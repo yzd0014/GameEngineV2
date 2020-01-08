@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Windows">
+      <UniqueIdentifier>{cbef9414-02c6-42e6-834c-9bae0f1b65c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Direct3D">
+      <UniqueIdentifier>{fb100b21-afc9-41b1-a24a-5606f7c67aa4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenGL">
+      <UniqueIdentifier>{cdba9045-0127-479f-afcf-4a498f454321}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cConstantBuffer.cpp" />
+    <ClCompile Include="cShader.cpp" />
+    <ClCompile Include="sContext.cpp" />
+    <ClCompile Include="OpenGL\cConstantBuffer.gl.cpp">
+      <Filter>OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGL\cRenderState.gl.cpp">
+      <Filter>OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGL\cShader.gl.cpp">
+      <Filter>OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGL\sContext.gl.cpp">
+      <Filter>OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Direct3D\cConstantBuffer.d3d.cpp">
+      <Filter>Direct3D</Filter>
+    </ClCompile>
+    <ClCompile Include="Direct3D\cRenderState.d3d.cpp">
+      <Filter>Direct3D</Filter>
+    </ClCompile>
+    <ClCompile Include="Direct3D\cShader.d3d.cpp">
+      <Filter>Direct3D</Filter>
+    </ClCompile>
+    <ClCompile Include="Direct3D\sContext.d3d.cpp">
+      <Filter>Direct3D</Filter>
+    </ClCompile>
+    <ClCompile Include="Effect.cpp" />
+    <ClCompile Include="OpenGL\Mesh.gl.cpp">
+      <Filter>OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="Direct3D\Mesh_d3d.cpp">
+      <Filter>Direct3D</Filter>
+    </ClCompile>
+    <ClCompile Include="Direct3D\View_d3d.cpp">
+      <Filter>Direct3D</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGL\View_gl.cpp">
+      <Filter>OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="cRenderState.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cConstantBuffer.h" />
+    <ClInclude Include="Configuration.h" />
+    <ClInclude Include="ConstantBufferFormats.h" />
+    <ClInclude Include="cShader.h" />
+    <ClInclude Include="Graphics.h" />
+    <ClInclude Include="sContext.h" />
+    <ClInclude Include="VertexFormats.h" />
+    <ClInclude Include="Windows\ExternalLibraries.win.h">
+      <Filter>Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGL\Includes.h">
+      <Filter>OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Direct3D\Includes.h">
+      <Filter>Direct3D</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Effect.h" />
+    <ClInclude Include="View.h" />
+    <ClInclude Include="cRenderState.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cRenderState.inl" />
+  </ItemGroup>
+</Project>

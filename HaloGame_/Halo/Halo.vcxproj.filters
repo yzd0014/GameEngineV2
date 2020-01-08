@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{ea14b60a-baf9-4254-9a79-eb4a6e93c811}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Custom Game Objects">
+      <UniqueIdentifier>{c24b9297-dca0-4f65-b5d1-3243cf54c922}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resource Files\eaeAlien.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resource Files\eaeGamePad.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resource Files\vsDefault_large.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resource Files\vsDefault_small.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Resource Files\Resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource Files\targetver.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Custom Game Objects\MoveableCube.h">
+      <Filter>Custom Game Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Custom Game Objects\HomingCube.h">
+      <Filter>Custom Game Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Custom Game Objects\Player.h">
+      <Filter>Custom Game Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Custom Game Objects\Bullet.h">
+      <Filter>Custom Game Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Custom Game Objects\Boss.h">
+      <Filter>Custom Game Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="cHalo.h" />
+    <ClInclude Include="Custom Game Objects\Cloth.h">
+      <Filter>Custom Game Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Custom Game Objects\Tri.h">
+      <Filter>Custom Game Objects</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="EntryPoint.cpp" />
+    <ClCompile Include="Custom Game Objects\MoveableCube.cpp">
+      <Filter>Custom Game Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Custom Game Objects\HomingCube.cpp">
+      <Filter>Custom Game Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Custom Game Objects\Player.cpp">
+      <Filter>Custom Game Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Custom Game Objects\Bullet.cpp">
+      <Filter>Custom Game Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Custom Game Objects\Boss.cpp">
+      <Filter>Custom Game Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="cHalo.cpp" />
+    <ClCompile Include="Custom Game Objects\Cloth.cpp">
+      <Filter>Custom Game Objects</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource Files\Halo.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

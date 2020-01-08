@@ -1,0 +1,8 @@
+return
+{
+	AlphaTransparency = true,
+	DepthBuffering = true,
+	DrawBothTriangleSides = true,
+	vertexShader = "Shaders/Vertex/standard.shader",
+	fragmentShader = "Shaders/Fragment/standard.shader",
+}
