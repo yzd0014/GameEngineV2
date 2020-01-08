@@ -133,6 +133,8 @@ eae6320::Physics::Contact eae6320::Physics::Collider::getContact(Simplex&i_simpl
 			contact.tangent1 = GetTangentVector(contact.normal);
 			contact.tangent1.Normalize();
 			contact.tangent2 = Math::Cross(contact.normal, contact.tangent1).GetNormalized();
+			contact.colliderA = this;
+			contact.colliderB = coll2;
 			return contact;
 		}
 
@@ -219,6 +221,8 @@ eae6320::Physics::Contact eae6320::Physics::Collider::getContact(Simplex&i_simpl
 	contact.tangent1 = GetTangentVector(contact.normal);
 	contact.tangent1.Normalize();
 	contact.tangent2 = Math::Cross(contact.normal, contact.tangent1).GetNormalized();
+	contact.colliderA = this;
+	contact.colliderB = coll2;
 	return contact;
 }
 

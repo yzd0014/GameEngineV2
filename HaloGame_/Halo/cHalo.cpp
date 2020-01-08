@@ -211,20 +211,40 @@ void eae6320::cHalo::SubmitDataToBeRendered(const float i_elapsedSecondCount_sys
 	//submit gameObject with colliders 
 	for (size_t i = 0; i < masterGameObjectArr.size(); i++) {
 		//smooth movement first
-		Math::sVector predictedPosition = masterGameObjectArr[i]->m_State.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
-		Math::cQuaternion predictedOrientation = masterGameObjectArr[i]->m_State.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
+		Math::sVector position;
+		Math::cQuaternion orientation;
+		if (masterGameObjectArr[i]->movementInterpolation)
+		{
+			position = masterGameObjectArr[i]->m_State.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
+			orientation = masterGameObjectArr[i]->m_State.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
+		}
+		else
+		{
+			position = masterGameObjectArr[i]->m_State.position;
+			orientation = masterGameObjectArr[i]->m_State.orientation;
+		}
 		//submit
-		eae6320::Graphics::SubmitObject(Math::cMatrix_transformation(predictedOrientation, predictedPosition),
+		eae6320::Graphics::SubmitObject(Math::cMatrix_transformation(orientation, position),
 			masterGameObjectArr[i]->GetEffect(), Mesh::s_manager.Get(masterGameObjectArr[i]->GetMesh()));
 
 	}
 	//submit gameObject without colliders
 	for (size_t i = 0; i < gameOjbectsWithoutCollider.size(); i++) {
 		//smooth movement first
-		Math::sVector predictedPosition = gameOjbectsWithoutCollider[i]->m_State.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
-		Math::cQuaternion predictedOrientation = gameOjbectsWithoutCollider[i]->m_State.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
+		Math::sVector position;
+		Math::cQuaternion orientation;
+		if(gameOjbectsWithoutCollider[i]->movementInterpolation)
+		{
+			position = gameOjbectsWithoutCollider[i]->m_State.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
+			orientation = gameOjbectsWithoutCollider[i]->m_State.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
+		}
+		else
+		{
+			position = gameOjbectsWithoutCollider[i]->m_State.position;
+			orientation = gameOjbectsWithoutCollider[i]->m_State.orientation;
+		}
 		//submit
-		eae6320::Graphics::SubmitObject(Math::cMatrix_transformation(predictedOrientation, predictedPosition),
+		eae6320::Graphics::SubmitObject(Math::cMatrix_transformation(orientation, position),
 			gameOjbectsWithoutCollider[i]->GetEffect(), Mesh::s_manager.Get(gameOjbectsWithoutCollider[i]->GetMesh()));
 
 	}

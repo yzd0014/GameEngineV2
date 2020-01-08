@@ -22,7 +22,7 @@ namespace eae6320
 {
 	namespace Physics
 	{
-		
+		class Collider;//forward declaration
 		struct AABB {
 			Math::sVector center;
 			Math::sVector extends;
@@ -41,6 +41,24 @@ namespace eae6320
 			float normalImpulseSum;
 			float tangentImpulseSum1;
 			float tangentImpulseSUm2;
+			Collider* colliderA;
+			Collider* colliderB;
+		};
+		
+		class ContactManifold3D
+		{
+		public:
+			void AddContact(Contact& i_contact)
+			{
+				m_contacts[numContacts] = i_contact;
+				numContacts++;
+			}
+			void Clear()
+			{
+				numContacts = 0;
+			}
+			Contact m_contacts[4];
+			int numContacts;
 		};
 
 		//struct to cache local position of support function result

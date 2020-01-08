@@ -75,6 +75,7 @@ namespace eae6320 {
 			}
 			Physics::sRigidBodyState m_State;
 			char objectType[20];
+			bool movementInterpolation = false;
 		private:
 			eae6320::Assets::cHandle<Mesh> m_Mesh;
 			Effect* m_pEffect;
