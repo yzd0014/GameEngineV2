@@ -15,7 +15,7 @@ namespace eae6320 {
 				i_pEffect->IncrementReferenceCount();
 				m_pEffect = i_pEffect;
 				m_State = i_State;
-
+				m_State.collider.m_pParentRigidBody = &m_State;
 				active = true;
 			}
 			GameObject(GameObject & i_other) {//copy constructor

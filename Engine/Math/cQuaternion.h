@@ -69,7 +69,7 @@ namespace eae6320
 
 			// Data
 			//=====
-
+			void Quaternion2Euler(float& o_x, float& o_y, float& o_z);//rotSeq is yxz
 		private:
 
 			float m_w = 1.0f;
@@ -89,7 +89,7 @@ namespace eae6320
 
 			// Friends
 			//========
-
+			void threeaxisrot(float r11, float r12, float r21, float r31, float r32, float res[]);
 			friend class cMatrix_transformation;
 		};
 

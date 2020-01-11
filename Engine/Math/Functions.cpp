@@ -17,6 +17,11 @@ float eae6320::Math::ConvertDegreesToRadians( const float i_degrees )
 	return i_degrees * ( Pi / 180.0f );
 }
 
+float eae6320::Math::ConvertRadiansToDegrees(const float i_radians)
+{
+	return i_radians * 180.0f / Pi;
+}
+
 uint16_t eae6320::Math::ConvertFloatToHalf( const float i_value )
 {
 	// Get the individual bits of the floating point value

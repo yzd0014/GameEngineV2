@@ -118,3 +118,25 @@ eae6320::Math::cQuaternion::cQuaternion( const float i_w, const float i_x, const
 {
 
 }
+
+void eae6320::Math::cQuaternion::Quaternion2Euler(float& o_x, float& o_y, float& o_z)
+{
+	float res[3];
+	
+	threeaxisrot(2 * (m_x*m_z + m_w*m_y),
+		m_w*m_w - m_x*m_x - m_y*m_y + m_z*m_z,
+		-2 * (m_y*m_z - m_w*m_x),
+		2 * (m_x*m_y + m_w*m_z),
+		m_w*m_w - m_x*m_x + m_y*m_y - m_z*m_z,
+		res);
+
+	o_z = res[0];
+	o_x = res[1];
+	o_y = res[2];
+}
+
+void eae6320::Math::cQuaternion::threeaxisrot(float r11, float r12, float r21, float r31, float r32, float res[]) {
+	res[0] = atan2(r31, r32);
+	res[1] = asin(r21);
+	res[2] = atan2(r11, r12);
+}

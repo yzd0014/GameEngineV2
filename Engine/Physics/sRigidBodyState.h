@@ -23,6 +23,8 @@ namespace eae6320
 	namespace Physics
 	{
 		class Collider;//forward declaration
+		struct sRigidBodyState;//forward declaration
+
 		struct AABB {
 			Math::sVector center;
 			Math::sVector extends;
@@ -41,8 +43,10 @@ namespace eae6320
 			float normalImpulseSum;
 			float tangentImpulseSum1;
 			float tangentImpulseSUm2;
+			
 			Collider* colliderA;
 			Collider* colliderB;
+			bool persistent = false;
 		};
 		
 		class ContactManifold3D
@@ -53,12 +57,18 @@ namespace eae6320
 				m_contacts[numContacts] = i_contact;
 				numContacts++;
 			}
+			void RemoveContactAtIndex(int index)
+			{
+				m_contacts[index] = m_contacts[numContacts-1];
+				numContacts--;
+			}
+
 			void Clear()
 			{
 				numContacts = 0;
 			}
-			Contact m_contacts[4];
-			int numContacts;
+			Contact m_contacts[5];//maxmum is 4, 5th one is used to select the best 4
+			int numContacts = 0;
 		};
 
 		//struct to cache local position of support function result
@@ -102,14 +112,16 @@ namespace eae6320
 			void UpdateTransformation(eae6320::Math::cMatrix_transformation i_t);
 			Math::sVector Center();
 			bool IsCollided(Collider& i_B, Contact& o_contact);
+			void RemoveManifold(ContactManifold3D* i_pManifold);
 
+			eae6320::Math::cMatrix_transformation m_transformation;
 			std::vector<Math::sVector> m_vertices;
+			std::vector<ContactManifold3D*> m_pManifolds;
+			sRigidBodyState* m_pParentRigidBody;
 		private:
 			static SupportResult supportFunction(Collider& i_A, Collider& i_B, Math::sVector i_dir);
 			SupportResult getFarthestPointInDirection(Math::sVector i_dir);
 			Contact getContact(Simplex&i_simplex, Collider* coll2);
-			void Barycentric(Math::sVector p, Math::sVector a, Math::sVector b, Math::sVector c, float &u, float &v, float &w);
-			eae6320::Math::cMatrix_transformation m_transformation;
 		};
 
 		struct sRigidBodyState
@@ -121,16 +133,17 @@ namespace eae6320
 			Math::sVector velocity;	// Distance per-second
 			Math::sVector acceleration;	// Distance per-second^2
 			Math::cQuaternion orientation;
-			Math::sVector angularVelocity_axis_local = Math::sVector( 0.0f, 1.0f, 0.0f );	// In local space (not world space)
-			float angularSpeed = 0.0f;	// Radians per-second (positive values rotate right-handed, negative rotate left-handed)
+			//Math::sVector angularVelocity_axis_local = Math::sVector( 0.0f, 1.0f, 0.0f );	// In local space (not world space)
+			//float angularSpeed = 0.0f;	// Radians per-second (positive values rotate right-handed, negative rotate left-handed)
+			Math::sVector angularVelocity;
 
 			float euler_x = 0.0f; //in degrees;
 			float euler_y = 0.0f;
 			float euler_z = 0.0f;
 
-			float axis_X_velocity = 0.0f;//degrees per second
-			float axis_Y_velocity = 0.0f;
-			float axis_Z_velocity = 0.0f;
+			//float axis_X_velocity = 0.0f;//degrees per second
+			//float axis_Y_velocity = 0.0f;
+			//float axis_Z_velocity = 0.0f;
 
 			AABB boundingBox;
 			Collider collider;
@@ -158,64 +171,8 @@ namespace eae6320
 			}
 			return t;
 		}
-
-		static Math::sVector GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c)
-		{
-			float bias = 0.000001f;
-			Math::sVector faceNormal;
-			faceNormal = Math::Cross(b - a, c - a);
-			if (faceNormal.GetLength() > bias)
-			{
-				faceNormal = faceNormal.GetNormalized();
-			}
-			else if ((a-b).GetLength() < bias && (b-c).GetLength() < bias)
-			{// handle case when surface is a point
-				faceNormal = a.GetNormalized();
-			}
-			else
-			{//handle case where surface is a line segement
-				if ((a - b).GetLength() > bias)
-				{
-					Math::sVector ab = b - a;
-					faceNormal = Math::Cross(Math::Cross(ab, a), ab);
-					if (faceNormal.GetLength()>bias)
-					{
-						faceNormal.Normalize();
-					}
-					else
-					{
-						faceNormal = GetTangentVector(a-b).GetNormalized();
-					}
-				}
-				else if ((b - c).GetLength() > bias)
-				{
-					Math::sVector bc = c - b;
-					faceNormal = Math::Cross(Math::Cross(bc, b), bc);
-					if (faceNormal.GetLength() > bias)
-					{
-						faceNormal.Normalize();
-					}
-					else
-					{
-						faceNormal = GetTangentVector(b-c).GetNormalized();
-					}
-				}
-				else if ((c - a).GetLength() > bias)
-				{
-					Math::sVector ca = a - c;
-					faceNormal = Math::Cross(Math::Cross(ca, c), ca);
-					if (faceNormal.GetLength() > bias)
-					{
-						faceNormal.Normalize();
-					}
-					else
-					{
-						faceNormal = GetTangentVector(c-a).GetNormalized();
-					}
-				}
-			}
-			return faceNormal;
-		}
+		void Barycentric(Math::sVector& p, Math::sVector& a, Math::sVector& b, Math::sVector& c, float &u, float &v, float &w);
+		Math::sVector GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c);
 	}
 }
 

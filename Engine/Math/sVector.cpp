@@ -103,6 +103,12 @@ float eae6320::Math::sVector::GetLength() const
 	return std::sqrt( length_squared );
 }
 
+float eae6320::Math::sVector::GetLengthSQ() const
+{
+	const auto length_squared = (x * x) + (y * y) + (z * z);
+	return length_squared;
+}
+
 float eae6320::Math::sVector::Normalize()
 {
 	const auto length = GetLength();

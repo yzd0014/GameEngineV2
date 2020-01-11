@@ -18,22 +18,17 @@ namespace eae6320 {
 			size_t numOfObjects = o_gameObjectsWithCollider.size();
 			for (size_t i = 0; i < numOfObjects; i++) {
 				o_gameObjectsWithCollider[i]->m_State.velocity = Math::sVector(0, 0, 0);
-				o_gameObjectsWithCollider[i]->m_State.axis_X_velocity = 0;
-				o_gameObjectsWithCollider[i]->m_State.axis_Y_velocity = 0;
-				o_gameObjectsWithCollider[i]->m_State.axis_Z_velocity = 0;
+				o_gameObjectsWithCollider[i]->m_State.angularVelocity = Math::sVector(0, 0, 0);
 			}
 			numOfObjects = o_gameObjectsWithoutCollider.size();
 			for (size_t i = 0; i < numOfObjects; i++) {
 				o_gameObjectsWithoutCollider[i]->m_State.velocity = Math::sVector(0, 0, 0);
-				o_gameObjectsWithoutCollider[i]->m_State.axis_X_velocity = 0;
-				o_gameObjectsWithoutCollider[i]->m_State.axis_Y_velocity = 0;
-				o_gameObjectsWithoutCollider[i]->m_State.axis_Z_velocity = 0;
+				o_gameObjectsWithoutCollider[i]->m_State.angularVelocity = Math::sVector(0, 0, 0);
 			}
 
 			o_camera.m_State.velocity = Math::sVector(0, 0, 0);
-			o_camera.m_State.axis_X_velocity = 0;
-			o_camera.m_State.axis_Y_velocity = 0;
-			o_camera.m_State.axis_Z_velocity = 0;
+			o_camera.axis_X_velocity = 0;
+			o_camera.axis_Y_velocity = 0;
 		}
 	}
 }

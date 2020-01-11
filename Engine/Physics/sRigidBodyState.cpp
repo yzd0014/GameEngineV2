@@ -4,6 +4,7 @@
 #include "sRigidBodyState.h"
 #include "Engine/Math/Functions.h"
 #include "Engine/UserOutput/UserOutput.h"
+#include <Engine/Asserts/Asserts.h>
 
 #define EPA_TOLERANCE 0.0001
 #define EPA_MAX_NUM_FACES 64
@@ -30,6 +31,19 @@ eae6320::Physics::SupportResult eae6320::Physics::Collider::getFarthestPointInDi
 	return supportResult;
 }
 
+void eae6320::Physics::Collider::RemoveManifold(ContactManifold3D* i_pManifold)
+{
+	for (size_t i = 0; i < m_pManifolds.size(); i++)
+	{
+		if (m_pManifolds[i] == i_pManifold)
+		{
+			m_pManifolds[i] = m_pManifolds.back();
+			m_pManifolds.pop_back();
+			m_pManifolds.shrink_to_fit();
+		}
+	}
+}
+
 eae6320::Physics::SupportResult eae6320::Physics::Collider::supportFunction(Collider&i_A, Collider&i_B, Math::sVector i_dir)
 {
 	auto a = i_A.getFarthestPointInDirection(i_dir);
@@ -53,7 +67,7 @@ eae6320::Math::sVector eae6320::Physics::Collider::Center()
 	return center / float(count);
 }
 
-void eae6320::Physics::Collider::Barycentric(Math::sVector p, Math::sVector a, Math::sVector b, Math::sVector c, float &u, float &v, float &w)
+void eae6320::Physics::Barycentric(Math::sVector& p, Math::sVector& a, Math::sVector& b, Math::sVector& c, float &u, float &v, float &w)
 {
 	Math::sVector v0 = b - a, v1 = c - a, v2 = p - a;
 	float d00 = Math::Dot(v0, v0);
@@ -65,6 +79,64 @@ void eae6320::Physics::Collider::Barycentric(Math::sVector p, Math::sVector a, M
 	v = (d11 * d20 - d01 * d21) / denom;
 	w = (d00 * d21 - d01 * d20) / denom;
 	u = 1.0f - v - w;
+}
+
+eae6320::Math::sVector eae6320::Physics::GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c)
+{
+	float bias = 0.000001f;
+	Math::sVector faceNormal;
+	faceNormal = Math::Cross(b - a, c - a);
+	if (faceNormal.GetLength() > bias)
+	{
+		faceNormal = faceNormal.GetNormalized();
+	}
+	else if ((a - b).GetLength() < bias && (b - c).GetLength() < bias)
+	{// handle case when surface is a point
+		faceNormal = a.GetNormalized();
+	}
+	else
+	{//handle case where surface is a line segement
+		if ((a - b).GetLength() > bias)
+		{
+			Math::sVector ab = b - a;
+			faceNormal = Math::Cross(Math::Cross(ab, a), ab);
+			if (faceNormal.GetLength() > bias)
+			{
+				faceNormal.Normalize();
+			}
+			else
+			{
+				faceNormal = GetTangentVector(a - b).GetNormalized();
+			}
+		}
+		else if ((b - c).GetLength() > bias)
+		{
+			Math::sVector bc = c - b;
+			faceNormal = Math::Cross(Math::Cross(bc, b), bc);
+			if (faceNormal.GetLength() > bias)
+			{
+				faceNormal.Normalize();
+			}
+			else
+			{
+				faceNormal = GetTangentVector(b - c).GetNormalized();
+			}
+		}
+		else if ((c - a).GetLength() > bias)
+		{
+			Math::sVector ca = a - c;
+			faceNormal = Math::Cross(Math::Cross(ca, c), ca);
+			if (faceNormal.GetLength() > bias)
+			{
+				faceNormal.Normalize();
+			}
+			else
+			{
+				faceNormal = GetTangentVector(c - a).GetNormalized();
+			}
+		}
+	}
+	return faceNormal;
 }
 
 eae6320::Physics::Contact eae6320::Physics::Collider::getContact(Simplex&i_simplex, Collider* coll2) 
@@ -360,24 +432,33 @@ void eae6320::Physics::sRigidBodyState::Update( const float i_secondCountToInteg
 	}
 	// Update orientation
 	{
+		Math::cQuaternion deltaRot;
+		if (angularVelocity.GetLength() > 0.000001f)
+		{
+			deltaRot = Math::cQuaternion(angularVelocity.GetLength()*i_secondCountToIntegrate, angularVelocity.GetNormalized());
+		}
+		float deltaRot_x;
+		float deltaRot_y;
+		float deltaRot_z;
+		deltaRot.Quaternion2Euler(deltaRot_x, deltaRot_y, deltaRot_z);
 		//const auto rotation = Math::cQuaternion( angularSpeed * i_secondCountToIntegrate, angularVelocity_axis_local );
-		euler_x = euler_x + axis_X_velocity * i_secondCountToIntegrate;
-		if (euler_x > 360) euler_x = euler_x - 360;
-		if (euler_x < 0) euler_x = euler_x + 360;
+		euler_x = euler_x + Math::ConvertRadiansToDegrees(deltaRot_x);
+		if (euler_x > 180) euler_x = euler_x - 360;
+		if (euler_x < -180) euler_x = euler_x + 360;
 
-		euler_y = euler_y + axis_Y_velocity * i_secondCountToIntegrate;
-		if (euler_y > 360) euler_y = euler_y - 360;
-		if (euler_y < 0) euler_y = euler_y + 360;
+		euler_y = euler_y + Math::ConvertRadiansToDegrees(deltaRot_y);
+		if (euler_y > 180) euler_y = euler_y - 360;
+		if (euler_y < -180) euler_y = euler_y + 360;
 
-		euler_z = euler_z + axis_Z_velocity * i_secondCountToIntegrate;
-		if (euler_z > 360) euler_z = euler_z - 360;
-		if (euler_z < 0) euler_z = euler_z + 360;
-		
+		euler_z = euler_z + Math::ConvertRadiansToDegrees(deltaRot_z);
+		if (euler_z > 180) euler_z = euler_z - 360;
+		if (euler_z < -180) euler_z = euler_z + 360;
+
 		const auto rotation_x = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_x), Math::sVector(1, 0, 0));
 		const auto rotation_y = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_y), Math::sVector(0, 1, 0));
 		const auto rotation_z = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_z), Math::sVector(0, 0, 1));
 
-		const auto rotation = rotation_y * rotation_x * rotation_z;
+		auto rotation = rotation_y * rotation_x * rotation_z;
 
 		orientation = rotation;
 		orientation.Normalize();
@@ -392,15 +473,14 @@ void eae6320::Physics::sRigidBodyState::UpdateVelocity(const float i_secondCount
 }
 void eae6320::Physics::sRigidBodyState::UpdateOrientation(const float i_secondCountToIntegrate) {
 	//const auto rotation = Math::cQuaternion( angularSpeed * i_secondCountToIntegrate, angularVelocity_axis_local );
-	euler_x = euler_x + axis_X_velocity * i_secondCountToIntegrate;
 	if (euler_x > 360) euler_x = euler_x - 360;
 	if (euler_x < 0) euler_x = euler_x + 360;
 
-	euler_y = euler_y + axis_Y_velocity * i_secondCountToIntegrate;
+	//euler_y = euler_y + axis_Y_velocity * i_secondCountToIntegrate;
 	if (euler_y > 360) euler_y = euler_y - 360;
 	if (euler_y < 0) euler_y = euler_y + 360;
 
-	euler_z = euler_z + axis_Z_velocity * i_secondCountToIntegrate;
+	//euler_z = euler_z + axis_Z_velocity * i_secondCountToIntegrate;
 	if (euler_z > 360) euler_z = euler_z - 360;
 	if (euler_z < 0) euler_z = euler_z + 360;
 
@@ -408,10 +488,17 @@ void eae6320::Physics::sRigidBodyState::UpdateOrientation(const float i_secondCo
 	const auto rotation_y = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_y), Math::sVector(0, 1, 0));
 	const auto rotation_z = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_z), Math::sVector(0, 0, 1));
 
-	const auto rotation = rotation_y * rotation_x * rotation_z;
+	Math::cQuaternion deltaRot;
+	if (angularVelocity.GetLength() > 0.000001f)
+	{
+		deltaRot = Math::cQuaternion(angularVelocity.GetLength()*i_secondCountToIntegrate, angularVelocity.GetNormalized());
+	}
+
+	const auto rotation = deltaRot * rotation_y * rotation_x * rotation_z;
 
 	orientation = rotation;
 	orientation.Normalize();
+	//orientation.Quaternion2Euler(euler_x, euler_y, euler_z);
 }
 
 
@@ -420,14 +507,19 @@ eae6320::Math::sVector eae6320::Physics::sRigidBodyState::PredictFuturePosition(
 	return position + (velocity * i_secondCountToExtrapolate );
 }
 
-eae6320::Math::cQuaternion eae6320::Physics::sRigidBodyState::PredictFutureOrientation( const float i_secondCountToExtrapolate ) const
+eae6320::Math::cQuaternion eae6320::Physics::sRigidBodyState::PredictFutureOrientation(const float i_secondCountToExtrapolate) const
 {
 	//const auto rotation = Math::cQuaternion( angularSpeed * i_secondCountToExtrapolate, angularVelocity_axis_local );
-	const auto rotation_x = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_x + axis_X_velocity * i_secondCountToExtrapolate), Math::sVector(1, 0, 0));
-	const auto rotation_y = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_y + axis_Y_velocity * i_secondCountToExtrapolate), Math::sVector(0, 1, 0));
-	const auto rotation_z = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_z + axis_Z_velocity * i_secondCountToExtrapolate), Math::sVector(0, 0, 1));
-
-	const auto rotation = rotation_y * rotation_x * rotation_z;
+	const auto rotation_x = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_x), Math::sVector(1, 0, 0));
+	const auto rotation_y = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_y), Math::sVector(0, 1, 0));
+	const auto rotation_z = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_z), Math::sVector(0, 0, 1));
+	Math::cQuaternion deltaRot;
+	if (angularVelocity.GetLength() > 0.000001f)
+	{
+		deltaRot = Math::cQuaternion(angularVelocity.GetLength()*i_secondCountToExtrapolate, angularVelocity.GetNormalized());
+	}
+	
+	const auto rotation = deltaRot * rotation_y * rotation_x * rotation_z;
 
 	return rotation.GetNormalized();
 }

@@ -52,6 +52,7 @@ namespace eae6320
 			//-----------------------
 
 			float GetLength() const;
+			float GetLengthSQ() const;
 			float Normalize();
 			sVector GetNormalized() const;
 

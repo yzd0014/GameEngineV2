@@ -1,28 +1,29 @@
 #include "MoveableCube.h"
+#include "Engine/Math/Functions.h"
 #include "Engine/UserInput/UserInput.h"
 #include "Engine/Math/sVector.h"
 void eae6320::MoveableCube::UpdateGameObjectBasedOnInput() {
 	//gameObject movement
 	//reset to defualt velocity
 	m_State.velocity = Math::sVector(0, 0, 0);
-	m_State.axis_X_velocity = 0.0f;
-	m_State.axis_Y_velocity = 0.0f;
-	m_State.axis_Z_velocity = 0.0f;
+	axis_X_velocity = 0.0f;
+	axis_Y_velocity = 0.0f;
+	//m_State.axis_Z_velocity = 0.0f;
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::H))
 	{
-		m_State.axis_Y_velocity = 400;
+		axis_Y_velocity = 400;
 	}
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::K))
 	{
-		m_State.axis_Y_velocity = -400;
+		axis_Y_velocity = -400;
 	}
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::U))
 	{
-		m_State.axis_X_velocity = 400;
+		axis_X_velocity = 400;
 	}
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::J))
 	{
-		m_State.axis_X_velocity = -400;
+		axis_X_velocity = -400;
 	}
 
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Right))
@@ -54,5 +55,9 @@ void eae6320::MoveableCube::UpdateGameObjectBasedOnInput() {
 		//m_State.acceleration = Math::sVector(0, 0, -5);
 	}
 }
-
+void eae6320::MoveableCube::EventTick(const float i_secondCountToIntegrate)
+{
+	m_State.euler_x = m_State.euler_x + axis_X_velocity * i_secondCountToIntegrate;
+	m_State.euler_y = m_State.euler_y + axis_Y_velocity * i_secondCountToIntegrate;
+}
 eae6320::MoveableCube::~MoveableCube() {}

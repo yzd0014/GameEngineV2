@@ -2,8 +2,8 @@
 #include "Engine/Math/sVector.h"
 #include "Engine/Math/cMatrix_transformation.h"
 #include "PhysicsSimulation.h"
+#include "ContactManager3D.h"
 #include "CollisionPair.h"
-#include "CollisionDetection.h"
 #include "CollisionDetection.h"
 #include "Engine/UserOutput/UserOutput.h"
 
@@ -24,6 +24,7 @@ namespace eae6320 {
 				Math::cMatrix_transformation local2World(i_allGameObjects[i]->m_State.orientation, i_allGameObjects[i]->m_State.position);
 				i_allGameObjects[i]->m_State.collider.UpdateTransformation(local2World);
 			}
+			//collision detection
 			for (size_t i = 0; i < count - 1; i++)
 			{
 				for (size_t j = i + 1; j < count; j++)
@@ -31,28 +32,28 @@ namespace eae6320 {
 					Contact contact;
 					if (i_allGameObjects[i]->m_State.collider.IsCollided(i_allGameObjects[j]->m_State.collider, contact))
 					{
-						i_allGameObjects[i]->m_State.position += -contact.depth*contact.normal;
-						//UserOutput::DebugPrint("%f, %f, %f", contact.contactNormal.x, contact.contactNormal.y, contact.contactNormal.z);
-
+						//add contact to correct manifold
+						/*
+						bool manifoldExist = false;
+						for (size_t k = 0; k < i_allGameObjects[i]->m_State.collider.m_pManifolds.size(); i++)
 						{
-							Physics::sRigidBodyState objState;
-							objState.position = contact.globalPositionA;
-							objState.euler_x = i_allGameObjects[i]->m_State.euler_x;
-							objState.euler_y = i_allGameObjects[i]->m_State.euler_y;
-							objState.euler_z = i_allGameObjects[i]->m_State.euler_z;
-							GameCommon::GameObject * pGameObject = new GameCommon::GameObject(i_pDebugEffect, i_debugMesh, objState);
-							i_debugGraphics.push_back(pGameObject);
+							ContactManifold3D* pManifold = i_allGameObjects[i]->m_State.collider.m_pManifolds[k];
+							if ((pManifold[k].m_contacts->colliderA == &i_allGameObjects[i]->m_State.collider && pManifold[k].m_contacts->colliderB == &i_allGameObjects[j]->m_State.collider)||
+								(pManifold[k].m_contacts->colliderA == &i_allGameObjects[j]->m_State.collider && pManifold[k].m_contacts->colliderB == &i_allGameObjects[i]->m_State.collider))
+							{
+								manifoldExist = true;
+								//merge contact
+								MergeContact(contact, *pManifold);
+							}
 						}
-						
+						if (!manifoldExist)
 						{
-							Physics::sRigidBodyState objState;
-							objState.position = contact.globalPositionB;
-							objState.euler_x = i_allGameObjects[j]->m_State.euler_x;
-							objState.euler_y = i_allGameObjects[j]->m_State.euler_y;
-							objState.euler_z = i_allGameObjects[j]->m_State.euler_z;
-							GameCommon::GameObject * pGameObject = new GameCommon::GameObject(i_pDebugEffect, i_debugMesh, objState);
-							i_debugGraphics.push_back(pGameObject);
-						}
+							ContactManifold3D manifold;
+							manifold.AddContact(contact);
+							allManifolds.push_back(manifold);
+							i_allGameObjects[i]->m_State.collider.m_pManifolds.push_back(&allManifolds.back());
+							i_allGameObjects[j]->m_State.collider.m_pManifolds.push_back(&allManifolds.back());
+						}*/
 					}
 				}
 			}
