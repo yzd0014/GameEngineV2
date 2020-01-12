@@ -26,7 +26,7 @@ namespace eae6320 {
 				o_gameObjectsWithoutCollider[i]->m_State.angularVelocity = Math::sVector(0, 0, 0);
 			}
 
-			o_camera.m_State.velocity = Math::sVector(0, 0, 0);
+			o_camera.velocity = Math::sVector(0, 0, 0);
 			o_camera.axis_X_velocity = 0;
 			o_camera.axis_Y_velocity = 0;
 		}

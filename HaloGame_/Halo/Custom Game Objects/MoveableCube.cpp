@@ -6,24 +6,25 @@ void eae6320::MoveableCube::UpdateGameObjectBasedOnInput() {
 	//gameObject movement
 	//reset to defualt velocity
 	m_State.velocity = Math::sVector(0, 0, 0);
-	axis_X_velocity = 0.0f;
-	axis_Y_velocity = 0.0f;
-	//m_State.axis_Z_velocity = 0.0f;
+	Math::cMatrix_transformation localToWorldMat = Math::cMatrix_transformation::cMatrix_transformation(m_State.orientation, m_State.position);
+	Math::sVector rightVector = localToWorldMat.GetRightDirection();
+	rightVector.Normalize();
+	m_State.angularVelocity = Math::sVector(0, 0, 0);
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::H))
 	{
-		axis_Y_velocity = 400;
+		m_State.angularVelocity = Math::sVector(0, 1, 0) * Math::ConvertDegreesToRadians(-400);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::K))
+	else if (UserInput::IsKeyPressed(UserInput::KeyCodes::K))
 	{
-		axis_Y_velocity = -400;
+		m_State.angularVelocity = Math::sVector(0, 1, 0) * Math::ConvertDegreesToRadians(400);
 	}
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::U))
 	{
-		axis_X_velocity = 400;
+		m_State.angularVelocity = rightVector * Math::ConvertDegreesToRadians(400);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::J))
+	else if (UserInput::IsKeyPressed(UserInput::KeyCodes::J))
 	{
-		axis_X_velocity = -400;
+		m_State.angularVelocity = rightVector * Math::ConvertDegreesToRadians(-400);
 	}
 
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Right))
@@ -57,7 +58,7 @@ void eae6320::MoveableCube::UpdateGameObjectBasedOnInput() {
 }
 void eae6320::MoveableCube::EventTick(const float i_secondCountToIntegrate)
 {
-	m_State.euler_x = m_State.euler_x + axis_X_velocity * i_secondCountToIntegrate;
-	m_State.euler_y = m_State.euler_y + axis_Y_velocity * i_secondCountToIntegrate;
+	//m_State.euler_x = m_State.euler_x + axis_X_velocity * i_secondCountToIntegrate;
+	//m_State.euler_y = m_State.euler_y + axis_Y_velocity * i_secondCountToIntegrate;
 }
 eae6320::MoveableCube::~MoveableCube() {}

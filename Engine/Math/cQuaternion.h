@@ -69,7 +69,8 @@ namespace eae6320
 
 			// Data
 			//=====
-			void Quaternion2Euler(float& o_x, float& o_y, float& o_z);//rotSeq is yxz
+			Math::sVector Quaternion2Euler();//rotSeq is yxz
+			Math::sVector Quaternion2AxisAngle();
 		private:
 
 			float m_w = 1.0f;

@@ -45,7 +45,7 @@ void eae6320::cHalo::UpdateBasedOnInput()
 eae6320::cResult eae6320::cHalo::Initialize()
 {
 	//initialize camera 
-	mainCamera.Initialize(Math::sVector(0.0f, 5.0f, 15.0f), Math::cQuaternion(), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
+	mainCamera.Initialize(Math::sVector(0.0f, 5.0f, 15.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 	
 	//create two meshes 	
 	eae6320::Assets::cHandle<Mesh> mesh_plane;
@@ -94,7 +94,6 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		MoveableCube * pGameObject = new MoveableCube(pEffect_white, mesh_cube, objState);
 		masterGameObjectArr.push_back(pGameObject);
 	}
-
 	//cube
 	{
 		Physics::AABB boundingBox;
@@ -153,7 +152,6 @@ void  eae6320::cHalo::UpdateSimulationBasedOnTime(const float i_elapsedSecondCou
 		}
 		//update camera
 		mainCamera.UpdateState(i_elapsedSecondCount_sinceLastUpdate);
-		UserOutput::DebugPrint("x = %f, y = %f, z = %f\n\n", mainCamera.m_State.euler_x, mainCamera.m_State.euler_y, mainCamera.m_State.euler_z);
 //run AI*********************************************************************************
 		for (size_t i = 0; i < size_physicsObject; i++) {
 			masterGameObjectArr[i]->EventTick(i_elapsedSecondCount_sinceLastUpdate);
@@ -253,7 +251,7 @@ void eae6320::cHalo::SubmitDataToBeRendered(const float i_elapsedSecondCount_sys
 	//submit camera
 	{
 		//smooth camera movemnt first before it's submitted
-		Math::sVector predictedPosition = mainCamera.m_State.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
+		Math::sVector predictedPosition = mainCamera.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
 		Math::cQuaternion predictedOrientation = mainCamera.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
 		//submit
 		eae6320::Graphics::SubmitCamera(Math::cMatrix_transformation::CreateWorldToCameraTransform(predictedOrientation, predictedPosition),

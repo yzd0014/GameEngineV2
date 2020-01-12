@@ -119,10 +119,10 @@ eae6320::Math::cQuaternion::cQuaternion( const float i_w, const float i_x, const
 
 }
 
-void eae6320::Math::cQuaternion::Quaternion2Euler(float& o_x, float& o_y, float& o_z)
+eae6320::Math::sVector eae6320::Math::cQuaternion::Quaternion2Euler()
 {
 	float res[3];
-	
+	Math::sVector rot;
 	threeaxisrot(2 * (m_x*m_z + m_w*m_y),
 		m_w*m_w - m_x*m_x - m_y*m_y + m_z*m_z,
 		-2 * (m_y*m_z - m_w*m_x),
@@ -130,13 +130,37 @@ void eae6320::Math::cQuaternion::Quaternion2Euler(float& o_x, float& o_y, float&
 		m_w*m_w - m_x*m_x + m_y*m_y - m_z*m_z,
 		res);
 
-	o_z = res[0];
-	o_x = res[1];
-	o_y = res[2];
+	rot.z = res[0];
+	rot.x = res[1];
+	rot.y = res[2];
+	return rot;
 }
 
 void eae6320::Math::cQuaternion::threeaxisrot(float r11, float r12, float r21, float r31, float r32, float res[]) {
 	res[0] = atan2(r31, r32);
 	res[1] = asin(r21);
 	res[2] = atan2(r11, r12);
+}
+
+eae6320::Math::sVector eae6320::Math::cQuaternion::Quaternion2AxisAngle()
+{
+	if (m_w > 1) Normalize(); // if w>1 acos and sqrt will produce errors, this cant happen if quaternion is normalised
+	float angle = 2 * acos(m_w);
+	float s = sqrt(1 - m_w*m_w); // assuming quaternion normalised then w is less than 1, so term always positive.
+
+	Math::sVector rot;
+	if (s < s_epsilon) { // test to avoid divide by zero, s is always positive due to sqrt
+	  // if s close to zero then direction of axis not important
+		rot.x = m_x; // if it is important that axis is normalised then replace with x=1; y=z=0;
+		rot.y = m_y;
+		rot.z = m_z;
+	}
+	else {
+		rot.x = m_x / s; // normalise axis
+		rot.y = m_y / s;
+		rot.z = m_z / s;
+		rot = rot.GetNormalized()*angle;
+	}
+
+	return rot;
 }

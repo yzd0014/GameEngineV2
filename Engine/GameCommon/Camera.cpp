@@ -4,9 +4,9 @@
 #include "Engine/UserOutput/UserOutput.h"
 #include <Engine/Asserts/Asserts.h>
 
-eae6320::GameCommon::Camera::Camera(Math::sVector i_position, Math::cQuaternion i_orientation, const float i_verticalFieldOfView_inRadians, const float i_aspectRatio, const float i_z_nearPlane, const float i_z_farPlane) {
-	m_State.position = i_position;
-	m_State.orientation = i_orientation;
+eae6320::GameCommon::Camera::Camera(Math::sVector i_position, Math::sVector i_orientation, const float i_verticalFieldOfView_inRadians, const float i_aspectRatio, const float i_z_nearPlane, const float i_z_farPlane) {
+	position = i_position;
+	orientationEuler = i_orientation;
 
 	m_verticalFieldOfView_inRadians = i_verticalFieldOfView_inRadians;
 	m_aspectRatio = i_aspectRatio;
@@ -15,9 +15,9 @@ eae6320::GameCommon::Camera::Camera(Math::sVector i_position, Math::cQuaternion 
 }
 
 
-void eae6320::GameCommon::Camera::Initialize(Math::sVector i_position, Math::cQuaternion i_orientation, const float i_verticalFieldOfView_inRadians, const float i_aspectRatio, const float i_z_nearPlane, const float i_z_farPlane) {
-	m_State.position = i_position;
-	m_State.orientation = i_orientation;
+void eae6320::GameCommon::Camera::Initialize(Math::sVector i_position, Math::sVector i_orientation, const float i_verticalFieldOfView_inRadians, const float i_aspectRatio, const float i_z_nearPlane, const float i_z_farPlane) {
+	position = i_position;
+	orientationEuler = i_orientation;
 
 	m_verticalFieldOfView_inRadians = i_verticalFieldOfView_inRadians;
 	m_aspectRatio = i_aspectRatio;
@@ -26,15 +26,23 @@ void eae6320::GameCommon::Camera::Initialize(Math::sVector i_position, Math::cQu
 }
 
 void eae6320::GameCommon::Camera::UpdateState(const float i_secondCountToIntegrate) {
-	m_State.euler_x = m_State.euler_x + axis_X_velocity * i_secondCountToIntegrate;
-	m_State.euler_y = m_State.euler_y + axis_Y_velocity * i_secondCountToIntegrate;
-	if (m_State.euler_x > 90) {
-		m_State.euler_x = 90;
+	//update position
+	position += velocity * i_secondCountToIntegrate;
+	//update orientation
+	orientationEuler.x = orientationEuler.x + axis_X_velocity * i_secondCountToIntegrate;
+	orientationEuler.y = orientationEuler.y + axis_Y_velocity * i_secondCountToIntegrate;
+	if (orientationEuler.x > 90) {
+		orientationEuler.x = 90;
 	}
-	if (m_State.euler_x < -90) {
-		m_State.euler_x = -90;
+	if (orientationEuler.x < -90) {
+		orientationEuler.x = -90;
 	}
-	m_State.Update(i_secondCountToIntegrate);
+	//m_State.Update(i_secondCountToIntegrate);
+	const auto rotation_x = Math::cQuaternion(Math::ConvertDegreesToRadians(orientationEuler.x), Math::sVector(1, 0, 0));
+	const auto rotation_y = Math::cQuaternion(Math::ConvertDegreesToRadians(orientationEuler.y), Math::sVector(0, 1, 0));
+	//const auto rotation_z = Math::cQuaternion(Math::ConvertDegreesToRadians(orientation.z), Math::sVector(0, 0, 1));
+	orientation = rotation_y * rotation_x;
+	orientation.Normalize();
 	
 	int mouseX, mouseY;
 	UserInput::GetMouseMoveDistanceInDeltaTime(&mouseX, &mouseY);
@@ -49,16 +57,16 @@ void eae6320::GameCommon::Camera::UpdateState(const float i_secondCountToIntegra
 	axis_Y_velocity = axis_Y_velo;
 	axis_X_velocity = axis_X_velo;
 
-	if (axis_X_velo > 0 && m_State.euler_x < 90) {
+	if (axis_X_velo > 0 && orientationEuler.x < 90) {
 		axis_X_velocity = axis_X_velo;
 	}
-	if (axis_X_velo < 0 && m_State.euler_x > -90) {
+	if (axis_X_velo < 0 && orientationEuler.x > -90) {
 		axis_X_velocity = axis_X_velo;
 	}
 }
 
 eae6320::Math::cMatrix_transformation eae6320::GameCommon::Camera::GetWorldToCameraMat() {
-	return Math::cMatrix_transformation::CreateWorldToCameraTransform(m_State.orientation, m_State.position);
+	return Math::cMatrix_transformation::CreateWorldToCameraTransform(orientation, position);
 }
 
 eae6320::Math::cMatrix_transformation eae6320::GameCommon::Camera::GetCameraToProjectedMat() {
@@ -67,9 +75,9 @@ eae6320::Math::cMatrix_transformation eae6320::GameCommon::Camera::GetCameraToPr
 
 void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
 	//reset velocity before update velocity
-	m_State.velocity = Math::sVector(0, 0, 0);
+	velocity = Math::sVector(0, 0, 0);
 	
-	Math::cMatrix_transformation localToWorldMat = Math::cMatrix_transformation::cMatrix_transformation(m_State.orientation, m_State.position);
+	Math::cMatrix_transformation localToWorldMat = Math::cMatrix_transformation::cMatrix_transformation(orientation, position);
 	Math::sVector forwardVector = localToWorldMat.GetBackDirection();
 	forwardVector.Normalize();
 	forwardVector = forwardVector * -10;
@@ -80,31 +88,41 @@ void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
 
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::D))
 	{
-		m_State.velocity = rightVector;
+		velocity = rightVector;
 	}
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::A))
 	{
-		m_State.velocity = -1 * rightVector;
+		velocity = -1 * rightVector;
 	}
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::W))
 	{
-		m_State.velocity = forwardVector;
+		velocity = forwardVector;
 	}
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::S))
 	{
-		m_State.velocity = forwardVector * -1;
+		velocity = forwardVector * -1;
 	}
 }
 
 eae6320::Math::cQuaternion eae6320::GameCommon::Camera::PredictFutureOrientation(const float i_secondCountToExtrapolate) const
 {
+	auto rot_x = orientationEuler.x + axis_X_velocity * i_secondCountToExtrapolate;
+	auto rot_y = orientationEuler.y + axis_Y_velocity * i_secondCountToExtrapolate;
+	if (rot_x > 90) {
+		rot_x = 90;
+	}
+	if (rot_x < -90) {
+		rot_x = -90;
+	}
 	//const auto rotation = Math::cQuaternion( angularSpeed * i_secondCountToExtrapolate, angularVelocity_axis_local );
-	const auto rotation_x = Math::cQuaternion(Math::ConvertDegreesToRadians(m_State.euler_x + axis_X_velocity * i_secondCountToExtrapolate), Math::sVector(1, 0, 0));
-	const auto rotation_y = Math::cQuaternion(Math::ConvertDegreesToRadians(m_State.euler_y + axis_Y_velocity * i_secondCountToExtrapolate), Math::sVector(0, 1, 0));
-	//const auto rotation_z = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_z + axis_Z_velocity * i_secondCountToExtrapolate), Math::sVector(0, 0, 1));
+	const auto rotation_x = Math::cQuaternion(Math::ConvertDegreesToRadians(rot_x), Math::sVector(1, 0, 0));
+	const auto rotation_y = Math::cQuaternion(Math::ConvertDegreesToRadians(rot_y), Math::sVector(0, 1, 0));
 
 	const auto rotation = rotation_y * rotation_x;
 	
-	//return rotation.GetNormalized();
-	return m_State.orientation;
+	return rotation.GetNormalized();
+}
+eae6320::Math::sVector eae6320::GameCommon::Camera::PredictFuturePosition(const float i_secondCountToExtrapolate) const
+{
+	return position + (velocity * i_secondCountToExtrapolate);
 }

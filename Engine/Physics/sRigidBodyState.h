@@ -137,9 +137,9 @@ namespace eae6320
 			//float angularSpeed = 0.0f;	// Radians per-second (positive values rotate right-handed, negative rotate left-handed)
 			Math::sVector angularVelocity;
 
-			float euler_x = 0.0f; //in degrees;
-			float euler_y = 0.0f;
-			float euler_z = 0.0f;
+			//float euler_x = 0.0f; //in degrees;
+			//float euler_y = 0.0f;
+			//float euler_z = 0.0f;
 
 			//float axis_X_velocity = 0.0f;//degrees per second
 			//float axis_Y_velocity = 0.0f;

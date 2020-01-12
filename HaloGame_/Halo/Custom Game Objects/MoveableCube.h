@@ -18,8 +18,8 @@ namespace eae6320 {
 		void UpdateGameObjectBasedOnInput() override;
 		void EventTick(const float i_secondCountToIntegrate) override;
 	private:
-		float axis_Y_velocity = 0.0f;
-		float axis_X_velocity = 0.0f;
+		//float axis_Y_velocity = 0.0f;
+		//float axis_X_velocity = 0.0f;
 	};
 }
 
