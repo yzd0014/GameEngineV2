@@ -32,6 +32,7 @@
     <ClInclude Include="Custom Game Objects\Boss.h" />
     <ClInclude Include="Custom Game Objects\Bullet.h" />
     <ClInclude Include="Custom Game Objects\Cloth.h" />
+    <ClInclude Include="Custom Game Objects\CubeSpawner.h" />
     <ClInclude Include="Custom Game Objects\Ground.h" />
     <ClInclude Include="Custom Game Objects\HomingCube.h" />
     <ClInclude Include="Custom Game Objects\MoveableCube.h" />
@@ -55,6 +56,7 @@
     </ClCompile>
     <ClCompile Include="Custom Game Objects\Bullet.cpp" />
     <ClCompile Include="Custom Game Objects\Cloth.cpp" />
+    <ClCompile Include="Custom Game Objects\CubeSpawner.cpp" />
     <ClCompile Include="Custom Game Objects\HomingCube.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

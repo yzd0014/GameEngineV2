@@ -22,6 +22,7 @@
 #include "Custom Game Objects/Cloth.h"
 #include "Custom Game Objects/Tri.h"
 #include "Custom Game Objects/Ground.h"
+#include "Custom Game Objects/CubeSpawner.h"
 
 // Inherited Implementation
 //=========================
@@ -83,21 +84,17 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//soundArray[0]->PlayInLoop();
 	
 	//cube
-	/*
+	
 	{
-		Physics::AABB boundingBox;
-		boundingBox.center = Math::sVector(0.0f, 0.0f, 0.0f);
-		boundingBox.extends = Math::sVector(1.0f, 1.0f, 1.0f);
-		
 		Physics::sRigidBodyState objState;
-		objState.collider.InitializeCollider(boundingBox);
-		objState.position = Math::sVector(0.0f, 3.0f, 0.0f);
+		objState.position = Math::sVector(0.0f, 5.0f, 0.0f);
 		objState.orientation = Math::cQuaternion();
-		MoveableCube * pGameObject = new MoveableCube(pEffect_white, mesh_cube, objState);
-		masterGameObjectArr.push_back(pGameObject);
+		CubeSpawner * pGameObject = new CubeSpawner(pEffect_red, mesh_dot, objState, this);
+		gameOjbectsWithoutCollider.push_back(pGameObject);
 	}
-	*/
+	
 	//cube
+	/*
 	{
 		Physics::AABB boundingBox;
 		boundingBox.center = Math::sVector(0.0f, 0.0f, 0.0f);
@@ -106,18 +103,18 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		Physics::sRigidBodyState objState;
 		objState.collider.InitializeCollider(boundingBox);
 		objState.position = Math::sVector(0.0f, 6.0f, 0.0f);
-		objState.orientation = Math::cQuaternion(Math::ConvertDegreesToRadians(15), Math::sVector(0, 0, 1));
+		objState.orientation = Math::cQuaternion(Math::ConvertDegreesToRadians(5), Math::sVector(0, 0, 1));
 		//objState.velocity = Math::sVector(0.0f, -4.0f, 0.0f);
 		objState.hasGravity = true;
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_cube, objState);
 		masterGameObjectArr.push_back(pGameObject);
 	}
-
+	*/
 	//add ground collider
 	{
 		Physics::AABB boundingBox;
 		boundingBox.center = Math::sVector(0.0f, 0.0f, 0.0f);
-		boundingBox.extends = Math::sVector(4.0f, 1.0f, 4.0f);
+		boundingBox.extends = Math::sVector(8.0f, 1.0f, 8.0f);
 
 		Physics::sRigidBodyState objState;
 		objState.collider.InitializeCollider(boundingBox);

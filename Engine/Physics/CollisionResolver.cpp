@@ -43,7 +43,7 @@ namespace eae6320
 
 							float beta = 0.3f;
 							float CR = 0.7f;
-							float SlopP = 0.0001f;
+							float SlopP = 0.001f;
 							float SlopR = 0.5f;
 							float b = -beta / i_dt * std::max(o_allManifolds[i].m_contacts[j].depth - SlopP, 0.0f) - CR * std::max(-JV - SlopR, 0.0f);
 

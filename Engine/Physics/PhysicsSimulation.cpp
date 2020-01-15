@@ -12,7 +12,7 @@ namespace eae6320 {
 	namespace Physics {
 		void RunPhysics(std::vector<GameCommon::GameObject *> & i_allGameObjects, std::vector<GameCommon::GameObject *> & i_debugGraphics, Assets::cHandle<Mesh> i_debugMesh, Effect* i_pDebugEffect, float i_dt)
 		{
-			for (size_t i = 1; i < i_debugGraphics.size(); i++)
+			for (size_t i = 2; i < i_debugGraphics.size(); i++)
 			{
 				delete i_debugGraphics[i];
 				i_debugGraphics[i] = i_debugGraphics.back();

@@ -13,7 +13,7 @@ namespace eae6320
 		}
 		void MergeContact(Contact& i_contact, ContactManifold3D& o_dest)
 		{
-			float persistentThresholdSQ = 0.01f;
+			float persistentThresholdSQ = 0.0025f;
 
 			Collider* colliderA = i_contact.colliderA;
 			Collider* colliderB = i_contact.colliderB;
