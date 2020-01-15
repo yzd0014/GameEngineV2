@@ -29,12 +29,14 @@ namespace eae6320
 					Math::sVector localToGlobalB = colliderB->m_transformation*contact.localPositionB;
 					const Math::sVector rA = contact.globalPositionA - localToGlobalA;
 					const Math::sVector rB = contact.globalPositionB - localToGlobalB;
-					if( Math::Dot(contact.normal, localToGlobalB - localToGlobalA) <= 0.0f
+					if( Math::Dot(contact.normal, localToGlobalB - localToGlobalA) <= 0.01f
 						&& rA.GetLengthSQ() < persistentThresholdSQ
 						&& rB.GetLengthSQ() < persistentThresholdSQ)
 					{
 						// contact persistent, keep
 						contact.persistent = true;
+						//update penetration depth
+						contact.depth = Math::Dot(localToGlobalB - localToGlobalA, contact.normal);
 					}
 					else
 					{

@@ -21,6 +21,7 @@
 #include "Custom Game Objects/Boss.h"
 #include "Custom Game Objects/Cloth.h"
 #include "Custom Game Objects/Tri.h"
+#include "Custom Game Objects/Ground.h"
 
 // Inherited Implementation
 //=========================
@@ -45,7 +46,7 @@ void eae6320::cHalo::UpdateBasedOnInput()
 eae6320::cResult eae6320::cHalo::Initialize()
 {
 	//initialize camera 
-	mainCamera.Initialize(Math::sVector(0.0f, 5.0f, 15.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
+	mainCamera.Initialize(Math::sVector(0.0f, 0.9f, 10.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 	
 	//create two meshes 	
 	eae6320::Assets::cHandle<Mesh> mesh_plane;
@@ -82,6 +83,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//soundArray[0]->PlayInLoop();
 	
 	//cube
+	/*
 	{
 		Physics::AABB boundingBox;
 		boundingBox.center = Math::sVector(0.0f, 0.0f, 0.0f);
@@ -89,11 +91,12 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		
 		Physics::sRigidBodyState objState;
 		objState.collider.InitializeCollider(boundingBox);
-		objState.position = Math::sVector(0.0f, 2.0f, 0.0f);
+		objState.position = Math::sVector(0.0f, 3.0f, 0.0f);
 		objState.orientation = Math::cQuaternion();
 		MoveableCube * pGameObject = new MoveableCube(pEffect_white, mesh_cube, objState);
 		masterGameObjectArr.push_back(pGameObject);
 	}
+	*/
 	//cube
 	{
 		Physics::AABB boundingBox;
@@ -102,25 +105,34 @@ eae6320::cResult eae6320::cHalo::Initialize()
 
 		Physics::sRigidBodyState objState;
 		objState.collider.InitializeCollider(boundingBox);
-		objState.position = Math::sVector(-5.0f, 2.0f, 0.0f);
-		objState.orientation = Math::cQuaternion();
-		objState.angularVelocity = Math::sVector(-1.0f, 0.0f, 0.0f);
+		objState.position = Math::sVector(0.0f, 6.0f, 0.0f);
+		objState.orientation = Math::cQuaternion(Math::ConvertDegreesToRadians(15), Math::sVector(0, 0, 1));
+		//objState.velocity = Math::sVector(0.0f, -4.0f, 0.0f);
+		objState.hasGravity = true;
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_cube, objState);
 		masterGameObjectArr.push_back(pGameObject);
 	}
 
-	//add ground
+	//add ground collider
 	{
 		Physics::AABB boundingBox;
 		boundingBox.center = Math::sVector(0.0f, 0.0f, 0.0f);
-		boundingBox.extends = Math::sVector(4.0f, 0.0f, 4.0f);
+		boundingBox.extends = Math::sVector(4.0f, 1.0f, 4.0f);
 
 		Physics::sRigidBodyState objState;
 		objState.collider.InitializeCollider(boundingBox);
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_plane, objState);
+		Ground* pGameObject = new Ground(pEffect_white, mesh_dot, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
 		masterGameObjectArr.push_back(pGameObject);
+	}
+	//add ground mesh
+	{
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, 1.0f, 0.0f);
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_plane, objState);
+		strcpy_s(pGameObject->objectType, "Ground");
+		gameOjbectsWithoutCollider.push_back(pGameObject);
 	}
 	return Results::Success;
 }
@@ -212,7 +224,7 @@ void eae6320::cHalo::SubmitDataToBeRendered(const float i_elapsedSecondCount_sys
 		//smooth movement first
 		Math::sVector position;
 		Math::cQuaternion orientation;
-		if (masterGameObjectArr[i]->movementInterpolation)
+		if (masterGameObjectArr[i]->m_State.movementInterpolation)
 		{
 			position = masterGameObjectArr[i]->m_State.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
 			orientation = masterGameObjectArr[i]->m_State.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
@@ -232,7 +244,7 @@ void eae6320::cHalo::SubmitDataToBeRendered(const float i_elapsedSecondCount_sys
 		//smooth movement first
 		Math::sVector position;
 		Math::cQuaternion orientation;
-		if(gameOjbectsWithoutCollider[i]->movementInterpolation)
+		if(gameOjbectsWithoutCollider[i]->m_State.movementInterpolation)
 		{
 			position = gameOjbectsWithoutCollider[i]->m_State.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
 			orientation = gameOjbectsWithoutCollider[i]->m_State.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);

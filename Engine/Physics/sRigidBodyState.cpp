@@ -422,14 +422,16 @@ void eae6320::Physics::Collider::UpdateTransformation(eae6320::Math::cMatrix_tra
 }
 void eae6320::Physics::sRigidBodyState::Update( const float i_secondCountToIntegrate )
 {
-	// Update position
-	{
-		position += velocity * i_secondCountToIntegrate;
-	}
 	// Update velocity
 	{
 		velocity += acceleration * i_secondCountToIntegrate;
 	}
+	
+	// Update position
+	{
+		position += velocity * i_secondCountToIntegrate;
+	}
+
 	// Update orientation
 	{
 		Math::cQuaternion deltaRot;
@@ -437,32 +439,11 @@ void eae6320::Physics::sRigidBodyState::Update( const float i_secondCountToInteg
 		{
 			deltaRot = Math::cQuaternion(angularVelocity.GetLength()*i_secondCountToIntegrate, angularVelocity.GetNormalized());
 		}
-		/*
-		float deltaRot_x;
-		float deltaRot_y;
-		float deltaRot_z;
-		deltaRot.Quaternion2Euler(deltaRot_x, deltaRot_y, deltaRot_z);
-		//const auto rotation = Math::cQuaternion( angularSpeed * i_secondCountToIntegrate, angularVelocity_axis_local );
-		euler_x = euler_x + Math::ConvertRadiansToDegrees(deltaRot_x);
-		if (euler_x > 180) euler_x = euler_x - 360;
-		if (euler_x < -180) euler_x = euler_x + 360;
-
-		euler_y = euler_y + Math::ConvertRadiansToDegrees(deltaRot_y);
-		if (euler_y > 180) euler_y = euler_y - 360;
-		if (euler_y < -180) euler_y = euler_y + 360;
-
-		euler_z = euler_z + Math::ConvertRadiansToDegrees(deltaRot_z);
-		if (euler_z > 180) euler_z = euler_z - 360;
-		if (euler_z < -180) euler_z = euler_z + 360;
-
-		const auto rotation_x = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_x), Math::sVector(1, 0, 0));
-		const auto rotation_y = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_y), Math::sVector(0, 1, 0));
-		const auto rotation_z = Math::cQuaternion(Math::ConvertDegreesToRadians(euler_z), Math::sVector(0, 0, 1));
-		
-		auto rotation = rotation_y * rotation_x * rotation_z;
-		*/
 		orientation = deltaRot * orientation;
 		orientation.Normalize();
+		Math::cMatrix_transformation local2WorldRot(orientation, Math::sVector(0, 0, 0));
+		Math::cMatrix_transformation world2LocalRot = Math::cMatrix_transformation::CreateWorldToCameraTransform(local2WorldRot);
+		globalInverseInertiaTensor = local2WorldRot * localInverseInertiaTensor * world2LocalRot;
 	}
 }
 void eae6320::Physics::sRigidBodyState::UpdatePosition(const float i_secondCountToIntegrate) {
@@ -480,6 +461,9 @@ void eae6320::Physics::sRigidBodyState::UpdateOrientation(const float i_secondCo
 	}
 	orientation = deltaRot * orientation;
 	orientation.Normalize();
+	Math::cMatrix_transformation local2WorldRot(orientation, Math::sVector(0, 0, 0));
+	Math::cMatrix_transformation world2LocalRot = Math::cMatrix_transformation::CreateWorldToCameraTransform(local2WorldRot);
+	globalInverseInertiaTensor = local2WorldRot * localInverseInertiaTensor * world2LocalRot;
 }
 
 

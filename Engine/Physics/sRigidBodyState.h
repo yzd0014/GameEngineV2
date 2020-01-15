@@ -14,7 +14,9 @@
 #include <Engine/Math/cQuaternion.h>
 #include <Engine/Math/cMatrix_transformation.h>
 #include <Engine/Math/sVector.h>
+#include "Engine/EigenLibrary/Eigen/Dense"
 
+using namespace Eigen;
 // Struct Declaration
 //===================
 
@@ -40,9 +42,9 @@ namespace eae6320
 			Math::sVector tangent1, tangent2;
 			float depth;
 			// for clamping (more on this later)
-			float normalImpulseSum;
-			float tangentImpulseSum1;
-			float tangentImpulseSUm2;
+			float normalImpulseSum = 0.0f;
+			float tangentImpulseSum1 = 0.0f;
+			float tangentImpulseSum2 = 0.0f;
 			
 			Collider* colliderA;
 			Collider* colliderB;
@@ -126,6 +128,11 @@ namespace eae6320
 
 		struct sRigidBodyState
 		{
+			//Physics property
+			float mass;
+			Math::cMatrix_transformation localInverseInertiaTensor;
+			Math::cMatrix_transformation globalInverseInertiaTensor;
+			
 			// Data
 			//=====
 
@@ -147,6 +154,9 @@ namespace eae6320
 
 			AABB boundingBox;
 			Collider collider;
+			bool movementInterpolation = false;
+			bool isStatic = false;
+			bool hasGravity = false;
 			// Interface
 			//==========
 
