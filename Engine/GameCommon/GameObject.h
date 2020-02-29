@@ -23,7 +23,7 @@ namespace eae6320 {
 				m_State.localInverseInertiaTensor.m_00 = 1.0f / ((1.0f / 12.0f)*m_State.mass * 2);
 				m_State.localInverseInertiaTensor.m_11 = 1.0f / ((1.0f / 12.0f)*m_State.mass * 2);
 				m_State.localInverseInertiaTensor.m_22 = 1.0f / ((1.0f / 12.0f)*m_State.mass * 2);
-				m_State.globalInverseInertiaTensor = m_State.localInverseInertiaTensor; Math::cMatrix_transformation local2WorldRot(m_State.orientation, Math::sVector(0, 0, 0));
+				Math::cMatrix_transformation local2WorldRot(m_State.orientation, Math::sVector(0, 0, 0));
 				Math::cMatrix_transformation world2LocalRot = Math::cMatrix_transformation::CreateWorldToCameraTransform(local2WorldRot);
 				m_State.globalInverseInertiaTensor = local2WorldRot * m_State.localInverseInertiaTensor * world2LocalRot;
 			}

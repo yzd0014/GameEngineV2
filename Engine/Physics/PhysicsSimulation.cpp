@@ -10,6 +10,9 @@
 
 namespace eae6320 {
 	namespace Physics {
+		std::vector<ContactManifold3D> allManifolds;
+		std::vector<PointJoint> allPointJoints;
+
 		void RunPhysics(std::vector<GameCommon::GameObject *> & i_allGameObjects, std::vector<GameCommon::GameObject *> & i_debugGraphics, Assets::cHandle<Mesh> i_debugMesh, Effect* i_pDebugEffect, float i_dt)
 		{
 			for (size_t i = 2; i < i_debugGraphics.size(); i++)
@@ -21,8 +24,8 @@ namespace eae6320 {
 			}
 
 			//update collider transformation and apply gravity
-			size_t count = i_allGameObjects.size();
-			for (size_t i = 0; i < count; i++)
+			int count = static_cast<int>(i_allGameObjects.size());
+			for (int i = 0; i < count; i++)
 			{
 				Math::cMatrix_transformation local2World(i_allGameObjects[i]->m_State.orientation, i_allGameObjects[i]->m_State.position);
 				i_allGameObjects[i]->m_State.collider.UpdateTransformation(local2World);
@@ -32,10 +35,9 @@ namespace eae6320 {
 				}
 			}
 			//collision detection
-			
-			for (size_t i = 0; i < count - 1; i++)
+			for (int i = 0; i < count - 1; i++)
 			{
-				for (size_t j = i + 1; j < count; j++)
+				for (int j = i + 1; j < count; j++)
 				{
 					Contact contact;
 					if (i_allGameObjects[i]->m_State.collider.IsCollided(i_allGameObjects[j]->m_State.collider, contact))
@@ -105,6 +107,7 @@ namespace eae6320 {
 
 			//resolve collision
 			CollisionResolver(allManifolds, i_dt);
+			PointJointsResolver(i_dt);
 
 			//integration
 			for (size_t i = 0; i < count; i++)

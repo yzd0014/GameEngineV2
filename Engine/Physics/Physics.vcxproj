@@ -23,6 +23,7 @@
     <ClCompile Include="CollisionResolver.cpp" />
     <ClCompile Include="ContactManager3D.cpp" />
     <ClCompile Include="PhysicsSimulation.cpp" />
+    <ClCompile Include="PointJoint.cpp" />
     <ClCompile Include="sRigidBodyState.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
@@ -36,6 +37,7 @@
     <ClInclude Include="CollisionResolver.h" />
     <ClInclude Include="ContactManager3D.h" />
     <ClInclude Include="PhysicsSimulation.h" />
+    <ClInclude Include="PointJoint.h" />
     <ClInclude Include="sRigidBodyState.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>

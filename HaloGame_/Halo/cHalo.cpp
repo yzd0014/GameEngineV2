@@ -82,17 +82,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//create sound
 	//soundArray.push_back(new Engine::Sound("data/audio/neon.wav"));
 	//soundArray[0]->PlayInLoop();
-	
-	//cube
-	
-	{
-		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, 5.0f, 0.0f);
-		objState.orientation = Math::cQuaternion();
-		CubeSpawner * pGameObject = new CubeSpawner(pEffect_red, mesh_dot, objState, this);
-		gameOjbectsWithoutCollider.push_back(pGameObject);
-	}
-	
+
 	//cube
 	/*
 	{
@@ -110,6 +100,16 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		masterGameObjectArr.push_back(pGameObject);
 	}
 	*/
+	/*
+	//cube
+	{
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, 5.0f, 0.0f);
+		objState.orientation = Math::cQuaternion();
+		CubeSpawner * pGameObject = new CubeSpawner(pEffect_red, mesh_dot, objState, this);
+		gameOjbectsWithoutCollider.push_back(pGameObject);
+	}
+	
 	//add ground collider
 	{
 		Physics::AABB boundingBox;
@@ -123,6 +123,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		strcpy_s(pGameObject->objectType, "Ground");
 		masterGameObjectArr.push_back(pGameObject);
 	}
+	*/
 	//add ground mesh
 	{
 		Physics::sRigidBodyState objState;
@@ -131,6 +132,35 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		strcpy_s(pGameObject->objectType, "Ground");
 		gameOjbectsWithoutCollider.push_back(pGameObject);
 	}
+	{
+		//add fixed point
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, 5.0f, 0.0f);
+		MoveableCube * pGameObject = new MoveableCube(pEffect_red, mesh_dot, objState);
+		gameOjbectsWithoutCollider.push_back(pGameObject);
+	}
+	{
+		//contrained box
+		Physics::AABB boundingBox;
+		boundingBox.center = Math::sVector(0.0f, 0.0f, 0.0f);
+		boundingBox.extends = Math::sVector(1.0f, 1.0f, 1.0f);
+
+		Physics::sRigidBodyState objState;
+		objState.collider.InitializeCollider(boundingBox);
+		objState.position = Math::sVector(-1.0f, 4.0f, -1.0f);
+		objState.hasGravity = true;
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_cube, objState);
+		masterGameObjectArr.push_back(pGameObject);
+
+		//add a point joint
+		Physics::PointJoint pointJoint;
+		pointJoint.pGameObject = pGameObject;
+		pointJoint.pParentObject = gameOjbectsWithoutCollider[1];
+		pointJoint.anchor = Math::sVector(0.0f, 5.0f, 0.0f);
+		pointJoint.extend = Math::sVector(1.0f, 1.0f, 1.0f);
+		Physics::allPointJoints.push_back(pointJoint);
+	}
+
 	return Results::Success;
 }
 

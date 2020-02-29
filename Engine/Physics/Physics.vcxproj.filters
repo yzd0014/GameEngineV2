@@ -6,6 +6,7 @@
     <ClCompile Include="PhysicsSimulation.cpp" />
     <ClCompile Include="ContactManager3D.cpp" />
     <ClCompile Include="CollisionResolver.cpp" />
+    <ClCompile Include="PointJoint.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sRigidBodyState.h" />
@@ -14,5 +15,6 @@
     <ClInclude Include="CollisionPair.h" />
     <ClInclude Include="ContactManager3D.h" />
     <ClInclude Include="CollisionResolver.h" />
+    <ClInclude Include="PointJoint.h" />
   </ItemGroup>
 </Project>

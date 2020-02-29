@@ -1,12 +1,14 @@
 #pragma once
 #include "Engine/GameCommon/GameObject.h"
+#include "PointJoint.h"
 #include <vector>
 
 namespace eae6320 {
 	struct CollisionPair;
-	
+
 	namespace Physics {
-		static std::vector<ContactManifold3D> allManifolds;
+		extern std::vector<ContactManifold3D> allManifolds;
+		extern std::vector<PointJoint> allPointJoints;
 		void RunPhysics(std::vector<GameCommon::GameObject *> & i_allGameObjects, std::vector<GameCommon::GameObject *> & i_debugGraphics, Assets::cHandle<Mesh> i_debugMesh, Effect* i_pDebugEffect, float i_dt);
 		void MoveObjectsForward(std::vector<GameCommon::GameObject *> & o_allGameObjects, float timeSpan);
 		void PhysicsUpdate(std::vector<GameCommon::GameObject *> & o_allGameObjects, float i_dt);
