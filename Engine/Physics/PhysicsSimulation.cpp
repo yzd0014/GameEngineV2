@@ -13,6 +13,15 @@ namespace eae6320 {
 		std::vector<ContactManifold3D> allManifolds;
 		std::vector<PointJoint> allPointJoints;
 
+		void ConstrainResolver(std::vector<ContactManifold3D>& o_allManifolds, float i_dt)
+		{
+			for (int k = 0; k < 10; k++)//resolve contrains for 10 iterations
+			{
+				CollisionResolver(allManifolds, i_dt);
+				PointJointsResolver(i_dt);
+			}
+		}
+
 		void RunPhysics(std::vector<GameCommon::GameObject *> & i_allGameObjects, std::vector<GameCommon::GameObject *> & i_debugGraphics, Assets::cHandle<Mesh> i_debugMesh, Effect* i_pDebugEffect, float i_dt)
 		{
 			for (size_t i = 2; i < i_debugGraphics.size(); i++)
@@ -106,8 +115,7 @@ namespace eae6320 {
 			}
 
 			//resolve collision
-			CollisionResolver(allManifolds, i_dt);
-			PointJointsResolver(i_dt);
+			ConstrainResolver(allManifolds, i_dt);
 
 			//integration
 			for (size_t i = 0; i < count; i++)

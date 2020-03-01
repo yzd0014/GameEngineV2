@@ -56,7 +56,7 @@ void eae6320::Physics::PointJoint::ResolvePointJointConstrain(float i_dt)
 	dVVector.y = dV(1);
 	dVVector.z = dV(2);
 	pGameObject->m_State.velocity += dVVector;
-	pGameObject->m_State.velocity *= 0.99f;//damping
+	pGameObject->m_State.velocity *= 0.999f;//damping
 
 	Vector3f dA = inertiaInv * S.transpose() * lamada;
 	Math::sVector dAVector;
@@ -64,5 +64,5 @@ void eae6320::Physics::PointJoint::ResolvePointJointConstrain(float i_dt)
 	dAVector.y = dA(1);
 	dAVector.z = dA(2);
 	pGameObject->m_State.angularVelocity += dAVector;
-	pGameObject->m_State.angularVelocity *= 0.99f;//damping
+	pGameObject->m_State.angularVelocity *= 0.999f;//damping
 }
