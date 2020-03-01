@@ -17,7 +17,7 @@ namespace eae6320 {
 		{
 			for (int k = 0; k < 10; k++)//resolve contrains for 10 iterations
 			{
-				CollisionResolver(allManifolds, i_dt);
+				CollisionResolver(allManifolds, i_dt, k);
 				PointJointsResolver(i_dt);
 			}
 		}
