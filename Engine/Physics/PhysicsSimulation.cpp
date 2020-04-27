@@ -15,7 +15,7 @@ namespace eae6320 {
 
 		void ConstraintResolver(std::vector<ContactManifold3D>& o_allManifolds, float i_dt)
 		{
-			for (int k = 0; k < 10; k++)//resolve contrains for 10 iterations
+			for (int k = 0; k < 30; k++)//resolve contrains for 10 iterations
 			{
 				CollisionResolver(allManifolds, i_dt, k);
 				PointJointsResolver(i_dt);
