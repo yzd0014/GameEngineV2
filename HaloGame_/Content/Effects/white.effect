@@ -1,6 +1,6 @@
 return
 {
-	AlphaTransparency = false,
+	AlphaTransparency = true,
 	DepthBuffering = true,
 	DrawBothTriangleSides = true,
 	vertexShader = "Shaders/Vertex/standard.shader",

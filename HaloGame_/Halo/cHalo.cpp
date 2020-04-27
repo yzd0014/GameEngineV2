@@ -100,7 +100,6 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		masterGameObjectArr.push_back(pGameObject);
 	}
 	*/
-	/*
 	//cube
 	{
 		Physics::sRigidBodyState objState;
@@ -123,7 +122,6 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		strcpy_s(pGameObject->objectType, "Ground");
 		masterGameObjectArr.push_back(pGameObject);
 	}
-	*/
 	//add ground mesh
 	{
 		Physics::sRigidBodyState objState;
@@ -132,6 +130,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		strcpy_s(pGameObject->objectType, "Ground");
 		gameOjbectsWithoutCollider.push_back(pGameObject);
 	}
+	/*
 	{
 		//add fixed point
 		Physics::sRigidBodyState objState;
@@ -160,7 +159,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		pointJoint.extend = Math::sVector(1.0f, 1.0f, 1.0f);
 		Physics::allPointJoints.push_back(pointJoint);
 	}
-
+	*/
 	return Results::Success;
 }
 

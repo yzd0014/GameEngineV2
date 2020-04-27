@@ -13,7 +13,7 @@ namespace eae6320 {
 		std::vector<ContactManifold3D> allManifolds;
 		std::vector<PointJoint> allPointJoints;
 
-		void ConstrainResolver(std::vector<ContactManifold3D>& o_allManifolds, float i_dt)
+		void ConstraintResolver(std::vector<ContactManifold3D>& o_allManifolds, float i_dt)
 		{
 			for (int k = 0; k < 10; k++)//resolve contrains for 10 iterations
 			{
@@ -115,7 +115,7 @@ namespace eae6320 {
 			}
 
 			//resolve collision
-			ConstrainResolver(allManifolds, i_dt);
+			ConstraintResolver(allManifolds, i_dt);
 
 			//integration
 			for (size_t i = 0; i < count; i++)
