@@ -184,36 +184,7 @@ void  eae6320::cHalo::UpdateSimulationBasedOnTime(const float i_elapsedSecondCou
 
 
 eae6320::cResult eae6320::cHalo::CleanUp()
-{	//release all game objects first
-	size_t numOfObjects = colliderObjects.size();
-	for (size_t i = 0; i < numOfObjects; i++) {
-		delete colliderObjects[i];
-	}
-	colliderObjects.clear();
-	numOfObjects = noColliderObjects.size();
-	for (size_t i = 0; i < numOfObjects; i++) {
-		delete noColliderObjects[i];
-	}
-	noColliderObjects.clear();
-
-	//release effect
-	for (size_t i = 0; i < masterEffectArray.size(); i++) {
-		masterEffectArray[i]->DecrementReferenceCount();
-		masterEffectArray[i] = nullptr;
-	}
-	masterEffectArray.clear();
-
-	//release mesh handle
-	for (size_t i = 0; i < masterMeshArray.size(); i++) {
-		Mesh::s_manager.Release(masterMeshArray[i]);
-	}
-	masterMeshArray.clear();
-
-	//delete sound
-	for (size_t i = 0; i < soundArray.size(); i++) {
-		delete soundArray[i];
-	}
-	soundArray.clear();
-	
+{	
+	cbApplication::CleanUp();
 	return Results::Success;
 }

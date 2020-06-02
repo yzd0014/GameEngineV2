@@ -194,6 +194,8 @@ namespace eae6320
 			// to instuct the Graphics system what to render for the next frame
 			virtual void SubmitDataToBeRendered(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate);
 
+			virtual cResult CleanUp();
+
 		private:
 			// Initialization / Clean Up
 			//--------------------------
@@ -202,7 +204,6 @@ namespace eae6320
 			// (i.e. initializing the engine and application base class happens automatically;
 			// a derived class only needs to worry about itself)
 			virtual cResult Initialize() = 0;
-			virtual cResult CleanUp() = 0;
 
 			// Data
 			//=====
