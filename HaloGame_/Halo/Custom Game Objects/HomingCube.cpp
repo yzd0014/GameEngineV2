@@ -2,7 +2,7 @@
 #include "Engine/Math/sVector.h"
 
 eae6320::HomingCube::~HomingCube(){}
-void eae6320::HomingCube::EventTick(const float i_secondCountToIntegrate) {
+void eae6320::HomingCube::Tick(const float i_secondCountToIntegrate) {
 	//homing
 	Math::sVector moveDir = m_target->m_State.position - m_State.position;
 	if (moveDir.GetLength() > 0.01f && m_target->m_State.position.z > m_State.euler_z) {
@@ -17,7 +17,7 @@ void eae6320::HomingCube::EventTick(const float i_secondCountToIntegrate) {
 	}
 }
 
-void eae6320::HomingCube::EventHit(GameObject * i_pObjectHit) {
+void eae6320::HomingCube::OnHit(GameObject * i_pObjectHit) {
 	//char * nameExpected_0 = { "Player" };
 	char * nameExpected_1 = { "BackWall" };
 	/*

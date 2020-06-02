@@ -56,7 +56,7 @@ void eae6320::MoveableCube::UpdateGameObjectBasedOnInput() {
 		//m_State.acceleration = Math::sVector(0, 0, -5);
 	}
 }
-void eae6320::MoveableCube::EventTick(const float i_secondCountToIntegrate)
+void eae6320::MoveableCube::Tick(const float i_secondCountToIntegrate)
 {
 	//m_State.euler_x = m_State.euler_x + axis_X_velocity * i_secondCountToIntegrate;
 	//m_State.euler_y = m_State.euler_y + axis_Y_velocity * i_secondCountToIntegrate;

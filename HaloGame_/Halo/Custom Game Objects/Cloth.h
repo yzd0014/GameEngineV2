@@ -120,7 +120,7 @@ namespace eae6320 {
 
 			timeConstant = 1 / pow(i_h, 2);
 		}
-		void EventTick(const float i_secondCountToIntegrate) override;
+		void Tick(const float i_secondCountToIntegrate) override;
 		~Cloth() {
 			delete[] lastFramePos;
 			delete[] A;

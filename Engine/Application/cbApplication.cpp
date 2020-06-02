@@ -11,9 +11,103 @@
 #include <Engine/Time/Time.h>
 #include <Engine/UserOutput/UserOutput.h>
 #include "Engine/UserInput/UserInput.h"
+#include "Engine/Physics/PhysicsSimulation.h"
 
 // Interface
 //==========
+void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const float i_elapsedSecondCount_sinceLastUpdate)
+{
+	size_t size_physicsObject = colliderObjects.size();
+	// ***********************run physics****************************************************	
+			//update game objects with AABB
+			//Physics::PhysicsUpdate(masterGameObjectArr, i_elapsedSecondCount_sinceLastUpdate);
+	Physics::RunPhysics(colliderObjects, noColliderObjects, masterMeshArray[2], masterEffectArray[1], i_elapsedSecondCount_sinceLastUpdate);
+
+	//update non-phyiscs objects
+	for (size_t i = 0; i < noColliderObjects.size(); i++) {
+		noColliderObjects[i]->m_State.Update(i_elapsedSecondCount_sinceLastUpdate);
+	}
+	//update camera
+	mainCamera.UpdateState(i_elapsedSecondCount_sinceLastUpdate);
+	//run AI*********************************************************************************
+	for (size_t i = 0; i < size_physicsObject; i++) {
+		colliderObjects[i]->Tick(i_elapsedSecondCount_sinceLastUpdate);
+	}
+	for (size_t i = 0; i < noColliderObjects.size(); i++) {
+		noColliderObjects[i]->Tick(i_elapsedSecondCount_sinceLastUpdate);
+	}
+}
+
+void eae6320::Application::cbApplication::UpdateSimulationBasedOnInput()
+{
+	mainCamera.UpdateCameraBasedOnInput();
+	size_t numOfObjects = colliderObjects.size();
+	for (size_t i = 0; i < numOfObjects; i++) {
+		colliderObjects[i]->UpdateGameObjectBasedOnInput();
+	}
+	numOfObjects = noColliderObjects.size();
+	for (size_t i = 0; i < numOfObjects; i++) {
+		noColliderObjects[i]->UpdateGameObjectBasedOnInput();
+	}
+}
+
+void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate)
+{
+	//submit background color
+	float color[] = { 0.0f, 0.7f, 1.0f , 1.0f };
+	eae6320::Graphics::SubmitBGColor(color);
+
+	//submit gameObject with colliders 
+	for (size_t i = 0; i < colliderObjects.size(); i++) {
+		//smooth movement first
+		Math::sVector position;
+		Math::cQuaternion orientation;
+		if (colliderObjects[i]->m_State.movementInterpolation)
+		{
+			position = colliderObjects[i]->m_State.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
+			orientation = colliderObjects[i]->m_State.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
+		}
+		else
+		{
+			position = colliderObjects[i]->m_State.position;
+			orientation = colliderObjects[i]->m_State.orientation;
+		}
+		//submit
+		eae6320::Graphics::SubmitObject(Math::cMatrix_transformation(orientation, position),
+			colliderObjects[i]->GetEffect(), Mesh::s_manager.Get(colliderObjects[i]->GetMesh()));
+
+	}
+	//submit gameObject without colliders
+	for (size_t i = 0; i < noColliderObjects.size(); i++) {
+		//smooth movement first
+		Math::sVector position;
+		Math::cQuaternion orientation;
+		if (noColliderObjects[i]->m_State.movementInterpolation)
+		{
+			position = noColliderObjects[i]->m_State.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
+			orientation = noColliderObjects[i]->m_State.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
+		}
+		else
+		{
+			position = noColliderObjects[i]->m_State.position;
+			orientation = noColliderObjects[i]->m_State.orientation;
+		}
+		//submit
+		eae6320::Graphics::SubmitObject(Math::cMatrix_transformation(orientation, position),
+			noColliderObjects[i]->GetEffect(), Mesh::s_manager.Get(noColliderObjects[i]->GetMesh()));
+
+	}
+
+	//submit camera
+	{
+		//smooth camera movemnt first before it's submitted
+		Math::sVector predictedPosition = mainCamera.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
+		Math::cQuaternion predictedOrientation = mainCamera.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
+		//submit
+		eae6320::Graphics::SubmitCamera(Math::cMatrix_transformation::CreateWorldToCameraTransform(predictedOrientation, predictedPosition),
+			mainCamera.GetCameraToProjectedMat());
+	}
+}
 
 double eae6320::Application::cbApplication::GetElapsedSecondCount_systemTime() const
 {

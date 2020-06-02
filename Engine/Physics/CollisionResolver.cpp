@@ -46,23 +46,33 @@ namespace eae6320
 						float SlopR = 0.5f;
 						float b = -beta / i_dt * std::max(o_allManifolds[i].m_contacts[j].depth - SlopP, 0.0f) - CR * std::max(-JV - SlopR, 0.0f);
 
-						float lamada;
-						lamada = (-JV - b) / effectiveMass;
+						float lambda;
+						lambda = (-JV - b) / effectiveMass;
 
 						float oldImpulseSum = o_allManifolds[i].m_contacts[j].normalImpulseSum;
-						o_allManifolds[i].m_contacts[j].normalImpulseSum = o_allManifolds[i].m_contacts[j].normalImpulseSum + lamada;
+						o_allManifolds[i].m_contacts[j].normalImpulseSum = o_allManifolds[i].m_contacts[j].normalImpulseSum + lambda;
 						if (o_allManifolds[i].m_contacts[j].normalImpulseSum < 0) o_allManifolds[i].m_contacts[j].normalImpulseSum = 0;
-						lamada = o_allManifolds[i].m_contacts[j].normalImpulseSum - oldImpulseSum;
+						lambda = o_allManifolds[i].m_contacts[j].normalImpulseSum - oldImpulseSum;
 							
+						if (o_allManifolds[i].m_contacts[j].lambdaCached && k == 0 && o_allManifolds[i].m_contacts[j].enableWarmStart)
+						{
+							lambda = 0.8f * o_allManifolds[i].m_contacts[j].oldNormalLambda + 0.2f * lambda;
+						}
+						if (k == constraintMaxNum - 1)
+						{
+							o_allManifolds[i].m_contacts[j].oldNormalLambda = lambda;
+							o_allManifolds[i].m_contacts[j].lambdaCached = true;
+						}
+						
 						if (!rigidBodyA->isStatic)
 						{
-							rigidBodyA->velocity = rigidBodyA->velocity + lamada * -o_allManifolds[i].m_contacts[j].normal*(1 / rigidBodyA->mass);
-							rigidBodyA->angularVelocity = rigidBodyA->angularVelocity + rigidBodyA->globalInverseInertiaTensor * neRAxN * lamada;
+							rigidBodyA->velocity = rigidBodyA->velocity + lambda * -o_allManifolds[i].m_contacts[j].normal*(1 / rigidBodyA->mass);
+							rigidBodyA->angularVelocity = rigidBodyA->angularVelocity + rigidBodyA->globalInverseInertiaTensor * neRAxN * lambda;
 						}
 						if (!rigidBodyB->isStatic)
 						{
-							rigidBodyB->velocity = rigidBodyB->velocity + lamada * o_allManifolds[i].m_contacts[j].normal*(1 / rigidBodyB->mass);
-							rigidBodyB->angularVelocity = rigidBodyB->angularVelocity + rigidBodyB->globalInverseInertiaTensor * poRBxN * lamada;
+							rigidBodyB->velocity = rigidBodyB->velocity + lambda * o_allManifolds[i].m_contacts[j].normal*(1 / rigidBodyB->mass);
+							rigidBodyB->angularVelocity = rigidBodyB->angularVelocity + rigidBodyB->globalInverseInertiaTensor * poRBxN * lambda;
 						}	
 					}
 						
@@ -80,25 +90,34 @@ namespace eae6320
 							+ Math::Dot(o_allManifolds[i].m_contacts[j].tangent1, o_allManifolds[i].m_contacts[j].tangent1*(1 / rigidBodyB->mass))
 							+ Math::Dot(poRBxN, rigidBodyB->globalInverseInertiaTensor * poRBxN);
 
-						float lamada;
-						lamada = -JV / effectiveMass;
+						float lambda;
+						lambda = -JV / effectiveMass;
 
 						float CF = 2.0f;
 						float oldImpulseT = o_allManifolds[i].m_contacts[j].tangentImpulseSum1;
-						o_allManifolds[i].m_contacts[j].tangentImpulseSum1 = o_allManifolds[i].m_contacts[j].tangentImpulseSum1 + lamada;
+						o_allManifolds[i].m_contacts[j].tangentImpulseSum1 = o_allManifolds[i].m_contacts[j].tangentImpulseSum1 + lambda;
 						if (o_allManifolds[i].m_contacts[j].tangentImpulseSum1 < -o_allManifolds[i].m_contacts[j].normalImpulseSum * CF) o_allManifolds[i].m_contacts[j].tangentImpulseSum1 = -o_allManifolds[i].m_contacts[j].normalImpulseSum * CF;
 						else if (o_allManifolds[i].m_contacts[j].tangentImpulseSum1 > o_allManifolds[i].m_contacts[j].normalImpulseSum * CF) o_allManifolds[i].m_contacts[j].tangentImpulseSum1 = o_allManifolds[i].m_contacts[j].normalImpulseSum * CF;
-						lamada = o_allManifolds[i].m_contacts[j].tangentImpulseSum1 - oldImpulseT;
+						lambda = o_allManifolds[i].m_contacts[j].tangentImpulseSum1 - oldImpulseT;
+
+						if (o_allManifolds[i].m_contacts[j].lambdaCached && k == 0 && o_allManifolds[i].m_contacts[j].enableWarmStart)
+						{
+							lambda = 0.8f * o_allManifolds[i].m_contacts[j].oldTangent1Lambda + 0.2f * lambda;
+						}
+						if (k == constraintMaxNum - 1)
+						{
+							o_allManifolds[i].m_contacts[j].oldTangent1Lambda = lambda;
+						}
 
 						if (!rigidBodyA->isStatic)
 						{
-							rigidBodyA->velocity = rigidBodyA->velocity + lamada * -o_allManifolds[i].m_contacts[j].tangent1*(1 / rigidBodyA->mass);
-							rigidBodyA->angularVelocity = rigidBodyA->angularVelocity + rigidBodyA->globalInverseInertiaTensor * neRAxN * lamada;
+							rigidBodyA->velocity = rigidBodyA->velocity + lambda * -o_allManifolds[i].m_contacts[j].tangent1*(1 / rigidBodyA->mass);
+							rigidBodyA->angularVelocity = rigidBodyA->angularVelocity + rigidBodyA->globalInverseInertiaTensor * neRAxN * lambda;
 						}
 						if (!rigidBodyB->isStatic)
 						{
-							rigidBodyB->velocity = rigidBodyB->velocity + lamada * o_allManifolds[i].m_contacts[j].tangent1*(1 / rigidBodyB->mass);
-							rigidBodyB->angularVelocity = rigidBodyB->angularVelocity + rigidBodyB->globalInverseInertiaTensor * poRBxN * lamada;
+							rigidBodyB->velocity = rigidBodyB->velocity + lambda * o_allManifolds[i].m_contacts[j].tangent1*(1 / rigidBodyB->mass);
+							rigidBodyB->angularVelocity = rigidBodyB->angularVelocity + rigidBodyB->globalInverseInertiaTensor * poRBxN * lambda;
 						}
 					}
 
@@ -116,25 +135,34 @@ namespace eae6320
 							+ Math::Dot(o_allManifolds[i].m_contacts[j].tangent2, o_allManifolds[i].m_contacts[j].tangent2*(1 / rigidBodyB->mass))
 							+ Math::Dot(poRBxN, rigidBodyB->globalInverseInertiaTensor * poRBxN);
 
-						float lamada;
-						lamada = -JV / effectiveMass;
+						float lambda;
+						lambda = -JV / effectiveMass;
 
 						float CF = 2.0f;
 						float oldImpulseT = o_allManifolds[i].m_contacts[j].tangentImpulseSum2;
-						o_allManifolds[i].m_contacts[j].tangentImpulseSum2 = o_allManifolds[i].m_contacts[j].tangentImpulseSum2 + lamada;
+						o_allManifolds[i].m_contacts[j].tangentImpulseSum2 = o_allManifolds[i].m_contacts[j].tangentImpulseSum2 + lambda;
 						if (o_allManifolds[i].m_contacts[j].tangentImpulseSum2 < -o_allManifolds[i].m_contacts[j].normalImpulseSum * CF) o_allManifolds[i].m_contacts[j].tangentImpulseSum2 = -o_allManifolds[i].m_contacts[j].normalImpulseSum * CF;
 						else if (o_allManifolds[i].m_contacts[j].tangentImpulseSum2 > o_allManifolds[i].m_contacts[j].normalImpulseSum * CF) o_allManifolds[i].m_contacts[j].tangentImpulseSum2 = o_allManifolds[i].m_contacts[j].normalImpulseSum * CF;
-						lamada = o_allManifolds[i].m_contacts[j].tangentImpulseSum2 - oldImpulseT;
+						lambda = o_allManifolds[i].m_contacts[j].tangentImpulseSum2 - oldImpulseT;
+
+						if (o_allManifolds[i].m_contacts[j].lambdaCached && k == 0 && o_allManifolds[i].m_contacts[j].enableWarmStart)
+						{
+							lambda = 0.8f * o_allManifolds[i].m_contacts[j].oldTangent2Lambda + 0.2f * lambda;
+						}
+						if (k == constraintMaxNum - 1)
+						{
+							o_allManifolds[i].m_contacts[j].oldTangent2Lambda = lambda;
+						}
 
 						if (!rigidBodyA->isStatic)
 						{
-							rigidBodyA->velocity = rigidBodyA->velocity + lamada * -o_allManifolds[i].m_contacts[j].tangent2*(1 / rigidBodyA->mass);
-							rigidBodyA->angularVelocity = rigidBodyA->angularVelocity + rigidBodyA->globalInverseInertiaTensor * neRAxN * lamada;
+							rigidBodyA->velocity = rigidBodyA->velocity + lambda * -o_allManifolds[i].m_contacts[j].tangent2*(1 / rigidBodyA->mass);
+							rigidBodyA->angularVelocity = rigidBodyA->angularVelocity + rigidBodyA->globalInverseInertiaTensor * neRAxN * lambda;
 						}
 						if (!rigidBodyB->isStatic)
 						{
-							rigidBodyB->velocity = rigidBodyB->velocity + lamada * o_allManifolds[i].m_contacts[j].tangent2*(1 / rigidBodyB->mass);
-							rigidBodyB->angularVelocity = rigidBodyB->angularVelocity + rigidBodyB->globalInverseInertiaTensor * poRBxN * lamada;
+							rigidBodyB->velocity = rigidBodyB->velocity + lambda * o_allManifolds[i].m_contacts[j].tangent2*(1 / rigidBodyB->mass);
+							rigidBodyB->angularVelocity = rigidBodyB->angularVelocity + rigidBodyB->globalInverseInertiaTensor * poRBxN * lambda;
 						}
 					}
 				}

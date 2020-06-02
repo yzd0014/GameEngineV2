@@ -20,8 +20,8 @@ namespace eae6320 {
 
 		}
 		~Player() override;
-		void EventTick(const float i_secondCountToIntegrate) override;
-		void EventHit(GameObject * i_pObjectHit) override;
+		void Tick(const float i_secondCountToIntegrate) override;
+		void OnHit(GameObject * i_pObjectHit) override;
 		void UpdateGameObjectBasedOnInput() override;
 
 		GameCommon::Camera * m_Camera;

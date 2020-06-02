@@ -20,8 +20,8 @@ namespace eae6320 {
 		{
 			bornTime = (float)Time::ConvertTicksToSeconds(Time::GetCurrentSystemTimeTickCount());
 		}
-		void EventHit(GameObject * i_pObjectHit) override;
-		void EventTick(const float i_secondCountToIntegrate) override;
+		void OnHit(GameObject * i_pObjectHit) override;
+		void Tick(const float i_secondCountToIntegrate) override;
 
 		float bornTime;
 		cHalo * const m_Halo;

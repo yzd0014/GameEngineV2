@@ -51,9 +51,9 @@ namespace eae6320 {
 				Mesh::s_manager.Get(m_Mesh)->DecrementReferenceCount();
 				m_pEffect->DecrementReferenceCount();
 			}
-			virtual void EventTick(const float i_secondCountToIntegrate) {}
-			virtual void EventHit(GameObject * i_pObjectHit) {}
-			virtual void EventOverlap(GameObject * i_pObjectOverlapped) {}
+			virtual void Tick(const float i_secondCountToIntegrate) {}
+			virtual void OnHit(GameObject * i_pObjectHit) {}
+			virtual void OnOverlap(GameObject * i_pObjectOverlapped) {}
 			virtual void UpdateGameObjectBasedOnInput() {}
 			/*
 			void UpdateState(const float i_secondCountToIntegrate) {

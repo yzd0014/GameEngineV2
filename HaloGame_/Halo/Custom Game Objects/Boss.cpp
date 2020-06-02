@@ -1,7 +1,7 @@
 #include "Boss.h"
 #include "HomingCube.h"
 #include "Halo/cHalo.h"
-void eae6320::Boss::EventTick(const float i_secondCountToIntegrate) {
+void eae6320::Boss::Tick(const float i_secondCountToIntegrate) {
 	//UserOutput::DebugPrint("Number of objects: %d", numOfMissleLaunched);
 	//Time::ConvertTicksToSeconds(Time::GetCurrentSystemTimeTickCount());
 	if (timeLastShot == 0 || Time::ConvertTicksToSeconds(Time::GetCurrentSystemTimeTickCount()) - timeLastShot > shootingInterval) {

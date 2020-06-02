@@ -15,8 +15,8 @@ namespace eae6320 {
 			bornTime = (float)Time::ConvertTicksToSeconds(Time::GetCurrentSystemTimeTickCount());
 		}
 		~HomingCube() override;
-		void EventTick(const float i_secondCountToIntegrate) override;
-		void EventHit(GameObject * i_pObjectHit) override;
+		void Tick(const float i_secondCountToIntegrate) override;
+		void OnHit(GameObject * i_pObjectHit) override;
 		
 		GameCommon::GameObject * m_target;
 		float bornTime;

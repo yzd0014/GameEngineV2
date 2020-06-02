@@ -272,8 +272,8 @@ namespace eae6320 {
 					float colTime;
 					bool collisionFound = CollisionDetection(i_allGameObjects[i]->m_State, i_allGameObjects[j]->m_State, i_dt, colNormal4A, colTime);
 					if (collisionFound && colTime == fakeZero) {
-						i_allGameObjects[i]->EventOverlap(i_allGameObjects[j]);
-						i_allGameObjects[j]->EventOverlap(i_allGameObjects[i]);
+						i_allGameObjects[i]->OnOverlap(i_allGameObjects[j]);
+						i_allGameObjects[j]->OnOverlap(i_allGameObjects[i]);
 					}
 					if (collisionFound && colTime != fakeZero) {
 						if (colTime < o_earliestCollision.collisionTime) {
@@ -291,8 +291,8 @@ namespace eae6320 {
 				}
 			}
 			if (foundCollision_earliest) {
-				i_allGameObjects[earliest_A]->EventHit(i_allGameObjects[earliest_B]);
-				i_allGameObjects[earliest_B]->EventHit(i_allGameObjects[earliest_A]);
+				i_allGameObjects[earliest_A]->OnHit(i_allGameObjects[earliest_B]);
+				i_allGameObjects[earliest_B]->OnHit(i_allGameObjects[earliest_A]);
 			}
 
 			return foundCollision_earliest;

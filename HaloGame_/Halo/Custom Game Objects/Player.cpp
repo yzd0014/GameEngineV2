@@ -5,7 +5,7 @@
 #include "Engine/Math/sVector.h"
 #include "Engine/UserOutput/UserOutput.h"
 #include "Engine/Time/Time.h"
-void eae6320::Player::EventTick(const float i_secondCountToIntegrate) {
+void eae6320::Player::Tick(const float i_secondCountToIntegrate) {
 	//apply gravity
 	if (!isOnGround) {
 		m_State.acceleration = Math::sVector(0, -8, 0);
@@ -55,7 +55,7 @@ void eae6320::Player::EventTick(const float i_secondCountToIntegrate) {
 	//m_Camera->m_State.UpdateOrientation(0);
 }
 
-void eae6320::Player::EventHit(GameObject * i_pObjectHit) {
+void eae6320::Player::OnHit(GameObject * i_pObjectHit) {
 	char * nameExpected_0 = { "Ground" };
 	if (strcmp(i_pObjectHit->objectType, nameExpected_0) == 0) {
 		m_State.velocity.y = 0;

@@ -69,7 +69,7 @@ namespace eae6320 {
 			triMesh->updateVertexBuffer = true;
 			
 		}
-		void EventTick(const float i_secondCountToIntegrate) {
+		void Tick(const float i_secondCountToIntegrate) {
 			Mesh* triMesh = Mesh::s_manager.Get(GetMesh());
 			
 			for (int i = 0, j = 0; i < 4; i++) {

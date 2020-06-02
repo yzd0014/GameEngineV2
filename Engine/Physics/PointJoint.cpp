@@ -22,7 +22,7 @@ void eae6320::Physics::PointJoint::ResolvePointJointConstrain(float i_dt)
 	Math::sVector cVelVector = pGameObject->m_State.velocity + Math::Cross(pGameObject->m_State.angularVelocity, worldExtend);
 	Vector3f cVel(cVelVector.x, cVelVector.y, cVelVector.z);
 
-	// compute lamada
+	// compute lambda
 	Matrix3f S;
 	S.setZero();
 	S(0, 1) = worldExtend.z;
@@ -47,10 +47,10 @@ void eae6320::Physics::PointJoint::ResolvePointJointConstrain(float i_dt)
 	float massInv = 1 / pGameObject->m_State.mass;
 	Matrix3f effectiveMass = (massInv * I + S * inertiaInv * S.transpose()).inverse();
 	float beta = 1.6f;
-	Vector3f lamada = effectiveMass * (-cVel - (beta / i_dt)*cPos);
+	Vector3f lambda = effectiveMass * (-cVel - (beta / i_dt)*cPos);
 
 	//correct velocity
-	Vector3f dV = (1 / pGameObject->m_State.mass)*lamada;
+	Vector3f dV = (1 / pGameObject->m_State.mass)*lambda;
 	Math::sVector dVVector;
 	dVVector.x = dV(0);
 	dVVector.y = dV(1);
@@ -58,7 +58,7 @@ void eae6320::Physics::PointJoint::ResolvePointJointConstrain(float i_dt)
 	pGameObject->m_State.velocity += dVVector;
 	pGameObject->m_State.velocity *= 0.999f;//damping
 
-	Vector3f dA = inertiaInv * S.transpose() * lamada;
+	Vector3f dA = inertiaInv * S.transpose() * lambda;
 	Math::sVector dAVector;
 	dAVector.x = dA(0);
 	dAVector.y = dA(1);

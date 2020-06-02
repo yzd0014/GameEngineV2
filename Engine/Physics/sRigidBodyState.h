@@ -16,6 +16,8 @@
 #include <Engine/Math/sVector.h>
 #include "Engine/EigenLibrary/Eigen/Dense"
 
+#define constraintMaxNum 50
+
 using namespace Eigen;
 // Struct Declaration
 //===================
@@ -45,10 +47,17 @@ namespace eae6320
 			float normalImpulseSum = 0.0f;
 			float tangentImpulseSum1 = 0.0f;
 			float tangentImpulseSum2 = 0.0f;
+
+			//warm start
+			float oldNormalLambda = 0.0f;
+			float oldTangent1Lambda = 0.0f;
+			float oldTangent2Lambda = 0.0f;
 			
 			Collider* colliderA;
 			Collider* colliderB;
 			bool persistent = false;
+			bool lambdaCached = false;
+			bool enableWarmStart = false;
 		};
 		
 		class ContactManifold3D

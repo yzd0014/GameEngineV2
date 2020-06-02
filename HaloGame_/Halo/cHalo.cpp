@@ -106,7 +106,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		objState.position = Math::sVector(0.0f, 5.0f, 0.0f);
 		objState.orientation = Math::cQuaternion();
 		CubeSpawner * pGameObject = new CubeSpawner(pEffect_red, mesh_dot, objState, this);
-		gameOjbectsWithoutCollider.push_back(pGameObject);
+		noColliderObjects.push_back(pGameObject);
 	}
 	
 	//add ground collider
@@ -120,7 +120,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
 		Ground* pGameObject = new Ground(pEffect_white, mesh_dot, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
-		masterGameObjectArr.push_back(pGameObject);
+		colliderObjects.push_back(pGameObject);
 	}
 	//add ground mesh
 	{
@@ -128,7 +128,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		objState.position = Math::sVector(0.0f, 1.0f, 0.0f);
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_plane, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
-		gameOjbectsWithoutCollider.push_back(pGameObject);
+		noColliderObjects.push_back(pGameObject);
 	}
 	/*
 	{
@@ -164,59 +164,37 @@ eae6320::cResult eae6320::cHalo::Initialize()
 }
 
 void eae6320::cHalo::UpdateSimulationBasedOnInput() {
-	if (isGameOver == false) {
-		mainCamera.UpdateCameraBasedOnInput();
-		size_t numOfObjects = masterGameObjectArr.size();
-		for (size_t i = 0; i < numOfObjects; i++) {
-			masterGameObjectArr[i]->UpdateGameObjectBasedOnInput();
-		}
-		numOfObjects = gameOjbectsWithoutCollider.size();
-		for (size_t i = 0; i < numOfObjects; i++) {
-			gameOjbectsWithoutCollider[i]->UpdateGameObjectBasedOnInput();
-		}
+	if (isGameOver == false)
+	{
+		cbApplication::UpdateSimulationBasedOnInput();
 	}
 }
 
 void  eae6320::cHalo::UpdateSimulationBasedOnTime(const float i_elapsedSecondCount_sinceLastUpdate) {
-	if (isGameOver == false) {
-		size_t size_physicsObject = masterGameObjectArr.size();
-// ***********************run physics****************************************************	
-		//update game objects with AABB
-		//Physics::PhysicsUpdate(masterGameObjectArr, i_elapsedSecondCount_sinceLastUpdate);
-		Physics::RunPhysics(masterGameObjectArr, gameOjbectsWithoutCollider, masterMeshArray[2], masterEffectArray[1], i_elapsedSecondCount_sinceLastUpdate);
-		//update non-phyiscs objects
-		for (size_t i = 0; i < gameOjbectsWithoutCollider.size(); i++) {
-			gameOjbectsWithoutCollider[i]->m_State.Update(i_elapsedSecondCount_sinceLastUpdate);
-		}
-		//update camera
-		mainCamera.UpdateState(i_elapsedSecondCount_sinceLastUpdate);
-//run AI*********************************************************************************
-		for (size_t i = 0; i < size_physicsObject; i++) {
-			masterGameObjectArr[i]->EventTick(i_elapsedSecondCount_sinceLastUpdate);
-		}
-		for (size_t i = 0; i < gameOjbectsWithoutCollider.size(); i++) {
-			gameOjbectsWithoutCollider[i]->EventTick(i_elapsedSecondCount_sinceLastUpdate);
-		}
+	if (isGameOver == false) 
+	{
+		cbApplication::UpdateSimulationBasedOnTime(i_elapsedSecondCount_sinceLastUpdate);
 	}
-	else {
-		GameCommon::ResetAllGameObjectsVelo(masterGameObjectArr, gameOjbectsWithoutCollider, mainCamera);
+	else 
+	{
+		GameCommon::ResetAllGameObjectsVelo(colliderObjects, noColliderObjects, mainCamera);
 	}
-	GameCommon::RemoveInactiveGameObjects(masterGameObjectArr);
+	GameCommon::RemoveInactiveGameObjects(colliderObjects);
 }
 
 
 eae6320::cResult eae6320::cHalo::CleanUp()
 {	//release all game objects first
-	size_t numOfObjects = masterGameObjectArr.size();
+	size_t numOfObjects = colliderObjects.size();
 	for (size_t i = 0; i < numOfObjects; i++) {
-		delete masterGameObjectArr[i];
+		delete colliderObjects[i];
 	}
-	masterGameObjectArr.clear();
-	numOfObjects = gameOjbectsWithoutCollider.size();
+	colliderObjects.clear();
+	numOfObjects = noColliderObjects.size();
 	for (size_t i = 0; i < numOfObjects; i++) {
-		delete gameOjbectsWithoutCollider[i];
+		delete noColliderObjects[i];
 	}
-	gameOjbectsWithoutCollider.clear();
+	noColliderObjects.clear();
 
 	//release effect
 	for (size_t i = 0; i < masterEffectArray.size(); i++) {
@@ -238,61 +216,4 @@ eae6320::cResult eae6320::cHalo::CleanUp()
 	soundArray.clear();
 	
 	return Results::Success;
-}
-
-void eae6320::cHalo::SubmitDataToBeRendered(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate) {	
-	//submit background color
-	float color[] = { 0.0f, 0.7f, 1.0f , 1.0f };
-	eae6320::Graphics::SubmitBGColor(color);
-	
-	//submit gameObject with colliders 
-	for (size_t i = 0; i < masterGameObjectArr.size(); i++) {
-		//smooth movement first
-		Math::sVector position;
-		Math::cQuaternion orientation;
-		if (masterGameObjectArr[i]->m_State.movementInterpolation)
-		{
-			position = masterGameObjectArr[i]->m_State.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
-			orientation = masterGameObjectArr[i]->m_State.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
-		}
-		else
-		{
-			position = masterGameObjectArr[i]->m_State.position;
-			orientation = masterGameObjectArr[i]->m_State.orientation;
-		}
-		//submit
-		eae6320::Graphics::SubmitObject(Math::cMatrix_transformation(orientation, position),
-			masterGameObjectArr[i]->GetEffect(), Mesh::s_manager.Get(masterGameObjectArr[i]->GetMesh()));
-
-	}
-	//submit gameObject without colliders
-	for (size_t i = 0; i < gameOjbectsWithoutCollider.size(); i++) {
-		//smooth movement first
-		Math::sVector position;
-		Math::cQuaternion orientation;
-		if(gameOjbectsWithoutCollider[i]->m_State.movementInterpolation)
-		{
-			position = gameOjbectsWithoutCollider[i]->m_State.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
-			orientation = gameOjbectsWithoutCollider[i]->m_State.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
-		}
-		else
-		{
-			position = gameOjbectsWithoutCollider[i]->m_State.position;
-			orientation = gameOjbectsWithoutCollider[i]->m_State.orientation;
-		}
-		//submit
-		eae6320::Graphics::SubmitObject(Math::cMatrix_transformation(orientation, position),
-			gameOjbectsWithoutCollider[i]->GetEffect(), Mesh::s_manager.Get(gameOjbectsWithoutCollider[i]->GetMesh()));
-
-	}
-	
-	//submit camera
-	{
-		//smooth camera movemnt first before it's submitted
-		Math::sVector predictedPosition = mainCamera.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
-		Math::cQuaternion predictedOrientation = mainCamera.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
-		//submit
-		eae6320::Graphics::SubmitCamera(Math::cMatrix_transformation::CreateWorldToCameraTransform(predictedOrientation, predictedPosition),
-			mainCamera.GetCameraToProjectedMat());
-	}	
 }

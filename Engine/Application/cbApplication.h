@@ -14,6 +14,10 @@
 #include <cstdint>
 #include <Engine/Concurrency/cThread.h>
 #include <Engine/Results/Results.h>
+#include "Engine/GameCommon/GameObject.h"
+#include "Engine/GameCommon/Camera.h"
+#include "Engine/Audio/Sound.h"
+#include "Engine/Graphics/Graphics.h"
 
 #if defined( EAE6320_PLATFORM_WINDOWS )
 	#include <Engine/Windows/Includes.h>
@@ -72,6 +76,13 @@ namespace eae6320
 			//==========
 
 		public:
+			std::vector<Effect*> masterEffectArray;
+			std::vector<eae6320::Assets::cHandle<Mesh>> masterMeshArray;
+			std::vector<Engine::Sound *> soundArray;
+
+			std::vector<GameCommon::GameObject *> colliderObjects;//game objects with colliders
+			std::vector<GameCommon::GameObject *> noColliderObjects;//game objects without colliders
+			GameCommon::Camera mainCamera;
 
 			// Different platforms have different parameters that get passed to a program's entry point
 			struct sEntryPointParameters
@@ -138,7 +149,7 @@ namespace eae6320
 				o_height = 512;
 			}
 			
-
+		protected:
 			// Run
 			//----
 
@@ -176,13 +187,14 @@ namespace eae6320
 			// to control the update of the simulation.
 			// They will both be called every time the simulation is updated
 			// (i.e. whenever GetSimulationUpdatePeriod_inSeconds() of simulation time has elapsed)
-			virtual void UpdateSimulationBasedOnInput() {}
-			virtual void UpdateSimulationBasedOnTime( const float i_elapsedSecondCount_sinceLastUpdate ) {}
+			virtual void UpdateSimulationBasedOnInput();
+			virtual void UpdateSimulationBasedOnTime(const float i_elapsedSecondCount_sinceLastUpdate);
 
 			// Your application should override the following function
 			// to instuct the Graphics system what to render for the next frame
-			virtual void SubmitDataToBeRendered( const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate ) {}
+			virtual void SubmitDataToBeRendered(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate);
 
+		private:
 			// Initialization / Clean Up
 			//--------------------------
 

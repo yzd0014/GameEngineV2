@@ -36,7 +36,7 @@ namespace eae6320 {
 			numOfMissleLaunched = 0;
 		}
 		
-		void EventTick(const float i_secondCountToIntegrate) override;
+		void Tick(const float i_secondCountToIntegrate) override;
 
 		cHalo * const m_Halo;
 		float shootingInterval;

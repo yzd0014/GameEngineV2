@@ -50,11 +50,11 @@ void eae6320::CubeSpawner::UpdateGameObjectBasedOnInput() {
 			//objState.velocity = Math::sVector(0.0f, -4.0f, 0.0f);
 			objState.hasGravity = true;
 			GameCommon::GameObject * pGameObject = new GameCommon::GameObject(m_Halo->masterEffectArray[0], m_Halo->masterMeshArray[1], objState);
-			m_Halo->masterGameObjectArr.push_back(pGameObject);
+			m_Halo->colliderObjects.push_back(pGameObject);
 		}
 	}
 }
-void eae6320::CubeSpawner::EventTick(const float i_secondCountToIntegrate)
+void eae6320::CubeSpawner::Tick(const float i_secondCountToIntegrate)
 {
 	//m_State.euler_x = m_State.euler_x + axis_X_velocity * i_secondCountToIntegrate;
 	//m_State.euler_y = m_State.euler_y + axis_Y_velocity * i_secondCountToIntegrate;

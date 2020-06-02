@@ -3,7 +3,7 @@
 #include "Engine//Math/Functions.h"
 
 
-void eae6320::Cloth::EventTick(const float i_secondCountToIntegrate) {
+void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 	Mesh* clothMesh = Mesh::s_manager.Get(GetMesh());
 	for (int i = 0; i < verticeCount; i++) {
 		//get y

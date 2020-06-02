@@ -22,7 +22,7 @@ namespace eae6320 {
 		}
 		~CubeSpawner() override;
 		void UpdateGameObjectBasedOnInput() override;
-		void EventTick(const float i_secondCountToIntegrate) override;
+		void Tick(const float i_secondCountToIntegrate) override;
 	private:
 		cHalo * const m_Halo;
 	};

@@ -17,9 +17,8 @@
 #include <vector>
 #include "Engine/Graphics/Mesh.h"
 #include "Engine/Graphics/Effect.h"
-#include "Engine/GameCommon/Camera.h"
 #include "Engine/GameCommon/GameObject.h"
-#include "Engine/Audio/Sound.h"
+
 // Class Declaration
 //==================
 namespace eae6320
@@ -80,19 +79,12 @@ namespace eae6320
 		// Initialization / Clean Up
 		//--------------------------
 		
-		virtual void SubmitDataToBeRendered(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate) override;
+		//virtual void SubmitDataToBeRendered(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate) override;
 		virtual cResult Initialize() override;
 		virtual cResult CleanUp() override;
+
 	public:
-		std::vector<Effect*> masterEffectArray;
-		std::vector<eae6320::Assets::cHandle<Mesh>> masterMeshArray;
-		std::vector<Engine::Sound *> soundArray;
-
 		GameCommon::GameObject * scoreboard[2];
-
-		std::vector<GameCommon::GameObject *> masterGameObjectArr;//game objects with colliders
-		std::vector<GameCommon::GameObject *> gameOjbectsWithoutCollider;//game objects without colliders
-		GameCommon::Camera mainCamera;
 
 		bool isGameOver = false;
 		int score = 0;
