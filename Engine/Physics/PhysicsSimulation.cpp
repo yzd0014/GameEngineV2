@@ -22,15 +22,17 @@ namespace eae6320 {
 			}
 		}
 
-		void RunPhysics(std::vector<GameCommon::GameObject *> & i_allGameObjects, std::vector<GameCommon::GameObject *> & i_debugGraphics, Assets::cHandle<Mesh> i_debugMesh, Effect* i_pDebugEffect, float i_dt)
+		//void RunPhysics(std::vector<GameCommon::GameObject *> & i_allGameObjects, std::vector<GameCommon::GameObject *> & i_debugGraphics, Assets::cHandle<Mesh> i_debugMesh, Effect* i_pDebugEffect, float i_dt)
+		void RunPhysics(std::vector<GameCommon::GameObject *> & i_allGameObjects, float i_dt)
 		{
+			/*
 			for (size_t i = 2; i < i_debugGraphics.size(); i++)
 			{
 				delete i_debugGraphics[i];
 				i_debugGraphics[i] = i_debugGraphics.back();
 				i_debugGraphics.pop_back();
 				i_debugGraphics.shrink_to_fit();
-			}
+			}*/
 
 			//update collider transformation and apply gravity
 			int count = static_cast<int>(i_allGameObjects.size());
@@ -91,7 +93,7 @@ namespace eae6320 {
 					}
 				}
 			}
-			
+			/*
 			for (size_t i = 0; i < allManifolds.size(); i++)
 			{
 				for (int j = 0; j < allManifolds[i].numContacts; j++)
@@ -112,7 +114,7 @@ namespace eae6320 {
 						i_debugGraphics.push_back(pGameObject);
 					}
 				}
-			}
+			}*/
 
 			//resolve collision
 			ConstraintResolver(allManifolds, i_dt);

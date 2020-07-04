@@ -21,7 +21,7 @@ void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const floa
 	// ***********************run physics****************************************************	
 			//update game objects with AABB
 			//Physics::PhysicsUpdate(masterGameObjectArr, i_elapsedSecondCount_sinceLastUpdate);
-	Physics::RunPhysics(colliderObjects, noColliderObjects, masterMeshArray[2], masterEffectArray[1], i_elapsedSecondCount_sinceLastUpdate);
+	Physics::RunPhysics(colliderObjects, i_elapsedSecondCount_sinceLastUpdate);
 
 	//update non-phyiscs objects
 	for (size_t i = 0; i < noColliderObjects.size(); i++) {

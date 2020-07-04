@@ -35,6 +35,7 @@
     <ClInclude Include="Custom Game Objects\CubeSpawner.h" />
     <ClInclude Include="Custom Game Objects\Ground.h" />
     <ClInclude Include="Custom Game Objects\HomingCube.h" />
+    <ClInclude Include="Custom Game Objects\JellyCube.h" />
     <ClInclude Include="Custom Game Objects\MoveableCube.h" />
     <ClInclude Include="Custom Game Objects\Player.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

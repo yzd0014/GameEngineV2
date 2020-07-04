@@ -31,7 +31,9 @@ return
 		"Meshes/square_plane.mesh",
 		"Meshes/cloth10x10.mesh",
 		"Meshes/cloth2x2.mesh",
-		"Meshes/tri.mesh"
+		"Meshes/tri.mesh",
+		"Meshes/fem_cube.mesh",
+		"Meshes/fem_cube_5.mesh",
 	},
 	effects = {
 		"Effects/white.effect",

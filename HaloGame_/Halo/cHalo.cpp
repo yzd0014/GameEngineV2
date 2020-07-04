@@ -23,6 +23,7 @@
 #include "Custom Game Objects/Tri.h"
 #include "Custom Game Objects/Ground.h"
 #include "Custom Game Objects/CubeSpawner.h"
+#include "Custom Game Objects/JellyCube.h"
 
 // Inherited Implementation
 //=========================
@@ -59,7 +60,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	if (!(result = Mesh::s_manager.Load("data/meshes/square_plane.mesh", mesh_plane))) {
 		EAE6320_ASSERT(false);
 	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/cube.mesh", mesh_cube))) {
+	if (!(result = Mesh::s_manager.Load("data/meshes/fem_cube_5.mesh", mesh_cube))) {
 		EAE6320_ASSERT(false);
 	}
 	if (!(result = Mesh::s_manager.Load("data/meshes/bullet.mesh", mesh_dot))) {
@@ -84,82 +85,27 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//soundArray[0]->PlayInLoop();
 
 	//cube
-	/*
 	{
-		Physics::AABB boundingBox;
-		boundingBox.center = Math::sVector(0.0f, 0.0f, 0.0f);
-		boundingBox.extends = Math::sVector(1.0f, 1.0f, 1.0f);
-
 		Physics::sRigidBodyState objState;
-		objState.collider.InitializeCollider(boundingBox);
-		objState.position = Math::sVector(0.0f, 6.0f, 0.0f);
-		objState.orientation = Math::cQuaternion(Math::ConvertDegreesToRadians(5), Math::sVector(0, 0, 1));
-		//objState.velocity = Math::sVector(0.0f, -4.0f, 0.0f);
-		objState.hasGravity = true;
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_cube, objState);
-		masterGameObjectArr.push_back(pGameObject);
+		objState.position = Math::sVector(-1.0f, -1.0f, -1.0f);
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_red, mesh_dot, objState);
+		noColliderObjects.push_back(pGameObject);
 	}
-	*/
 	//cube
 	{
 		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, 5.0f, 0.0f);
-		objState.orientation = Math::cQuaternion();
-		CubeSpawner * pGameObject = new CubeSpawner(pEffect_red, mesh_dot, objState, this);
+		objState.position = Math::sVector(1.0f, 1.0f, 1.0f);
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_red, mesh_dot, objState);
 		noColliderObjects.push_back(pGameObject);
 	}
-	
-	//add ground collider
+	//GetSimulationUpdatePeriod_inSeconds();
 	{
-		Physics::AABB boundingBox;
-		boundingBox.center = Math::sVector(0.0f, 0.0f, 0.0f);
-		boundingBox.extends = Math::sVector(8.0f, 1.0f, 8.0f);
-
 		Physics::sRigidBodyState objState;
-		objState.collider.InitializeCollider(boundingBox);
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		Ground* pGameObject = new Ground(pEffect_white, mesh_dot, objState);
-		strcpy_s(pGameObject->objectType, "Ground");
-		colliderObjects.push_back(pGameObject);
-	}
-	//add ground mesh
-	{
-		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, 1.0f, 0.0f);
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_plane, objState);
-		strcpy_s(pGameObject->objectType, "Ground");
+		JellyCube* pGameObject = new JellyCube(pEffect_white, mesh_cube, objState, GetSimulationUpdatePeriod_inSeconds(), noColliderObjects[1]);
 		noColliderObjects.push_back(pGameObject);
 	}
-	/*
-	{
-		//add fixed point
-		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, 5.0f, 0.0f);
-		MoveableCube * pGameObject = new MoveableCube(pEffect_red, mesh_dot, objState);
-		gameOjbectsWithoutCollider.push_back(pGameObject);
-	}
-	{
-		//contrained box
-		Physics::AABB boundingBox;
-		boundingBox.center = Math::sVector(0.0f, 0.0f, 0.0f);
-		boundingBox.extends = Math::sVector(1.0f, 1.0f, 1.0f);
 
-		Physics::sRigidBodyState objState;
-		objState.collider.InitializeCollider(boundingBox);
-		objState.position = Math::sVector(-1.0f, 4.0f, -1.0f);
-		objState.hasGravity = true;
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_cube, objState);
-		masterGameObjectArr.push_back(pGameObject);
-
-		//add a point joint
-		Physics::PointJoint pointJoint;
-		pointJoint.pGameObject = pGameObject;
-		pointJoint.pParentObject = gameOjbectsWithoutCollider[1];
-		pointJoint.anchor = Math::sVector(0.0f, 5.0f, 0.0f);
-		pointJoint.extend = Math::sVector(1.0f, 1.0f, 1.0f);
-		Physics::allPointJoints.push_back(pointJoint);
-	}
-	*/
 	return Results::Success;
 }
 
