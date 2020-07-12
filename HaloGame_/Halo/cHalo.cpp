@@ -48,7 +48,7 @@ void eae6320::cHalo::UpdateBasedOnInput()
 eae6320::cResult eae6320::cHalo::Initialize()
 {
 	//initialize camera 
-	mainCamera.Initialize(Math::sVector(0.0f, 0.9f, 10.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
+	mainCamera.Initialize(Math::sVector(0.0f, 1.0f, 10.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 	
 	//create two meshes 	
 	eae6320::Assets::cHandle<Mesh> mesh_plane;
@@ -84,25 +84,20 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//soundArray.push_back(new Engine::Sound("data/audio/neon.wav"));
 	//soundArray[0]->PlayInLoop();
 
-	//cube
-	{
-		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(-1.0f, -1.0f, -1.0f);
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_red, mesh_dot, objState);
-		noColliderObjects.push_back(pGameObject);
-	}
-	//cube
-	{
-		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(1.0f, 1.0f, 1.0f);
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_red, mesh_dot, objState);
-		noColliderObjects.push_back(pGameObject);
-	}
 	//GetSimulationUpdatePeriod_inSeconds();
 	{
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		JellyCube* pGameObject = new JellyCube(pEffect_white, mesh_cube, objState, GetSimulationUpdatePeriod_inSeconds(), noColliderObjects[1]);
+		JellyCube* pGameObject = new JellyCube(pEffect_white, mesh_cube, objState, GetSimulationUpdatePeriod_inSeconds());
+		noColliderObjects.push_back(pGameObject);
+	}
+
+	//add ground
+	{
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, -5.0f, 0.0f);
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_plane, objState);
+		strcpy_s(pGameObject->objectType, "Ground");
 		noColliderObjects.push_back(pGameObject);
 	}
 

@@ -5,6 +5,7 @@
 #include "Engine/EigenLibrary/Eigen/Dense"
 #include "Engine/UserInput/UserInput.h"
 #include "Engine/Math/sVector.h"
+#include "Engine/UserOutput/UserOutput.h"
 
 using namespace Eigen;
 
@@ -13,27 +14,14 @@ namespace eae6320
 	class JellyCube : public eae6320::GameCommon::GameObject
 	{
 	public:
-		JellyCube(Effect * i_pEffect, eae6320::Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, float i_h, GameCommon::GameObject* i_pGameObject) :
+		JellyCube(Effect * i_pEffect, eae6320::Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, float i_h) :
 			GameCommon::GameObject(i_pEffect, i_Mesh, i_State),
-			h(i_h),
-			pMovePoint(i_pGameObject)
+			hSquare(i_h*i_h)
 		{
 			Mesh* m_Mesh = Mesh::s_manager.Get(i_Mesh);
-			
-			{
-				int i = 0;
-				for (int j = 0; j < 36; j++)
-				{
-					if (m_Mesh->m_pVertexDataInRAM[j].x == 1.0f &&
-						m_Mesh->m_pVertexDataInRAM[j].y == 1.0f &&
-						m_Mesh->m_pVertexDataInRAM[j].z == 1.0f)
-					{
-						kinematicIndex[i] = j;
-						i++;
-					}
-				}
-			}
-			
+			m_k = 200.0f;
+			M.resize(8, 8);
+			M.setIdentity();
 			//set rest pose
 			x.resize(3, 8);
 			lastFramePos.resize(3, 8);
@@ -141,108 +129,82 @@ namespace eae6320
 			S[4](6, 2) = 1;
 			S[4](2, 2) = -1;
 
-			MatrixXd Dm[5];
 			for (int i = 0; i < 5; i++)
 			{
 				Dm[i].resize(3, 3);
 				Dm[i] = lastFramePos * S[i];	
 			}
 
-			MatrixXd L[5];
 			for (int i = 0; i < 5; i++)
 			{
 				L[i].resize(8, 3);
 				L[i] = S[i] * Dm[i].inverse();
 			}
 
-			double Wt[5];
 			for (int i = 0; i < 5; i++)
 			{
 				Wt[i] = abs(Dm[i].determinant() / 6.0f);
 			}
-
-			MatrixXd M(8, 8);
-			M.setIdentity();
 			
 			T_0.resize(3, 8);
-			T_0.setZero();
-			for (int i = 0; i < 5; i++)
-			{
-				T_0 = T_0 + 2.0f * Wt[i] * L[i].transpose();
-			}
+			MatrixXd m(1, 8);
+			m.setOnes();
+			Vector3d g(0.0f, 5.0f, 0.0f);
+			T_0 = g * m;
 
 			T_1.resize(8, 8);
 			MatrixXd U(8, 8);
 			U.setZero();
 			for (int i = 0; i < 5; i++)
 			{
-				U = U + 2.0f * Wt[i] * L[i] * L[i].transpose();
+				U = U + 2.0f * m_k * Wt[i] * L[i] * L[i].transpose();
 			}
-			T_1 = (M / pow(h, 2) + U).inverse();
+			T_1 = (M / hSquare + U).inverse();
 			
+			//rotate initial postion
+			Math::cMatrix_transformation rotZ(Math::cQuaternion(Math::ConvertDegreesToRadians(35), Math::sVector(0, 0, 1)), Math::sVector(0.0f, 0.0f, 0.0f));
+			Math::cMatrix_transformation rotX(Math::cQuaternion(Math::ConvertDegreesToRadians(20), Math::sVector(1, 0, 0)), Math::sVector(0.0f, 0.0f, 0.0f));
+			for (int i = 0; i < 8; i++)
+			{
+				Math::sVector oldPos, newPos;
+				oldPos.x = m_Mesh->m_pVertexDataInRAM[renderToSim[i]].x;
+				oldPos.y = m_Mesh->m_pVertexDataInRAM[renderToSim[i]].y;
+				oldPos.z = m_Mesh->m_pVertexDataInRAM[renderToSim[i]].z;
+				newPos = rotX * rotZ * oldPos;
+
+				lastFramePos(0, i) = newPos.x;
+				lastFramePos(1, i) = newPos.y;
+				lastFramePos(2, i) = newPos.z;
+			}
+
+			for (int i = 0; i < 36; i++)
+			{
+				Math::sVector oldPos, newPos;
+				oldPos.x = m_Mesh->m_pVertexDataInRAM[i].x;
+				oldPos.y = m_Mesh->m_pVertexDataInRAM[i].y;
+				oldPos.z = m_Mesh->m_pVertexDataInRAM[i].z;
+				newPos = rotX * rotZ * oldPos;
+
+				m_Mesh->m_pVertexDataInRAM[i].x = newPos.x;
+				m_Mesh->m_pVertexDataInRAM[i].y = newPos.y;
+				m_Mesh->m_pVertexDataInRAM[i].z = newPos.z;
+			}
 			m_Mesh->updateVertexBuffer = true;
 		}
 
 		void Tick(const float i_secondCountToIntegrate)
 		{
 			Mesh* m_Mesh = Mesh::s_manager.Get(GetMesh());
-			
-			if (UserInput::IsKeyEdgeTriggered(UserInput::KeyCodes::Space))
-			{
-				//UserOutput::DebugPrint("space pressed!");
-				if (isKinematic) 
-				{
-					isKinematic = false;
-				}
-				else
-				{
-					isKinematic = true;
-					pMovePoint->m_State.position.x = m_Mesh->m_pVertexDataInRAM[kinematicIndex[0]].x;
-					pMovePoint->m_State.position.y = m_Mesh->m_pVertexDataInRAM[kinematicIndex[0]].y;
-					pMovePoint->m_State.position.z = m_Mesh->m_pVertexDataInRAM[kinematicIndex[0]].z;
-				}
-			}
-			
-			if (isKinematic)
-			{
-				Math::sVector velocity;
-				if (UserInput::IsKeyPressed(UserInput::KeyCodes::Right))
-				{
-					velocity = Math::sVector(5, 0, 0);
-				}
-				if (UserInput::IsKeyPressed(UserInput::KeyCodes::Left))
-				{
-					velocity = Math::sVector(-5, 0, 0);
-				}
-				if (UserInput::IsKeyPressed(UserInput::KeyCodes::Up))
-				{
-					velocity = Math::sVector(0, 5, 0);
-				}
-				if (UserInput::IsKeyPressed(UserInput::KeyCodes::Down))
-				{
-					velocity = Math::sVector(0, -5, 0);
-				}
-				Math::sVector displacement;
-				displacement = velocity * i_secondCountToIntegrate;
-				for (int i = 0; i < 3; i++)
-				{
-					m_Mesh->m_pVertexDataInRAM[kinematicIndex[i]].x += displacement.x;
-					m_Mesh->m_pVertexDataInRAM[kinematicIndex[i]].y += displacement.y;
-					m_Mesh->m_pVertexDataInRAM[kinematicIndex[i]].z += displacement.z;
-				}
-				lastFramePos(0, 5) = m_Mesh->m_pVertexDataInRAM[kinematicIndex[0]].x;
-				lastFramePos(1, 5) = m_Mesh->m_pVertexDataInRAM[kinematicIndex[0]].y;
-				lastFramePos(2, 5) = m_Mesh->m_pVertexDataInRAM[kinematicIndex[0]].z;
+			MatrixXd v(3, 8);
 
-				pMovePoint->m_State.position.x = m_Mesh->m_pVertexDataInRAM[kinematicIndex[0]].x;
-				pMovePoint->m_State.position.y = m_Mesh->m_pVertexDataInRAM[kinematicIndex[0]].y;
-				pMovePoint->m_State.position.z = m_Mesh->m_pVertexDataInRAM[kinematicIndex[0]].z;
-			}
-			
-			//compute new position
+			//compute new position without internal force
 			MatrixXd y(3, 8);
 			for (int i = 0; i < 8; i++)
 			{
+				v(0, i) = m_Mesh->m_pVertexDataInRAM[renderToSim[i]].x - lastFramePos(0, i);
+				v(1, i) = m_Mesh->m_pVertexDataInRAM[renderToSim[i]].y - lastFramePos(1, i);
+				v(2, i) = m_Mesh->m_pVertexDataInRAM[renderToSim[i]].z - lastFramePos(2, i);
+				
 				y(0, i) = 2.0f * m_Mesh->m_pVertexDataInRAM[renderToSim[i]].x - lastFramePos(0, i);
 				y(1, i) = 2.0f * m_Mesh->m_pVertexDataInRAM[renderToSim[i]].y - lastFramePos(1, i);
 				y(2, i) = 2.0f * m_Mesh->m_pVertexDataInRAM[renderToSim[i]].z - lastFramePos(2, i);
@@ -251,69 +213,82 @@ namespace eae6320
 				lastFramePos(1, i) = m_Mesh->m_pVertexDataInRAM[renderToSim[i]].y;
 				lastFramePos(2, i) = m_Mesh->m_pVertexDataInRAM[renderToSim[i]].z;
 			}
+			//UserOutput::DebugPrint("%f", v.col(0).norm());
 
-			x = (T_0 + y / pow(h, 2))*T_1;
+			//projective dynamics
+			x = y;
+			for (int k = 0; k < 10; k++)
+			{
+				MatrixXd T_2(3, 8);
+				T_2.setZero();
+				for (int i = 0; i < 5; i++)
+				{
+					MatrixXd F(3, 3);
+					F = x * L[i];
+					MatrixXd R(3, 3);
+					JacobiSVD<MatrixXd> svd(F, ComputeFullU | ComputeFullV);
+					R = svd.matrixU() * svd.matrixV().transpose();
+					if (R.determinant() < 0.0f)
+					{
+						MatrixXd U;
+						U = svd.matrixU();
+						U(0, 2) = U(0, 2) * -1;
+						U(1, 2) = U(1, 2) * -1;
+						U(2, 2) = U(2, 2) * -1;
+						R = U * svd.matrixV().transpose();
+					}
+					T_2 = T_2 + 2.0f * m_k * Wt[i] * R * L[i].transpose();
+				}
 
+				x = (T_2 + (1.0f / hSquare) * y * M - T_0) * T_1;
+			}
+
+			//collision detection
+			for (int i = 0; i < 8; i++) 
+			{
+				if (x(1, i) < -5.0f)
+				{
+					x(1, i) = -5.0f;
+
+					if (v.col(i).norm() < 0.05f)
+					{
+						v(0, i) = 0.0f;
+						v(1, i) = 0.0f;
+						v(2, i) = 0.0f;
+					}
+					else
+					{
+						v(0, i) = -0.9f * v(0, i);
+						v(1, i) = -0.9f * v(1, i);
+						v(2, i) = -0.9f * v(2, i);
+					}
+					lastFramePos(0, i) = x(0, i) - v(0, i);
+					lastFramePos(1, i) = x(1, i) - v(1, i);
+					lastFramePos(2, i) = x(2, i) - v(2, i);
+				}
+			}
+			
 			//update new position
 			for (int i = 0; i < 36; i++) 
 			{
-				if (m_Mesh->m_pVertexDataInRAM[i].x != -1 &&
-					m_Mesh->m_pVertexDataInRAM[i].y != -1 &&
-					m_Mesh->m_pVertexDataInRAM[i].z != -1 && 
-					(isKinematic == false ||i != kinematicIndex[0] && i != kinematicIndex[1] && i != kinematicIndex[2]))
-				{
-					m_Mesh->m_pVertexDataInRAM[i].x = (float)x(0, simToRender[i]);
-					m_Mesh->m_pVertexDataInRAM[i].y = (float)x(1, simToRender[i]);
-					m_Mesh->m_pVertexDataInRAM[i].z = (float)x(2, simToRender[i]);
-				}
-				
+				m_Mesh->m_pVertexDataInRAM[i].x = (float)x(0, simToRender[i]);
+				m_Mesh->m_pVertexDataInRAM[i].y = (float)x(1, simToRender[i]);
+				m_Mesh->m_pVertexDataInRAM[i].z = (float)x(2, simToRender[i]);
 			}
-
-			//update normals
-			for (int16_t i = 0; i < m_Mesh->GetIndicesCount(); i += 3) {
-#if defined( EAE6320_PLATFORM_D3D )
-				int16_t index_0 = m_Mesh->m_pIndexDataInRAM[i];
-				int16_t index_1 = m_Mesh->m_pIndexDataInRAM[i + 2];
-				int16_t index_2 = m_Mesh->m_pIndexDataInRAM[i + 1];
-#elif defined( EAE6320_PLATFORM_GL )
-				int16_t index_0 = m_Mesh->m_pIndexDataInRAM[i];
-				int16_t index_1 = m_Mesh->m_pIndexDataInRAM[i + 1];
-				int16_t index_2 = m_Mesh->m_pIndexDataInRAM[i + 2];
-#endif
-				Math::sVector vec_1(m_Mesh->m_pVertexDataInRAM[index_1].x - m_Mesh->m_pVertexDataInRAM[index_0].x,
-					m_Mesh->m_pVertexDataInRAM[index_1].y - m_Mesh->m_pVertexDataInRAM[index_0].y,
-					m_Mesh->m_pVertexDataInRAM[index_1].z - m_Mesh->m_pVertexDataInRAM[index_0].z);
-
-				Math::sVector vec_2(m_Mesh->m_pVertexDataInRAM[index_2].x - m_Mesh->m_pVertexDataInRAM[index_0].x,
-					m_Mesh->m_pVertexDataInRAM[index_2].y - m_Mesh->m_pVertexDataInRAM[index_0].y,
-					m_Mesh->m_pVertexDataInRAM[index_2].z - m_Mesh->m_pVertexDataInRAM[index_0].z);
-
-				Math::sVector normal = Math::Cross(vec_1, vec_2);
-				normal.Normalize();
-				m_Mesh->m_pVertexDataInRAM[index_0].nor_x = normal.x;
-				m_Mesh->m_pVertexDataInRAM[index_0].nor_y = normal.y;
-				m_Mesh->m_pVertexDataInRAM[index_0].nor_z = normal.z;
-
-				m_Mesh->m_pVertexDataInRAM[index_1].nor_x = normal.x;
-				m_Mesh->m_pVertexDataInRAM[index_1].nor_y = normal.y;
-				m_Mesh->m_pVertexDataInRAM[index_1].nor_z = normal.z;
-
-				m_Mesh->m_pVertexDataInRAM[index_2].nor_x = normal.x;
-				m_Mesh->m_pVertexDataInRAM[index_2].nor_y = normal.y;
-				m_Mesh->m_pVertexDataInRAM[index_2].nor_z = normal.z;
-			}
-
-			m_Mesh->updateVertexBuffer = true;
 		}
 	private:
-		int kinematicIndex[3];//render indexing
+		//int kinematicIndex[3];//render indexing
 		int simToRender[36];
 		int renderToSim[8];
-		float h;
-		GameCommon::GameObject* pMovePoint;
+		float hSquare;
 		bool isKinematic = true;
 
+		double Wt[5];
+		double m_k;
 		MatrixXd x;
+		MatrixXd M;
+		MatrixXd L[5];
+		MatrixXd Dm[5];
 		MatrixXd lastFramePos;
 		MatrixXd T_0;
 		MatrixXd T_1;
