@@ -160,7 +160,7 @@ namespace eae6320
 				U = U + 2.0f * m_k * Wt[i] * L[i] * L[i].transpose();
 			}
 			T_1 = (M / hSquare + U).inverse();
-			
+			//std::cout << lastFramePos;
 			//rotate initial postion
 			Math::cMatrix_transformation rotZ(Math::cQuaternion(Math::ConvertDegreesToRadians(35), Math::sVector(0, 0, 1)), Math::sVector(0.0f, 0.0f, 0.0f));
 			Math::cMatrix_transformation rotX(Math::cQuaternion(Math::ConvertDegreesToRadians(20), Math::sVector(1, 0, 0)), Math::sVector(0.0f, 0.0f, 0.0f));

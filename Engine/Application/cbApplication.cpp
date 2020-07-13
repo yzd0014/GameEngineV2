@@ -457,6 +457,13 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 {
 	auto result = Results::Success;
 
+#ifdef _ENABLE_CONSOLE
+	AllocConsole();
+	AttachConsole(GetCurrentProcessId());
+	freopen("CON", "w", stdout);
+	std::cout << "Console Initialized..." << std::endl;
+#endif // _ENABLE_CONSOLE
+
 	// User Output
 	{
 		UserOutput::sInitializationParameters initializationParameters;
@@ -506,6 +513,10 @@ OnExit:
 eae6320::cResult eae6320::Application::cbApplication::CleanUp_all()
 {
 	auto result = Results::Success;
+
+#ifdef _ENABLE_CONSOLE
+	fclose(stdout);
+#endif // _ENABLE_CONSOLE
 
 	// Exit the application loop
 	{

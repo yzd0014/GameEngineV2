@@ -120,7 +120,7 @@ namespace eae6320 {
 			ConstraintResolver(allManifolds, i_dt);
 
 			//integration
-			for (size_t i = 0; i < count; i++)
+			for (int i = 0; i < count; i++)
 			{
 				i_allGameObjects[i]->m_State.Update(i_dt);
 			}
