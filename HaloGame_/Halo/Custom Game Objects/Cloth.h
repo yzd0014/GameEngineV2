@@ -45,12 +45,13 @@ namespace eae6320 {
 			
 
 			//precomput all matrix
-			float k = 10000;
+			float k = 100000;
 			MatrixXd t(3, verticeCount);
 			MatrixXd P(verticeCount, verticeCount);
 			t.setZero();
 			P.setZero();
-			for (int i = 0; i < clothResolution + 1; i += clothResolution) {
+			//for (int i = 0; i < clothResolution + 1; i += clothResolution) {
+			for (int i = 0; i < clothResolution + 1; i++) {
 				t(0, i) = clothMesh->m_pVertexDataInRAM[i].x;
 				t(1, i) = clothMesh->m_pVertexDataInRAM[i].y;
 				t(2, i) = clothMesh->m_pVertexDataInRAM[i].z;

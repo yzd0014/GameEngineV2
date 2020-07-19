@@ -275,6 +275,7 @@ namespace eae6320
 				m_Mesh->m_pVertexDataInRAM[i].y = (float)x(1, simToRender[i]);
 				m_Mesh->m_pVertexDataInRAM[i].z = (float)x(2, simToRender[i]);
 			}
+			m_Mesh->UpdateMeshNormals();
 		}
 	private:
 		//int kinematicIndex[3];//render indexing

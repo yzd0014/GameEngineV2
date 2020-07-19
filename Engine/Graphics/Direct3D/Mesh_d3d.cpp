@@ -163,41 +163,44 @@ OnExit:
 	return result;
 }
 
+void Mesh::UpdateMeshNormals()
+{
+	//update normals
+	for (int16_t i = 0; i < m_numberOfIndices; i += 3)
+	{
+
+		int16_t index_0 = m_pIndexDataInRAM[i];
+		int16_t index_1 = m_pIndexDataInRAM[i + 2];
+		int16_t index_2 = m_pIndexDataInRAM[i + 1];
+
+		eae6320::Math::sVector vec_1(m_pVertexDataInRAM[index_1].x - m_pVertexDataInRAM[index_0].x,
+			m_pVertexDataInRAM[index_1].y - m_pVertexDataInRAM[index_0].y,
+			m_pVertexDataInRAM[index_1].z - m_pVertexDataInRAM[index_0].z);
+
+		eae6320::Math::sVector vec_2(m_pVertexDataInRAM[index_2].x - m_pVertexDataInRAM[index_0].x,
+			m_pVertexDataInRAM[index_2].y - m_pVertexDataInRAM[index_0].y,
+			m_pVertexDataInRAM[index_2].z - m_pVertexDataInRAM[index_0].z);
+
+		eae6320::Math::sVector normal = eae6320::Math::Cross(vec_1, vec_2);
+		normal.Normalize();
+		m_pVertexDataInRAM[index_0].nor_x = normal.x;
+		m_pVertexDataInRAM[index_0].nor_y = normal.y;
+		m_pVertexDataInRAM[index_0].nor_z = normal.z;
+
+		m_pVertexDataInRAM[index_1].nor_x = normal.x;
+		m_pVertexDataInRAM[index_1].nor_y = normal.y;
+		m_pVertexDataInRAM[index_1].nor_z = normal.z;
+
+		m_pVertexDataInRAM[index_2].nor_x = normal.x;
+		m_pVertexDataInRAM[index_2].nor_y = normal.y;
+		m_pVertexDataInRAM[index_2].nor_z = normal.z;
+	}
+}
+
 void Mesh::Draw() {
-	if (updateVertexBuffer) {
-		//update normals
-		for (int16_t i = 0; i < m_numberOfIndices; i += 3)
-		{
-
-			int16_t index_0 = m_pIndexDataInRAM[i];
-			int16_t index_1 = m_pIndexDataInRAM[i + 2];
-			int16_t index_2 = m_pIndexDataInRAM[i + 1];
-
-			eae6320::Math::sVector vec_1(m_pVertexDataInRAM[index_1].x - m_pVertexDataInRAM[index_0].x, 
-				m_pVertexDataInRAM[index_1].y - m_pVertexDataInRAM[index_0].y, 
-				m_pVertexDataInRAM[index_1].z - m_pVertexDataInRAM[index_0].z);
-
-			eae6320::Math::sVector vec_2(m_pVertexDataInRAM[index_2].x - m_pVertexDataInRAM[index_0].x,
-				m_pVertexDataInRAM[index_2].y - m_pVertexDataInRAM[index_0].y,
-				m_pVertexDataInRAM[index_2].z - m_pVertexDataInRAM[index_0].z);
-
-			eae6320::Math::sVector normal = eae6320::Math::Cross(vec_1, vec_2);
-			normal.Normalize();
-			m_pVertexDataInRAM[index_0].nor_x = normal.x;
-			m_pVertexDataInRAM[index_0].nor_y = normal.y;
-			m_pVertexDataInRAM[index_0].nor_z = normal.z;
-
-			m_pVertexDataInRAM[index_1].nor_x = normal.x;
-			m_pVertexDataInRAM[index_1].nor_y = normal.y;
-			m_pVertexDataInRAM[index_1].nor_z = normal.z;
-
-			m_pVertexDataInRAM[index_2].nor_x = normal.x;
-			m_pVertexDataInRAM[index_2].nor_y = normal.y;
-			m_pVertexDataInRAM[index_2].nor_z = normal.z;
-		}
-		
+	if (updateVertexBuffer) 
+	{	
 		UpdataVertexBuffer();
-		//updateVertexBuffer = false;
 	}
 
 	//Bind index buffer

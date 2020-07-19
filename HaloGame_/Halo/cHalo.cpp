@@ -52,9 +52,9 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	
 	//create two meshes 	
 	eae6320::Assets::cHandle<Mesh> mesh_plane;
-	//eae6320::Assets::cHandle<Mesh> mesh_cloth;
+	eae6320::Assets::cHandle<Mesh> mesh_cloth;
 	eae6320::Assets::cHandle<Mesh> mesh_cube;
-	eae6320::Assets::cHandle<Mesh> mesh_dot;
+	eae6320::Assets::cHandle<Mesh> mesh_sphere;
 
 	auto result = eae6320::Results::Success;
 	if (!(result = Mesh::s_manager.Load("data/meshes/square_plane.mesh", mesh_plane))) {
@@ -63,12 +63,16 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	if (!(result = Mesh::s_manager.Load("data/meshes/fem_cube_5.mesh", mesh_cube))) {
 		EAE6320_ASSERT(false);
 	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/bullet.mesh", mesh_dot))) {
+	if (!(result = Mesh::s_manager.Load("data/meshes/cloth10x10.mesh", mesh_cloth))) {
+		EAE6320_ASSERT(false);
+	}
+	if (!(result = Mesh::s_manager.Load("data/meshes/sphere.mesh", mesh_sphere))) {
 		EAE6320_ASSERT(false);
 	}
 	masterMeshArray.push_back(mesh_plane);
 	masterMeshArray.push_back(mesh_cube);
-	masterMeshArray.push_back(mesh_dot);
+	masterMeshArray.push_back(mesh_cloth);
+	masterMeshArray.push_back(mesh_sphere);
 
 	//create two effect
 	Effect* pEffect_white;
@@ -85,21 +89,38 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//soundArray[0]->PlayInLoop();
 
 	//GetSimulationUpdatePeriod_inSeconds();
+	//add cloth
 	{
+		
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
+		GameCommon::GameObject * pGameObject = new Cloth(pEffect_white, mesh_cloth, objState, GetSimulationUpdatePeriod_inSeconds());
+		noColliderObjects.push_back(pGameObject);
+		
+		/*
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
 		JellyCube* pGameObject = new JellyCube(pEffect_white, mesh_cube, objState, GetSimulationUpdatePeriod_inSeconds());
 		noColliderObjects.push_back(pGameObject);
+		*/
+	}
+	//sphere with radius of 4
+	{
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, -7.0f, 2.0f);
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_red, mesh_sphere, objState);
+		noColliderObjects.push_back(pGameObject);
 	}
 
 	//add ground
+	/*
 	{
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, -5.0f, 0.0f);
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_plane, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
 		noColliderObjects.push_back(pGameObject);
-	}
+	}*/
 
 	return Results::Success;
 }

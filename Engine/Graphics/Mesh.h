@@ -96,6 +96,9 @@ public:
 		o_Mesh = pMesh;
 		return result;
 	}
+
+	void UpdateMeshNormals();
+
 	EAE6320_ASSETS_DECLAREDELETEDREFERENCECOUNTEDFUNCTIONS(Mesh)
 	uint16_t GetVerticesCount() {
 		return m_numberOfVertices;
