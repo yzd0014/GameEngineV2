@@ -15,15 +15,7 @@
 #include "Engine/UserOutput/UserOutput.h"
 #include "Engine/Physics/CollisionDetection.h"
 #include "Engine/Physics/PhysicsSimulation.h"
-#include "Custom Game Objects/HomingCube.h"
-#include "Custom Game Objects/MoveableCube.h"
-#include "Custom Game Objects/Player.h"
-#include "Custom Game Objects/Boss.h"
-#include "Custom Game Objects/Cloth.h"
-#include "Custom Game Objects/Tri.h"
-#include "Custom Game Objects/Ground.h"
-#include "Custom Game Objects/CubeSpawner.h"
-#include "Custom Game Objects/JellyCube.h"
+#include "HaloGame_/Halo/Custom Game Objects/DoublePendulums.h"
 
 // Inherited Implementation
 //=========================
@@ -52,27 +44,23 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	
 	//create two meshes 	
 	eae6320::Assets::cHandle<Mesh> mesh_plane;
-	eae6320::Assets::cHandle<Mesh> mesh_cloth;
-	eae6320::Assets::cHandle<Mesh> mesh_cube;
-	eae6320::Assets::cHandle<Mesh> mesh_sphere;
+	eae6320::Assets::cHandle<Mesh> mesh_p1;
+	eae6320::Assets::cHandle<Mesh> mesh_p2;
 
 	auto result = eae6320::Results::Success;
 	if (!(result = Mesh::s_manager.Load("data/meshes/square_plane.mesh", mesh_plane))) {
 		EAE6320_ASSERT(false);
 	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/fem_cube_5.mesh", mesh_cube))) {
+	if (!(result = Mesh::s_manager.Load("data/meshes/pendulum1.mesh", mesh_p1))) {
 		EAE6320_ASSERT(false);
 	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/cloth10x10.mesh", mesh_cloth))) {
+	if (!(result = Mesh::s_manager.Load("data/meshes/pendulum2.mesh", mesh_p2))) {
 		EAE6320_ASSERT(false);
 	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/sphere.mesh", mesh_sphere))) {
-		EAE6320_ASSERT(false);
-	}
+	
 	masterMeshArray.push_back(mesh_plane);
-	masterMeshArray.push_back(mesh_cube);
-	masterMeshArray.push_back(mesh_cloth);
-	masterMeshArray.push_back(mesh_sphere);
+	masterMeshArray.push_back(mesh_p1);
+	masterMeshArray.push_back(mesh_p2);
 
 	//create two effect
 	Effect* pEffect_white;
@@ -91,37 +79,50 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//GetSimulationUpdatePeriod_inSeconds();
 	//add cloth
 	{
-		
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		GameCommon::GameObject * pGameObject = new Cloth(pEffect_white, mesh_cloth, objState, GetSimulationUpdatePeriod_inSeconds());
-		noColliderObjects.push_back(pGameObject);
-		
+		GameCommon::GameObject * p2 = new GameCommon::GameObject(pEffect_white, mesh_p2, objState);
+		noColliderObjects.push_back(p2);
+	
+		DoublePendulums* referencePendulum = new DoublePendulums(pEffect_white, mesh_p1, objState,
+			Math::sVector(0.0f, 0.0f, 0.0f),
+			p2, Kinematic);
+		noColliderObjects.push_back(referencePendulum);
+	}
+
+	{
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
+		GameCommon::GameObject * p2 = new GameCommon::GameObject(pEffect_red, mesh_p2, objState);
+		noColliderObjects.push_back(p2);
+
+		DoublePendulums* referencePendulum = new DoublePendulums(pEffect_red, mesh_p1, objState,
+			Math::sVector(4.0f, 0.0f, -4.0f),
+			p2, SPD);
+		noColliderObjects.push_back(referencePendulum);
+	}
+
+	{
 		/*
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		JellyCube* pGameObject = new JellyCube(pEffect_white, mesh_cube, objState, GetSimulationUpdatePeriod_inSeconds());
-		noColliderObjects.push_back(pGameObject);
+		GameCommon::GameObject * p2 = new GameCommon::GameObject(pEffect_red, mesh_p2, objState);
+		noColliderObjects.push_back(p2);
+
+		DoublePendulums* referencePendulum = new DoublePendulums(pEffect_red, mesh_p1, objState,
+			Math::sVector(-4.0f, 0.0f, -4.0f),
+			p2, PD);
+		noColliderObjects.push_back(referencePendulum);
 		*/
 	}
-	//sphere with radius of 4
-	{
-		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, -7.0f, 2.0f);
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_red, mesh_sphere, objState);
-		noColliderObjects.push_back(pGameObject);
-	}
-
 	//add ground
-	/*
 	{
 		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, -5.0f, 0.0f);
+		objState.position = Math::sVector(0.0f, -10.0f, 0.0f);
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_plane, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
 		noColliderObjects.push_back(pGameObject);
-	}*/
-
+	}
 	return Results::Success;
 }
 

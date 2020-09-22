@@ -60,6 +60,9 @@
     <ClInclude Include="Custom Game Objects\JellyCube.h">
       <Filter>Custom Game Objects</Filter>
     </ClInclude>
+    <ClInclude Include="Custom Game Objects\DoublePendulums.h">
+      <Filter>Custom Game Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EntryPoint.cpp" />
@@ -83,6 +86,9 @@
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
     <ClCompile Include="Custom Game Objects\CubeSpawner.cpp">
+      <Filter>Custom Game Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Custom Game Objects\DoublePendulums.cpp">
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
   </ItemGroup>
