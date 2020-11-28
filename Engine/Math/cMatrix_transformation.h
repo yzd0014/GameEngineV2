@@ -21,7 +21,9 @@
 
 #ifndef EAE6320_MATH_CMATRIX_TRANSFORMATION_H
 #define EAE6320_MATH_CMATRIX_TRANSFORMATION_H
+#include "Engine/EigenLibrary/Eigen/Dense"
 
+using namespace Eigen;
 // Forward Declarations
 //=====================
 
@@ -126,6 +128,8 @@ namespace eae6320
 				const float i_02, const float i_12, const float i_22, const float i_32,
 				const float i_03, const float i_13, const float i_23, const float i_33 );
 		};
+
+		void NativeMatrix2EigenMatrix(cMatrix_transformation &i_matrix, Matrix3f &o_matrix);
 	}
 }
 

@@ -14,20 +14,31 @@
 //==========
 eae6320::Physics::SupportResult eae6320::Physics::Collider::getFarthestPointInDirection(Math::sVector i_dir)
 {
-	int selection = 0;
-	float maxDist = Math::Dot(m_transformation * m_vertices[0], i_dir);
-	for (size_t i = 1; i < m_vertices.size(); i++)
-	{
-		float dist = Math::Dot(m_transformation * m_vertices[i], i_dir);//(m_transformation * m_vertices[i]).Dot(i_dir);
-		if (dist > maxDist)
-		{
-			maxDist = dist;
-			selection = (int)i;
-		}
-	}
 	SupportResult supportResult;
-	supportResult.globalPosition = m_transformation * m_vertices[selection];
-	supportResult.m_vec3 = m_vertices[selection];//store local position
+	if (m_type == Box)
+	{
+		int selection = 0;
+		float maxDist = Math::Dot(m_transformation * m_vertices[0], i_dir);
+		for (size_t i = 1; i < m_vertices.size(); i++)
+		{
+			float dist = Math::Dot(m_transformation * m_vertices[i], i_dir);//(m_transformation * m_vertices[i]).Dot(i_dir);
+			if (dist > maxDist)
+			{
+				maxDist = dist;
+				selection = (int)i;
+			}
+		}
+		supportResult.globalPosition = m_transformation * m_vertices[selection];
+		supportResult.m_vec3 = m_vertices[selection];//store local position
+	}
+	else if (m_type == Sphere)
+	{
+		Math::sVector normalizedSearchDir = i_dir.GetNormalized();
+		float r = m_vertices[1].GetLength();
+		supportResult.globalPosition = m_transformation * m_vertices[0] + r * normalizedSearchDir;
+		Math::cMatrix_transformation world2LocalRot = Math::cMatrix_transformation::CreateWorldToCameraTransform(m_rotMatrix);
+		supportResult.m_vec3 = world2LocalRot * (r * normalizedSearchDir);
+	}
 	return supportResult;
 }
 
@@ -58,13 +69,18 @@ eae6320::Physics::SupportResult eae6320::Physics::Collider::supportFunction(Coll
 eae6320::Math::sVector eae6320::Physics::Collider::Center()
 {
 	Math::sVector center;
-	int count = 0;
-	for (size_t i = 0; i < m_vertices.size(); i++)
+	if (m_type != Sphere)
 	{
-		center = center + m_transformation * m_vertices[i];
-		count++;
+		int count = 0;
+		for (size_t i = 0; i < m_vertices.size(); i++)
+		{
+			center = center + m_transformation * m_vertices[i];
+			count++;
+		}
+		return center / float(count);
 	}
-	return center / float(count);
+	center = m_transformation * m_vertices[0];
+	return center;
 }
 
 void eae6320::Physics::Barycentric(Math::sVector& p, Math::sVector& a, Math::sVector& b, Math::sVector& c, float &u, float &v, float &w)
@@ -106,7 +122,7 @@ eae6320::Math::sVector eae6320::Physics::GetSurfaceNormal(Math::sVector a, Math:
 			}
 			else
 			{
-				faceNormal = GetTangentVector(a - b).GetNormalized();
+				faceNormal = Math::GetTangentVector(a - b).GetNormalized();
 			}
 		}
 		else if ((b - c).GetLength() > bias)
@@ -119,7 +135,7 @@ eae6320::Math::sVector eae6320::Physics::GetSurfaceNormal(Math::sVector a, Math:
 			}
 			else
 			{
-				faceNormal = GetTangentVector(b - c).GetNormalized();
+				faceNormal = Math::GetTangentVector(b - c).GetNormalized();
 			}
 		}
 		else if ((c - a).GetLength() > bias)
@@ -132,7 +148,7 @@ eae6320::Math::sVector eae6320::Physics::GetSurfaceNormal(Math::sVector a, Math:
 			}
 			else
 			{
-				faceNormal = GetTangentVector(c - a).GetNormalized();
+				faceNormal = Math::GetTangentVector(c - a).GetNormalized();
 			}
 		}
 	}
@@ -202,7 +218,7 @@ eae6320::Physics::Contact eae6320::Physics::Collider::getContact(Simplex&i_simpl
 			contact.globalPositionB = coll2->m_transformation * contact.localPositionB;
 			contact.normal = faces[closest_face][3].m_vec3;
 			contact.depth = Math::Dot(p.globalPosition, search_dir);
-			contact.tangent1 = GetTangentVector(contact.normal);
+			contact.tangent1 = Math::GetTangentVector(contact.normal);
 			contact.tangent1.Normalize();
 			contact.tangent2 = Math::Cross(contact.normal, contact.tangent1).GetNormalized();
 			contact.colliderA = this;
@@ -290,7 +306,7 @@ eae6320::Physics::Contact eae6320::Physics::Collider::getContact(Simplex&i_simpl
 	contact.globalPositionB = m_transformation * contact.localPositionB;
 	contact.normal = faces[closest_face][3].m_vec3;
 	contact.depth = Math::Dot(faces[closest_face][0].globalPosition, faces[closest_face][3].m_vec3);
-	contact.tangent1 = GetTangentVector(contact.normal);
+	contact.tangent1 = Math::GetTangentVector(contact.normal);
 	contact.tangent1.Normalize();
 	contact.tangent2 = Math::Cross(contact.normal, contact.tangent1).GetNormalized();
 	contact.colliderA = this;
@@ -392,8 +408,16 @@ bool eae6320::Physics::Simplex::ContainsOrigin(Math::sVector &t_direction)
 }
 
 eae6320::Physics::Collider::Collider() { m_vertices.clear(); }
-eae6320::Physics::Collider::Collider(std::vector<Math::sVector>& i_v) { m_vertices = i_v; }
-eae6320::Physics::Collider::Collider(const Collider& i_v) { m_vertices = i_v.m_vertices; }
+eae6320::Physics::Collider::Collider(std::vector<Math::sVector>& i_v, ColliderType i_type)
+{ 
+	m_vertices = i_v;
+	m_type = i_type;
+}
+eae6320::Physics::Collider::Collider(const Collider& i_v) 
+{ 
+	m_vertices = i_v.m_vertices; 
+	m_type = i_v.m_type;
+}
 void eae6320::Physics::Collider::InitializeCollider(AABB &i_box)
 {
 	m_vertices.resize(8);
@@ -416,9 +440,11 @@ void eae6320::Physics::Collider::InitializeCollider(AABB &i_box)
 	m_vertices[7].z = -m_vertices[7].z;
 }
 
-void eae6320::Physics::Collider::UpdateTransformation(eae6320::Math::cMatrix_transformation i_t)
+void eae6320::Physics::Collider::UpdateTransformation(eae6320::Math::cMatrix_transformation i_t, eae6320::Math::cMatrix_transformation i_rot)
 {
 	m_transformation = i_t;
+	m_rotMatrix = i_rot;
+
 }
 void eae6320::Physics::sRigidBodyState::Update( const float i_secondCountToIntegrate )
 {

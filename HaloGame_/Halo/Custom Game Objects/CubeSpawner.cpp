@@ -45,6 +45,7 @@ void eae6320::CubeSpawner::UpdateGameObjectBasedOnInput() {
 
 			Physics::sRigidBodyState objState;
 			objState.collider.InitializeCollider(boundingBox);
+			objState.collider.m_type = Box;
 			objState.position = m_State.position;
 			objState.orientation = Math::cQuaternion(Math::ConvertDegreesToRadians(5), Math::sVector(0, 0, 1));
 			//objState.velocity = Math::sVector(0.0f, -4.0f, 0.0f);
@@ -52,6 +53,27 @@ void eae6320::CubeSpawner::UpdateGameObjectBasedOnInput() {
 			GameCommon::GameObject * pGameObject = new GameCommon::GameObject(m_Halo->masterEffectArray[0], m_Halo->masterMeshArray[1], objState);
 			m_Halo->colliderObjects.push_back(pGameObject);
 		}
+	}
+	else if (UserInput::IsKeyEdgeTriggered(UserInput::KeyCodes::F))
+	{
+		Physics::sRigidBodyState objState;
+		objState.position = m_State.position;
+		//objState.angularVelocity = Math::sVector(0.0f, 10.0f, -10.0f);
+		objState.hasGravity = true;
+		objState.mass = 1;
+		float r = 1.0f;
+		objState.collider.m_type = Sphere;
+		objState.collider.m_vertices.push_back(Math::sVector(0.0f, 0.0f, 0.0f));
+		objState.collider.m_vertices.push_back(Math::sVector(r, 0.0f, 0.0f));
+		objState.localInverseInertiaTensor.m_00 = 1.0f / ((2.0f / 5.0f)* r * r);
+		objState.localInverseInertiaTensor.m_11 = 1.0f / ((2.0f / 5.0f)* r * r);
+		objState.localInverseInertiaTensor.m_22 = 1.0f / ((2.0f / 5.0f)* r * r);
+		Math::cMatrix_transformation local2WorldRot(objState.orientation, Math::sVector(0, 0, 0));
+		Math::cMatrix_transformation world2LocalRot = Math::cMatrix_transformation::CreateWorldToCameraTransform(local2WorldRot);
+		objState.globalInverseInertiaTensor = local2WorldRot * objState.localInverseInertiaTensor * world2LocalRot;
+
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(m_Halo->masterEffectArray[0], m_Halo->masterMeshArray[3], objState);
+		m_Halo->colliderObjects.push_back(pGameObject);
 	}
 }
 void eae6320::CubeSpawner::Tick(const float i_secondCountToIntegrate)

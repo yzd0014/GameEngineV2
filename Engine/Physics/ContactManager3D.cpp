@@ -1,3 +1,4 @@
+#include <iostream>
 #include "sRigidBodyState.h"
 #include <vector>
 namespace eae6320
@@ -42,6 +43,7 @@ namespace eae6320
 					else
 					{
 						o_dest.RemoveContactAtIndex(i);
+						i--;
 						// dispatch end contact event
 					}
 				}
@@ -114,14 +116,13 @@ namespace eae6320
 				{
 					// calculate distance from 1D simplex
 					Math::sVector p = o_dest.m_contacts[i].globalPositionA;
-					const float currDistSQ = SqDistPointTriangle(p, deepest.globalPositionA, furthest1.globalPositionA, furthest2.globalPositionA);
+					const float currDistSQ = SqDistPointTriangle(p, deepest.globalPositionA, furthest1.globalPositionA, furthest2.globalPositionA);//return nan sometimes
 					if (currDistSQ > distSQ3)
-					{
+					{			
 						furthest3 = o_dest.m_contacts[i];
 						distSQ3 = currDistSQ;
 					}
 				}
-
 				o_dest.Clear();
 				o_dest.AddContact(deepest);
 				o_dest.AddContact(furthest1);

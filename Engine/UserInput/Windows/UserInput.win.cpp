@@ -13,7 +13,7 @@
 bool eae6320::UserInput::IsKeyEdgeTriggered(const uint_fast8_t i_keyCode) {
 	bool currentState = IsKeyPressed(i_keyCode);
 	bool output = false;
-	//index 0: left mouse button, 1: middle mouse button, 2: right mouse button, 3: space bar
+	//index 0: left mouse button, 1: middle mouse button, 2: right mouse button, 3: space bar, 4: Key F
 	if (i_keyCode == KeyCodes::MiddleMouseButton) {
 		if (KeyState::lastFrameKeyState[1] == 0 && currentState) {
 			output = true;
@@ -34,6 +34,17 @@ bool eae6320::UserInput::IsKeyEdgeTriggered(const uint_fast8_t i_keyCode) {
 		}
 		else {
 			KeyState::lastFrameKeyState[3] = 0;
+		}
+	}
+	else if (i_keyCode == KeyCodes::F) {
+		if (KeyState::lastFrameKeyState[4] == 0 && currentState) {
+			output = true;
+		}
+		if (currentState) {
+			KeyState::lastFrameKeyState[4] = 1;
+		}
+		else {
+			KeyState::lastFrameKeyState[4] = 0;
 		}
 	}
 	

@@ -37,6 +37,7 @@ return
 		"Meshes/sphere.mesh",
 		"Meshes/pendulum1.mesh",
 		"Meshes/pendulum2.mesh",
+		"Meshes/wheel.mesh",
 	},
 	effects = {
 		"Effects/white.effect",

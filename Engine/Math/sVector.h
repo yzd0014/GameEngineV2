@@ -4,7 +4,9 @@
 
 #ifndef EAE6320_MATH_SVECTOR_H
 #define EAE6320_MATH_SVECTOR_H
+#include "Engine/EigenLibrary/Eigen/Dense"
 
+using namespace Eigen;
 // Struct Declaration
 //===================
 
@@ -12,6 +14,8 @@ namespace eae6320
 {
 	namespace Math
 	{
+		void GetSkewSymmetricMatrix(Vector3f &i_vecotor, Matrix3f &o_matrix);
+
 		struct sVector
 		{
 			// Data
@@ -81,6 +85,10 @@ namespace eae6320
 		sVector operator *( const float i_lhs, const sVector i_rhs );
 		float Dot( const sVector i_lhs, const sVector i_rhs );
 		sVector Cross( const sVector i_lhs, const sVector i_rhs );
+
+		void NativeVector2EigenVector(sVector i_vector, Vector3f &o_vector);
+		sVector EigenVector2nativeVector(Vector3f &i_vector);
+		sVector GetTangentVector(sVector n);
 	}
 }
 

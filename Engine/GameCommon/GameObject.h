@@ -27,7 +27,7 @@ namespace eae6320 {
 				Math::cMatrix_transformation world2LocalRot = Math::cMatrix_transformation::CreateWorldToCameraTransform(local2WorldRot);
 				m_State.globalInverseInertiaTensor = local2WorldRot * m_State.localInverseInertiaTensor * world2LocalRot;
 			}
-			GameObject(GameObject & i_other) {//copy constructor
+			GameObject(const GameObject & i_other) {//copy constructor
 				m_pEffect = i_other.GetEffect();
 				m_pEffect->IncrementReferenceCount();
 
@@ -46,6 +46,8 @@ namespace eae6320 {
 				m_Mesh = i_other.GetMesh();
 				Mesh::s_manager.Get(m_Mesh)->IncrementReferenceCount();
 				m_State = i_other.m_State;
+
+				return *this;
 			}
 			virtual ~GameObject() {
 				Mesh::s_manager.Get(m_Mesh)->DecrementReferenceCount();

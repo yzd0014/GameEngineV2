@@ -15,7 +15,10 @@
 #include "Engine/UserOutput/UserOutput.h"
 #include "Engine/Physics/CollisionDetection.h"
 #include "Engine/Physics/PhysicsSimulation.h"
-#include "HaloGame_/Halo/Custom Game Objects/DoublePendulums.h"
+#include "Custom Game Objects/Ground.h"
+#include "Custom Game Objects/CubeSpawner.h"
+#include "Custom Game Objects/MoveableCube.h"
+#include "Engine/Physics/HingeJoint.h"
 
 // Inherited Implementation
 //=========================
@@ -40,27 +43,32 @@ void eae6320::cHalo::UpdateBasedOnInput()
 eae6320::cResult eae6320::cHalo::Initialize()
 {
 	//initialize camera 
-	mainCamera.Initialize(Math::sVector(0.0f, 1.0f, 10.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
+	mainCamera.Initialize(Math::sVector(0.0f, 10.0f, 10.0f), Math::sVector(-30.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 	
 	//create two meshes 	
 	eae6320::Assets::cHandle<Mesh> mesh_plane;
-	eae6320::Assets::cHandle<Mesh> mesh_p1;
-	eae6320::Assets::cHandle<Mesh> mesh_p2;
+	eae6320::Assets::cHandle<Mesh> mesh_cube;
+	eae6320::Assets::cHandle<Mesh> mesh_dot;
+	eae6320::Assets::cHandle<Mesh> mesh_sphere;
 
 	auto result = eae6320::Results::Success;
 	if (!(result = Mesh::s_manager.Load("data/meshes/square_plane.mesh", mesh_plane))) {
 		EAE6320_ASSERT(false);
 	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/pendulum1.mesh", mesh_p1))) {
+	if (!(result = Mesh::s_manager.Load("data/meshes/cube.mesh", mesh_cube))) {
 		EAE6320_ASSERT(false);
 	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/pendulum2.mesh", mesh_p2))) {
+	if (!(result = Mesh::s_manager.Load("data/meshes/bullet.mesh", mesh_dot))) {
 		EAE6320_ASSERT(false);
 	}
-	
+	if (!(result = Mesh::s_manager.Load("data/meshes/sphere.mesh", mesh_sphere))) {
+		EAE6320_ASSERT(false);
+	}
+
 	masterMeshArray.push_back(mesh_plane);
-	masterMeshArray.push_back(mesh_p1);
-	masterMeshArray.push_back(mesh_p2);
+	masterMeshArray.push_back(mesh_cube);
+	masterMeshArray.push_back(mesh_dot);
+	masterMeshArray.push_back(mesh_sphere);
 
 	//create two effect
 	Effect* pEffect_white;
@@ -75,54 +83,68 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//create sound
 	//soundArray.push_back(new Engine::Sound("data/audio/neon.wav"));
 	//soundArray[0]->PlayInLoop();
-
-	//GetSimulationUpdatePeriod_inSeconds();
-	//add cloth
-	{
+	{		
 		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		GameCommon::GameObject * p2 = new GameCommon::GameObject(pEffect_white, mesh_p2, objState);
-		noColliderObjects.push_back(p2);
-	
-		DoublePendulums* referencePendulum = new DoublePendulums(pEffect_white, mesh_p1, objState,
-			Math::sVector(0.0f, 0.0f, 0.0f),
-			p2, Kinematic);
-		noColliderObjects.push_back(referencePendulum);
+		objState.position = Math::sVector(0.0f, 6.0f, 0.0f);
+		objState.isStatic = true;
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_red, mesh_dot, objState);
+		noColliderObjects.push_back(pGameObject);
 	}
-
 	{
+		Physics::AABB boundingBox;
+		boundingBox.center = Math::sVector(0.0f, 0.0f, 0.0f);
+		boundingBox.extends = Math::sVector(1.0f, 1.0f, 1.0f);
+		
 		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		GameCommon::GameObject * p2 = new GameCommon::GameObject(pEffect_red, mesh_p2, objState);
-		noColliderObjects.push_back(p2);
-
-		DoublePendulums* referencePendulum = new DoublePendulums(pEffect_red, mesh_p1, objState,
-			Math::sVector(4.0f, 0.0f, -4.0f),
-			p2, SPD);
-		noColliderObjects.push_back(referencePendulum);
+		objState.collider.InitializeCollider(boundingBox);
+		objState.collider.m_type = Box;
+		objState.position = Math::sVector(1.0f, 6.0f, 0.0f);
+		
+		objState.hasGravity = true;
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_cube, objState);
+		colliderObjects.push_back(pGameObject);
 	}
-
 	{
-		/*
-		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		GameCommon::GameObject * p2 = new GameCommon::GameObject(pEffect_red, mesh_p2, objState);
-		noColliderObjects.push_back(p2);
-
-		DoublePendulums* referencePendulum = new DoublePendulums(pEffect_red, mesh_p1, objState,
-			Math::sVector(-4.0f, 0.0f, -4.0f),
-			p2, PD);
-		noColliderObjects.push_back(referencePendulum);
-		*/
+		Physics::HingeJoint hingeJoint(noColliderObjects[0], colliderObjects[0], Math::sVector(0.0f, 0.0f, 0.0f), Math::sVector(-1.0f, 0.0f, 0.0f), Math::sVector(0.0f, 0.0f, 1.0f));
+		Physics::allHingeJoints.push_back(hingeJoint);
+		//colliderObjects[0]->m_State.orientation = Math::cQuaternion(Math::ConvertDegreesToRadians(20), Math::sVector(0, 1, 0));
+		//colliderObjects[0]->m_State.angularVelocity = Math::sVector(0.0f, 20.0f, 0.0f);
 	}
-	//add ground
+	{
+		Physics::AABB boundingBox;
+		boundingBox.center = Math::sVector(0.0f, 0.0f, 0.0f);
+		boundingBox.extends = Math::sVector(1.0f, 1.0f, 1.0f);
+		
+		Physics::sRigidBodyState objState;
+		objState.collider.InitializeCollider(boundingBox);
+		objState.collider.m_type = Box;
+		objState.position = Math::sVector(-5.0f, 6.0f, 0.0f);
+		MoveableCube* pGameObject = new MoveableCube(pEffect_white, mesh_cube, objState);
+		colliderObjects.push_back(pGameObject);
+	}
+	//add ground collider
+	{
+		Physics::AABB boundingBox;
+		boundingBox.center = Math::sVector(0.0f, 0.0f, 0.0f);
+		boundingBox.extends = Math::sVector(4.0f, 1.0f, 4.0f);
+
+		Physics::sRigidBodyState objState;
+		objState.collider.InitializeCollider(boundingBox);
+		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
+		objState.collider.m_type = Box;
+		Ground* pGameObject = new Ground(pEffect_white, mesh_dot, objState);
+		strcpy_s(pGameObject->objectType, "Ground");
+		colliderObjects.push_back(pGameObject);
+	}
+	//add ground mesh
 	{
 		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, -10.0f, 0.0f);
+		objState.position = Math::sVector(0.0f, 1.0f, 0.0f);
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_plane, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
 		noColliderObjects.push_back(pGameObject);
 	}
+	
 	return Results::Success;
 }
 

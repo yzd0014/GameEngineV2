@@ -165,3 +165,45 @@ eae6320::Math::sVector::sVector( const float i_x, const float i_y, const float i
 {
 
 }
+
+void eae6320::Math::GetSkewSymmetricMatrix(Vector3f &i_vecotor, Matrix3f &o_matrix)
+{
+	o_matrix.setZero();
+	o_matrix(0, 1) = -i_vecotor(2);
+	o_matrix(0, 2) = i_vecotor(1);
+	o_matrix(1, 0) = i_vecotor(2);
+	o_matrix(1, 2) = -i_vecotor(0);
+	o_matrix(2, 0) = -i_vecotor(1);
+	o_matrix(2, 1) = i_vecotor(0);
+}
+
+void eae6320::Math::NativeVector2EigenVector(sVector i_vector, Vector3f &o_vector)
+{
+	o_vector(0) = i_vector.x;
+	o_vector(1) = i_vector.y;
+	o_vector(2) = i_vector.z;
+}
+
+eae6320::Math::sVector eae6320::Math::EigenVector2nativeVector(Vector3f &i_vector)
+{
+	sVector output;
+	output.x = i_vector(0);
+	output.y = i_vector(1);
+	output.z = i_vector(2);
+
+	return output;
+}
+
+eae6320::Math::sVector eae6320::Math::GetTangentVector(sVector n)
+{
+	sVector t;
+	if (abs(n.x) >= 0.57735f)
+	{
+		t = { n.y, n.x, 0.0f };
+	}
+	else
+	{
+		t = { 0.0f, n.z, n.y };
+	}
+	return t;
+}

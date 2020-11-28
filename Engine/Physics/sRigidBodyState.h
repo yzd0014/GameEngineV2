@@ -24,6 +24,8 @@ using namespace Eigen;
 
 namespace eae6320
 {
+	enum ColliderType {Box, Sphere};
+	
 	namespace Physics
 	{
 		class Collider;//forward declaration
@@ -116,11 +118,11 @@ namespace eae6320
 		{
 		public:
 			Collider();
-			Collider(std::vector<Math::sVector>& i_v);
+			Collider(std::vector<Math::sVector>& i_v, ColliderType i_type);
 			Collider(const Collider& i_v);
 			
 			void InitializeCollider(AABB &i_box);
-			void UpdateTransformation(eae6320::Math::cMatrix_transformation i_t);
+			void UpdateTransformation(eae6320::Math::cMatrix_transformation i_t, eae6320::Math::cMatrix_transformation i_rot);
 			Math::sVector Center();
 			bool IsCollided(Collider& i_B, Contact& o_contact);
 			void RemoveManifold(ContactManifold3D* i_pManifold);
@@ -129,7 +131,9 @@ namespace eae6320
 			std::vector<Math::sVector> m_vertices;
 			std::vector<ContactManifold3D*> m_pManifolds;
 			sRigidBodyState* m_pParentRigidBody;
+			ColliderType m_type;
 		private:
+			Math::cMatrix_transformation m_rotMatrix;
 			static SupportResult supportFunction(Collider& i_A, Collider& i_B, Math::sVector i_dir);
 			SupportResult getFarthestPointInDirection(Math::sVector i_dir);
 			Contact getContact(Simplex&i_simplex, Collider* coll2);
@@ -177,19 +181,6 @@ namespace eae6320
 			Math::cQuaternion PredictFutureOrientation( const float i_secondCountToExtrapolate ) const;
 		};
 		
-		static Math::sVector GetTangentVector(Math::sVector n)
-		{
-			Math::sVector t;
-			if (abs(n.x) >= 0.57735f)
-			{
-				t = { n.y, n.x, 0.0f };
-			}
-			else
-			{
-				t = { 0.0f, n.z, n.y };
-			}
-			return t;
-		}
 		void Barycentric(Math::sVector& p, Math::sVector& a, Math::sVector& b, Math::sVector& c, float &u, float &v, float &w);
 		Math::sVector GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c);
 	}

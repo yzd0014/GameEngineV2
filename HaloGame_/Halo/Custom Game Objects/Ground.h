@@ -17,6 +17,7 @@ namespace eae6320
 			Math::cMatrix_transformation world2LocalRot = Math::cMatrix_transformation::CreateWorldToCameraTransform(local2WorldRot);
 			m_State.globalInverseInertiaTensor = local2WorldRot * m_State.localInverseInertiaTensor * world2LocalRot;
 			m_State.isStatic = true;
+			
 		}
 	};
 }
