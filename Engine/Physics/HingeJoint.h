@@ -37,7 +37,8 @@ namespace eae6320
 			Math::sVector axisLocaA;
 			Math::sVector axisLocaB;
 
-			float w_motor_B2A = 1.0f;
+			float w_motor_B2A = 0.0f;
+			bool motorEnable = false;
 
 			void ResolveHingJoint(float i_dt);
 		};

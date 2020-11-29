@@ -446,6 +446,16 @@ void eae6320::Physics::Collider::UpdateTransformation(eae6320::Math::cMatrix_tra
 	m_rotMatrix = i_rot;
 
 }
+
+eae6320::Physics::sRigidBodyState::sRigidBodyState()
+{
+	mass = 1.0f;
+	//default value is for a 2x2x2 cube
+	localInverseInertiaTensor.m_00 = 1.0f / ((1.0f / 12.0f)* mass * 8);
+	localInverseInertiaTensor.m_11 = 1.0f / ((1.0f / 12.0f)* mass * 8);
+	localInverseInertiaTensor.m_22 = 1.0f / ((1.0f / 12.0f)* mass * 8);
+}
+
 void eae6320::Physics::sRigidBodyState::Update( const float i_secondCountToIntegrate )
 {
 	// Update velocity

@@ -31,6 +31,7 @@
     <ClInclude Include="cHalo.h" />
     <ClInclude Include="Custom Game Objects\Boss.h" />
     <ClInclude Include="Custom Game Objects\Bullet.h" />
+    <ClInclude Include="Custom Game Objects\Car.h" />
     <ClInclude Include="Custom Game Objects\Cloth.h" />
     <ClInclude Include="Custom Game Objects\CubeSpawner.h" />
     <ClInclude Include="Custom Game Objects\DoublePendulums.h" />
@@ -57,6 +58,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Custom Game Objects\Bullet.cpp" />
+    <ClCompile Include="Custom Game Objects\Car.cpp" />
     <ClCompile Include="Custom Game Objects\Cloth.cpp" />
     <ClCompile Include="Custom Game Objects\CubeSpawner.cpp" />
     <ClCompile Include="Custom Game Objects\DoublePendulums.cpp" />

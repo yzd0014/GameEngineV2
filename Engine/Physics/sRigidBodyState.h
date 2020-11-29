@@ -16,7 +16,7 @@
 #include <Engine/Math/sVector.h>
 #include "Engine/EigenLibrary/Eigen/Dense"
 
-#define constraintMaxNum 50
+#define constraintMaxNum 100
 
 using namespace Eigen;
 // Struct Declaration
@@ -172,7 +172,7 @@ namespace eae6320
 			bool hasGravity = false;
 			// Interface
 			//==========
-
+			sRigidBodyState();
 			void Update( const float i_secondCountToIntegrate );
 			void UpdatePosition(const float i_secondCountToIntegrate);
 			void UpdateVelocity(const float i_secondCountToIntegrate);

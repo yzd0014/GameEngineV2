@@ -94,7 +94,7 @@ namespace eae6320
 						float lambda;
 						lambda = -JV / effectiveMass;
 
-						float CF = 5.0f;
+						float CF = 50.0f;
 						float oldImpulseT = allManifolds[i].m_contacts[j].tangentImpulseSum1;
 						allManifolds[i].m_contacts[j].tangentImpulseSum1 = allManifolds[i].m_contacts[j].tangentImpulseSum1 + lambda;
 						if (allManifolds[i].m_contacts[j].tangentImpulseSum1 < -allManifolds[i].m_contacts[j].normalImpulseSum * CF) allManifolds[i].m_contacts[j].tangentImpulseSum1 = -allManifolds[i].m_contacts[j].normalImpulseSum * CF;
@@ -139,7 +139,7 @@ namespace eae6320
 						float lambda;
 						lambda = -JV / effectiveMass;
 
-						float CF = 2.0f;
+						float CF = 50.0f;
 						float oldImpulseT = allManifolds[i].m_contacts[j].tangentImpulseSum2;
 						allManifolds[i].m_contacts[j].tangentImpulseSum2 = allManifolds[i].m_contacts[j].tangentImpulseSum2 + lambda;
 						if (allManifolds[i].m_contacts[j].tangentImpulseSum2 < -allManifolds[i].m_contacts[j].normalImpulseSum * CF) allManifolds[i].m_contacts[j].tangentImpulseSum2 = -allManifolds[i].m_contacts[j].normalImpulseSum * CF;

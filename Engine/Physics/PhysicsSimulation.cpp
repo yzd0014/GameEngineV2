@@ -28,14 +28,12 @@ namespace eae6320 {
 		void RunPhysics(std::vector<GameCommon::GameObject *> & i_colliderObjects, std::vector<GameCommon::GameObject *> & i_noColliderObjects, Assets::cHandle<Mesh> i_debugMesh, Effect* i_pDebugEffect, float i_dt)
 		//void RunPhysics(std::vector<GameCommon::GameObject *> & i_colliderObjects, float i_dt)
 		{
-	
 			for (size_t i = 2; i < i_noColliderObjects.size();)
 			{
 				delete i_noColliderObjects[i];
 				i_noColliderObjects[i] = i_noColliderObjects.back();
 				i_noColliderObjects.pop_back();
 			}
-
 			//update collider transformation and apply gravity
 			int colliderCounts = static_cast<int>(i_colliderObjects.size());
 			for (int i = 0; i < colliderCounts; i++)
@@ -45,14 +43,14 @@ namespace eae6320 {
 				i_colliderObjects[i]->m_State.collider.UpdateTransformation(local2World, local2WorldRot);
 				if (i_colliderObjects[i]->m_State.hasGravity && !i_colliderObjects[i]->m_State.isStatic)
 				{
-					i_colliderObjects[i]->m_State.velocity += Math::sVector(0.0f, -6.0f, 0.0f) * i_dt;
+					i_colliderObjects[i]->m_State.velocity += Math::sVector(0.0f, -9.8f, 0.0f) * i_dt;
 				}
 			}
 			for (size_t i = 0; i < i_noColliderObjects.size(); i++)
 			{
 				if (i_noColliderObjects[i]->m_State.hasGravity && !i_noColliderObjects[i]->m_State.isStatic)
-				{
-					i_noColliderObjects[i]->m_State.velocity += Math::sVector(0.0f, -6.0f, 0.0f) * i_dt;
+				{		
+					i_noColliderObjects[i]->m_State.velocity += Math::sVector(0.0f, -9.8f, 0.0f) * i_dt;	
 				}
 			}
 
@@ -129,7 +127,7 @@ namespace eae6320 {
 
 			//resolve collision
 			ConstraintResolver(i_dt);
-
+			
 			//integration
 			for (int i = 0; i < colliderCounts; i++)
 			{
