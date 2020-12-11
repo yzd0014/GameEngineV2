@@ -182,7 +182,7 @@ namespace eae6320
 		};
 		
 		void Barycentric(Math::sVector& p, Math::sVector& a, Math::sVector& b, Math::sVector& c, float &u, float &v, float &w);
-		Math::sVector GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c);
+		Math::sVector GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c, bool guaranteeOutwards = false);
 	}
 }
 

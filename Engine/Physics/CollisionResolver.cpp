@@ -41,7 +41,7 @@ namespace eae6320
 							+ Math::Dot(allManifolds[i].m_contacts[j].normal, allManifolds[i].m_contacts[j].normal*(1 / rigidBodyB->mass))
 							+ Math::Dot(poRBxN, rigidBodyB->globalInverseInertiaTensor * poRBxN);
 
-						float beta = 0.3f;
+						float beta = 0.1f;
 						float CR = 0.7f;//0.7f
 						float SlopP = 0.001f;
 						float SlopR = 0.5f;

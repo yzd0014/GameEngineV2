@@ -9,7 +9,7 @@
 #define EPA_TOLERANCE 0.0001
 #define EPA_MAX_NUM_FACES 64
 #define EPA_MAX_NUM_LOOSE_EDGES 32
-#define EPA_MAX_NUM_ITERATIONS 64
+#define EPA_MAX_NUM_ITERATIONS 30
 // Interface
 //==========
 eae6320::Physics::SupportResult eae6320::Physics::Collider::getFarthestPointInDirection(Math::sVector i_dir)
@@ -97,26 +97,53 @@ void eae6320::Physics::Barycentric(Math::sVector& p, Math::sVector& a, Math::sVe
 	u = 1.0f - v - w;
 }
 
-eae6320::Math::sVector eae6320::Physics::GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c)
+eae6320::Math::sVector eae6320::Physics::GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c, bool guaranteeOutwards)
 {
-	float bias = 0.000001f;
+	float bias = 0.000000000001f;
 	Math::sVector faceNormal;
 	faceNormal = Math::Cross(b - a, c - a);
-	if (faceNormal.GetLength() > bias)
+	if (faceNormal.GetLengthSQ() > bias)
 	{
+		Math::sVector testPoint;
+		if (guaranteeOutwards)
+		{
+			if (a.GetLengthSQ() > bias)
+			{
+				testPoint = a;
+			}
+			else if (b.GetLengthSQ() > bias)
+			{
+				testPoint = b;
+			}
+			else
+			{
+				testPoint = c;
+			}
+			if (Math::Dot(faceNormal, testPoint) < 0)
+			{
+				faceNormal = -faceNormal;//make sure that face normal always points outerwards
+			}
+		}
 		faceNormal = faceNormal.GetNormalized();
 	}
-	else if ((a - b).GetLength() < bias && (b - c).GetLength() < bias)
+	else if ((a - b).GetLengthSQ() < bias && (b - c).GetLengthSQ() < bias)
 	{// handle case when surface is a point
-		faceNormal = a.GetNormalized();
+		if (a.GetLengthSQ() < bias)
+		{
+			faceNormal = Math::sVector(1.0f, 0.0f, 0.0f);
+		}
+		else
+		{
+			faceNormal = a.GetNormalized();
+		}
 	}
 	else
 	{//handle case where surface is a line segement
-		if ((a - b).GetLength() > bias)
+		if ((a - b).GetLengthSQ() > bias)
 		{
 			Math::sVector ab = b - a;
 			faceNormal = Math::Cross(Math::Cross(ab, a), ab);
-			if (faceNormal.GetLength() > bias)
+			if (faceNormal.GetLengthSQ() > bias)
 			{
 				faceNormal.Normalize();
 			}
@@ -125,11 +152,11 @@ eae6320::Math::sVector eae6320::Physics::GetSurfaceNormal(Math::sVector a, Math:
 				faceNormal = Math::GetTangentVector(a - b).GetNormalized();
 			}
 		}
-		else if ((b - c).GetLength() > bias)
+		else if ((b - c).GetLengthSQ() > bias)
 		{
 			Math::sVector bc = c - b;
 			faceNormal = Math::Cross(Math::Cross(bc, b), bc);
-			if (faceNormal.GetLength() > bias)
+			if (faceNormal.GetLengthSQ() > bias)
 			{
 				faceNormal.Normalize();
 			}
@@ -138,11 +165,11 @@ eae6320::Math::sVector eae6320::Physics::GetSurfaceNormal(Math::sVector a, Math:
 				faceNormal = Math::GetTangentVector(b - c).GetNormalized();
 			}
 		}
-		else if ((c - a).GetLength() > bias)
+		else if ((c - a).GetLengthSQ() > bias)
 		{
 			Math::sVector ca = a - c;
 			faceNormal = Math::Cross(Math::Cross(ca, c), ca);
-			if (faceNormal.GetLength() > bias)
+			if (faceNormal.GetLengthSQ() > bias)
 			{
 				faceNormal.Normalize();
 			}
@@ -303,7 +330,7 @@ eae6320::Physics::Contact eae6320::Physics::Collider::getContact(Simplex&i_simpl
 	contact.localPositionA = u * faces[closest_face][0].localPositionA + v * faces[closest_face][1].localPositionA + w * faces[closest_face][2].localPositionA;
 	contact.localPositionB = u * faces[closest_face][0].localPositionB + v * faces[closest_face][1].localPositionB + w * faces[closest_face][2].localPositionB;
 	contact.globalPositionA = m_transformation * contact.localPositionA;
-	contact.globalPositionB = m_transformation * contact.localPositionB;
+	contact.globalPositionB = coll2->m_transformation * contact.localPositionB;
 	contact.normal = faces[closest_face][3].m_vec3;
 	contact.depth = Math::Dot(faces[closest_face][0].globalPosition, faces[closest_face][3].m_vec3);
 	contact.tangent1 = Math::GetTangentVector(contact.normal);
@@ -339,18 +366,41 @@ bool eae6320::Physics::Simplex::ContainsOrigin(Math::sVector &t_direction)
 {
 	Math::sVector a, b, c, d;
 	Math::sVector ab, ac, ao;
+	float bias = 0.000000000001f;
+	Math::sVector normal_abo;
 	switch (this->GetSize())
 	{
 	case 1:
-		t_direction = t_direction * -1;
+		if (this->GetA().globalPosition.GetLengthSQ() < bias)
+		{
+			t_direction = Math::sVector(1.0f, 0.0f, 0.0f);
+		}
+		else
+		{
+			t_direction = this->GetA().globalPosition * -1;
+		}
 		break;
 	case 2:
 		a = this->GetA().globalPosition;
 		b = this->GetB().globalPosition;
 		ab = b - a;
 		ao = a*-1;
-		//t_direction = ab.cross(ao).cross(ab);
-		t_direction = Math::Cross(Math::Cross(ab, ao), ab);
+		normal_abo = Math::Cross(ab, ao);
+		if (normal_abo.GetLengthSQ() < bias)
+		{
+			if ((a - b).GetLengthSQ() < bias) //when line segment is a point
+			{
+				if(a.GetLengthSQ() < bias) t_direction = Math::sVector(1.0f, 0.0f, 0.0f);
+			}
+			else
+			{
+				t_direction = GetTangentVector(a - b).GetNormalized();//when origin is on line segment
+			}
+		}
+		else
+		{
+			t_direction = Math::Cross(Math::Cross(ab, ao), ab);
+		}
 		break;
 
 	case 3:
@@ -360,10 +410,22 @@ bool eae6320::Physics::Simplex::ContainsOrigin(Math::sVector &t_direction)
 		ab = b - a;
 		ac = c - a;
 		ao = a*-1;
-		//t_direction = ac.cross(ab);
-		t_direction = Math::Cross(ac, ab);
-		
-		if (Math::Dot(t_direction, ao) < 0) t_direction = t_direction * -1;
+		t_direction = Math::Cross(ab, ac);
+		if (t_direction.GetLengthSQ() > bias)
+		{
+			if (Math::Dot(t_direction, ao) < 0)
+			{
+				t_direction = t_direction * -1;
+				auto temp = m_points[1];
+				m_points[1] = m_points[2];
+				m_points[2] = temp;
+			}
+		}
+		else
+		{
+			t_direction = GetSurfaceNormal(a, b, c, true) * -1;
+		}
+
 		break;
 	case 4:
 		a = this->GetA().globalPosition;
@@ -383,7 +445,6 @@ bool eae6320::Physics::Simplex::ContainsOrigin(Math::sVector &t_direction)
 		if (ndab > 0)
 		{
 			this->RemoveC();
-
 			t_direction = normal_dab;
 		}
 		else if (ndac > 0)

@@ -111,11 +111,25 @@ namespace eae6320
 
 				// 4) blow up manifold using furthest contact from 2D simplex (triangle)
 				Contact furthest3;
+				//rule out colinear first 
+				Math::sVector edge1 = furthest1.globalPositionA - deepest.globalPositionA;
+				Math::sVector edge2 = furthest2.globalPositionA - deepest.globalPositionA;
+				Math::sVector temp = Math::Cross(edge1, edge2);
+				bool colinear = false;
+				if (temp.GetLengthSQ() < 0.0001f) colinear = true;
+
 				float distSQ3 = std::numeric_limits<float>::lowest();
 				for (int i = 0; i < o_dest.numContacts; ++i)
 				{
-					// calculate distance from 1D simplex
+					//handle colinear case
 					Math::sVector p = o_dest.m_contacts[i].globalPositionA;
+					if (colinear && p != deepest.globalPositionA && p != furthest1.globalPositionA && p != furthest2.globalPositionA)
+					{
+						furthest3 = o_dest.m_contacts[i];
+						break;
+					}
+
+					// calculate distance from 1D simplex
 					const float currDistSQ = SqDistPointTriangle(p, deepest.globalPositionA, furthest1.globalPositionA, furthest2.globalPositionA);//return nan sometimes
 					if (currDistSQ > distSQ3)
 					{			
