@@ -16,8 +16,6 @@
 #include <Engine/Math/sVector.h>
 #include "Engine/EigenLibrary/Eigen/Dense"
 
-#define constraintMaxNum 100
-
 using namespace Eigen;
 // Struct Declaration
 //===================

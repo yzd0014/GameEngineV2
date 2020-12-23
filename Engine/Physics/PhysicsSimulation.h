@@ -3,7 +3,7 @@
 #include "PointJoint.h"
 #include "HingeJoint.h"
 #include <vector>
-
+#define constraintMaxNum 50
 namespace eae6320 {
 	struct CollisionPair;
 

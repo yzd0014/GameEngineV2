@@ -56,9 +56,10 @@ void eae6320::Physics::HingeJoint::ResolveHingJoint(float i_dt)
 		a1.Normalize();
 		Math::sVector a2 = local2WorldRotB * axisLocaB;
 		a2.Normalize();
-		Math::sVector b2 = Math::GetTangentVector(a2);
+		Math::sVector b2 = local2WorldRotB * localB2;
 		b2.Normalize();
-		Math::sVector c2 = Math::Cross(b2, a2).GetNormalized();
+		Math::sVector c2 = local2WorldRotB * localC2;
+		c2.Normalize();
 		Math::sVector b2xa1_vec = Math::Cross(b2, a1);
 		Math::sVector c2xa1_vec = Math::Cross(c2, a1);
 		Vector3f b2xa1, c2xa1;
@@ -96,11 +97,11 @@ void eae6320::Physics::HingeJoint::ResolveHingJoint(float i_dt)
 		Vector2f C_1;
 		C_1(0) = Math::Dot(a1, b2);
 		C_1(1) = Math::Dot(a1, c2);
-		float beta_1 = 0.001f;
+		float beta_1 = 1.0f;
 		b_1 = (beta_1 / i_dt) * C_1;
 		VectorXf b(5);
 		b.segment(0, 3) = b_0;
-		b.segment(3, 2) = -b_1;
+		b.segment(3, 2) = b_1;
 
 		VectorXf V(12);
 		V.segment(0, 3) = v1;

@@ -27,6 +27,9 @@ namespace eae6320
 				Math::cMatrix_transformation local2WorldRotB(pActorB->m_State.orientation, Math::sVector(0, 0, 0));
 				Math::cMatrix_transformation world2LocalRotB = Math::cMatrix_transformation::CreateWorldToCameraTransform(local2WorldRotB);
 				axisLocaB = world2LocalRotB * i_globalAxis;
+
+				localB2 = Math::GetTangentVector(axisLocaB);
+				localC2 = Math::Cross(localB2, axisLocaB).GetNormalized();
 			}
 
 			GameCommon::GameObject* pActorA;
@@ -36,6 +39,8 @@ namespace eae6320
 			Math::sVector anchorLocalB;
 			Math::sVector axisLocaA;
 			Math::sVector axisLocaB;
+			Math::sVector localB2;
+			Math::sVector localC2;
 
 			float w_motor_B2A = 0.0f;
 			bool motorEnable = false;
