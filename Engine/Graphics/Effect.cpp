@@ -1,6 +1,10 @@
 #include "Effect.h"
 #include "sContext.h"
 
+namespace eae6320
+{
+	std::vector<Effect*> masterEffectArray;
+}
 
 Effect::Effect() {
 #if defined( EAE6320_PLATFORM_GL )

@@ -54,6 +54,7 @@
       <Filter>OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="cRenderState.cpp" />
+    <ClCompile Include="Mesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cConstantBuffer.h" />

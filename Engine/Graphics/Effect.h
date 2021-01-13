@@ -79,3 +79,8 @@ private:
 #endif
 	EAE6320_ASSETS_DECLAREREFERENCECOUNT()
 };
+
+namespace eae6320
+{
+	extern std::vector<Effect*> masterEffectArray;
+}

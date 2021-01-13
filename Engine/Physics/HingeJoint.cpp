@@ -90,14 +90,14 @@ void eae6320::Physics::HingeJoint::ResolveHingJoint(float i_dt)
 		//K = (1.0f / m1) * I + r1Skew * inertiaInv_1 * r1Skew.transpose() + (1.0f / m2) * I + r2Skew * inertiaInv_2 * r2Skew.transpose();
 
 		Vector3f b_0;
-		float beta_0 = 1.0f;
+		float beta_0 = 1.0f;//point correction strength
 		Vector3f C_0 = x2 + r2 - x1 - r1;
 		b_0 = (beta_0 / i_dt) * C_0;
 		Vector2f b_1;
 		Vector2f C_1;
 		C_1(0) = Math::Dot(a1, b2);
 		C_1(1) = Math::Dot(a1, c2);
-		float beta_1 = 1.0f;
+		float beta_1 = 1.0f;//axis correction strength
 		b_1 = (beta_1 / i_dt) * C_1;
 		VectorXf b(5);
 		b.segment(0, 3) = b_0;

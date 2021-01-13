@@ -50,8 +50,8 @@ void eae6320::CubeSpawner::UpdateGameObjectBasedOnInput() {
 			objState.orientation = Math::cQuaternion(Math::ConvertDegreesToRadians(5), Math::sVector(0, 0, 1));
 			//objState.velocity = Math::sVector(0.0f, -4.0f, 0.0f);
 			objState.hasGravity = true;
-			GameCommon::GameObject * pGameObject = new GameCommon::GameObject(m_Halo->masterEffectArray[0], m_Halo->masterMeshArray[1], objState);
-			m_Halo->colliderObjects.push_back(pGameObject);
+			GameCommon::GameObject * pGameObject = new GameCommon::GameObject(masterEffectArray[0], masterMeshArray[1], objState);
+			colliderObjects.push_back(pGameObject);
 		}
 	}
 	else if (UserInput::IsKeyEdgeTriggered(UserInput::KeyCodes::F))
@@ -72,8 +72,8 @@ void eae6320::CubeSpawner::UpdateGameObjectBasedOnInput() {
 		Math::cMatrix_transformation world2LocalRot = Math::cMatrix_transformation::CreateWorldToCameraTransform(local2WorldRot);
 		objState.globalInverseInertiaTensor = local2WorldRot * objState.localInverseInertiaTensor * world2LocalRot;
 
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(m_Halo->masterEffectArray[0], m_Halo->masterMeshArray[3], objState);
-		m_Halo->colliderObjects.push_back(pGameObject);
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(masterEffectArray[0], masterMeshArray[3], objState);
+		colliderObjects.push_back(pGameObject);
 	}
 }
 void eae6320::CubeSpawner::Tick(const float i_secondCountToIntegrate)

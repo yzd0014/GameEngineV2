@@ -34,6 +34,8 @@ namespace eae6320 {
 			float m_z_farPlane;
 		};
 	}
+
+	extern GameCommon::Camera mainCamera;
 }
 
 

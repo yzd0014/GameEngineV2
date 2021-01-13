@@ -4,6 +4,11 @@
 #include "Engine/UserOutput/UserOutput.h"
 #include <Engine/Asserts/Asserts.h>
 
+namespace eae6320
+{
+	GameCommon::Camera mainCamera;
+}
+
 eae6320::GameCommon::Camera::Camera(Math::sVector i_position, Math::sVector i_orientation, const float i_verticalFieldOfView_inRadians, const float i_aspectRatio, const float i_z_nearPlane, const float i_z_farPlane) {
 	position = i_position;
 	orientationEuler = i_orientation;

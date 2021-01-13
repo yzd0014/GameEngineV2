@@ -1,6 +1,9 @@
 #include "GameObject.h"
 #include "Camera.h"
 namespace eae6320 {
+	std::vector<GameCommon::GameObject *> colliderObjects;//game objects with colliders
+	std::vector<GameCommon::GameObject *> noColliderObjects;//game objects without colliders
+
 	namespace GameCommon {
 		void RemoveInactiveGameObjects(std::vector<GameObject *> & o_allGameObjects) {
 			for (size_t i = 0; i < o_allGameObjects.size(); i++) {

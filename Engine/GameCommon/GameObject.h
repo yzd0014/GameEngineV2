@@ -91,4 +91,7 @@ namespace eae6320 {
 		void RemoveInactiveGameObjects(std::vector<GameObject *> & o_allGameObjects);
 		void ResetAllGameObjectsVelo(std::vector<GameObject *> & o_gameObjectsWithCollider, std::vector<GameObject *> & o_gameObjectsWithoutCollider, Camera & o_camera);
 	}
+
+	extern std::vector<GameCommon::GameObject *> colliderObjects;//game objects with colliders
+	extern std::vector<GameCommon::GameObject *> noColliderObjects;//game objects without colliders
 }

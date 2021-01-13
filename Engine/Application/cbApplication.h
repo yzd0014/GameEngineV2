@@ -76,13 +76,7 @@ namespace eae6320
 			//==========
 
 		public:
-			std::vector<Effect*> masterEffectArray;
-			std::vector<eae6320::Assets::cHandle<Mesh>> masterMeshArray;
 			std::vector<Engine::Sound *> soundArray;
-
-			std::vector<GameCommon::GameObject *> colliderObjects;//game objects with colliders
-			std::vector<GameCommon::GameObject *> noColliderObjects;//game objects without colliders
-			GameCommon::Camera mainCamera;
 
 			// Different platforms have different parameters that get passed to a program's entry point
 			struct sEntryPointParameters

@@ -136,3 +136,8 @@ private:
 	eae6320::cResult InitializeGeometry(uint16_t i_vertexCount, uint16_t i_indexCount, eae6320::Graphics::VertexFormats::sMesh * i_vertexData, uint16_t * i_indexData);
 	eae6320::cResult CleanUp(eae6320::cResult result);
 };
+
+namespace eae6320
+{
+	extern std::vector<eae6320::Assets::cHandle<Mesh>> masterMeshArray;
+}
