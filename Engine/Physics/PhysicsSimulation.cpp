@@ -25,15 +25,17 @@ namespace eae6320 {
 			}
 		}
 
-		void RunPhysics(std::vector<GameCommon::GameObject *> & i_colliderObjects, std::vector<GameCommon::GameObject *> & i_noColliderObjects, Assets::cHandle<Mesh> i_debugMesh, Effect* i_pDebugEffect, float i_dt)
-		//void RunPhysics(std::vector<GameCommon::GameObject *> & i_colliderObjects, float i_dt)
+		//void RunPhysics(std::vector<GameCommon::GameObject *> & i_colliderObjects, std::vector<GameCommon::GameObject *> & i_noColliderObjects, Assets::cHandle<Mesh> i_debugMesh, Effect* i_pDebugEffect, float i_dt)
+		void RunPhysics(std::vector<GameCommon::GameObject *> & i_colliderObjects, std::vector<GameCommon::GameObject *> & i_noColliderObjects, float i_dt)
 		{
+			/*
 			for (size_t i = 2; i < i_noColliderObjects.size();)
 			{
 				delete i_noColliderObjects[i];
 				i_noColliderObjects[i] = i_noColliderObjects.back();
 				i_noColliderObjects.pop_back();
 			}
+			*/
 			//update collider transformation and apply gravity
 			int colliderCounts = static_cast<int>(i_colliderObjects.size());
 			for (int i = 0; i < colliderCounts; i++)
@@ -102,7 +104,7 @@ namespace eae6320 {
 					}
 				}
 			}
-			
+			/*
 			for (size_t i = 0; i < allManifolds.size(); i++)
 			{
 				for (int j = 0; j < allManifolds[i].numContacts; j++)
@@ -124,7 +126,7 @@ namespace eae6320 {
 					}
 				}
 			}
-
+			*/
 			//resolve collision
 			ConstraintResolver(i_dt);
 			

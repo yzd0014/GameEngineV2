@@ -20,7 +20,7 @@ void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const floa
 	size_t size_physicsObject = colliderObjects.size();
 	// ***********************run physics****************************************************	
 			//update game objects with AABB
-	Physics::RunPhysics(colliderObjects, noColliderObjects, masterMeshArray[2], masterEffectArray[1], i_elapsedSecondCount_sinceLastUpdate);
+	Physics::RunPhysics(colliderObjects, noColliderObjects, i_elapsedSecondCount_sinceLastUpdate);
 	//update camera
 	mainCamera.UpdateState(i_elapsedSecondCount_sinceLastUpdate);
 	

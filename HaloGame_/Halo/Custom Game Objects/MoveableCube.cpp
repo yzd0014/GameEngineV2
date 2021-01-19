@@ -39,20 +39,18 @@ void eae6320::MoveableCube::UpdateGameObjectBasedOnInput() {
 	}
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Up))
 	{
-		m_State.velocity = Math::sVector(0, 5, 0);
-		//m_State.acceleration = Math::sVector(0, 5, 0);
+		m_State.velocity = Math::sVector(0, 0, -5);
 	}
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Down))
 	{
-		m_State.velocity = Math::sVector(0, -5, 0);
-		//m_State.acceleration = Math::sVector(0, -5, 0);
+		m_State.velocity = Math::sVector(0, 0, 5);
 	}
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::G)) {
-		m_State.velocity = Math::sVector(0, 0, 5);
+		m_State.velocity = Math::sVector(0, 5, 0);
 		//m_State.acceleration = Math::sVector(0, 0, 5);
 	}
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::T)) {
-		m_State.velocity = Math::sVector(0, 0, -5);
+		m_State.velocity = Math::sVector(0, -5, 0);
 		//m_State.acceleration = Math::sVector(0, 0, -5);
 	}
 }

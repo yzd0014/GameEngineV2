@@ -1,24 +1,34 @@
 #pragma once
+#pragma once
 #include "Engine/GameCommon/GameObject.h"
 #include "Engine/Math/Functions.h"
 #include "Engine/Math/cMatrix_transformation.h"
-//#include "Eigen/Dense"
 #include "Engine/EigenLibrary/Eigen/Dense"
 
 using namespace Eigen;
 namespace eae6320 {
 	class Cloth : public eae6320::GameCommon::GameObject {
 	public:
-		Cloth(Effect * i_pEffect, eae6320::Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, float i_h) :
+		Cloth(Effect * i_pEffect, eae6320::Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, float i_h, GameCommon::GameObject* i_pActor) :
 			GameCommon::GameObject(i_pEffect, i_Mesh, i_State),
 			totalElapsedSimulationTime(0.0f),
-			h(i_h)
+			h(i_h),
+			pActor(i_pActor)
 		{
 			Mesh* clothMesh = Mesh::s_manager.Get(i_Mesh);
 			verticeCount = clothMesh->GetVerticesCount();
 			clothResolution = (int)sqrt(verticeCount) - 1;
 			edgeCount = (2 * clothResolution + 1)*clothResolution + clothResolution;
 
+			MatrixXd X_rest(3, verticeCount);
+			X_rest.setZero();
+			for (int i = 0; i < verticeCount; i++)
+			{
+				X_rest(0, i) = clothMesh->m_pVertexDataInRAM[i].x;
+				X_rest(1, i) = clothMesh->m_pVertexDataInRAM[i].y;
+				X_rest(2, i) = clothMesh->m_pVertexDataInRAM[i].z;
+			}
+			
 			//rotate cloth to make it parallel to ground
 			Math::cMatrix_transformation rotMatrix(Math::cQuaternion(Math::ConvertDegreesToRadians(-60), Math::sVector(1, 0, 0)), Math::sVector(0.0f, 0.0f, 0.0f));
 			for (uint16_t i = 0; i < clothMesh->GetVerticesCount(); i++) {
@@ -26,6 +36,7 @@ namespace eae6320 {
 				oldPos.x = clothMesh->m_pVertexDataInRAM[i].x;
 				oldPos.y = clothMesh->m_pVertexDataInRAM[i].y;
 				oldPos.z = clothMesh->m_pVertexDataInRAM[i].z;
+				//if (i == 60) oldPos.z += -3;
 				newPos = rotMatrix * oldPos;
 
 				clothMesh->m_pVertexDataInRAM[i].x = newPos.x;
@@ -33,25 +44,21 @@ namespace eae6320 {
 				clothMesh->m_pVertexDataInRAM[i].z = newPos.z;
 			}
 			clothMesh->updateVertexBuffer = true;
-			
+
 			//initialize last frame 
 			lastFramePos = new Math::sVector[clothMesh->GetVerticesCount()];
 			for (int i = 0; i < clothMesh->GetVerticesCount(); i++) {
 				lastFramePos[i] = Math::sVector(clothMesh->m_pVertexDataInRAM[i].x, clothMesh->m_pVertexDataInRAM[i].y, clothMesh->m_pVertexDataInRAM[i].z);
 			}
-			//fixedPos[0] = Math::sVector(clothMesh->m_pVertexDataInRAM[0].x, clothMesh->m_pVertexDataInRAM[0].y, clothMesh->m_pVertexDataInRAM[0].z);
-			//fixedPos[1] = Math::sVector(clothMesh->m_pVertexDataInRAM[clothResolution].x, clothMesh->m_pVertexDataInRAM[clothResolution].y, clothMesh->m_pVertexDataInRAM[clothResolution].z);
-			
-			
 
 			//precomput all matrix
-			float k = 100000;
+			float k = 10000;
 			MatrixXd t(3, verticeCount);
 			MatrixXd P(verticeCount, verticeCount);
 			t.setZero();
 			P.setZero();
-			//for (int i = 0; i < clothResolution + 1; i += clothResolution) {
-			for (int i = 0; i < clothResolution + 1; i++) {
+			for (int i = 0; i < clothResolution + 1; i += clothResolution / 2) {
+				//for (int i = 0; i < clothResolution + 1; i++) {
 				t(0, i) = clothMesh->m_pVertexDataInRAM[i].x;
 				t(1, i) = clothMesh->m_pVertexDataInRAM[i].y;
 				t(2, i) = clothMesh->m_pVertexDataInRAM[i].z;
@@ -61,10 +68,32 @@ namespace eae6320 {
 				S(i, 0) = 1;
 				P = P + k * S * S.transpose();
 			}
+			/*
+			for (int i = 0; i < clothResolution + 1; i += clothResolution) {
+				t(0, i) = clothMesh->m_pVertexDataInRAM[i].x;
+				t(1, i) = clothMesh->m_pVertexDataInRAM[i].y;
+				t(2, i) = clothMesh->m_pVertexDataInRAM[i].z;
+
+				MatrixXd S(verticeCount, 1);
+				S.setZero();
+				S(i, 0) = 1;
+				P = P + k * S * S.transpose();
+			}
+			for (int i = 110; i < clothResolution + 111; i += clothResolution) {
+				t(0, i) = clothMesh->m_pVertexDataInRAM[i].x;
+				t(1, i) = clothMesh->m_pVertexDataInRAM[i].y;
+				t(2, i) = clothMesh->m_pVertexDataInRAM[i].z;
+
+				MatrixXd S(verticeCount, 1);
+				S.setZero();
+				S(i, 0) = 1;
+				P = P + k * S * S.transpose();
+			}
+			*/
 
 			MatrixXd m(1, verticeCount);
 
-			matInverse.resize(verticeCount, verticeCount);
+			//matInverse.resize(verticeCount, verticeCount);
 			d.resize(3, edgeCount);
 			J.resize(edgeCount, verticeCount);
 			x.resize(3, verticeCount);
@@ -114,14 +143,68 @@ namespace eae6320 {
 				//get L
 				L = L + k * A[i] * A[i].transpose();
 			}
-			matInverse = ((1 / pow(h, 2))*M + L + P).inverse();
-			
+			for (int row = 0; row < clothResolution - 1; row++)
+			{
+				int start = 2 + clothResolution + row * (clothResolution + 1);
+				int end = start + clothResolution - 1;
+				for (int i = start; i < end; i++)
+				{
+					MatrixXd S_temp(verticeCount, 6);
+					S_temp.setZero();
+					S_temp(i - clothResolution - 1, 0) = 1;
+					S_temp(i, 0) = -1;
+
+					S_temp(i - clothResolution, 1) = 1;
+					S_temp(i, 1) = -1;
+
+					S_temp(i + 1, 2) = 1;
+					S_temp(i, 2) = -1;
+
+					S_temp(i + clothResolution + 2, 3) = 1;
+					S_temp(i, 3) = -1;
+
+					S_temp(i + clothResolution + 1, 4) = 1;
+					S_temp(i, 4) = -1;
+
+					S_temp(i - 1, 5) = 1;
+					S_temp(i, 5) = -1;
+
+					double A = 1;
+					VectorXd c(6);
+					c(0) = A * 0;
+					c(1) = A * 2;
+					c(2) = A * 2;
+					c(3) = A * 0;
+					c(4) = A * 2;
+					c(5) = A * 2;
+
+					MatrixXd S(verticeCount, 1);
+					S = S_temp * c;
+					S_bending.push_back(S);
+					Vector3d V_rest = X_rest * S;
+					V_rest_array.push_back(V_rest);
+				}
+			}
+			w_bending = 100.0f;
+			MatrixXd T_bending(verticeCount, verticeCount);
+			T_bending.setZero();
+			size_t numBendings = S_bending.size();
+			for (size_t i = 0; i < numBendings; i++)
+			{
+				T_bending = T_bending + w_bending * S_bending[i] * S_bending[i].transpose();
+			}
+
+			T0 = ((1 / pow(h, 2))*M + P + L + T_bending);
+			//T0 = ((1 / pow(h, 2))*M + P + L + T_bending).inverse();
+
 			Vector3d g(0.0f, 5.0f, 0.0f);
-			restMat = t * P - g * m;
+			T1 = t * P - g * m;
+			//T1 = t * P;
 
 			timeConstant = 1 / pow(i_h, 2);
 		}
 		void Tick(const float i_secondCountToIntegrate) override;
+		void UpdateMeshNormal(Mesh* mesh);
 		~Cloth() {
 			delete[] lastFramePos;
 			delete[] A;
@@ -132,16 +215,24 @@ namespace eae6320 {
 		float totalElapsedSimulationTime;
 		float h;
 		float timeConstant;
+		float w_bending;
 		int verticeCount;
 		int clothResolution;
 		int edgeCount;
-		MatrixXd matInverse;
-		MatrixXd restMat;
+		//MatrixXd matInverse;
+		//MatrixXd restMat;
 		MatrixXd d;
 		MatrixXd J;
 		MatrixXd x;
 		MatrixXd y;
 		MatrixXd M;
 		MatrixXd* A;
+		std::vector<MatrixXd> S_bending;
+		std::vector<Vector3d> V_rest_array;
+
+		MatrixXd T0;
+		MatrixXd T1;
+
+		GameCommon::GameObject* pActor;
 	};
 }
