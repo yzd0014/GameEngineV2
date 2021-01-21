@@ -23,27 +23,8 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 	std::vector<int> collidedParticles;
 	std::vector<Vector3d> collisionNormals;
 	std::vector<Vector3d> contacts;
-	double r = 4.0;
 	MatrixXd E(verticeCount, verticeCount);
-	E.setZero();
-	double w_collision = 5000;//collision constraint weight 
-	for (int i = 0; i < verticeCount; i++)
-	{
-		Vector3d colliderOrigin(pActor->m_State.position.x, pActor->m_State.position.y, pActor->m_State.position.z);
-		//std::cout << colliderOrigin << std::endl << std::endl;
-		Vector3d d = y.col(i) - colliderOrigin;
-		if (d.norm() < r)
-		{
-			VectorXd S(verticeCount);
-			S.setZero();
-			S(i) = 1;
-			E = E + w_collision * S * S.transpose();
-
-			collidedParticles.push_back(i);
-			collisionNormals.push_back(d.normalized());
-			contacts.push_back(d.normalized() * r + colliderOrigin);
-		}
-	}
+	CollisionDetection(y, collidedParticles, collisionNormals, contacts, E);
 
 	//projective dynamics
 	MatrixXd T_bending_right(3, verticeCount);
@@ -55,14 +36,14 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 	for (int k = 0; k < 5; k++) {
 		//distance constraint projection
 		for (int i = 0; i < edgeCount; i++) {
-			Math::sVector restVec;
-			restVec.x = (float)(x * A[i])(0, 0);
-			restVec.y = (float)(x * A[i])(1, 0);
-			restVec.z = (float)(x * A[i])(2, 0);
-			restVec.Normalize();
-			d(0, i) = restVec.x;
-			d(1, i) = restVec.y;
-			d(2, i) = restVec.z;
+			Vector3d restVec;
+			restVec = x * A[i];
+			restVec.normalize();
+			if (i >= edgeCount - 2)
+			{
+				restVec = restVec * 2 * sqrt(2);
+			}
+			d.col(i) = restVec;
 		}
 
 		//bending constraint projection
@@ -72,7 +53,8 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 		for (size_t i = 0; i < numBendings; i++)
 		{
 			Vector3d V_current = x * S_bending[i];
-			Vector3d projectedV = V_current * V_rest_array[i].norm() / V_current.norm();
+			Vector3d projectedV;// = V_current * V_rest_array[i].norm() / V_current.norm();
+			projectedV.setZero();
 			T_bending_right = T_bending_right + w_bending * projectedV * S_bending[i].transpose();
 		}
 
@@ -97,6 +79,16 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 		
 		x = (timeConstant * y * M + d * J + T1 + T_bending_right + c * E) * (T0 + E).inverse();
 	}
+	
+	/*
+	for (size_t i = 0; i < numCollision; i++)
+	{
+		int pi = collidedParticles[i];
+		lastFramePos[pi].x = (float)x(0, pi);
+		lastFramePos[pi].y = (float)x(1, pi);
+		lastFramePos[pi].z = (float)x(2, pi);
+	}
+	*/
 
 	for (int i = 0; i < verticeCount; i++)
 	{
@@ -142,5 +134,48 @@ void eae6320::Cloth::UpdateMeshNormal(Mesh* clothMesh)
 		clothMesh->m_pVertexDataInRAM[index_2].nor_x = normal.x;
 		clothMesh->m_pVertexDataInRAM[index_2].nor_y = normal.y;
 		clothMesh->m_pVertexDataInRAM[index_2].nor_z = normal.z;
+	}
+}
+
+void eae6320::Cloth::CollisionDetection(MatrixXd &i_y, std::vector<int> &o_collidedParticles, std::vector<Vector3d> &o_collisionNormals, std::vector<Vector3d> &o_contacts, MatrixXd &o_E)
+{
+	double r = 4.0;
+	o_E.resize(verticeCount, verticeCount);
+	o_E.setZero();
+	double w_collision = 5000;//collision constraint weight 
+	
+	for (int i = 0; i < verticeCount; i++)
+	{
+		//ball collision
+		Vector3d colliderOrigin(noColliderObjects[0]->m_State.position.x, noColliderObjects[0]->m_State.position.y, noColliderObjects[0]->m_State.position.z);
+		//std::cout << colliderOrigin << std::endl << std::endl;
+		Vector3d d = i_y.col(i) - colliderOrigin;
+		if (d.norm() < r)
+		{
+			VectorXd S(verticeCount);
+			S.setZero();
+			S(i) = 1;
+			o_E = o_E + w_collision * S * S.transpose();
+
+			o_collidedParticles.push_back(i);
+			o_collisionNormals.push_back(d.normalized());
+			o_contacts.push_back(d.normalized() * r + colliderOrigin);
+		}
+
+		//ground collision
+		else if (i_y.col(i)(1) < noColliderObjects[2]->m_State.position.y + 0.05)
+		{
+			VectorXd S(verticeCount);
+			S.setZero();
+			S(i) = 1;
+			o_E = o_E + w_collision * S * S.transpose();
+			
+			o_collidedParticles.push_back(i);
+			Vector3d collisionNormal(0, 1, 0);
+			o_collisionNormals.push_back(collisionNormal);
+			Vector3d contact = i_y.col(i);
+			contact(1) = noColliderObjects[2]->m_State.position.y + 0.05;
+			o_contacts.push_back(contact);
+		}
 	}
 }

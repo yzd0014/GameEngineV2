@@ -100,7 +100,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		Cloth* pGameObject = new Cloth(pEffect_white, mesh_cloth, objState, GetSimulationUpdatePeriod_inSeconds(), noColliderObjects[0]);
+		Cloth* pGameObject = new Cloth(pEffect_red, mesh_cloth, objState, GetSimulationUpdatePeriod_inSeconds());
 		noColliderObjects.push_back(pGameObject);
 
 		/*
@@ -114,7 +114,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//add ground mesh
 	{
 		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, -11.0f, 0.0f);
+		objState.position = Math::sVector(0.0f, -11.0f, 0.0f);//Math::sVector(0.0f, -5.0f, 0.0f)
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_plane, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
 		noColliderObjects.push_back(pGameObject);
