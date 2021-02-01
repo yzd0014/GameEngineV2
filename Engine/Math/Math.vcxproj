@@ -25,6 +25,7 @@
     <ClCompile Include="sVector.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="3DMathHelpers.h" />
     <ClInclude Include="cMatrix_transformation.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="cQuaternion.h" />

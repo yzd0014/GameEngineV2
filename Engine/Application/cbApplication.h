@@ -46,6 +46,8 @@ namespace eae6320
 {
 	namespace Application
 	{
+		extern bool enableConsole;
+		
 		// The only thing that a specific application project's main() entry point should do
 		// is to call the following function with the derived application class
 		// as the template argument:
@@ -189,6 +191,8 @@ namespace eae6320
 			virtual void SubmitDataToBeRendered(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate);
 
 			virtual cResult CleanUp();
+
+			void EnableConsolePrinting(bool isEnabled);
 
 		private:
 			// Initialization / Clean Up

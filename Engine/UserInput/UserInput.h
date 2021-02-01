@@ -72,7 +72,7 @@ namespace eae6320
 				U = 0x55,
 				T = 0x54,
 				G = 0x47,
-
+				R = 0x52,	
 				F = 0x46,
 
 				F1 = 0x70,

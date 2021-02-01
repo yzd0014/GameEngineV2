@@ -83,7 +83,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 
 	{
 		Physics::sRigidBodyState objState;
-		//objState.position = Math::sVector(0.0f, -6.0f, 20.0f);
+		//objState.position = Math::sVector(0.0f, -5.0f, -2.0f);
 		objState.position = Math::sVector(0.0f, -6.0f, -2.0f);
 		MoveableCube* pGameObject = new MoveableCube(pEffect_white, mesh_sphere, objState);
 		noColliderObjects.push_back(pGameObject);
@@ -114,11 +114,13 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//add ground mesh
 	{
 		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, -11.0f, 0.0f);//Math::sVector(0.0f, -5.0f, 0.0f)
+		objState.position = Math::sVector(0.0f, -11.0f, 0.0f);
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_plane, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
 		noColliderObjects.push_back(pGameObject);
 	}
+
+	//EnableConsolePrinting(true);
 
 	return Results::Success;
 }

@@ -12,6 +12,7 @@
     <ClInclude Include="Functions.h" />
     <ClInclude Include="cQuaternion.h" />
     <ClInclude Include="sVector.h" />
+    <ClInclude Include="3DMathHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Functions.hpp" />

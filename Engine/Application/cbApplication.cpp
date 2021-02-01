@@ -15,6 +15,8 @@
 
 // Interface
 //==========
+bool eae6320::Application::enableConsole = false;
+
 void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const float i_elapsedSecondCount_sinceLastUpdate)
 {
 	size_t size_physicsObject = colliderObjects.size();
@@ -448,6 +450,20 @@ OnExit:
 	return result;
 }
 
+void eae6320::Application::cbApplication::EnableConsolePrinting(bool enabled)
+{
+#ifndef _ENABLE_CONSOLE
+	enableConsole = enabled;
+	if (enabled)
+	{
+		AllocConsole();
+		AttachConsole(GetCurrentProcessId());
+		freopen("CON", "w", stdout);
+		std::cout << "Console Initialized..." << std::endl;
+	}
+#endif // !_ENABLE_CONSOLE
+}
+
 eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 {
 	auto result = Results::Success;
@@ -512,6 +528,12 @@ eae6320::cResult eae6320::Application::cbApplication::CleanUp_all()
 #ifdef _ENABLE_CONSOLE
 	fclose(stdout);
 #endif // _ENABLE_CONSOLE
+#ifndef _ENABLE_CONSOLE
+	if (enableConsole)
+	{
+		fclose(stdout);
+	}
+#endif // !_ENABLE_CONSOLE
 
 	// Exit the application loop
 	{

@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include "Engine/GameCommon/GameObject.h"
 #include "Engine/Math/Functions.h"
 #include "Engine/Math/cMatrix_transformation.h"
@@ -30,59 +29,52 @@ namespace eae6320 {
 			}
 			
 			//rotate cloth to make it parallel to ground
-			Math::cMatrix_transformation rotMatrix(Math::cQuaternion(Math::ConvertDegreesToRadians(-60), Math::sVector(1, 0, 0)), Math::sVector(0.0f, 0.0f, 0.0f));
+			x.resize(3, verticeCount);
+			y.resize(3, verticeCount);
+			Math::cMatrix_transformation rotMatrixUp(Math::cQuaternion(Math::ConvertDegreesToRadians(-5), Math::sVector(1, 0, 0)), Math::sVector(0.0f, 0.0f, 0.0f));
+			Math::cMatrix_transformation rotMatrixDown(Math::cQuaternion(Math::ConvertDegreesToRadians(-175), Math::sVector(1, 0, 0)), Math::sVector(0.0f, 0.0f, 0.0f));
 			for (uint16_t i = 0; i < clothMesh->GetVerticesCount(); i++) {
 				Math::sVector oldPos, newPos;
 				oldPos.x = clothMesh->m_pVertexDataInRAM[i].x;
 				oldPos.y = clothMesh->m_pVertexDataInRAM[i].y;
 				oldPos.z = clothMesh->m_pVertexDataInRAM[i].z;
 				//if (i == 60) oldPos.z += -3;
-				newPos = rotMatrix * oldPos;
-
+				if (i < 55) newPos = rotMatrixUp * oldPos;
+				else newPos = rotMatrixDown * oldPos;
+				
 				clothMesh->m_pVertexDataInRAM[i].x = newPos.x;
 				clothMesh->m_pVertexDataInRAM[i].y = newPos.y;
 				clothMesh->m_pVertexDataInRAM[i].z = newPos.z;
+				x(0, i) = newPos.x;
+				x(1, i) = newPos.y;
+				x(2, i) = newPos.z;
 			}
 			clothMesh->updateVertexBuffer = true;
 
-			//initialize last frame 
-			lastFramePos = new Math::sVector[clothMesh->GetVerticesCount()];
-			for (int i = 0; i < clothMesh->GetVerticesCount(); i++) {
-				lastFramePos[i] = Math::sVector(clothMesh->m_pVertexDataInRAM[i].x, clothMesh->m_pVertexDataInRAM[i].y, clothMesh->m_pVertexDataInRAM[i].z);
-			}
-
-			x.resize(3, verticeCount);
-			y.resize(3, verticeCount);
+			//initialize velocity
+			v.resize(3, verticeCount);
+			v.setZero();
 
 			//attachment 
-			float k = 10000;
+			float k = 3000;
 			MatrixXd t(3, verticeCount);
 			MatrixXd P(verticeCount, verticeCount);
 			t.setZero();
 			P.setZero();
-			for (int i = 0; i < clothResolution + 1; i += clothResolution / 2) {
-				//for (int i = 0; i < clothResolution + 1; i++) {
-				t(0, i) = clothMesh->m_pVertexDataInRAM[i].x;
-				t(1, i) = clothMesh->m_pVertexDataInRAM[i].y;
-				t(2, i) = clothMesh->m_pVertexDataInRAM[i].z;
-
-				MatrixXd S(verticeCount, 1);
-				S.setZero();
-				S(i, 0) = 1;
-				P = P + k * S * S.transpose();
-			}
-			/*
+			
 			for (int i = 0; i < clothResolution + 1; i += clothResolution) {
-				t(0, i) = clothMesh->m_pVertexDataInRAM[i].x;
-				t(1, i) = clothMesh->m_pVertexDataInRAM[i].y;
-				t(2, i) = clothMesh->m_pVertexDataInRAM[i].z;
+				//for (int i = 0; i < clothResolution + 1; i++) {
+				t.col(i) = x.col(i);
 
 				MatrixXd S(verticeCount, 1);
 				S.setZero();
 				S(i, 0) = 1;
 				P = P + k * S * S.transpose();
 			}
+			
 			for (int i = 110; i < clothResolution + 111; i += clothResolution) {
+				t.col(i) = x.col(i);
+				
 				t(0, i) = clothMesh->m_pVertexDataInRAM[i].x;
 				t(1, i) = clothMesh->m_pVertexDataInRAM[i].y;
 				t(2, i) = clothMesh->m_pVertexDataInRAM[i].z;
@@ -92,8 +84,7 @@ namespace eae6320 {
 				S(i, 0) = 1;
 				P = P + k * S * S.transpose();
 			}
-			*/
-
+		
 			//gravity
 			MatrixXd m(1, verticeCount);
 			M.resize(verticeCount, verticeCount);
@@ -110,6 +101,7 @@ namespace eae6320 {
 			L.setZero();
 			J.resize(edgeCount, verticeCount);
 			J.setZero();
+			//for (int i = 0; i < edgeCount; i++) {
 			for (int i = 0; i < edgeCount - 2; i++) {
 				int row = i / (2 * clothResolution + 1);
 				int	remander = i % (2 * clothResolution + 1);
@@ -154,6 +146,54 @@ namespace eae6320 {
 			S_right(edgeCount - 1, 0) = 1;
 			J = J + k * S_right * A[edgeCount - 1].transpose();
 			L = L + k * A[edgeCount - 1] * A[edgeCount - 1].transpose();
+			
+			//diagnal edges
+			numDiagEdges = clothResolution * clothResolution;
+			int diagEdgesCounter = 0;
+			
+			d_diag.resize(3, numDiagEdges);
+			MatrixXd L_diag(verticeCount, verticeCount);
+			L_diag.setZero();
+			J_diag.resize(numDiagEdges, verticeCount);
+			J_diag.setZero();
+			int switcher = 1;
+			for (int i = 0; i < numDiagEdges; i++)
+			{
+				int row = i / clothResolution;
+				int remainder = i % clothResolution;
+				int index = row * (clothResolution + 1) + remainder;
+
+				MatrixXd Ai(verticeCount, 1);
+				Ai.setZero();
+				if (switcher == 1)
+				{
+					int k0 = index + clothResolution + 1;
+					int k1 = index + 1;
+					Ai(k0, 0) = -1;
+					Ai(k1, 0) = 1;
+				}
+				else if (switcher == -1)
+				{
+					int k0 = index;
+					int k1 = index + clothResolution + 2;
+					Ai(k0, 0) = -1;
+					Ai(k1, 0) = 1;
+				}
+
+				MatrixXd Si(numDiagEdges, 1);
+				Si.setZero();
+				Si(diagEdgesCounter, 0) = 1;
+				diagEdgesCounter++;
+
+				J_diag = J_diag + k * Si * Ai.transpose();
+				A_diag.push_back(Ai);
+				L_diag = L_diag + k * Ai * Ai.transpose();
+
+				if ((i + 1) % clothResolution != 0)
+				{
+					switcher = switcher * -1;
+				}
+			}
 
 			//bending
 			for (int row = 0; row < clothResolution - 1; row++)
@@ -199,7 +239,7 @@ namespace eae6320 {
 					V_rest_array.push_back(V_rest);
 				}
 			}
-			w_bending = 10.0f;
+			w_bending = 0.0f;
 			MatrixXd T_bending(verticeCount, verticeCount);
 			T_bending.setZero();
 			size_t numBendings = S_bending.size();
@@ -209,44 +249,88 @@ namespace eae6320 {
 			}
 
 			//precompute matrices
-			T0 = ((1 / pow(h, 2))*M + P + L + T_bending);
-			//T0 = (1 / pow(h, 2))*M + L + T_bending;
+			T0 = ((1 / pow(h, 2))*M + P + L + L_diag + T_bending);
 
 			Vector3d g(0.0f, 5.0f, 0.0f);
 			T1 = t * P - g * m;
 			//T1 = -g * m;
 
 			timeConstant = 1 / pow(i_h, 2);
+
+			GenerateCollisionEdges();
 		}
 		void Tick(const float i_secondCountToIntegrate) override;
 		void UpdateMeshNormal(Mesh* mesh);
-		void CollisionDetection(MatrixXd &i_y, std::vector<int> &o_collidedParticles, std::vector<Vector3d> &o_collisionNormals, std::vector<Vector3d> &o_contacts, MatrixXd &o_E);
+		void CollisionDetection(MatrixXd &o_E);
+		void SelfCollisionDetection();
+		void ConstructNeighborList();
+		void GenerateCollisionEdges();
 		~Cloth() {
-			delete[] lastFramePos;
 			delete[] A;
 		}
-		Math::sVector* lastFramePos;
-		Math::sVector fixedPos[11];
+		
 	private:
+		float clothThickness = 0.1f;
 		float totalElapsedSimulationTime;
 		float h;
 		float timeConstant;
 		float w_bending;
+		double w_selfcollision = 5000;
 		int verticeCount;
 		int clothResolution;
 		int edgeCount;
-		//MatrixXd matInverse;
-		//MatrixXd restMat;
+		int numDiagEdges;
+
 		MatrixXd d;
+		MatrixXd d_diag;
 		MatrixXd J;
-		MatrixXd x;
-		MatrixXd y;
+		MatrixXd J_diag;
+		MatrixXd x;//position
+		MatrixXd v;//velocity 
+		MatrixXd y;//position estimated
 		MatrixXd M;
 		MatrixXd* A;
+		std::vector<MatrixXd> A_diag;
 		std::vector<MatrixXd> S_bending;
 		std::vector<Vector3d> V_rest_array;
 
 		MatrixXd T0;
 		MatrixXd T1;
+
+		std::vector<int> collidedParticles;
+		std::vector<Vector3d> collisionNormals;
+		std::vector<Vector3d> contacts;
+
+		std::vector<MatrixXd> S_triSelCol;
+		MatrixXd T_triSelCol;
+		MatrixXd T_triSelCol_r;
+		std::vector<uint16_t> isFrontFace;
+		std::vector<int> col_p;
+		std::vector<int> col_p0;
+		std::vector<int> col_p1;
+		std::vector<int> col_p2;
+
+		std::vector<MatrixXd> S_edgeSelCol;
+		MatrixXd T_edgeSelCol;
+		MatrixXd T_edgeSelCol_r;
+		std::vector<Vector3d> edge2EdgeNormal;
+		std::vector<double> edge2Edge_s;
+		std::vector<double> edge2Edge_t;
+		std::vector<int> col_pa;
+		std::vector<int> col_pb;
+		std::vector<int> col_pc;
+		std::vector<int> col_pd;
+
+		//neighbor list
+		int numCells_x;            	/* Number of cells in the x|y|z direction */
+		int numCells_y;            	/* Number of cells in the x|y|z direction */
+		int numCells_z;            	/* Number of cells in the x|y|z direction */
+		int numCellsXZ;					/* Total number of cells in YZ plane */
+		int numCellsXYZ;				/* Total number of cells in XYZ area*/
+		int head[8064];    			/* Headers for the linked cell lists: 24*12*28 */ 
+		int linkedCellist[321]; //vertices: 11*11 = 121, triangles: 10 * 10 * 2 = 200
+		int spaceIndices[321];
+
+		std::vector<int> collisionEdgeIndices;
 	};
 }
