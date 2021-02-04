@@ -364,9 +364,7 @@ void eae6320::Cloth::CollisionDetection(MatrixXd &o_E)
 void eae6320::Cloth::SelfCollisionDetection()
 {
 	ConstructNeighborList();
-	
 	Mesh* clothMesh = Mesh::s_manager.Get(GetMesh());
-	
 	for (int i = 0; i < verticeCount; i++)
 	{
 		int spaceIndex = spaceIndices[i];
@@ -391,63 +389,56 @@ void eae6320::Cloth::SelfCollisionDetection()
 					int n_i = head[nSpaceIndex];
 					while (n_i != -1)
 					{
-						
-						if (n_i >= verticeCount)
+						int p0 = clothMesh->m_pIndexDataInRAM[3 * n_i];
+						int p1 = clothMesh->m_pIndexDataInRAM[3 * n_i + 1];
+						int p2 = clothMesh->m_pIndexDataInRAM[3 * n_i + 2];
+
+						if (i != p0 && i != p1 && i != p2)
 						{
-							int triangle_i = n_i - 121;
-							triangle_i = triangle_i * 3;
+							Vector3d pPos = x.col(i);
+							Vector3d p0Pos = x.col(p0);
+							Vector3d p1Pos = x.col(p1);
+							Vector3d p2Pos = x.col(p2);
 
-							int p0 = clothMesh->m_pIndexDataInRAM[triangle_i];
-							int p1 = clothMesh->m_pIndexDataInRAM[triangle_i + 1];
-							int p2 = clothMesh->m_pIndexDataInRAM[triangle_i + 2];
-							
-							if (i != p0 && i != p1 && i != p2)
+							//get predicted displacement
+							Vector3d pointOntriangle = Math::PointToTriangleDis(pPos, p0Pos, p1Pos, p2Pos);
+							double u, v, w;
+							Math::Barycentric(pointOntriangle, p0Pos, p1Pos, p2Pos, u, v, w);
+							Vector3d d0 = y.col(p0) - p0Pos;
+							Vector3d d1 = y.col(p1) - p1Pos;
+							Vector3d d2 = y.col(p2) - p2Pos;
+							Vector3d dPredicted = u * d0 + v * d1 + w * d2;
+
+							//overlap check
+							Vector3d separationAxis = pPos - pointOntriangle;
+							double dPreProjective = dPredicted.dot(separationAxis.normalized());
+							Vector3d d = y.col(i) - pPos;
+							double dProjective = d.dot(separationAxis.normalized());
+							double dRelative = dPreProjective - dProjective;
+							double gap = separationAxis.norm();
+							if (dRelative + 0.1 > gap)
 							{
-								Vector3d pPos = x.col(i);
-								Vector3d p0Pos = x.col(p0);
-								Vector3d p1Pos = x.col(p1);
-								Vector3d p2Pos = x.col(p2);
+								Vector3d e10 = p1Pos - p0Pos;
+								Vector3d e20 = p2Pos - p0Pos;
+								Vector3d triNormal = e10.cross(e20).normalized();
+								double point2planeDis = triNormal.dot(pPos - p0Pos);
+								if (point2planeDis > 0) isFrontFace.push_back(1);
+								else isFrontFace.push_back(0);
 
-								//get predicted displacement
-								Vector3d pointOntriangle = Math::PointToTriangleDis(pPos, p0Pos, p1Pos, p2Pos);
-								double u, v, w;
-								Math::Barycentric(pointOntriangle, p0Pos, p1Pos, p2Pos, u, v, w);
-								Vector3d d0 = y.col(p0) - p0Pos;
-								Vector3d d1 = y.col(p1) - p1Pos;
-								Vector3d d2 = y.col(p2) - p2Pos;
-								Vector3d dPredicted = u * d0 + v * d1 + w * d2;
+								col_p.push_back(i);
+								col_p0.push_back(p0);
+								col_p1.push_back(p1);
+								col_p2.push_back(p2);
 
-								//overlap check
-								Vector3d separationAxis = pPos - pointOntriangle;
-								double dPreProjective = dPredicted.dot(separationAxis.normalized());
-								Vector3d d = y.col(i) - pPos;
-								double dProjective = d.dot(separationAxis.normalized());
-								double dRelative = dPreProjective - dProjective;
-								double gap = separationAxis.norm();
-								if (dRelative + 0.1 > gap)
-								{
-									Vector3d e10 = p1Pos - p0Pos;
-									Vector3d e20 = p2Pos - p0Pos;
-									Vector3d triNormal = e10.cross(e20).normalized();
-									double point2planeDis = triNormal.dot(pPos - p0Pos);
-									if (point2planeDis > 0) isFrontFace.push_back(1);
-									else isFrontFace.push_back(0);
+								MatrixXd S_temp(verticeCount, 4);
+								S_temp.setZero();
+								S_temp(i, 0) = 1;
+								S_temp(p0, 1) = 1;
+								S_temp(p1, 2) = 1;
+								S_temp(p2, 3) = 1;
 
-									col_p.push_back(i);
-									col_p0.push_back(p0);
-									col_p1.push_back(p1);
-									col_p2.push_back(p2);
-
-									MatrixXd S_temp(verticeCount, 4);
-									S_temp.setZero();
-									S_temp(i, 0) = 1;
-									S_temp(p0, 1) = 1;
-									S_temp(p1, 2) = 1;
-									S_temp(p2, 3) = 1;
-
-									T_triSelCol = T_triSelCol + w_selfcollision * S_temp * S_temp.transpose();
-									S_triSelCol.push_back(S_temp);
-								}
+								T_triSelCol = T_triSelCol + w_selfcollision * S_temp * S_temp.transpose();
+								S_triSelCol.push_back(S_temp);
 							}
 						}
 						n_i = linkedCellist[n_i];
@@ -518,13 +509,14 @@ void eae6320::Cloth::SelfCollisionDetection()
 			}
 		}
 	}
+	
 }
 
 void eae6320::Cloth::ConstructNeighborList()
 {
 	float cellLength = 0.5f;
 	numCells_x = 24; //12
-	numCells_y = 12; //6
+	numCells_y = 18; //9
 	numCells_z = 28; //14
 
 	numCellsXZ = numCells_x * numCells_z;
@@ -542,7 +534,7 @@ void eae6320::Cloth::ConstructNeighborList()
 	for (int i = 0; i < 121; i++)
 	{
 		int cell_x, cell_y, cell_z;
-		
+
 		Vector3d vertexPos = x.col(i);
 		if (vertexPos(0) < 0)
 		{
@@ -570,20 +562,17 @@ void eae6320::Cloth::ConstructNeighborList()
 		}
 
 		int spaceIndex = numCellsXZ * cell_y + numCells_x * cell_z + cell_x;
-
-		linkedCellist[i] = head[spaceIndex];
-		head[spaceIndex] = i;
 		spaceIndices[i] = spaceIndex;
 	}
+
 	Mesh* clothMesh = Mesh::s_manager.Get(GetMesh());
-	for (int i = 121; i < 321; i++)
+	for (int i = 0; i < 200; i++)
 	{
-		int t_i = i - 121;
 		int cell_x, cell_y, cell_z;
 
-		int p0 = clothMesh->m_pIndexDataInRAM[t_i * 3];
-		int p1 = clothMesh->m_pIndexDataInRAM[t_i * 3 + 1];
-		int p2 = clothMesh->m_pIndexDataInRAM[t_i * 3 + 2];
+		int p0 = clothMesh->m_pIndexDataInRAM[i * 3];
+		int p1 = clothMesh->m_pIndexDataInRAM[i * 3 + 1];
+		int p2 = clothMesh->m_pIndexDataInRAM[i * 3 + 2];
 
 		Vector3d COM = (x.col(p0) + x.col(p1) + x.col(p2)) / 3;
 		if (COM(0) < 0)
@@ -613,9 +602,9 @@ void eae6320::Cloth::ConstructNeighborList()
 
 		int spaceIndex = numCellsXZ * cell_y + numCells_x * cell_z + cell_x;
 		
+		//if (spaceIndex >= 12096) UserOutput::DebugPrint("x: %f, y: %f, z: %f", COM(0), COM(1), COM(2));
 		linkedCellist[i] = head[spaceIndex];
 		head[spaceIndex] = i;
-		spaceIndices[i] = spaceIndex;
 	}
 }
 

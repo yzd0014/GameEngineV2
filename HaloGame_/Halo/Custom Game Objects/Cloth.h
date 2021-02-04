@@ -222,7 +222,6 @@ namespace eae6320 {
 					S_temp(i - 1, 5) = 1;
 					S_temp(i, 5) = -1;
 					
-					//std::cout << S_temp << std::endl << std::endl;
 					double A = 1;
 					VectorXd c(6);
 					c(0) = A * 0;
@@ -327,9 +326,9 @@ namespace eae6320 {
 		int numCells_z;            	/* Number of cells in the x|y|z direction */
 		int numCellsXZ;					/* Total number of cells in YZ plane */
 		int numCellsXYZ;				/* Total number of cells in XYZ area*/
-		int head[8064];    			/* Headers for the linked cell lists: 24*12*28 */ 
-		int linkedCellist[321]; //vertices: 11*11 = 121, triangles: 10 * 10 * 2 = 200
-		int spaceIndices[321];
+		int head[12096];    			/* Headers for the linked cell lists: 24*18*28 */ 
+		int linkedCellist[200]; //triangles: 10 * 10 * 2 = 200
+		int spaceIndices[121]; //vertices: 11*11 = 121
 
 		std::vector<int> collisionEdgeIndices;
 	};
