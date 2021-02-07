@@ -2,7 +2,9 @@
 #include "Engine/Graphics/Mesh.h"
 #include "Engine/Graphics/Effect.h"
 #include "Engine/Physics/sRigidBodyState.h"
+#include "Engine/EigenLibrary/Eigen/Dense"
 
+using namespace Eigen;
 namespace eae6320 {
 	namespace GameCommon {
 		class GameObject {

@@ -9,7 +9,9 @@
 //=========
 
 #include <cstdint>
-
+#if defined( EAE6320_PLATFORM_WINDOWS )
+	#include <Engine/Windows/Includes.h>
+#endif
 // Interface
 //==========
 
@@ -27,6 +29,8 @@ namespace eae6320
 		bool IsKeyPressed( const uint_fast8_t i_keyCode );
 		bool IsKeyEdgeTriggered(const uint_fast8_t i_keyCode);
 		void GetMouseMoveDistanceInDeltaTime(int * o_xTravel, int * o_yTravel);
+		void GetCursorPositionInWindow(int* o_x, int* o_y);
+
 		namespace KeyCodes
 		{
 			// These values are what the Windows-specific function expects, for simplicity
@@ -97,6 +101,9 @@ namespace eae6320
 		namespace KeyState {
 			extern uint8_t lastFrameKeyState[30];
 		}
+#if defined( EAE6320_PLATFORM_WINDOWS )
+		extern HWND mainWindow;
+#endif
 	}
 }
 

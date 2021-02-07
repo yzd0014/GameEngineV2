@@ -14,7 +14,15 @@ bool eae6320::UserInput::IsKeyEdgeTriggered(const uint_fast8_t i_keyCode) {
 	bool currentState = IsKeyPressed(i_keyCode);
 	bool output = false;
 	//index 0: left mouse button, 1: middle mouse button, 2: right mouse button, 3: space bar, 4: Key F
-	if (i_keyCode == KeyCodes::MiddleMouseButton) {
+	if (i_keyCode == KeyCodes::LeftMouseButton)
+	{
+		if (KeyState::lastFrameKeyState[0] == 0 && currentState)
+		{
+			output = true;
+		}
+		KeyState::lastFrameKeyState[0] = currentState;
+	}
+	else if (i_keyCode == KeyCodes::MiddleMouseButton) {
 		if (KeyState::lastFrameKeyState[1] == 0 && currentState) {
 			output = true;
 		}
@@ -116,4 +124,13 @@ void eae6320::UserInput::GetMouseMoveDistanceInDeltaTime(int * o_xTravel, int * 
 	}
 	MouseMovement::xPosCached = currentX;
 	MouseMovement::yPosCached = currentY;
+}
+
+void eae6320::UserInput::GetCursorPositionInWindow(int* o_x, int* o_y)
+{
+	POINT Pos[1];
+	GetCursorPos(Pos);
+	ScreenToClient(mainWindow, Pos);
+	*o_x = (int)Pos[0].x;
+	*o_y = (int)Pos[0].y;
 }

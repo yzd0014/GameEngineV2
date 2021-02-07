@@ -5,6 +5,7 @@
     <ClCompile Include="cQuaternion.cpp" />
     <ClCompile Include="Functions.cpp" />
     <ClCompile Include="sVector.cpp" />
+    <ClCompile Include="3DMathHelpers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cMatrix_transformation.h" />

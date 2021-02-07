@@ -44,13 +44,15 @@ void eae6320::cHalo::UpdateBasedOnInput()
 eae6320::cResult eae6320::cHalo::Initialize()
 {
 	//initialize camera 
-	mainCamera.Initialize(Math::sVector(0.0f, -1.0f, 15.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
+	//mainCamera.Initialize(Math::sVector(0.0f, -1.0f, 15.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
+	mainCamera.Initialize(Math::sVector(5.0f, 10.0f, 15.0f), Math::sVector(-30.0f, 20.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 
 	//create two meshes 	
 	eae6320::Assets::cHandle<Mesh> mesh_plane;
 	eae6320::Assets::cHandle<Mesh> mesh_cloth;
 	eae6320::Assets::cHandle<Mesh> mesh_shell;
 	eae6320::Assets::cHandle<Mesh> mesh_sphere;
+	eae6320::Assets::cHandle<Mesh> mesh_smallCube;
 
 	auto result = eae6320::Results::Success;
 	if (!(result = Mesh::s_manager.Load("data/meshes/plane.mesh", mesh_plane))) {
@@ -65,11 +67,15 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	if (!(result = Mesh::s_manager.Load("data/meshes/sphere4.mesh", mesh_sphere))) {
 		EAE6320_ASSERT(false);
 	}
+	if (!(result = Mesh::s_manager.Load("data/meshes/bullet.mesh", mesh_smallCube))) {
+		EAE6320_ASSERT(false);
+	}
 
 	masterMeshArray.push_back(mesh_plane);
 	masterMeshArray.push_back(mesh_cloth);
 	masterMeshArray.push_back(mesh_shell);
 	masterMeshArray.push_back(mesh_sphere);
+	masterMeshArray.push_back(mesh_smallCube);
 
 	//create two effect
 	Effect* pEffect_white;
@@ -91,26 +97,13 @@ eae6320::cResult eae6320::cHalo::Initialize()
 
 	//add cloth
 	{
-		/*
-		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		SoftShell* pGameObject = new SoftShell(pEffect_white, mesh_shell, objState, GetSimulationUpdatePeriod_inSeconds());
-		noColliderObjects.push_back(pGameObject);
-		*/
-
+		
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
 		Cloth* pGameObject = new Cloth(pEffect_red, mesh_cloth, objState, GetSimulationUpdatePeriod_inSeconds());
 		noColliderObjects.push_back(pGameObject);
-
-		/*
-		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		Paper* pGameObject = new Paper(pEffect_white, mesh_cloth, objState, GetSimulationUpdatePeriod_inSeconds(), noColliderObjects[0]);
-		noColliderObjects.push_back(pGameObject);
-		*/
 	}
-
+	
 	//add ground mesh
 	{
 		Physics::sRigidBodyState objState;
@@ -121,7 +114,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	}
 
 	//EnableConsolePrinting(true);
-
+	
 	return Results::Success;
 }
 

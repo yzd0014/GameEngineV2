@@ -51,22 +51,23 @@ void eae6320::GameCommon::Camera::UpdateState(const float i_secondCountToIntegra
 	
 	int mouseX, mouseY;
 	UserInput::GetMouseMoveDistanceInDeltaTime(&mouseX, &mouseY);
-
 	axis_X_velocity = 0.0f;
 	axis_Y_velocity = 0.0f;
+	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Space))
+	{
+		//update rotation velocity
+		float axis_X_velo = -1 * mouseY * mouseSensitvity / i_secondCountToIntegrate;
+		float axis_Y_velo = -1 * mouseX * mouseSensitvity / i_secondCountToIntegrate;
 
-	//update rotation velocity
-	float axis_X_velo = -1 * mouseY * mouseSensitvity / i_secondCountToIntegrate;
-	float axis_Y_velo = -1 * mouseX * mouseSensitvity / i_secondCountToIntegrate;
-	
-	axis_Y_velocity = axis_Y_velo;
-	axis_X_velocity = axis_X_velo;
+		axis_Y_velocity = axis_Y_velo;
+		axis_X_velocity = axis_X_velo;
 
-	if (axis_X_velo > 0 && orientationEuler.x < 90) {
-		axis_X_velocity = axis_X_velo;
-	}
-	if (axis_X_velo < 0 && orientationEuler.x > -90) {
-		axis_X_velocity = axis_X_velo;
+		if (axis_X_velo > 0 && orientationEuler.x < 90) {
+			axis_X_velocity = axis_X_velo;
+		}
+		if (axis_X_velo < 0 && orientationEuler.x > -90) {
+			axis_X_velocity = axis_X_velo;
+		}
 	}
 }
 
@@ -82,31 +83,34 @@ void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
 	//reset velocity before update velocity
 	velocity = Math::sVector(0, 0, 0);
 	
-	Math::cMatrix_transformation localToWorldMat = Math::cMatrix_transformation::cMatrix_transformation(orientation, position);
-	Math::sVector forwardVector = localToWorldMat.GetBackDirection();
-	forwardVector.Normalize();
-	forwardVector = forwardVector * -10;
+	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Space))
+	{
+		Math::cMatrix_transformation localToWorldMat = Math::cMatrix_transformation::cMatrix_transformation(orientation, position);
+		Math::sVector forwardVector = localToWorldMat.GetBackDirection();
+		forwardVector.Normalize();
+		forwardVector = forwardVector * -10;
 
-	Math::sVector rightVector = localToWorldMat.GetRightDirection();
-	rightVector.Normalize();
-	rightVector = rightVector * 10;
+		Math::sVector rightVector = localToWorldMat.GetRightDirection();
+		rightVector.Normalize();
+		rightVector = rightVector * 10;
 
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::D))
-	{
-		velocity = rightVector;
-	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::A))
-	{
-		velocity = -1 * rightVector;
-	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::W))
-	{
-		velocity = forwardVector;
-	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::S))
-	{
-		velocity = forwardVector * -1;
-	}
+		if (UserInput::IsKeyPressed(UserInput::KeyCodes::D))
+		{
+			velocity = rightVector;
+		}
+		if (UserInput::IsKeyPressed(UserInput::KeyCodes::A))
+		{
+			velocity = -1 * rightVector;
+		}
+		if (UserInput::IsKeyPressed(UserInput::KeyCodes::W))
+		{
+			velocity = forwardVector;
+		}
+		if (UserInput::IsKeyPressed(UserInput::KeyCodes::S))
+		{
+			velocity = forwardVector * -1;
+		}
+	}	
 }
 
 eae6320::Math::cQuaternion eae6320::GameCommon::Camera::PredictFutureOrientation(const float i_secondCountToExtrapolate) const

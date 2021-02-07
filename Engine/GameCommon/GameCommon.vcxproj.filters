@@ -3,9 +3,11 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="GameplayUtility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="GameObjectManagement.cpp" />
+    <ClCompile Include="GameplayUtility.cpp" />
   </ItemGroup>
 </Project>

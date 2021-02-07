@@ -13,5 +13,9 @@ namespace eae6320
 		namespace KeyState {
 			uint8_t lastFrameKeyState[30];
 		}
+
+#if defined( EAE6320_PLATFORM_WINDOWS )
+		HWND mainWindow = NULL;
+#endif
 	}
 }

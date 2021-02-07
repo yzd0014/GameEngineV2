@@ -12,6 +12,7 @@
 #include <Engine/UserOutput/UserOutput.h>
 #include "Engine/UserInput/UserInput.h"
 #include "Engine/Physics/PhysicsSimulation.h"
+#include "Engine/GameCommon/GameplayUtility.h"
 
 // Interface
 //==========
@@ -514,8 +515,15 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 		for (int i = 0; i < 30; i++) {
 			UserInput::KeyState::lastFrameKeyState[i] = 0;
 		}
+		
+		EAE6320_ASSERT(m_mainWindow != NULL);
+		UserInput::mainWindow = m_mainWindow;
 	}
-
+	//GameplayUtility
+	{
+		GameplayUtility::pGameApplication = this;
+	}
+	
 OnExit:
 
 	return result;

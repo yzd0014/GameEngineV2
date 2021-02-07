@@ -9,7 +9,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Halo", "HaloGame_\Halo\Halo
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Application", "Engine\Application\Application.vcxproj", "{E9A1C1DB-D622-4FB4-8CF0-C76DF6A8CB1B}"
 	ProjectSection(ProjectDependencies) = postProject
-		{6D18F357-6AE1-45E5-8961-79E56982BCE5} = {6D18F357-6AE1-45E5-8961-79E56982BCE5}
 		{30E6BB9F-138D-4B44-9733-869263F7BAD5} = {30E6BB9F-138D-4B44-9733-869263F7BAD5}
 	EndProjectSection
 EndProject
@@ -90,9 +89,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AudioBuilder", "Tools\AudioBuilder\AudioBuilder.vcxproj", "{F3A2D932-AE7F-4224-8C24-CB84665B0FF3}"
 EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
@@ -388,6 +384,9 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A89F366F-0B7F-464F-90A8-A4828B273298}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true

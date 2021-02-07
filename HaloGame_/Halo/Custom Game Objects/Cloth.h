@@ -238,7 +238,7 @@ namespace eae6320 {
 					V_rest_array.push_back(V_rest);
 				}
 			}
-			w_bending = 0.0f;
+			w_bending = 2.0f;
 			MatrixXd T_bending(verticeCount, verticeCount);
 			T_bending.setZero();
 			size_t numBendings = S_bending.size();
@@ -259,6 +259,7 @@ namespace eae6320 {
 			GenerateCollisionEdges();
 		}
 		void Tick(const float i_secondCountToIntegrate) override;
+		void UpdateGameObjectBasedOnInput() override;
 		void UpdateMeshNormal(Mesh* mesh);
 		void CollisionDetection(MatrixXd &o_E);
 		void SelfCollisionDetection();

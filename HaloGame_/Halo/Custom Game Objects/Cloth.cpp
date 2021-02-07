@@ -4,9 +4,13 @@
 #include "Engine/UserOutput/UserOutput.h"
 #include "Engine//Math/Functions.h"
 #include "Engine/Math/3DMathHelpers.h"
+#include "Engine/UserInput/UserInput.h"
+#include "Engine/GameCommon/GameplayUtility.h"
+#include "Engine/GameCommon/Camera.h"
 
 void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 	Mesh* clothMesh = Mesh::s_manager.Get(GetMesh());
+
 	//momentum update
 	y = x + v * i_secondCountToIntegrate;
 
@@ -316,6 +320,42 @@ void eae6320::Cloth::UpdateMeshNormal(Mesh* clothMesh)
 		clothMesh->m_pVertexDataInRAM[index_2].nor_y = normal.y;
 		clothMesh->m_pVertexDataInRAM[index_2].nor_z = normal.z;
 	}
+}
+
+void eae6320::Cloth::UpdateGameObjectBasedOnInput()
+{
+	
+	Mesh* clothMesh = Mesh::s_manager.Get(GetMesh());
+	if (UserInput::IsKeyEdgeTriggered(UserInput::KeyCodes::LeftMouseButton))
+	{
+		Math::sVector dir_t = GameplayUtility::MouseRayCasting();
+		Vector3f dir;
+		Math::NativeVector2EigenVector(dir_t, dir);
+		Vector3f cameraPos;
+		Math::NativeVector2EigenVector(mainCamera.position, cameraPos);
+		Vector3f intersect;
+		intersect.setZero();
+		
+		for (int16_t i = 0; i < clothMesh->GetIndicesCount(); i += 3)
+		{
+			int a_i = clothMesh->m_pIndexDataInRAM[i];
+			int b_i = clothMesh->m_pIndexDataInRAM[i + 1];
+			int c_i = clothMesh->m_pIndexDataInRAM[i + 2];
+			Vector3f a = x.col(a_i).cast<float>();
+			Vector3f b = x.col(b_i).cast<float>();
+			Vector3f c = x.col(c_i).cast<float>();
+			
+			if (Math::GetLineTriangleIntersection(cameraPos, dir, a, b, c, intersect))
+			{
+				Vector3d v_delta(0, 0, -40);
+				v.col(a_i) = v.col(a_i) + v_delta;
+				v.col(b_i) = v.col(b_i) + v_delta;
+				v.col(c_i) = v.col(c_i) + v_delta;
+				break;
+			}
+		}
+	}
+	
 }
 
 void eae6320::Cloth::CollisionDetection(MatrixXd &o_E)
