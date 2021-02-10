@@ -246,6 +246,7 @@ namespace eae6320 {
 
 			//precompute matrices
 			T0 = ((1 / pow(h, 2))*M + P + L + L_diag + T_bending);
+			//T0 = ((1 / pow(h, 2))*M + L + L_diag + T_bending);
 
 			Vector3d g(0.0f, 5.0f, 0.0f);
 			T1 = t * P - g * m;

@@ -17,6 +17,7 @@
 #include "Engine/Physics/PhysicsSimulation.h"
 #include "Custom Game Objects/Ground.h"
 #include "Halo/Custom Game Objects/Cloth.h"
+#include "Engine/Profiling/Profiling.h"
 //#include "Halo/Custom Game Objects/SoftShell.h"
 #include "Halo/Custom Game Objects/MoveableCube.h"
 //#include "Halo/Custom Game Objects/Paper.h"
@@ -139,6 +140,10 @@ void  eae6320::cHalo::UpdateSimulationBasedOnTime(const float i_elapsedSecondCou
 
 eae6320::cResult eae6320::cHalo::CleanUp()
 {
+	UserOutput::DebugPrint("Cloth Simulation(%d times) : %f ticks(%f s)",
+		g_Profiler.m_Allccumulators[0]->m_Count,
+		g_Profiler.m_Allccumulators[0]->average(),
+		g_Profiler.m_Allccumulators[0]->getAverageTime());
 	cbApplication::CleanUp();
 	return Results::Success;
 }
