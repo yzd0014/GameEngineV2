@@ -96,6 +96,9 @@
     <ProjectReference Include="..\..\Engine\Physics\Physics.vcxproj">
       <Project>{30e6bb9f-138d-4b44-9733-869263f7bad5}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\Engine\Profiling\Profiling.vcxproj">
+      <Project>{5b9a7da4-8d51-45a6-a76f-ef5af58f07ed}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\Engine\UserInput\UserInput.vcxproj">
       <Project>{193bb096-cd2c-48e8-8a28-99ecc2d019ad}</Project>
     </ProjectReference>

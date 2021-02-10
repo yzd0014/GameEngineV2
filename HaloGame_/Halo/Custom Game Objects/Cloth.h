@@ -31,16 +31,16 @@ namespace eae6320 {
 			//rotate cloth to make it parallel to ground
 			x.resize(3, verticeCount);
 			y.resize(3, verticeCount);
-			Math::cMatrix_transformation rotMatrixUp(Math::cQuaternion(Math::ConvertDegreesToRadians(-5), Math::sVector(1, 0, 0)), Math::sVector(0.0f, 0.0f, 0.0f));
-			Math::cMatrix_transformation rotMatrixDown(Math::cQuaternion(Math::ConvertDegreesToRadians(-175), Math::sVector(1, 0, 0)), Math::sVector(0.0f, 0.0f, 0.0f));
+			Math::cMatrix_transformation rotMatrixUp(Math::cQuaternion(Math::ConvertDegreesToRadians(-60), Math::sVector(1, 0, 0)), Math::sVector(0.0f, 0.0f, 0.0f));
+			//Math::cMatrix_transformation rotMatrixDown(Math::cQuaternion(Math::ConvertDegreesToRadians(-175), Math::sVector(1, 0, 0)), Math::sVector(0.0f, 0.0f, 0.0f));
 			for (uint16_t i = 0; i < clothMesh->GetVerticesCount(); i++) {
 				Math::sVector oldPos, newPos;
 				oldPos.x = clothMesh->m_pVertexDataInRAM[i].x;
 				oldPos.y = clothMesh->m_pVertexDataInRAM[i].y;
 				oldPos.z = clothMesh->m_pVertexDataInRAM[i].z;
-				//if (i == 60) oldPos.z += -3;
-				if (i < 55) newPos = rotMatrixUp * oldPos;
-				else newPos = rotMatrixDown * oldPos;
+				//if (i < 55) newPos = rotMatrixUp * oldPos;
+				//else newPos = rotMatrixDown * oldPos;
+				newPos = rotMatrixUp * oldPos;
 				
 				clothMesh->m_pVertexDataInRAM[i].x = newPos.x;
 				clothMesh->m_pVertexDataInRAM[i].y = newPos.y;
@@ -72,18 +72,15 @@ namespace eae6320 {
 				P = P + k * S * S.transpose();
 			}
 			
+			/*
 			for (int i = 110; i < clothResolution + 111; i += clothResolution) {
 				t.col(i) = x.col(i);
 				
-				t(0, i) = clothMesh->m_pVertexDataInRAM[i].x;
-				t(1, i) = clothMesh->m_pVertexDataInRAM[i].y;
-				t(2, i) = clothMesh->m_pVertexDataInRAM[i].z;
-
 				MatrixXd S(verticeCount, 1);
 				S.setZero();
 				S(i, 0) = 1;
 				P = P + k * S * S.transpose();
-			}
+			}*/
 		
 			//gravity
 			MatrixXd m(1, verticeCount);
@@ -238,7 +235,7 @@ namespace eae6320 {
 					V_rest_array.push_back(V_rest);
 				}
 			}
-			w_bending = 2.0f;
+			w_bending = 10.0f;
 			MatrixXd T_bending(verticeCount, verticeCount);
 			T_bending.setZero();
 			size_t numBendings = S_bending.size();

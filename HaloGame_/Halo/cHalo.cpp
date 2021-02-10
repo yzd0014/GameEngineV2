@@ -44,8 +44,8 @@ void eae6320::cHalo::UpdateBasedOnInput()
 eae6320::cResult eae6320::cHalo::Initialize()
 {
 	//initialize camera 
-	//mainCamera.Initialize(Math::sVector(0.0f, -1.0f, 15.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
-	mainCamera.Initialize(Math::sVector(5.0f, 10.0f, 15.0f), Math::sVector(-30.0f, 20.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
+	mainCamera.Initialize(Math::sVector(0.0f, -1.0f, 15.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
+	//mainCamera.Initialize(Math::sVector(5.0f, 10.0f, 15.0f), Math::sVector(-30.0f, 20.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 
 	//create two meshes 	
 	eae6320::Assets::cHandle<Mesh> mesh_plane;
@@ -89,7 +89,6 @@ eae6320::cResult eae6320::cHalo::Initialize()
 
 	{
 		Physics::sRigidBodyState objState;
-		//objState.position = Math::sVector(0.0f, -5.0f, -2.0f);
 		objState.position = Math::sVector(0.0f, -6.0f, -2.0f);
 		MoveableCube* pGameObject = new MoveableCube(pEffect_white, mesh_sphere, objState);
 		noColliderObjects.push_back(pGameObject);

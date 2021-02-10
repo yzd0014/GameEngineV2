@@ -7,8 +7,10 @@
 #include "Engine/UserInput/UserInput.h"
 #include "Engine/GameCommon/GameplayUtility.h"
 #include "Engine/GameCommon/Camera.h"
+#include "Engine/Profiling/Profiling.h"
 
 void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
+	PROFILE_UNSCOPED(0);
 	Mesh* clothMesh = Mesh::s_manager.Get(GetMesh());
 
 	//momentum update
@@ -46,7 +48,7 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 	col_pc.clear();
 	col_pd.clear();
 
-	SelfCollisionDetection();
+	//SelfCollisionDetection();
 
 	//projective dynamics
 	MatrixXd T_bending_right(3, verticeCount);
