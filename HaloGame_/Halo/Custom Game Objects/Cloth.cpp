@@ -17,7 +17,7 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 	y = x + v * i_secondCountToIntegrate;
 
 	//unilateral collision detection
-	MatrixXd E(verticeCount, verticeCount);
+	SparseMatrix<double> E(verticeCount, verticeCount);
 	collidedParticles.clear();
 	collisionNormals.clear();
 	contacts.clear();
@@ -25,7 +25,6 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 
 	//cloth self collision detection
 	T_triSelCol.resize(verticeCount, verticeCount);
-	T_triSelCol.setZero();
 	T_triSelCol_r.resize(3, verticeCount);
 	
 	T_edgeSelCol.resize(verticeCount, verticeCount);
@@ -52,7 +51,7 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 
 	//projective dynamics
 	MatrixXd T_bending_right(3, verticeCount);
-	MatrixXd c(3, verticeCount);
+	SparseMatrix<double> c(3, verticeCount);
 	size_t numCollision = collidedParticles.size();
 	
 	x = y;
@@ -82,7 +81,7 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 			Vector3d V_current = x * S_bending[i];
 			Vector3d projectedV;// = V_current * V_rest_array[i].norm() / V_current.norm();
 			projectedV.setZero();
-			T_bending_right = T_bending_right + w_bending * projectedV * S_bending[i].transpose();
+			T_bending_right = T_bending_right + w_bending * projectedV * SparseMatrix<double>(S_bending[i].transpose());
 		}
 
 		//collision projection
@@ -90,7 +89,10 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 		for (size_t i = 0; i < numCollision; i++)
 		{
 			int pi = collidedParticles[i];
-			c.col(pi) = Math::ProjectPointToPlane(x.col(pi), collisionNormals[i], contacts[i]);
+			Vector3d collisionContact = Math::ProjectPointToPlane(x.col(pi), collisionNormals[i], contacts[i]);
+			c.insert(0, pi) = collisionContact(0);
+			c.insert(1, pi) = collisionContact(1);
+			c.insert(2, pi) = collisionContact(2);
 		}
 
 
@@ -204,7 +206,7 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 			P.col(1) = p0 + p0Correction;
 			P.col(2) = p1 + p1Correction;
 			P.col(3) = p2 + p2Correction;
-			T_triSelCol_r = T_triSelCol_r + w_selfcollision * P * S_triSelCol[i].transpose();
+			T_triSelCol_r = T_triSelCol_r + w_selfcollision * P * SparseMatrix<double>(S_triSelCol[i].transpose());
 		}
 		
 		T_edgeSelCol_r.setZero();
@@ -239,10 +241,15 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 			P.col(1) = pb + pbCorrection;
 			P.col(2) = pc + pcCorrection;
 			P.col(3) = pd + pdCorrection;
-			T_edgeSelCol_r = T_edgeSelCol_r + w_selfcollision * P * S_edgeSelCol[i].transpose();
+			T_edgeSelCol_r = T_edgeSelCol_r + w_selfcollision * P * SparseMatrix<double>(S_edgeSelCol[i].transpose());
 		}
 		//x = (timeConstant * y * M + d * J + d_diag * J_diag + T1 + T_bending_right + c * E) * (T0 + E).inverse();
-		x = (timeConstant * y * M + d * J + d_diag * J_diag + T1 + T_bending_right + c * E + T_triSelCol_r + T_edgeSelCol_r) * (T0 + E + T_triSelCol + T_edgeSelCol).inverse();
+		SparseMatrix<double> m_A = T0 + E + T_triSelCol + T_edgeSelCol;
+		SimplicialCholesky<SparseMatrix<double>> chol(m_A.transpose());
+		
+		MatrixXd m_b = timeConstant * y * M + d * J + d_diag * J_diag + T1 + T_bending_right + c * E + T_triSelCol_r + T_edgeSelCol_r;
+		MatrixXd temp_x = chol.solve(m_b.transpose());
+		x = temp_x.transpose();
 	}
 	
 	//update velocity
@@ -360,11 +367,10 @@ void eae6320::Cloth::UpdateGameObjectBasedOnInput()
 	
 }
 
-void eae6320::Cloth::CollisionDetection(MatrixXd &o_E)
+void eae6320::Cloth::CollisionDetection(SparseMatrix<double> &o_E)
 {
 	double r = 4.0;
 	o_E.resize(verticeCount, verticeCount);
-	o_E.setZero();
 	double w_collision = 5000;//collision constraint weight 
 	
 	for (int i = 0; i < verticeCount; i++)
@@ -375,10 +381,12 @@ void eae6320::Cloth::CollisionDetection(MatrixXd &o_E)
 		Vector3d d = y.col(i) - colliderOrigin;
 		if (d.norm() < r)
 		{
-			VectorXd S(verticeCount);
-			S.setZero();
-			S(i) = 1;
-			o_E = o_E + w_collision * S * S.transpose();
+			SparseVector<double> S(verticeCount);
+			S.reserve(1);
+			S.insert(i) = 1;
+			//std::cout << MatrixXd(S) << std::endl << std::endl;
+			//std::cout << MatrixXd(S.transpose()) << std::endl << std::endl;
+			o_E = o_E + w_collision * S * SparseMatrix<double>(S.transpose());
 
 			collidedParticles.push_back(i);
 			collisionNormals.push_back(d.normalized());
@@ -388,10 +396,10 @@ void eae6320::Cloth::CollisionDetection(MatrixXd &o_E)
 		//ground collision
 		else if (y.col(i)(1) < noColliderObjects[2]->m_State.position.y + 0.05)
 		{
-			VectorXd S(verticeCount);
-			S.setZero();
-			S(i) = 1;
-			o_E = o_E + w_collision * S * S.transpose();
+			SparseVector<double> S(verticeCount);
+			S.reserve(1);
+			S.insert(i) = 1;
+			o_E = o_E + w_collision * S * SparseVector<double>(S.transpose());
 			
 			collidedParticles.push_back(i);
 			Vector3d collisionNormal(0, 1, 0);
@@ -472,14 +480,14 @@ void eae6320::Cloth::SelfCollisionDetection()
 								col_p1.push_back(p1);
 								col_p2.push_back(p2);
 
-								MatrixXd S_temp(verticeCount, 4);
-								S_temp.setZero();
-								S_temp(i, 0) = 1;
-								S_temp(p0, 1) = 1;
-								S_temp(p1, 2) = 1;
-								S_temp(p2, 3) = 1;
+								SparseMatrix<double> S_temp(verticeCount, 4);
+								S_temp.reserve(VectorXi::Constant(4, 1));
+								S_temp.insert(i, 0) = 1;
+								S_temp.insert(p0, 1) = 1;
+								S_temp.insert(p1, 2) = 1;
+								S_temp.insert(p2, 3) = 1;
 
-								T_triSelCol = T_triSelCol + w_selfcollision * S_temp * S_temp.transpose();
+								T_triSelCol = T_triSelCol + w_selfcollision * S_temp * SparseMatrix<double>(S_temp.transpose());
 								S_triSelCol.push_back(S_temp);
 							}
 						}
@@ -537,14 +545,14 @@ void eae6320::Cloth::SelfCollisionDetection()
 						col_pc.push_back(pc);
 						col_pd.push_back(pd);
 
-						MatrixXd S_temp(verticeCount, 4);
-						S_temp.setZero();
-						S_temp(pa, 0) = 1;
-						S_temp(pb, 1) = 1;
-						S_temp(pc, 2) = 1;
-						S_temp(pd, 3) = 1;
+						SparseMatrix<double> S_temp(verticeCount, 4);
+						S_temp.reserve(VectorXi::Constant(4, 1));
+						S_temp.insert(pa, 0) = 1;
+						S_temp.insert(pb, 1) = 1;
+						S_temp.insert(pc, 2) = 1;
+						S_temp.insert(pd, 3) = 1;
 
-						T_edgeSelCol = T_edgeSelCol + w_selfcollision * S_temp * S_temp.transpose();
+						T_edgeSelCol = T_edgeSelCol + w_selfcollision * S_temp * SparseMatrix<double>(S_temp.transpose());
 						S_edgeSelCol.push_back(S_temp);
 					}
 				}
