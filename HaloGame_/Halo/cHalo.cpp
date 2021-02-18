@@ -87,7 +87,12 @@ eae6320::cResult eae6320::cHalo::Initialize()
 
 	masterEffectArray.push_back(pEffect_white);
 	masterEffectArray.push_back(pEffect_red);
-
+	{
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, -6.0f, -2.0f);
+		MoveableCube* pGameObject = new MoveableCube(pEffect_white, mesh_sphere, objState);
+		noColliderObjects.push_back(pGameObject);
+	}
 	//add cloth
 	{
 		
