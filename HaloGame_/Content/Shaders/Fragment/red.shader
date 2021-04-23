@@ -29,6 +29,7 @@ cbuffer g_constantBuffer_perFrame : register( b0 )
 void main(
 	in const float4 i_position : SV_POSITION,
 	in const float3 i_normal : NORMAL,
+	in bool isFrontFacing : SV_IsFrontFace,
 	// Output
 	//=======
 
@@ -38,18 +39,25 @@ void main(
 
 	)
 {
-	float3 normal_world = normalize(i_normal);
-	float3 lightDir = float3(0, -1, 0);
-	float lambertTerm;
-	float dotProduct;
+	float3 normal_world;
+	if (isFrontFacing)
+	{
+		normal_world = normalize(i_normal);
+	}
+	else
+	{
+		normal_world = normalize(-i_normal);
+	}
 	
-	dotProduct = dot(normal_world, -lightDir);
-	lambertTerm = max(dotProduct, 0.0);
+	float3 lightDir = float3(0, -1, 0);
+	float dotProduct = dot(normal_world, -lightDir);
+	float lambertTerm = max(dotProduct, 0.0);
 	lambertTerm = 0.6 * lambertTerm;
 	
-	float4 materialColor = float4(1, 0, 0, 1);
-	// Output solid white
-	o_color = materialColor * (lambertTerm + 0.4);
+	float3 materialColor = float3(1, 0, 0);
+	// Output solid red
+	float3 temp_color = materialColor * (lambertTerm + 0.4);
+	o_color = float4(temp_color, 1);
 }
 
 #elif defined( EAE6320_PLATFORM_GL )
@@ -83,20 +91,24 @@ out vec4 o_color;
 
 void main()
 {
+	vec3 normal_world;
+	if (gl_FrontFacing)
+	{
+		normal_world = normalize(i_normal);
+	}
+	else
+	{
+		normal_world = normalize(-i_normal);
+	}	
 	
-	vec3 normal_world = normalize(i_normal);
 	vec3 lightDir = vec3(0, -1, 0);
-	float lambertTerm;
-	float dotProduct;
-	
-	dotProduct = dot(normal_world, -lightDir);
-	lambertTerm = max(dotProduct, 0.0);
+	float dotProduct = dot(normal_world, -lightDir);
+	float lambertTerm = max(dotProduct, 0.0);
 	lambertTerm = 0.6 * lambertTerm;
 	
-	vec4 materialColor = vec4(1, 0, 0, 1);
-	
-	// Output solid white
-	o_color = materialColor * (lambertTerm + 0.4);
+	vec3 materialColor = vec3(1, 0, 0);
+	vec3 temp_color = materialColor * (lambertTerm + 0.4);
+	o_color = vec4(temp_color, 1);
 }
 
 #endif

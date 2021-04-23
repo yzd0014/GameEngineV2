@@ -254,7 +254,6 @@ namespace eae6320 {
 		}
 		void Tick(const float i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
-		void UpdateMeshNormal(Mesh* mesh);
 		void CollisionDetection(SparseMatrix<double> &o_E);
 		void SelfCollisionDetection();
 		void ConstructNeighborList();

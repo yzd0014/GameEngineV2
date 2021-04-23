@@ -291,44 +291,7 @@ void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 		clothMesh->m_pVertexDataInRAM[i].z = (float)x(2, i);
 	}
 
-	UpdateMeshNormal(clothMesh);
-}
-
-void eae6320::Cloth::UpdateMeshNormal(Mesh* clothMesh)
-{
-	//update vertex normals
-	for (int16_t i = 0; i < clothMesh->GetIndicesCount(); i += 3) {
-#if defined( EAE6320_PLATFORM_D3D )
-		int16_t index_0 = clothMesh->m_pIndexDataInRAM[i];
-		int16_t index_1 = clothMesh->m_pIndexDataInRAM[i + 2];
-		int16_t index_2 = clothMesh->m_pIndexDataInRAM[i + 1];
-#elif defined( EAE6320_PLATFORM_GL )
-		int16_t index_0 = clothMesh->m_pIndexDataInRAM[i];
-		int16_t index_1 = clothMesh->m_pIndexDataInRAM[i + 1];
-		int16_t index_2 = clothMesh->m_pIndexDataInRAM[i + 2];
-#endif
-		Math::sVector vec_1(clothMesh->m_pVertexDataInRAM[index_1].x - clothMesh->m_pVertexDataInRAM[index_0].x,
-			clothMesh->m_pVertexDataInRAM[index_1].y - clothMesh->m_pVertexDataInRAM[index_0].y,
-			clothMesh->m_pVertexDataInRAM[index_1].z - clothMesh->m_pVertexDataInRAM[index_0].z);
-
-		Math::sVector vec_2(clothMesh->m_pVertexDataInRAM[index_2].x - clothMesh->m_pVertexDataInRAM[index_0].x,
-			clothMesh->m_pVertexDataInRAM[index_2].y - clothMesh->m_pVertexDataInRAM[index_0].y,
-			clothMesh->m_pVertexDataInRAM[index_2].z - clothMesh->m_pVertexDataInRAM[index_0].z);
-
-		Math::sVector normal = -1 * Math::Cross(vec_1, vec_2);
-		normal.Normalize();
-		clothMesh->m_pVertexDataInRAM[index_0].nor_x = normal.x;
-		clothMesh->m_pVertexDataInRAM[index_0].nor_y = normal.y;
-		clothMesh->m_pVertexDataInRAM[index_0].nor_z = normal.z;
-
-		clothMesh->m_pVertexDataInRAM[index_1].nor_x = normal.x;
-		clothMesh->m_pVertexDataInRAM[index_1].nor_y = normal.y;
-		clothMesh->m_pVertexDataInRAM[index_1].nor_z = normal.z;
-
-		clothMesh->m_pVertexDataInRAM[index_2].nor_x = normal.x;
-		clothMesh->m_pVertexDataInRAM[index_2].nor_y = normal.y;
-		clothMesh->m_pVertexDataInRAM[index_2].nor_z = normal.z;
-	}
+	clothMesh->UpdateMeshNormals();
 }
 
 void eae6320::Cloth::UpdateGameObjectBasedOnInput()
