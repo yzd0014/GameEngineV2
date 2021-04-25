@@ -41,7 +41,7 @@ namespace eae6320
 		// for the frame currently being submitted
 		void SubmitElapsedTime( const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_simulationTime );
 		void SubmitBGColor(const float *i_color);
-		void SubmitObject(Math::cMatrix_transformation &i_localToWorldMat, Effect *i_pEffect, Mesh * i_pMesh);
+		void SubmitObject(Math::sVector i_color, Math::cMatrix_transformation &i_localToWorldMat, Effect *i_pEffect, Mesh * i_pMesh);
 		void SubmitCamera(Math::cMatrix_transformation &i_transform_worldToCamera, Math::cMatrix_transformation &i_transform_cameraToProjected);
 
 		// When the application is ready to submit data for a new frame

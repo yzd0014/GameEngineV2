@@ -23,12 +23,19 @@ cbuffer g_constantBuffer_perFrame : register( b0 )
 	float g_elapsedSecondCount_systemTime;
 	float g_elapsedSecondCount_simulationTime;
 	// For float4 alignment
-	float2 g_padding;
+	float2 g_padding0;
+	
+	float3 g_lightSourceADir;
+	float3 g_lightSourceBDir;
+	float2 g_padding1;
 };
 
 cbuffer g_constantBuffer_perDrawCall : register( b2 )
 {
   float4x4 g_transform_localToWorld;
+  
+  float3 g_color;
+  float padding;
 };
 
 // Entry Point
@@ -94,13 +101,19 @@ layout( std140, binding = 0 ) uniform g_constantBuffer_perFrame
 
 	float g_elapsedSecondCount_systemTime;
 	float g_elapsedSecondCount_simulationTime;
-	// For vec4 alignment
-	vec2 g_padding;
+	vec2 g_padding0;
+	
+	vec3 g_lightSourceADir;
+	vec3 g_lightSourceBDir;
+	vec2 g_padding1;
 };
 
 layout( std140, binding = 2 ) uniform g_constantBuffer_perDrawCall
 {
   mat4 g_transform_localToWorld;
+  
+  vec3 g_color;
+  float padding;
 };
 
 // Input

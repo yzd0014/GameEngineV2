@@ -77,28 +77,24 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	masterMeshArray.push_back(mesh_shell);
 	masterMeshArray.push_back(mesh_sphere);
 	masterMeshArray.push_back(mesh_smallCube);
+	
+	//load effect
+	Effect* pDefaultEffect;
+	Effect::Load("data/effects/default.effect", pDefaultEffect);
+	masterEffectArray.push_back(pDefaultEffect);
 
-	//create two effect
-	Effect* pEffect_white;
-	Effect* pEffect_red;
-
-	Effect::Load("data/effects/white.effect", pEffect_white);
-	Effect::Load("data/effects/red.effect", pEffect_red);
-
-	masterEffectArray.push_back(pEffect_white);
-	masterEffectArray.push_back(pEffect_red);
 	{
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, -6.0f, -2.0f);
-		MoveableCube* pGameObject = new MoveableCube(pEffect_white, mesh_sphere, objState);
+		MoveableCube* pGameObject = new MoveableCube(pDefaultEffect, mesh_sphere, objState);
 		noColliderObjects.push_back(pGameObject);
 	}
 	//add cloth
 	{
-		
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		Cloth* pGameObject = new Cloth(pEffect_red, mesh_cloth, objState, GetSimulationUpdatePeriod_inSeconds());
+		Cloth* pGameObject = new Cloth(pDefaultEffect, mesh_cloth, objState, GetSimulationUpdatePeriod_inSeconds());
+		pGameObject->m_color = Math::sVector(0.12f, 0.56f, 1.0f);
 		noColliderObjects.push_back(pGameObject);
 	}
 	
@@ -106,7 +102,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	{
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, -11.0f, 0.0f);
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_plane, objState);
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_plane, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
 		noColliderObjects.push_back(pGameObject);
 	}
@@ -138,10 +134,11 @@ void  eae6320::cHalo::UpdateSimulationBasedOnTime(const float i_elapsedSecondCou
 
 eae6320::cResult eae6320::cHalo::CleanUp()
 {
+	/*
 	UserOutput::DebugPrint("Cloth Simulation(%d times) : %f ticks(%f s)",
 		g_Profiler.m_Allccumulators[0]->m_Count,
 		g_Profiler.m_Allccumulators[0]->average(),
-		g_Profiler.m_Allccumulators[0]->getAverageTime());
+		g_Profiler.m_Allccumulators[0]->getAverageTime());*/
 	cbApplication::CleanUp();
 	return Results::Success;
 }

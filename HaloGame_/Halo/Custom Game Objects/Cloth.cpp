@@ -10,7 +10,7 @@
 #include "Engine/Profiling/Profiling.h"
 
 void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
-	PROFILE_UNSCOPED(0);
+	//PROFILE_UNSCOPED(0);
 	Mesh* clothMesh = Mesh::s_manager.Get(GetMesh());
 
 	//momentum update

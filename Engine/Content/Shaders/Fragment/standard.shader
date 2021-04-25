@@ -19,9 +19,20 @@ cbuffer g_constantBuffer_perFrame : register( b0 )
 	float g_elapsedSecondCount_systemTime;
 	float g_elapsedSecondCount_simulationTime;
 	// For float4 alignment
-	float2 g_padding;
+	float2 g_padding0;
+	
+	float3 g_lightSourceADir;
+	float3 g_lightSourceBDir;
+	float2 g_padding1;
 };
 
+cbuffer g_constantBuffer_perDrawCall : register( b2 )
+{
+  float4x4 g_transform_localToWorld;
+  
+  float3 g_color;
+  float padding;
+};
 
 // Entry Point
 //============
@@ -29,6 +40,7 @@ cbuffer g_constantBuffer_perFrame : register( b0 )
 void main(
 	in const float4 i_position : SV_POSITION,
 	in const float3 i_normal : NORMAL,
+	in bool isFrontFacing : SV_IsFrontFace,
 
 	// Output
 	//=======
@@ -39,18 +51,22 @@ void main(
 
 	)
 {
-	float3 normal_world = normalize(i_normal);
-	float3 lightDir = float3(0, -1, 0);
-	float lambertTerm;
-	float dotProduct;
+	float3 normal_world;
+	if (isFrontFacing)
+	{
+		normal_world = normalize(i_normal);
+	}
+	else
+	{
+		normal_world = normalize(-i_normal);
+	}
 	
-	dotProduct = dot(normal_world, -lightDir);
-	lambertTerm = max(dotProduct, 0.0);
+	float dotProduct = dot(normal_world, -g_lightSourceADir);
+	float lambertTerm = max(dotProduct, 0.0);
 	lambertTerm = 0.6 * lambertTerm;
 	
-	float4 materialColor = float4(1, 1, 1, 1);
-	// Output solid white
-	o_color = materialColor * (lambertTerm + 0.4);
+	float3 temp_color = g_color * (lambertTerm + 0.4);
+	o_color = float4(temp_color, 1);
 }
 
 #elif defined( EAE6320_PLATFORM_GL )
@@ -65,8 +81,19 @@ layout( std140, binding = 0 ) uniform g_constantBuffer_perFrame
 
 	float g_elapsedSecondCount_systemTime;
 	float g_elapsedSecondCount_simulationTime;
-	// For vec4 alignment
-	vec2 g_padding;
+	vec2 g_padding0;
+	
+	vec3 g_lightSourceADir;
+	vec3 g_lightSourceBDir;
+	vec2 g_padding1;
+};
+
+layout( std140, binding = 2 ) uniform g_constantBuffer_perDrawCall
+{
+  mat4 g_transform_localToWorld;
+  
+  vec3 g_color;
+  float padding;
 };
 
 //Input 
@@ -83,19 +110,22 @@ out vec4 o_color;
 
 void main()
 {
-	vec3 normal_world = normalize(i_normal);
-	vec3 lightDir = vec3(0, -1, 0);
-	float lambertTerm;
-	float dotProduct;
+	vec3 normal_world;
+	if (gl_FrontFacing)
+	{
+		normal_world = normalize(i_normal);
+	}
+	else
+	{
+		normal_world = normalize(-i_normal);
+	}	
 	
-	dotProduct = dot(normal_world, -lightDir);
-	lambertTerm = max(dotProduct, 0.0);
+	float dotProduct = dot(normal_world, -g_lightSourceADir);
+	float lambertTerm = max(dotProduct, 0.0);
 	lambertTerm = 0.6 * lambertTerm;
 	
-	vec4 materialColor = vec4(1, 1, 1, 1);
-	
-	// Output solid white
-	o_color = materialColor * (lambertTerm + 0.4);
+	vec3 temp_color = g_color * (lambertTerm + 0.4);
+	o_color = vec4(temp_color, 1);
 }
 
 #endif

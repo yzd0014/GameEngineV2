@@ -71,7 +71,7 @@ void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_e
 			orientation = colliderObjects[i]->m_State.orientation;
 		}
 		//submit
-		eae6320::Graphics::SubmitObject(Math::cMatrix_transformation(orientation, position),
+		eae6320::Graphics::SubmitObject(colliderObjects[i]->m_color, Math::cMatrix_transformation(orientation, position),
 			colliderObjects[i]->GetEffect(), Mesh::s_manager.Get(colliderObjects[i]->GetMesh()));
 
 	}
@@ -91,7 +91,7 @@ void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_e
 			orientation = noColliderObjects[i]->m_State.orientation;
 		}
 		//submit
-		eae6320::Graphics::SubmitObject(Math::cMatrix_transformation(orientation, position),
+		eae6320::Graphics::SubmitObject(noColliderObjects[i]->m_color, Math::cMatrix_transformation(orientation, position),
 			noColliderObjects[i]->GetEffect(), Mesh::s_manager.Get(noColliderObjects[i]->GetMesh()));
 
 	}
@@ -453,7 +453,6 @@ OnExit:
 
 void eae6320::Application::cbApplication::EnableConsolePrinting(bool enabled)
 {
-#ifndef _ENABLE_CONSOLE
 	enableConsole = enabled;
 	if (enabled)
 	{
@@ -462,19 +461,11 @@ void eae6320::Application::cbApplication::EnableConsolePrinting(bool enabled)
 		freopen("CON", "w", stdout);
 		std::cout << "Console Initialized..." << std::endl;
 	}
-#endif // !_ENABLE_CONSOLE
 }
 
 eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 {
 	auto result = Results::Success;
-
-#ifdef _ENABLE_CONSOLE
-	AllocConsole();
-	AttachConsole(GetCurrentProcessId());
-	freopen("CON", "w", stdout);
-	std::cout << "Console Initialized..." << std::endl;
-#endif // _ENABLE_CONSOLE
 
 	// User Output
 	{
@@ -533,15 +524,10 @@ eae6320::cResult eae6320::Application::cbApplication::CleanUp_all()
 {
 	auto result = Results::Success;
 
-#ifdef _ENABLE_CONSOLE
-	fclose(stdout);
-#endif // _ENABLE_CONSOLE
-#ifndef _ENABLE_CONSOLE
 	if (enableConsole)
 	{
 		fclose(stdout);
 	}
-#endif // !_ENABLE_CONSOLE
 
 	// Exit the application loop
 	{

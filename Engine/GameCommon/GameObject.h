@@ -81,6 +81,7 @@ namespace eae6320 {
 				return active;
 			}
 			Physics::sRigidBodyState m_State;
+			Math::sVector m_color = Math::sVector(1, 1, 1);
 			char objectType[20];
 		private:
 			eae6320::Assets::cHandle<Mesh> m_Mesh;

@@ -14,6 +14,7 @@
 #include "Configuration.h"
 
 #include <Engine/Math/cMatrix_transformation.h>
+#include "Engine/Math/sVector.h"
 
 // Format Definitions
 //===================
@@ -31,12 +32,19 @@ namespace eae6320
 
 				float g_elapsedSecondCount_systemTime = 0.0f;
 				float g_elapsedSecondCount_simulationTime = 0.0f;
-				float padding[2];	// For float4 alignment
+				float padding0[2];	// For float4 alignment
+				
+				Math::sVector g_lightSourceADir = Math::sVector(0, -1, 0);
+				Math::sVector g_lightSourceBDir = Math::sVector(0, -1, 0);
+				float padding1[2];
 			};
 
 			struct sPerDrawCall
 			{
 				Math::cMatrix_transformation g_transform_localToWorld;
+				
+				Math::sVector g_color = Math::sVector(1, 1, 1);
+				float padding;
 			};
 		}
 	}

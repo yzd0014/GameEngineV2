@@ -43,7 +43,7 @@ return
 		"Meshes/shell.mesh",
 	},
 	effects = {
-		"Effects/white.effect",
+		"Effects/default.effect",
 		"Effects/red.effect",
 		"Effects/blue.effect",
 		"Effects/white_front_light.effect",

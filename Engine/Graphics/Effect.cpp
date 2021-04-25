@@ -4,6 +4,8 @@
 namespace eae6320
 {
 	std::vector<Effect*> masterEffectArray;
+	Math::sVector lightSourceADir = Math::sVector(0, -1, 0);
+	Math::sVector lightSourceBDir = Math::sVector(0, -1, 0);
 }
 
 Effect::Effect() {

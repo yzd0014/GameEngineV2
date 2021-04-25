@@ -77,6 +77,8 @@ void eae6320::Graphics::SubmitElapsedTime(const float i_elapsedSecondCount_syste
 void eae6320::Graphics::SubmitCamera(Math::cMatrix_transformation &i_transform_worldToCamera, Math::cMatrix_transformation &i_transform_cameraToProjected) {
 	s_dataBeingSubmittedByApplicationThread->constantData_perFrame.g_transform_worldToCamera = i_transform_worldToCamera;
 	s_dataBeingSubmittedByApplicationThread->constantData_perFrame.g_transform_cameraToProjected = i_transform_cameraToProjected;
+	s_dataBeingSubmittedByApplicationThread->constantData_perFrame.g_lightSourceADir = lightSourceADir;
+	s_dataBeingSubmittedByApplicationThread->constantData_perFrame.g_lightSourceBDir = lightSourceBDir;
 }
 void eae6320::Graphics::SubmitBGColor(const float *i_color) {
 	for (int i = 0; i < 4; i++) {
@@ -84,9 +86,11 @@ void eae6320::Graphics::SubmitBGColor(const float *i_color) {
 	}
 }
 
-void eae6320::Graphics::SubmitObject(Math::cMatrix_transformation &i_localToWorldMat, Effect *i_pEffect, Mesh * i_pMesh) {
+void eae6320::Graphics::SubmitObject(Math::sVector i_color, Math::cMatrix_transformation &i_localToWorldMat, Effect *i_pEffect, Mesh * i_pMesh) {
 	s_dataBeingSubmittedByApplicationThread->constantData_perDrawCall[s_dataBeingSubmittedByApplicationThread->numberOfObject].g_transform_localToWorld
 		= i_localToWorldMat;
+
+	s_dataBeingSubmittedByApplicationThread->constantData_perDrawCall[s_dataBeingSubmittedByApplicationThread->numberOfObject].g_color = i_color;
 	
 	i_pEffect->IncrementReferenceCount();
 	s_dataBeingSubmittedByApplicationThread->allEffectInScreen[s_dataBeingSubmittedByApplicationThread->numberOfObject] = i_pEffect;

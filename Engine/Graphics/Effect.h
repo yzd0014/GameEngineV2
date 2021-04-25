@@ -23,6 +23,7 @@
 #include "cShader.h"
 #include "cRenderState.h"
 #include "Engine/Platform/Platform.h"
+#include "Engine/Math/sVector.h"
 
 class Effect {
 public:
@@ -83,4 +84,6 @@ private:
 namespace eae6320
 {
 	extern std::vector<Effect*> masterEffectArray;
+	extern Math::sVector lightSourceADir;
+	extern Math::sVector lightSourceBDir;
 }
