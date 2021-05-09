@@ -65,6 +65,7 @@ void eae6320::MoveableCube::UpdateGameObjectBasedOnInput() {
 	}
 	*/
 	
+	/*
 	if (UserInput::IsKeyEdgeTriggered(UserInput::KeyCodes::Space))
 	{
 		Math::sVector dir_t = GameplayUtility::MouseRayCasting();
@@ -84,10 +85,12 @@ void eae6320::MoveableCube::UpdateGameObjectBasedOnInput() {
 			Physics::sRigidBodyState objState;
 			Math::sVector sIntersect = Math::EigenVector2nativeVector(intersect);
 			objState.position = sIntersect;
-			GameCommon::GameObject * pGameObject = new GameCommon::GameObject(masterEffectArray[1], masterMeshArray[4], objState);
+			GameCommon::GameObject * pGameObject = new GameCommon::GameObject(masterEffectArray[0], masterMeshArray[4], objState);
 			noColliderObjects.push_back(pGameObject);
 		}
+
 	}
+	*/
 	
 }
 void eae6320::MoveableCube::Tick(const float i_secondCountToIntegrate)
