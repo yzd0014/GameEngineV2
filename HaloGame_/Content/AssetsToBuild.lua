@@ -29,6 +29,7 @@ return
 		"Meshes/9.mesh",
 		"Meshes/0.mesh",
 		"Meshes/square_plane.mesh",
+		"Meshes/square_plane(8x8).mesh",
 		"Meshes/cloth10x10.mesh",
 		"Meshes/cloth2x2.mesh",
 		"Meshes/tri.mesh",
@@ -41,6 +42,7 @@ return
 		"Meshes/wheel.mesh",
 		"Meshes/box.mesh",
 		"Meshes/shell.mesh",
+		"Meshes/material_point.mesh",
 	},
 	effects = {
 		"Effects/default.effect",

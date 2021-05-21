@@ -24,6 +24,7 @@
 #include "Engine/GameCommon/GameObject.h"
 // Static Data Initialization
 //===========================
+#define maxNumActors 7000
 namespace
 {
 	
@@ -38,10 +39,10 @@ namespace
 	struct sDataRequiredToRenderAFrame
 	{
 		eae6320::Graphics::ConstantBufferFormats::sPerFrame constantData_perFrame;
-		eae6320::Graphics::ConstantBufferFormats::sPerDrawCall constantData_perDrawCall[100];
+		eae6320::Graphics::ConstantBufferFormats::sPerDrawCall constantData_perDrawCall[maxNumActors];
 		float BGColor[4];
-		Effect* allEffectInScreen[100];
-		Mesh* allMeshInScreen[100];
+		Effect* allEffectInScreen[maxNumActors];
+		Mesh* allMeshInScreen[maxNumActors];
 		//uint16_t EMCounter = 0;//use to initilize effect and mesh array above;
 		uint16_t numberOfObject = 0;
 	};
@@ -98,7 +99,7 @@ void eae6320::Graphics::SubmitObject(Math::sVector i_color, Math::cMatrix_transf
 	i_pMesh->IncrementReferenceCount();
 	s_dataBeingSubmittedByApplicationThread->allMeshInScreen[s_dataBeingSubmittedByApplicationThread->numberOfObject] = i_pMesh;
 
-	if (s_dataBeingSubmittedByApplicationThread->numberOfObject < 99) {
+	if (s_dataBeingSubmittedByApplicationThread->numberOfObject < maxNumActors - 1) {
 		s_dataBeingSubmittedByApplicationThread->numberOfObject++;
 	}
 }

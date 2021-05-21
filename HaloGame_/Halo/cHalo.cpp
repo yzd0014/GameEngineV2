@@ -20,7 +20,7 @@
 #include "Engine/Profiling/Profiling.h"
 //#include "Halo/Custom Game Objects/SoftShell.h"
 #include "Halo/Custom Game Objects/MoveableCube.h"
-//#include "Halo/Custom Game Objects/Paper.h"
+#include "Halo/Custom Game Objects/MPM.h"
 
 // Inherited Implementation
 //=========================
@@ -45,70 +45,51 @@ void eae6320::cHalo::UpdateBasedOnInput()
 eae6320::cResult eae6320::cHalo::Initialize()
 {
 	//initialize camera 
-	mainCamera.Initialize(Math::sVector(0.0f, -1.0f, 15.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
+	mainCamera.Initialize(Math::sVector(2.5f, 6.0f, 12.5f), Math::sVector(-30.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 	//mainCamera.Initialize(Math::sVector(5.0f, 10.0f, 15.0f), Math::sVector(-30.0f, 20.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 
 	//create two meshes 	
 	eae6320::Assets::cHandle<Mesh> mesh_plane;
-	eae6320::Assets::cHandle<Mesh> mesh_cloth;
-	eae6320::Assets::cHandle<Mesh> mesh_shell;
-	eae6320::Assets::cHandle<Mesh> mesh_sphere;
-	eae6320::Assets::cHandle<Mesh> mesh_smallCube;
+	eae6320::Assets::cHandle<Mesh> mesh_point;
 
 	auto result = eae6320::Results::Success;
-	if (!(result = Mesh::s_manager.Load("data/meshes/plane.mesh", mesh_plane))) {
+	if (!(result = Mesh::s_manager.Load("data/meshes/square_plane.mesh", mesh_plane))) {
 		EAE6320_ASSERT(false);
 	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/cloth10x10.mesh", mesh_cloth))) {
-		EAE6320_ASSERT(false);
-	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/shell.mesh", mesh_shell))) {
-		EAE6320_ASSERT(false);
-	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/sphere4.mesh", mesh_sphere))) {
-		EAE6320_ASSERT(false);
-	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/bullet.mesh", mesh_smallCube))) {
+	if (!(result = Mesh::s_manager.Load("data/meshes/material_point.mesh", mesh_point))) {
 		EAE6320_ASSERT(false);
 	}
 
 	masterMeshArray.push_back(mesh_plane);
-	masterMeshArray.push_back(mesh_cloth);
-	masterMeshArray.push_back(mesh_shell);
-	masterMeshArray.push_back(mesh_sphere);
-	masterMeshArray.push_back(mesh_smallCube);
+	masterMeshArray.push_back(mesh_point);
 	
 	//load effect
 	Effect* pDefaultEffect;
 	Effect::Load("data/effects/default.effect", pDefaultEffect);
 	masterEffectArray.push_back(pDefaultEffect);
 
+	//MPM simulator
+	int n_particles = 0;
+	MPM *MPMSim;
 	{
 		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, -6.0f, -2.0f);
-		MoveableCube* pGameObject = new MoveableCube(pDefaultEffect, mesh_sphere, objState);
-		noColliderObjects.push_back(pGameObject);
+		objState.position = Math::sVector(2.5f, 0.0f, 2.5f);
+		MPMSim = new MPM(pDefaultEffect, mesh_plane, objState, GetSimulationUpdatePeriod_inSeconds());
+		n_particles = MPMSim->n_particles;
+		noColliderObjects.push_back(MPMSim);
 	}
-	//add cloth
+	
+	for (int i = 0; i < n_particles; i++)
 	{
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		Cloth* pGameObject = new Cloth(pDefaultEffect, mesh_cloth, objState, GetSimulationUpdatePeriod_inSeconds());
+		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_point, objState);
 		pGameObject->m_color = Math::sVector(0.12f, 0.56f, 1.0f);
 		noColliderObjects.push_back(pGameObject);
-	}
-	
-	//add ground mesh
-	{
-		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, -11.0f, 0.0f);
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_plane, objState);
-		strcpy_s(pGameObject->objectType, "Ground");
-		noColliderObjects.push_back(pGameObject);
+		MPMSim->fluid[i] = pGameObject;
 	}
 
 	//EnableConsolePrinting(true);
-	
 	return Results::Success;
 }
 
