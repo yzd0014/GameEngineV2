@@ -29,6 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cHalo.h" />
+    <ClInclude Include="Custom Game Objects\BallJointCube.h" />
     <ClInclude Include="Custom Game Objects\Boss.h" />
     <ClInclude Include="Custom Game Objects\Bullet.h" />
     <ClInclude Include="Custom Game Objects\Car.h" />
