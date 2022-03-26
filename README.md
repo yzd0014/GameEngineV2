@@ -15,9 +15,13 @@
     <img src="Images/ClothSim.png" width="512" height="512">
 
 
+
+
 2. "HaloGame_\Halo\Custom Game Objects\JellyCube.h" implements elastic object simulation.
     
     <img src="Images/ElasticObject.png" width="512" height="512">
+
+
 
 
 3. "HaloGame_\Halo\Custom Game Objects\Car.h" and its .cpp file implement car simulation by using constratint solver in maximum coordinate system.
@@ -25,9 +29,13 @@
     <img src="Images/MaximumConstraint.png" width="512" height="512">
 
 
+
+
 4. "HaloGame_\Halo\Custom Game Objects\SphericalJoint.h" implments a spherical joint in reduced coordinate system.
     
     <img src="Images/ReducedConstraint.png" width="512" height="512">
+
+
 
 
 5. "HaloGame_\Halo\Custom Game Objects\MPM.h" implements MPM.
