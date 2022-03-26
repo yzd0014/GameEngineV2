@@ -49,6 +49,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//create two meshes 	
 	eae6320::Assets::cHandle<Mesh> mesh_plane;
 	eae6320::Assets::cHandle<Mesh> mesh_cube;
+	eae6320::Assets::cHandle<Mesh> mesh_anchor;
 
 	auto result = eae6320::Results::Success;
 	if (!(result = Mesh::s_manager.Load("data/meshes/square_plane.mesh", mesh_plane))) {
@@ -57,15 +58,26 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	if (!(result = Mesh::s_manager.Load("data/meshes/cube.mesh", mesh_cube))) {
 		EAE6320_ASSERT(false);
 	}
-
+	if (!(result = Mesh::s_manager.Load("data/meshes/bullet.mesh", mesh_anchor))) {
+		EAE6320_ASSERT(false);
+	}
 	masterMeshArray.push_back(mesh_plane);
 	masterMeshArray.push_back(mesh_cube);
-	
+	masterMeshArray.push_back(mesh_anchor);
 	//load effect
 	Effect* pDefaultEffect;
 	Effect::Load("data/effects/default.effect", pDefaultEffect);
 	masterEffectArray.push_back(pDefaultEffect);
+	Effect* pRedEffect;
+	Effect::Load("data/effects/red.effect", pRedEffect);
+	masterEffectArray.push_back(pRedEffect);
 
+	{
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pRedEffect, mesh_anchor, objState);
+		noColliderObjects.push_back(pGameObject);
+	}
 	//Ground
 	{
 		Physics::sRigidBodyState objState;
