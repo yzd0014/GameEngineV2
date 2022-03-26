@@ -69,7 +69,10 @@
     <ClInclude Include="Custom Game Objects\MPM.h">
       <Filter>Custom Game Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Custom Game Objects\BallJointCube.h">
+    <ClInclude Include="Custom Game Objects\SphericalJoint.h">
+      <Filter>Custom Game Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Custom Game Objects\HingeJointCube.h">
       <Filter>Custom Game Objects</Filter>
     </ClInclude>
   </ItemGroup>

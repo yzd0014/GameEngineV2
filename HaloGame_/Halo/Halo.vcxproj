@@ -29,7 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cHalo.h" />
-    <ClInclude Include="Custom Game Objects\BallJointCube.h" />
+    <ClInclude Include="Custom Game Objects\HingeJointCube.h" />
     <ClInclude Include="Custom Game Objects\Boss.h" />
     <ClInclude Include="Custom Game Objects\Bullet.h" />
     <ClInclude Include="Custom Game Objects\Car.h" />
@@ -47,6 +47,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Custom Game Objects\SphericalJoint.h" />
     <ClInclude Include="Custom Game Objects\Tri.h" />
     <ClInclude Include="Resource Files\Resource.h" />
     <ClInclude Include="Resource Files\targetver.h" />

@@ -8,10 +8,10 @@
 using namespace Eigen;
 namespace eae6320
 {
-	class BallJointCube : public eae6320::GameCommon::GameObject
+	class HingeJointCube : public eae6320::GameCommon::GameObject //actually this is a hinge joint
 	{
 	public: 
-		BallJointCube(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State):
+		HingeJointCube(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State):
 			GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 		{
 			uJoinLocal = Vector3f(-1.0f, -1.0f, 0.0f);
@@ -65,8 +65,8 @@ namespace eae6320
 			VectorXf Pr_ddot = M_r.inverse() * Q_r;
 			//integration
 			o_dot = o_dot + Pr_ddot(0) * i_secondCountToIntegrate;
-			o_dot *= 0.9f;//damping
-			o = o + o_dot;
+			o_dot *= 0.99f;//damping
+			o = o + o_dot * i_secondCountToIntegrate;
 	
 			//update inertiaTensor and others
 			Matrix3f Rt;

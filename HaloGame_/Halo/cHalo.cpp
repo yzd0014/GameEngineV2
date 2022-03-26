@@ -18,8 +18,8 @@
 #include "Custom Game Objects/Ground.h"
 #include "Halo/Custom Game Objects/Cloth.h"
 #include "Engine/Profiling/Profiling.h"
-#include "Halo/Custom Game Objects/BallJointCube.h"
-
+#include "Halo/Custom Game Objects/HingeJointCube.h"
+#include "Halo/Custom Game Objects/SphericalJoint.h"
 // Inherited Implementation
 //=========================
 
@@ -77,7 +77,8 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//cube with ball joint
 	{
 		Physics::sRigidBodyState objState;
-		BallJointCube * pGameObject = new BallJointCube(pDefaultEffect, mesh_cube, objState);
+		//HingeJointCube * pGameObject = new HingeJointCube(pDefaultEffect, mesh_cube, objState);
+		SphericalJoint *pGameObject = new SphericalJoint(pDefaultEffect, mesh_cube, objState);
 		noColliderObjects.push_back(pGameObject);
 	}
 

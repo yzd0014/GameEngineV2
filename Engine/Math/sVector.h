@@ -15,6 +15,7 @@ namespace eae6320
 	namespace Math
 	{
 		void GetSkewSymmetricMatrix(Vector3f &i_vecotor, Matrix3f &o_matrix);
+		Matrix3f ToSkewSymmetricMatrix(Vector3f &i_vecotor);
 
 		struct sVector
 		{
@@ -87,7 +88,8 @@ namespace eae6320
 		sVector Cross( const sVector i_lhs, const sVector i_rhs );
 
 		void NativeVector2EigenVector(sVector i_vector, Vector3f &o_vector);
-		sVector EigenVector2nativeVector(Vector3f &i_vector);
+		Vector3f NativeVector2EigenVector(const sVector &i_vector);
+		sVector EigenVector2nativeVector(const Vector3f &i_vector);
 		sVector GetTangentVector(sVector n);
 	}
 }

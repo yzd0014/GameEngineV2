@@ -177,6 +177,20 @@ void eae6320::Math::GetSkewSymmetricMatrix(Vector3f &i_vecotor, Matrix3f &o_matr
 	o_matrix(2, 1) = i_vecotor(0);
 }
 
+Matrix3f eae6320::Math::ToSkewSymmetricMatrix(Vector3f &i_vecotor)
+{
+	Matrix3f output;
+	output.setZero();
+	output(0, 1) = -i_vecotor(2);
+	output(0, 2) = i_vecotor(1);
+	output(1, 0) = i_vecotor(2);
+	output(1, 2) = -i_vecotor(0);
+	output(2, 0) = -i_vecotor(1);
+	output(2, 1) = i_vecotor(0);
+
+	return output;
+}
+
 void eae6320::Math::NativeVector2EigenVector(sVector i_vector, Vector3f &o_vector)
 {
 	o_vector(0) = i_vector.x;
@@ -184,12 +198,22 @@ void eae6320::Math::NativeVector2EigenVector(sVector i_vector, Vector3f &o_vecto
 	o_vector(2) = i_vector.z;
 }
 
-eae6320::Math::sVector eae6320::Math::EigenVector2nativeVector(Vector3f &i_vector)
+eae6320::Math::sVector eae6320::Math::EigenVector2nativeVector(const Vector3f &i_vector)
 {
 	sVector output;
 	output.x = i_vector(0);
 	output.y = i_vector(1);
 	output.z = i_vector(2);
+
+	return output;
+}
+
+Vector3f eae6320::Math::NativeVector2EigenVector(const sVector &i_vector)
+{
+	Vector3f output;
+	output(0) = i_vector.x;
+	output(1) = i_vector.y;
+	output(2) = i_vector.z;
 
 	return output;
 }
