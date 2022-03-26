@@ -17,8 +17,6 @@ namespace eae6320
 			GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 		{
 			uJointLocal = Vector3f(1.0f, -1.0f, -1.0f);
-			uJointGlobal = uJointLocal;
-			m_State.position = -Math::sVector(uJointGlobal(0), uJointGlobal(1), uJointGlobal(2));
 
 			M_d.resize(6, 6);
 			M_d.setZero();
@@ -28,19 +26,16 @@ namespace eae6320
 			M_d(2, 2) = mass;
 			localInertiaTensor.setIdentity();
 			localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* mass * 8;
-			globalInertiaTensor = localInertiaTensor;
-			M_d.block<3, 3>(3, 3) = globalInertiaTensor;
 
+			r_dot.setZero();
 			r.setZero();
 			r = Vector3f(0.7f, 4.0f, 0.4f);
-			r_dot.setZero();
-
-			F_user.setZero();
+			//r = Vector3f(0.0f, 0.4f, 0.0f);
+			physicsStateUpdate();
 		}
 		void Tick(const float i_secondCountToIntegrate)
 		{
 			float theta = r.norm();
-			//float theta_dot = r_dot.norm();
 			float a;
 			if (theta < 0.015) a = 1.0f - theta / 6.0f;
 			else a = sin(theta) / theta;
@@ -77,7 +72,7 @@ namespace eae6320
 			Matrix3f rrt = r * r.transpose();
 			T = a * I + b * Math::ToSkewSymmetricMatrix(r) + c * rrt;
 			Vector3f gamma;
-			gamma = (b * r.dot(r_dot) + a_dot) * r_dot - (b_dot * r_dot).cross(r) + (c_dot * r.dot(r_dot) + c * r_dot.norm() * r_dot.norm()) * r;
+			gamma = (c * r.dot(r_dot) + a_dot) * r_dot - (b_dot * r_dot).cross(r) + (c_dot * r.dot(r_dot) + c * r_dot.norm() * r_dot.norm()) * r;
 
 			MatrixXf H_t;
 			H_t.resize(6, 3);
@@ -111,13 +106,6 @@ namespace eae6320
 			r_dot *= 0.99f;
 			r = r + r_dot * i_secondCountToIntegrate;
 
-			//update inertiaTensor and others
-			Matrix3f Rt;
-			Rt = AngleAxisf(r.norm(), r.normalized());
-			globalInertiaTensor = Rt * localInertiaTensor * Rt.inverse();
-			M_d.block<3, 3>(3, 3) = globalInertiaTensor;
-			uJointGlobal = Rt * uJointLocal;
-
 			physicsStateUpdate();
 		}
 		void UpdateGameObjectBasedOnInput() override
@@ -131,6 +119,13 @@ namespace eae6320
 	private:
 		void physicsStateUpdate()
 		{
+			//update inertiaTensor and others
+			Matrix3f Rt;
+			Rt = AngleAxisf(r.norm(), r.normalized());
+			globalInertiaTensor = Rt * localInertiaTensor * Rt.transpose();
+			M_d.block<3, 3>(3, 3) = globalInertiaTensor;
+			uJointGlobal = Rt * uJointLocal;
+			
 			m_State.orientation = Math::cQuaternion(r.norm(), Math::EigenVector2nativeVector(r.normalized()));
 			m_State.orientation.Normalize();
 			m_State.position = -Math::sVector(uJointGlobal(0), uJointGlobal(1), uJointGlobal(2));

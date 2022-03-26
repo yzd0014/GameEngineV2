@@ -65,7 +65,7 @@ namespace eae6320
 			VectorXf Pr_ddot = M_r.inverse() * Q_r;
 			//integration
 			o_dot = o_dot + Pr_ddot(0) * i_secondCountToIntegrate;
-			o_dot *= 0.99f;//damping
+			//o_dot *= 0.99f;//damping
 			o = o + o_dot * i_secondCountToIntegrate;
 	
 			//update inertiaTensor and others
