@@ -87,3 +87,8 @@ namespace eae6320
 	extern Math::sVector lightSourceADir;
 	extern Math::sVector lightSourceBDir;
 }
+
+#define LOAD_EFFECT(effectPath, effectName)\
+Effect* effectName;\
+Effect::Load(effectPath, effectName);\
+masterEffectArray.push_back(effectName);

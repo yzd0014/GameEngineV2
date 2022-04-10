@@ -46,31 +46,14 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	mainCamera.Initialize(Math::sVector(0.0f, 5.0f, 12.5f), Math::sVector(-30.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 	//mainCamera.Initialize(Math::sVector(5.0f, 10.0f, 15.0f), Math::sVector(-30.0f, 20.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 
-	//create two meshes 	
-	eae6320::Assets::cHandle<Mesh> mesh_plane;
-	eae6320::Assets::cHandle<Mesh> mesh_cube;
-	eae6320::Assets::cHandle<Mesh> mesh_anchor;
+	//create two meshes
+	LOAD_MESH("data/meshes/square_plane.mesh", mesh_plane)
+	LOAD_MESH("data/meshes/cube.mesh", mesh_cube)
+	LOAD_MESH("data/meshes/bullet.mesh", mesh_anchor)
 
-	auto result = eae6320::Results::Success;
-	if (!(result = Mesh::s_manager.Load("data/meshes/square_plane.mesh", mesh_plane))) {
-		EAE6320_ASSERT(false);
-	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/cube.mesh", mesh_cube))) {
-		EAE6320_ASSERT(false);
-	}
-	if (!(result = Mesh::s_manager.Load("data/meshes/bullet.mesh", mesh_anchor))) {
-		EAE6320_ASSERT(false);
-	}
-	masterMeshArray.push_back(mesh_plane);
-	masterMeshArray.push_back(mesh_cube);
-	masterMeshArray.push_back(mesh_anchor);
 	//load effect
-	Effect* pDefaultEffect;
-	Effect::Load("data/effects/default.effect", pDefaultEffect);
-	masterEffectArray.push_back(pDefaultEffect);
-	Effect* pRedEffect;
-	Effect::Load("data/effects/red.effect", pRedEffect);
-	masterEffectArray.push_back(pRedEffect);
+	LOAD_EFFECT("data/effects/default.effect", pDefaultEffect)
+	LOAD_EFFECT("data/effects/red.effect", pRedEffect)
 
 	{
 		Physics::sRigidBodyState objState;
@@ -128,4 +111,3 @@ eae6320::cResult eae6320::cHalo::CleanUp()
 	cbApplication::CleanUp();
 	return Results::Success;
 }
-

@@ -141,3 +141,13 @@ namespace eae6320
 {
 	extern std::vector<eae6320::Assets::cHandle<Mesh>> masterMeshArray;
 }
+
+#define LOAD_MESH(meshPath, meshName)\
+eae6320::Assets::cHandle<Mesh> meshName;\
+{\
+	auto result = eae6320::Results::Success;\
+	if (!(result = Mesh::s_manager.Load(meshPath, meshName))) {\
+		EAE6320_ASSERT(false);\
+	}\
+	masterMeshArray.push_back(meshName);\
+}
