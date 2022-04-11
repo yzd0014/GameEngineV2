@@ -2,7 +2,7 @@
 #include "Engine/Math/sVector.h"
 #include "Engine/Math/cMatrix_transformation.h"
 #include "PhysicsSimulation.h"
-#include "ContactManager3D.h"
+#include "CollisionHelpers.h"
 #include "CollisionPair.h"
 #include "CollisionDetection.h"
 #include "Engine/UserOutput/UserOutput.h"
@@ -143,6 +143,8 @@ namespace eae6320 {
 				}
 			}
 		}
+		
+		//*************following functions ared used for continuious collision detection************************//
 		void MoveObjectsForward(std::vector<GameCommon::GameObject *> & o_allGameObjects, float timeSpan) {
 			size_t numOfObjects = o_allGameObjects.size();
 			for (size_t i = 0; i < numOfObjects; i++) {

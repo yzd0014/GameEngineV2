@@ -185,5 +185,112 @@ namespace eae6320
 			o_intersect = intersect;
 			return true;
 		}
+
+		void Barycentric(Math::sVector& p, Math::sVector& a, Math::sVector& b, Math::sVector& c, float &u, float &v, float &w)
+		{
+			Math::sVector v0 = b - a, v1 = c - a, v2 = p - a;
+			float d00 = Math::Dot(v0, v0);
+			float d01 = Dot(v0, v1);
+			float d11 = Dot(v1, v1);
+			float d20 = Dot(v2, v0);
+			float d21 = Dot(v2, v1);
+			float denom = d00 * d11 - d01 * d01;
+			v = (d11 * d20 - d01 * d21) / denom;
+			w = (d00 * d21 - d01 * d20) / denom;
+			u = 1.0f - v - w;
+		}
+
+		eae6320::Math::sVector GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c, bool guaranteeOutwards)
+		{
+			float bias = 0.000000000001f;
+			Math::sVector faceNormal;
+			faceNormal = Math::Cross(b - a, c - a);
+			if (faceNormal.GetLengthSQ() > bias)
+			{
+				Math::sVector testPoint;
+				if (guaranteeOutwards)
+				{
+					if (a.GetLengthSQ() > bias)
+					{
+						testPoint = a;
+					}
+					else if (b.GetLengthSQ() > bias)
+					{
+						testPoint = b;
+					}
+					else
+					{
+						testPoint = c;
+					}
+					if (Math::Dot(faceNormal, testPoint) < 0)
+					{
+						faceNormal = -faceNormal;//make sure that face normal always points outerwards
+					}
+				}
+				faceNormal = faceNormal.GetNormalized();
+			}
+			else if ((a - b).GetLengthSQ() < bias && (b - c).GetLengthSQ() < bias)
+			{// handle case when surface is a point
+				if (a.GetLengthSQ() < bias)
+				{
+					faceNormal = Math::sVector(1.0f, 0.0f, 0.0f);
+				}
+				else
+				{
+					faceNormal = a.GetNormalized();
+				}
+			}
+			else
+			{//handle case where surface is a line segement
+				if ((a - b).GetLengthSQ() > bias)
+				{
+					Math::sVector ab = b - a;
+					faceNormal = Math::Cross(Math::Cross(ab, a), ab);
+					if (faceNormal.GetLengthSQ() > bias)
+					{
+						faceNormal.Normalize();
+					}
+					else
+					{
+						faceNormal = Math::GetTangentVector(a - b).GetNormalized();
+					}
+				}
+				else if ((b - c).GetLengthSQ() > bias)
+				{
+					Math::sVector bc = c - b;
+					faceNormal = Math::Cross(Math::Cross(bc, b), bc);
+					if (faceNormal.GetLengthSQ() > bias)
+					{
+						faceNormal.Normalize();
+					}
+					else
+					{
+						faceNormal = Math::GetTangentVector(b - c).GetNormalized();
+					}
+				}
+				else if ((c - a).GetLengthSQ() > bias)
+				{
+					Math::sVector ca = a - c;
+					faceNormal = Math::Cross(Math::Cross(ca, c), ca);
+					if (faceNormal.GetLengthSQ() > bias)
+					{
+						faceNormal.Normalize();
+					}
+					else
+					{
+						faceNormal = Math::GetTangentVector(c - a).GetNormalized();
+					}
+				}
+			}
+			return faceNormal;
+		}
+
+		float SqDistPointTriangle(Math::sVector& vPoint, Math::sVector& vA, Math::sVector& vB, Math::sVector& vC)
+		{
+			float fU, fV, fW;
+			Barycentric(vPoint, vA, vB, vC, fU, fV, fW);
+			Math::sVector vClosestPoint = vA * fU + vB * fV + vC * fW;
+			return (vClosestPoint - vPoint).GetLengthSQ();
+		}
 	}
 }

@@ -20,8 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CollisionDetection.cpp" />
+    <ClCompile Include="CollisionHelpers.cpp" />
     <ClCompile Include="CollisionResolver.cpp" />
-    <ClCompile Include="ContactManager3D.cpp" />
     <ClCompile Include="HingeJoint.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
@@ -39,9 +39,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CollisionDetection.h" />
+    <ClInclude Include="CollisionHelpers.h" />
     <ClInclude Include="CollisionPair.h" />
     <ClInclude Include="CollisionResolver.h" />
-    <ClInclude Include="ContactManager3D.h" />
     <ClInclude Include="HingeJoint.h" />
     <ClInclude Include="PhysicsSimulation.h" />
     <ClInclude Include="PointJoint.h" />

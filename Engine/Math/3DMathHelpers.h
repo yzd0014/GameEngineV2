@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/EigenLibrary/Eigen/Dense"
+#include "sVector.h"
 
 using namespace Eigen;
 
@@ -15,5 +16,9 @@ namespace eae6320
 		//returned normal points from edge1 to edge2
 		bool EdgeToEdgeDis(Vector3d pa, Vector3d pb, Vector3d pc, Vector3d pd, Vector3d &o_normal, double &o_s, double &o_t);
 		bool GetLineTriangleIntersection(Vector3f lineStart, Vector3f lineDirNormalized, Vector3f v1, Vector3f v2, Vector3f v3, Vector3f& o_intersect);
+		
+		Math::sVector GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c, bool guaranteeOutwards = false);
+		void Barycentric(Math::sVector& p, Math::sVector& a, Math::sVector& b, Math::sVector& c, float &u, float &v, float &w);
+		float SqDistPointTriangle(Math::sVector& vPoint, Math::sVector& vA, Math::sVector& vB, Math::sVector& vC);
 	}
 }

@@ -56,24 +56,21 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	LOAD_EFFECT("data/effects/red.effect", pRedEffect)
 
 	{
-		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
+		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pRedEffect, mesh_anchor, objState);
 		noColliderObjects.push_back(pGameObject);
 	}
 	//Ground
 	{
-		Physics::sRigidBodyState objState;
-		objState.position = Math::sVector(0.0f, -5.0f, 0.0f);
+		Physics::sRigidBodyState objState(Math::sVector(0.0f, -5.0f, 0.0f));
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_plane, objState);
 		noColliderObjects.push_back(pGameObject);
 	}
 	
 	//cube with ball joint
 	{
-		Physics::sRigidBodyState objState;
-		//HingeJointCube * pGameObject = new HingeJointCube(pDefaultEffect, mesh_cube, objState);
-		SphericalJoint *pGameObject = new SphericalJoint(pDefaultEffect, mesh_cube, objState);
+		//HingeJointCube * pGameObject = new HingeJointCube(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
+		SphericalJoint *pGameObject = new SphericalJoint(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
 		noColliderObjects.push_back(pGameObject);
 	}
 

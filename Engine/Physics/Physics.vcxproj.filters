@@ -4,19 +4,19 @@
     <ClCompile Include="sRigidBodyState.cpp" />
     <ClCompile Include="CollisionDetection.cpp" />
     <ClCompile Include="PhysicsSimulation.cpp" />
-    <ClCompile Include="ContactManager3D.cpp" />
     <ClCompile Include="CollisionResolver.cpp" />
     <ClCompile Include="PointJoint.cpp" />
     <ClCompile Include="HingeJoint.cpp" />
+    <ClCompile Include="CollisionHelpers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sRigidBodyState.h" />
     <ClInclude Include="CollisionDetection.h" />
     <ClInclude Include="PhysicsSimulation.h" />
     <ClInclude Include="CollisionPair.h" />
-    <ClInclude Include="ContactManager3D.h" />
     <ClInclude Include="CollisionResolver.h" />
     <ClInclude Include="PointJoint.h" />
     <ClInclude Include="HingeJoint.h" />
+    <ClInclude Include="CollisionHelpers.h" />
   </ItemGroup>
 </Project>
