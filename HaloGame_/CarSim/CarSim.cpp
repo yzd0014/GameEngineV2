@@ -17,7 +17,7 @@
 #include "Engine/Physics/CollisionDetection.h"
 #include "Engine/Physics/PhysicsSimulation.h"
 #include "Engine/Profiling/Profiling.h"
-#include "HaloGame_/Halo/Custom Game Objects/Ground.h"
+#include "Engine/GameCommon/Ground.h"
 // Inherited Implementation
 //=========================
 
@@ -52,7 +52,6 @@ eae6320::cResult eae6320::CarSim::Initialize()
 
 	//load effect
 	LOAD_EFFECT("data/effects/default.effect", pEffect_white)
-	LOAD_EFFECT("data/effects/red.effect", pEffect_red)
 
 	Car* pCar = nullptr;
 	{
@@ -64,7 +63,8 @@ eae6320::cResult eae6320::CarSim::Initialize()
 		objState.localInverseInertiaTensor.m_11 = 1.0f / ((1.0f / 12.0f)* objState.mass * 80.0f);
 		objState.localInverseInertiaTensor.m_22 = 1.0f / ((1.0f / 12.0f)* objState.mass * 5.0f);
 		objState.hasGravity = true;
-		pCar = new Car(pEffect_red, mesh_box, objState);
+		pCar = new Car(pEffect_white, mesh_box, objState);
+		pCar->m_color = Math::sVector(1, 0, 0);
 		noColliderObjects.push_back(pCar);
 	}
 

@@ -78,6 +78,8 @@ namespace eae6320
 				G = 0x47,
 				R = 0x52,	
 				F = 0x46,
+				E = 0x45,
+				Q = 0x51,
 
 				F1 = 0x70,
 				F2 = 0x71,

@@ -1,5 +1,5 @@
 #pragma once
-#include "Engine/GameCommon/GameObject.h"
+#include "GameObject.h"
 
 namespace eae6320 {
 	class MoveableCube : public eae6320::GameCommon::GameObject {

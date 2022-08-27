@@ -1,5 +1,5 @@
 #pragma once
-#include "Engine/GameCommon/GameObject.h"
+#include "GameObject.h"
 
 namespace eae6320 
 {

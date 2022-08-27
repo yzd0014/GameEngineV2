@@ -1,7 +1,8 @@
 // Includes
 //=========
 //12/13/2018
-#include "cHalo.h"
+#include "ClothSim.h"
+#include "Cloth.h"
 
 #include <Engine/Asserts/Asserts.h>
 #include <Engine/UserInput/UserInput.h>
@@ -15,17 +16,16 @@
 #include "Engine/UserOutput/UserOutput.h"
 #include "Engine/Physics/CollisionDetection.h"
 #include "Engine/Physics/PhysicsSimulation.h"
-#include "Engine/GameCommon/Ground.h"
 #include "Engine/Profiling/Profiling.h"
-#include "Halo/Custom Game Objects/HingeJointCube.h"
-#include "Halo/Custom Game Objects/SphericalJoint.h"
+#include "Engine/GameCommon/Ground.h"
+#include "Engine/GameCommon/MoveableCube.h"
 // Inherited Implementation
 //=========================
 
 // Run
 //----
 
-void eae6320::cHalo::UpdateBasedOnInput()
+void eae6320::ClothSim::UpdateBasedOnInput()
 {
 	// Is the user pressing the ESC key?
 	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Escape))
@@ -39,37 +39,36 @@ void eae6320::cHalo::UpdateBasedOnInput()
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::cHalo::Initialize()
+eae6320::cResult eae6320::ClothSim::Initialize()
 {
 	//initialize camera 
-	mainCamera.Initialize(Math::sVector(0.0f, 5.0f, 12.5f), Math::sVector(-30.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
-	//mainCamera.Initialize(Math::sVector(5.0f, 10.0f, 15.0f), Math::sVector(-30.0f, 20.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
-
-	//create two meshes
-	LOAD_MESH("data/meshes/square_plane.mesh", mesh_plane)
-	LOAD_MESH("data/meshes/cube.mesh", mesh_cube)
-	LOAD_MESH("data/meshes/bullet.mesh", mesh_anchor)
-
+	mainCamera.Initialize(Math::sVector(0.0f, -1.0f, 15.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
+	LOAD_MESH("data/meshes/plane.mesh", mesh_plane)
+	LOAD_MESH("data/meshes/cloth10x10.mesh", mesh_cloth)
+	LOAD_MESH("data/meshes/sphere4.mesh", mesh_sphere)
 	//load effect
 	LOAD_EFFECT("data/effects/default.effect", pDefaultEffect)
+	{
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, -6.0f, -2.0f);
+		MoveableCube* pGameObject = new MoveableCube(pDefaultEffect, mesh_sphere, objState);
+		noColliderObjects.push_back(pGameObject);
+	}
+	//add cloth
+	{
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
+		Cloth* pGameObject = new Cloth(pDefaultEffect, mesh_cloth, objState, GetSimulationUpdatePeriod_inSeconds());
+		pGameObject->m_color = Math::sVector(0.12f, 0.56f, 1.0f);
+		noColliderObjects.push_back(pGameObject);
+	}
 
+	//add ground mesh
 	{
-		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_anchor, objState);
-		pGameObject->m_color = Math::sVector(1, 0, 0);
-		noColliderObjects.push_back(pGameObject);
-	}
-	//Ground
-	{
-		Physics::sRigidBodyState objState(Math::sVector(0.0f, -5.0f, 0.0f));
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, -11.0f, 0.0f);
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_plane, objState);
-		noColliderObjects.push_back(pGameObject);
-	}
-	
-	//cube with ball joint
-	{
-		//HingeJointCube * pGameObject = new HingeJointCube(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
-		SphericalJoint *pGameObject = new SphericalJoint(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
+		strcpy_s(pGameObject->objectType, "Ground");
 		noColliderObjects.push_back(pGameObject);
 	}
 
@@ -77,14 +76,14 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	return Results::Success;
 }
 
-void eae6320::cHalo::UpdateSimulationBasedOnInput() {
+void eae6320::ClothSim::UpdateSimulationBasedOnInput() {
 	if (isGameOver == false)
 	{
 		cbApplication::UpdateSimulationBasedOnInput();
 	}
 }
 
-void  eae6320::cHalo::UpdateSimulationBasedOnTime(const float i_elapsedSecondCount_sinceLastUpdate) {
+void  eae6320::ClothSim::UpdateSimulationBasedOnTime(const float i_elapsedSecondCount_sinceLastUpdate) {
 	if (isGameOver == false)
 	{
 		cbApplication::UpdateSimulationBasedOnTime(i_elapsedSecondCount_sinceLastUpdate);
@@ -97,7 +96,7 @@ void  eae6320::cHalo::UpdateSimulationBasedOnTime(const float i_elapsedSecondCou
 }
 
 
-eae6320::cResult eae6320::cHalo::CleanUp()
+eae6320::cResult eae6320::ClothSim::CleanUp()
 {
 	/*
 	UserOutput::DebugPrint("Cloth Simulation(%d times) : %f ticks(%f s)",

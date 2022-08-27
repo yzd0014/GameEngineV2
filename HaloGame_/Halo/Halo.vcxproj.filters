@@ -29,9 +29,6 @@
     <ClInclude Include="Resource Files\targetver.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="Custom Game Objects\MoveableCube.h">
-      <Filter>Custom Game Objects</Filter>
-    </ClInclude>
     <ClInclude Include="Custom Game Objects\HomingCube.h">
       <Filter>Custom Game Objects</Filter>
     </ClInclude>
@@ -45,13 +42,7 @@
       <Filter>Custom Game Objects</Filter>
     </ClInclude>
     <ClInclude Include="cHalo.h" />
-    <ClInclude Include="Custom Game Objects\Cloth.h">
-      <Filter>Custom Game Objects</Filter>
-    </ClInclude>
     <ClInclude Include="Custom Game Objects\Tri.h">
-      <Filter>Custom Game Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Custom Game Objects\Ground.h">
       <Filter>Custom Game Objects</Filter>
     </ClInclude>
     <ClInclude Include="Custom Game Objects\CubeSpawner.h">
@@ -75,9 +66,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EntryPoint.cpp" />
-    <ClCompile Include="Custom Game Objects\MoveableCube.cpp">
-      <Filter>Custom Game Objects</Filter>
-    </ClCompile>
     <ClCompile Include="Custom Game Objects\HomingCube.cpp">
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
@@ -91,9 +79,6 @@
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
     <ClCompile Include="cHalo.cpp" />
-    <ClCompile Include="Custom Game Objects\Cloth.cpp">
-      <Filter>Custom Game Objects</Filter>
-    </ClCompile>
     <ClCompile Include="Custom Game Objects\CubeSpawner.cpp">
       <Filter>Custom Game Objects</Filter>
     </ClCompile>

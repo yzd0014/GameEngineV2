@@ -4,10 +4,13 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GameplayUtility.h" />
+    <ClInclude Include="Ground.h" />
+    <ClInclude Include="MoveableCube.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="GameObjectManagement.cpp" />
     <ClCompile Include="GameplayUtility.cpp" />
+    <ClCompile Include="MoveableCube.cpp" />
   </ItemGroup>
 </Project>
