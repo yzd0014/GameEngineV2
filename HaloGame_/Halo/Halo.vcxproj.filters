@@ -63,9 +63,6 @@
     <ClInclude Include="Custom Game Objects\DoublePendulums.h">
       <Filter>Custom Game Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Custom Game Objects\Car.h">
-      <Filter>Custom Game Objects</Filter>
-    </ClInclude>
     <ClInclude Include="Custom Game Objects\MPM.h">
       <Filter>Custom Game Objects</Filter>
     </ClInclude>
@@ -101,9 +98,6 @@
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
     <ClCompile Include="Custom Game Objects\DoublePendulums.cpp">
-      <Filter>Custom Game Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Custom Game Objects\Car.cpp">
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
   </ItemGroup>
