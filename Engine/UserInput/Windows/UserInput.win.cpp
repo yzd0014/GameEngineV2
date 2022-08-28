@@ -13,49 +13,32 @@
 bool eae6320::UserInput::IsKeyEdgeTriggered(const uint_fast8_t i_keyCode) {
 	bool currentState = IsKeyPressed(i_keyCode);
 	bool output = false;
-	//index 0: left mouse button, 1: middle mouse button, 2: right mouse button, 3: space bar, 4: Key F
+	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
 	if (i_keyCode == KeyCodes::LeftMouseButton)
 	{
-		if (KeyState::lastFrameKeyState[0] == 0 && currentState)
+		if (KeyState::lastFrameKeyState[128] == 0 && currentState)
 		{
 			output = true;
 		}
-		KeyState::lastFrameKeyState[0] = currentState;
+		KeyState::lastFrameKeyState[128] = currentState;
 	}
 	else if (i_keyCode == KeyCodes::MiddleMouseButton) {
-		if (KeyState::lastFrameKeyState[1] == 0 && currentState) {
+		if (KeyState::lastFrameKeyState[129] == 0 && currentState) {
 			output = true;
 		}
-		if (currentState) {
-			KeyState::lastFrameKeyState[1] = 1;
-		}
-		else {
-			KeyState::lastFrameKeyState[1] = 0;
-		}
+		KeyState::lastFrameKeyState[129] = currentState;
 	}
 	else if (i_keyCode == KeyCodes::Space) {
-		if (KeyState::lastFrameKeyState[3] == 0 && currentState) {
+		if (KeyState::lastFrameKeyState[130] == 0 && currentState) {
 			output = true;
 		}
-		if (currentState) {
-			KeyState::lastFrameKeyState[3] = 1;
-		}
-		else {
-			KeyState::lastFrameKeyState[3] = 0;
-		}
+		KeyState::lastFrameKeyState[130] = currentState;
 	}
-	else if (i_keyCode == KeyCodes::F) {
-		if (KeyState::lastFrameKeyState[4] == 0 && currentState) {
-			output = true;
-		}
-		if (currentState) {
-			KeyState::lastFrameKeyState[4] = 1;
-		}
-		else {
-			KeyState::lastFrameKeyState[4] = 0;
-		}
+	if (KeyState::lastFrameKeyState[i_keyCode] == 0 && currentState)
+	{
+		output = true;
 	}
-	
+	KeyState::lastFrameKeyState[i_keyCode] = currentState;
 	return output;
 }
 

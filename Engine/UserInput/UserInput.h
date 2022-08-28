@@ -78,8 +78,6 @@ namespace eae6320
 				G = 0x47,
 				R = 0x52,	
 				F = 0x46,
-				E = 0x45,
-				Q = 0x51,
 
 				F1 = 0x70,
 				F2 = 0x71,
@@ -101,7 +99,7 @@ namespace eae6320
 			extern int yPosCached;
 		}
 		namespace KeyState {
-			extern uint8_t lastFrameKeyState[30];
+			extern uint8_t lastFrameKeyState[131];
 		}
 #if defined( EAE6320_PLATFORM_WINDOWS )
 		extern HWND mainWindow;

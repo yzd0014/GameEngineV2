@@ -59,7 +59,7 @@ eae6320::cResult eae6320::ClothSim::Initialize()
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
 		Cloth* pGameObject = new Cloth(pDefaultEffect, mesh_cloth, objState, GetSimulationUpdatePeriod_inSeconds());
-		pGameObject->m_color = Math::sVector(0.12f, 0.56f, 1.0f);
+		pGameObject->m_color = Math::sVector(1.0f, 0.0f, 0.0f);
 		noColliderObjects.push_back(pGameObject);
 	}
 

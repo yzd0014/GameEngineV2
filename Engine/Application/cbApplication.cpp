@@ -503,7 +503,7 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 	}
 	//UserInput
 	{
-		for (int i = 0; i < 30; i++) {
+		for (int i = 0; i < 131; i++) {
 			UserInput::KeyState::lastFrameKeyState[i] = 0;
 		}
 		
