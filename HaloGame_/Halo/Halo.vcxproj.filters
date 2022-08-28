@@ -48,9 +48,6 @@
     <ClInclude Include="Custom Game Objects\CubeSpawner.h">
       <Filter>Custom Game Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Custom Game Objects\JellyCube.h">
-      <Filter>Custom Game Objects</Filter>
-    </ClInclude>
     <ClInclude Include="Custom Game Objects\DoublePendulums.h">
       <Filter>Custom Game Objects</Filter>
     </ClInclude>
