@@ -41,6 +41,7 @@ void eae6320::ClothSim::UpdateBasedOnInput()
 
 eae6320::cResult eae6320::ClothSim::Initialize()
 {
+	//EnableConsolePrinting(true);
 	//initialize camera 
 	mainCamera.Initialize(Math::sVector(0.0f, -1.0f, 15.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 	LOAD_MESH("data/meshes/plane.mesh", mesh_plane)
@@ -71,8 +72,6 @@ eae6320::cResult eae6320::ClothSim::Initialize()
 		strcpy_s(pGameObject->objectType, "Ground");
 		noColliderObjects.push_back(pGameObject);
 	}
-
-	//EnableConsolePrinting(true);
 	return Results::Success;
 }
 

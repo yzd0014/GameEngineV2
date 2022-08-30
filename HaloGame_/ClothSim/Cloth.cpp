@@ -53,6 +53,11 @@ void eae6320::Cloth::GenerateClothInitialPos()
 }
 void eae6320::Cloth::InitializeCloth()
 {
+	if (A != nullptr)
+	{
+		delete[] A;
+		A = nullptr;
+	}
 	Mesh* clothMesh = Mesh::s_manager.Get(GetMesh());
 	
 	//rotate cloth to make it parallel to ground
@@ -130,6 +135,7 @@ void eae6320::Cloth::InitializeCloth()
 	A = new SparseMatrix<double>[edgeCount];
 	SparseMatrix<double> L(verticeCount, verticeCount);
 	J.resize(edgeCount, verticeCount);
+	J.setZero();
 	//for (int i = 0; i < edgeCount; i++) {
 	for (int i = 0; i < edgeCount - 2; i++) {
 		int row = i / (2 * clothResolution + 1);
@@ -176,6 +182,8 @@ void eae6320::Cloth::InitializeCloth()
 	d_diag.resize(3, numDiagEdges);
 	SparseMatrix<double> L_diag(verticeCount, verticeCount);
 	J_diag.resize(numDiagEdges, verticeCount);
+	J_diag.setZero();
+	A_diag.clear();
 	int switcher = 1;
 	for (int i = 0; i < numDiagEdges; i++)
 	{
@@ -214,6 +222,7 @@ void eae6320::Cloth::InitializeCloth()
 	}
 
 	//bending
+	S_bending.clear();
 	for (int row = 0; row < clothResolution - 1; row++)
 	{
 		int start = 2 + clothResolution + row * (clothResolution + 1);
@@ -273,6 +282,7 @@ void eae6320::Cloth::InitializeCloth()
 	//T1 = -g * m;
 	
 }
+
 void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
 	//PROFILE_UNSCOPED(0);
 	Mesh* clothMesh = Mesh::s_manager.Get(GetMesh());

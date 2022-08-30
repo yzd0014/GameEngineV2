@@ -29,6 +29,7 @@ namespace eae6320 {
 		void GenerateCollisionEdges();
 		~Cloth() {
 			delete[] A;
+			A = nullptr;
 		}
 		
 	private:
@@ -54,7 +55,7 @@ namespace eae6320 {
 		MatrixXd v;//velocity 
 		MatrixXd y;//position estimated
 		SparseMatrix<double> M;
-		SparseMatrix<double>* A;
+		SparseMatrix<double>* A = nullptr;
 		std::vector<SparseMatrix<double>> A_diag;
 		std::vector<SparseMatrix<double>> S_bending;
 		//std::vector<Vector3d> V_rest_array;
