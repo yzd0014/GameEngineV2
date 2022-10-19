@@ -72,8 +72,6 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		SphericalJoint *pGameObject = new SphericalJoint(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
 		noColliderObjects.push_back(pGameObject);
 	}
-
-	//EnableConsolePrinting(true);
 	return Results::Success;
 }
 

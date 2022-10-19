@@ -22,9 +22,19 @@
 #include "Effect.h"
 #include "View.h"
 #include "Engine/GameCommon/GameObject.h"
+#include "Engine/GameCommon/Camera.h"
+
 // Static Data Initialization
 //===========================
 #define maxNumActors 7000
+namespace eae6320
+{
+	namespace Graphics
+	{
+		Concurrency::cMutex renderBufferMutex;
+		bool renderThreadNoWait = false;
+	}
+}
 namespace
 {
 	
@@ -116,8 +126,40 @@ eae6320::cResult eae6320::Graphics::SignalThatAllDataForAFrameHasBeenSubmitted()
 
 void eae6320::Graphics::RenderFrame()
 {
-	// Wait for the application loop to submit data to be rendered
+	if (renderThreadNoWait)
 	{
+		renderBufferMutex.Lock();
+		std::swap(s_dataBeingSubmittedByApplicationThread, s_dataBeingRenderedByRenderThread);
+		renderBufferMutex.Unlock();
+		// Once the pointers have been swapped the application loop can submit new data
+		const auto result = s_whenDataForANewFrameCanBeSubmittedFromApplicationThread.Signal();
+		if (!result)
+		{
+			EAE6320_ASSERTF(false, "Couldn't signal that new graphics data can be submitted");
+			Logging::OutputError("Failed to signal that new render data can be submitted");
+			UserOutput::Print("The renderer failed to signal to the application that new graphics data can be submitted."
+				" The application is probably in a bad state and should be exited");
+			return;
+		}
+
+		uint64_t tickCount_currentLoop = Time::GetCurrentSystemTimeTickCount();
+		uint64_t tickCount_elapsedSinceLastLoop = tickCount_currentLoop - mainCamera.tickCount_previsouLoop;
+		mainCamera.tickCount_previsouLoop = tickCount_currentLoop;
+
+		//update camera
+		mainCamera.UpdateCameraBasedOnInput();
+		mainCamera.UpdateState((float)Time::ConvertTicksToSeconds(tickCount_elapsedSinceLastLoop));
+
+		//submit data
+		Math::sVector position = mainCamera.position;
+		Math::cQuaternion orientation = mainCamera.orientation;
+		Math::cMatrix_transformation worldToCameraMat = Math::cMatrix_transformation::CreateWorldToCameraTransform(orientation, position);
+		Math::cMatrix_transformation cameraToProjectedMat = mainCamera.GetCameraToProjectedMat();
+		eae6320::Graphics::SubmitCamera(worldToCameraMat, cameraToProjectedMat);
+	}
+	else
+	{
+		// Wait for the application loop to submit data to be rendered
 		const auto result = Concurrency::WaitForEvent(s_whenAllDataHasBeenSubmittedFromApplicationThread);
 		if (result)
 		{
@@ -176,6 +218,7 @@ void eae6320::Graphics::RenderFrame()
 	// Once everything has been drawn the data that was submitted for this frame
 	// should be cleaned up and cleared.
 	// so that the struct can be re-used (i.e. so that data for a new frame can be submitted to it)
+	if(!renderThreadNoWait)
 	{
 		
 		for (int i = 0; i < s_dataBeingRenderedByRenderThread->numberOfObject; i++) {
@@ -190,6 +233,27 @@ void eae6320::Graphics::RenderFrame()
 		s_dataBeingRenderedByRenderThread->BGColor[1] = 0;
 		s_dataBeingRenderedByRenderThread->BGColor[2] = 0;
 		s_dataBeingRenderedByRenderThread->BGColor[3] = 1;
+	}
+}
+
+void eae6320::Graphics::ClearDataBeingSubmittedByApplicationThread()
+{
+	// Once everything has been drawn the data that was submitted for this frame
+	// should be cleaned up and cleared.
+	// so that the struct can be re-used (i.e. so that data for a new frame can be submitted to it)
+	{
+		for (int i = 0; i < s_dataBeingSubmittedByApplicationThread->numberOfObject; i++) {
+			s_dataBeingSubmittedByApplicationThread->allEffectInScreen[i]->DecrementReferenceCount();
+			s_dataBeingSubmittedByApplicationThread->allEffectInScreen[i] = nullptr;
+
+			s_dataBeingSubmittedByApplicationThread->allMeshInScreen[i]->DecrementReferenceCount();
+			s_dataBeingSubmittedByApplicationThread->allMeshInScreen[i] = nullptr;
+		}
+		s_dataBeingSubmittedByApplicationThread->numberOfObject = 0;
+		s_dataBeingSubmittedByApplicationThread->BGColor[0] = 0;
+		s_dataBeingSubmittedByApplicationThread->BGColor[1] = 0;
+		s_dataBeingSubmittedByApplicationThread->BGColor[2] = 0;
+		s_dataBeingSubmittedByApplicationThread->BGColor[3] = 1;
 	}
 }
 
@@ -282,7 +346,17 @@ eae6320::cResult eae6320::Graphics::CleanUp()
 		s_dataBeingSubmittedByApplicationThread->allMeshInScreen[i]->DecrementReferenceCount();
 		s_dataBeingSubmittedByApplicationThread->allMeshInScreen[i] = nullptr;
 	}
-	
+	if (renderThreadNoWait)
+	{
+		for (int i = 0; i < s_dataBeingRenderedByRenderThread->numberOfObject; i++) {
+			s_dataBeingRenderedByRenderThread->allEffectInScreen[i]->DecrementReferenceCount();
+			s_dataBeingRenderedByRenderThread->allEffectInScreen[i] = nullptr;
+
+			s_dataBeingRenderedByRenderThread->allMeshInScreen[i]->DecrementReferenceCount();
+			s_dataBeingRenderedByRenderThread->allMeshInScreen[i] = nullptr;
+		}
+	}
+
 	s_View.CleanUp();
 	{
 		const auto localResult = s_constantBuffer_perFrame.CleanUp();

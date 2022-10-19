@@ -25,7 +25,7 @@ void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const floa
 			//update game objects with AABB
 	Physics::RunPhysics(colliderObjects, noColliderObjects, i_elapsedSecondCount_sinceLastUpdate);
 	//update camera
-	mainCamera.UpdateState(i_elapsedSecondCount_sinceLastUpdate);
+	if(!Graphics::renderThreadNoWait) mainCamera.UpdateState(i_elapsedSecondCount_sinceLastUpdate);
 	
 	//run AI*********************************************************************************
 	for (size_t i = 0; i < size_physicsObject; i++) {
@@ -38,7 +38,7 @@ void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const floa
 
 void eae6320::Application::cbApplication::UpdateSimulationBasedOnInput()
 {
-	mainCamera.UpdateCameraBasedOnInput();
+	if (!Graphics::renderThreadNoWait) mainCamera.UpdateCameraBasedOnInput();
 	size_t numOfObjects = colliderObjects.size();
 	for (size_t i = 0; i < numOfObjects; i++) {
 		colliderObjects[i]->UpdateGameObjectBasedOnInput();
@@ -51,6 +51,9 @@ void eae6320::Application::cbApplication::UpdateSimulationBasedOnInput()
 
 void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate)
 {
+	if(Graphics::renderThreadNoWait)
+		Graphics::ClearDataBeingSubmittedByApplicationThread();
+
 	//submit background color
 	float color[] = { 0.0f, 0.7f, 1.0f , 1.0f };
 	eae6320::Graphics::SubmitBGColor(color);
@@ -97,6 +100,7 @@ void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_e
 	}
 
 	//submit camera
+	if (!Graphics::renderThreadNoWait)
 	{
 		//smooth camera movemnt first before it's submitted
 		Math::sVector predictedPosition = mainCamera.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
@@ -166,6 +170,11 @@ int eae6320::Application::cbApplication::ParseEntryPointParametersAndRun( const 
 		const auto result = Initialize_all( i_entryPointParameters );
 		if ( result )
 		{
+			if (Graphics::renderThreadNoWait)
+			{
+				SubmitDataToBeRendered(0.0f, 0.0f);
+				Graphics::SubmitElapsedTime(0.0f, 0.0f);
+			}
 			Logging::OutputMessage( "The application was successfully initialized" );
 		}
 		else
@@ -363,6 +372,7 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 			}
 			// Submit the data to be rendered
 			{
+				if(Graphics::renderThreadNoWait) Graphics::renderBufferMutex.Lock();
 				// Submit the application-specific data
 				const auto elapsedSecondCount_systemTime = static_cast<float>( Time::ConvertTicksToSeconds( tickCount_systemTime_elapsedAllowable ) );
 				{
@@ -378,9 +388,11 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 					}();
 					Graphics::SubmitElapsedTime( elapsedSecondCount_systemTime, elapsedSecondCount_simulationTime );
 				}
+				if (Graphics::renderThreadNoWait) Graphics::renderBufferMutex.Unlock();
 			}
 			// Let the graphics system know that all of the data for this frame has been submitted
 			// (which means that it can start using it to render)
+			if(!Graphics::renderThreadNoWait)
 			{
 				const auto result = Graphics::SignalThatAllDataForAFrameHasBeenSubmitted();
 				EAE6320_ASSERT( result );
@@ -401,6 +413,17 @@ void eae6320::Application::cbApplication::EntryPoint_applicationLoopThread( void
 
 eae6320::cResult eae6320::Application::cbApplication::Initialize_all( const sEntryPointParameters& i_entryPointParameters )
 {
+	if (i_entryPointParameters.commandLineArguments[0] == '1')//enable console window
+	{
+		EnableConsolePrinting(true);
+	}
+	Graphics::renderThreadNoWait = false;
+	if (i_entryPointParameters.commandLineArguments[1] == '1')
+	{
+		//render thread won't wait for simulation thread to submit its data
+		Graphics::renderThreadNoWait = true;
+	}
+
 	auto result = Results::Success;
 
 	// Initialize logging first so that it's always available

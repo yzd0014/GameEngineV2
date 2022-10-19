@@ -171,6 +171,9 @@
     <ProjectReference Include="..\Physics\Physics.vcxproj">
       <Project>{30e6bb9f-138d-4b44-9733-869263f7bad5}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\Time\Time.vcxproj">
+      <Project>{674d3e72-cbd0-4ebd-bd0c-cf9326489421}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />

@@ -70,6 +70,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Graphics", "Engine\Graphics\Graphics.vcxproj", "{4D79D4E3-8956-4E27-B58A-4E654EAEE30C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameCommon", "Engine\GameCommon\GameCommon.vcxproj", "{6D18F357-6AE1-45E5-8961-79E56982BCE5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{674D3E72-CBD0-4EBD-BD0C-CF9326489421} = {674D3E72-CBD0-4EBD-BD0C-CF9326489421}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshBuilder", "Tools\MeshBuilder\MeshBuilder.vcxproj", "{169691A5-1BD1-48B2-BE3B-A23C12CB4A9F}"
 EndProject
