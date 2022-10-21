@@ -8,6 +8,9 @@ namespace eae6320 {
 	struct CollisionPair;
 
 	namespace Physics {
+		extern bool simPause;
+		extern bool nextSimStep;
+
 		extern std::vector<ContactManifold3D> allManifolds;
 		extern std::vector<PointJoint> allPointJoints;
 		extern std::vector<HingeJoint> allHingeJoints;

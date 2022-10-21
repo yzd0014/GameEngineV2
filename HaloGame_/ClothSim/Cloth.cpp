@@ -572,7 +572,7 @@ void eae6320::Cloth::UpdateGameObjectBasedOnInput()
 {
 	
 	Mesh* clothMesh = Mesh::s_manager.Get(GetMesh());
-	if (UserInput::IsKeyEdgeTriggered(UserInput::KeyCodes::LeftMouseButton))
+	if (UserInput::IsKeyFromReleasedToPressed(UserInput::KeyCodes::LeftMouseButton))
 	{
 		Math::sVector dir_t = GameplayUtility::MouseRayCasting();
 		Vector3f dir;
@@ -601,12 +601,12 @@ void eae6320::Cloth::UpdateGameObjectBasedOnInput()
 			}
 		}
 	}
-	if (UserInput::IsKeyEdgeTriggered('E'))
+	if (UserInput::IsKeyFromReleasedToPressed('E'))
 	{
 		mode = 0;
 		InitializeCloth();
 	}
-	else if (UserInput::IsKeyEdgeTriggered('Q'))
+	else if (UserInput::IsKeyFromReleasedToPressed('Q'))
 	{
 		mode = 1;
 		InitializeCloth();

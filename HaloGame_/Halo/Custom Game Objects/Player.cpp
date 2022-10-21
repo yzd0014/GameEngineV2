@@ -129,7 +129,7 @@ void eae6320::Player::UpdateGameObjectBasedOnInput() {
 	m_Camera->m_State.axis_Z_velocity = m_State.axis_Z_velocity;
 	
 	//Shooting
-	if (UserInput::IsKeyEdgeTriggered(UserInput::KeyCodes::Space)) {
+	if (UserInput::IsKeyFromReleasedToPressed(UserInput::KeyCodes::Space)) {
 
 		Physics::sRigidBodyState objState;
 

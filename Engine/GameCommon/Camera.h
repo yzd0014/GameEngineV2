@@ -33,7 +33,7 @@ namespace eae6320 {
 			float m_z_nearPlane;
 			float m_z_farPlane;
 
-			uint64_t tickCount_previsouLoop;
+			uint64_t tickCount_keyIsDown;
 		private:
 			void UpdateCameraOrientation(const float i_secondCountToIntegrate);
 		};

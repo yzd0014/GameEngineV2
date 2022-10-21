@@ -38,15 +38,7 @@ void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const floa
 
 void eae6320::Application::cbApplication::UpdateSimulationBasedOnInput()
 {
-	if (!Graphics::renderThreadNoWait) mainCamera.UpdateCameraBasedOnInput();
-	size_t numOfObjects = colliderObjects.size();
-	for (size_t i = 0; i < numOfObjects; i++) {
-		colliderObjects[i]->UpdateGameObjectBasedOnInput();
-	}
-	numOfObjects = noColliderObjects.size();
-	for (size_t i = 0; i < numOfObjects; i++) {
-		noColliderObjects[i]->UpdateGameObjectBasedOnInput();
-	}
+	Graphics::UpdateSimulationBasedOnInput();
 }
 
 void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate)
@@ -306,22 +298,24 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 		{
 			// Add the time elapsed since the last frame to the amount of simulation time that has not been simulated yet
 			tickCount_simulationTime_elapsedButNotYetSimulated += tickCount_toSimulate_elapsedSinceLastLoop;
+			if (Physics::simPause) tickCount_simulationTime_elapsedButNotYetSimulated = 0;
 			// Keep updating the simulation while more time has elapsed than the fixed amount used for a single update
 			// (note that the expected common behavior is to render faster than the simulation is updated,
 			// and so the amount of simulation updates per-iteration should most often be zero, should frequently be one,
 			// and should not be more than one unless something unexpected happens that causes a single iteration to take longer than expected)
 			auto simulationUpdateCount_thisIteration = 0;
-			while ( ( tickCount_simulationTime_elapsedButNotYetSimulated >= tickCount_perSimulationUpdate )
+			while ( ( ( tickCount_simulationTime_elapsedButNotYetSimulated >= tickCount_perSimulationUpdate )
 				// Regardless of how far the simulation is behind
 				// frames need to be rendered (and operating system messages handled)
 				// or the application will stop responding
-				&& ( simulationUpdateCount_thisIteration < maxSimulationUpdateCountWithoutRendering ))
+				&& ( simulationUpdateCount_thisIteration < maxSimulationUpdateCountWithoutRendering ) && (!Physics::simPause) ) || (Physics::simPause && Physics::nextSimStep) )
 			{
 				UpdateSimulationBasedOnTime( secondCount_perSimulationUpdate );
-				++simulationUpdateCount_thisIteration;
+				if (!Physics::simPause) ++simulationUpdateCount_thisIteration;
 				tickCount_simulationTime_totalElapsed += tickCount_perSimulationUpdate;
 				m_tickCount_simulationTime_totalElapsed = tickCount_simulationTime_totalElapsed;
-				tickCount_simulationTime_elapsedButNotYetSimulated -= tickCount_perSimulationUpdate;
+				if (!Physics::simPause) tickCount_simulationTime_elapsedButNotYetSimulated -= tickCount_perSimulationUpdate;
+				Physics::nextSimStep = false;
 			}
 			// If a time-based simulation update happened
 			// then update simulation state based on input.
@@ -331,7 +325,7 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 			// (so, for example, something that had moved in a previous frame would suddenly reset to a different position).
 			if ( simulationUpdateCount_thisIteration > 0 )
 			{
-				UpdateSimulationBasedOnInput();
+				if(!Graphics::renderThreadNoWait) UpdateSimulationBasedOnInput();
 			}
 		}
 		// Submit data for the render thread to use to render a new frame
@@ -528,6 +522,7 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 	{
 		for (int i = 0; i < 131; i++) {
 			UserInput::KeyState::lastFrameKeyState[i] = 0;
+			UserInput::KeyState::currFrameKeyState[i] = 0;
 		}
 		
 		EAE6320_ASSERT(m_mainWindow != NULL);

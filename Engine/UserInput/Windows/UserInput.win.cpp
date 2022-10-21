@@ -9,36 +9,88 @@
 #include "Winuser.h"
 // Interface
 //==========
-//right now this function only works for middle mouse button 
-bool eae6320::UserInput::IsKeyEdgeTriggered(const uint_fast8_t i_keyCode) {
-	bool currentState = IsKeyPressed(i_keyCode);
+void eae6320::UserInput::TrackKeyState()
+{
+	KeyState::currFrameKeyState[128] = IsKeyPressed(KeyCodes::LeftMouseButton);
+	KeyState::currFrameKeyState[129] = IsKeyPressed(KeyCodes::MiddleMouseButton);
+	KeyState::currFrameKeyState[130] = IsKeyPressed(KeyCodes::RightMouseButton);
+	for (uint8_t i = 0; i < 128; i++)
+	{
+		KeyState::currFrameKeyState[i] = IsKeyPressed(i);
+	}
+}
+
+void eae6320::UserInput::UpdateLastFrameKeyState()
+{
+	for (int i = 0; i < 131; i++) 
+	{
+		UserInput::KeyState::lastFrameKeyState[i] = UserInput::KeyState::currFrameKeyState[i];
+	}
+}
+
+bool eae6320::UserInput::IsKeyFromReleasedToPressed(const uint_fast8_t i_keyCode)
+{
 	bool output = false;
 	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
 	if (i_keyCode == KeyCodes::LeftMouseButton)
 	{
-		if (KeyState::lastFrameKeyState[128] == 0 && currentState)
+		if (KeyState::lastFrameKeyState[128] == 0 && KeyState::currFrameKeyState[128] == 1)
 		{
 			output = true;
 		}
-		KeyState::lastFrameKeyState[128] = currentState;
 	}
 	else if (i_keyCode == KeyCodes::MiddleMouseButton) {
-		if (KeyState::lastFrameKeyState[129] == 0 && currentState) {
+		if (KeyState::lastFrameKeyState[129] == 0 && KeyState::currFrameKeyState[129] == 1) {
 			output = true;
 		}
-		KeyState::lastFrameKeyState[129] = currentState;
 	}
-	else if (i_keyCode == KeyCodes::Space) {
-		if (KeyState::lastFrameKeyState[130] == 0 && currentState) {
+	else if (i_keyCode == KeyCodes::RightMouseButton) {
+		if (KeyState::lastFrameKeyState[130] == 0 && KeyState::currFrameKeyState[130] == 1) {
 			output = true;
 		}
-		KeyState::lastFrameKeyState[130] = currentState;
 	}
-	if (KeyState::lastFrameKeyState[i_keyCode] == 0 && currentState)
+	else
 	{
-		output = true;
+		if (KeyState::lastFrameKeyState[i_keyCode] == 0 && KeyState::currFrameKeyState[i_keyCode] == 1)
+		{
+			output = true;
+		}
 	}
-	KeyState::lastFrameKeyState[i_keyCode] = currentState;
+
+	return output;
+}
+
+bool eae6320::UserInput::IsKeyFromPressedToReleased(const uint_fast8_t i_keyCode)
+{
+	bool output = false;
+	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
+	if (i_keyCode == KeyCodes::LeftMouseButton)
+	{
+		if (KeyState::lastFrameKeyState[128] == 1 && KeyState::currFrameKeyState[128] == 0)
+		{
+			output = true;
+		}
+	}
+	else if (i_keyCode == KeyCodes::MiddleMouseButton) {
+		if (KeyState::lastFrameKeyState[129] == 1 && KeyState::currFrameKeyState[129] == 0)
+		{
+			output = true;
+		}
+	}
+	else if (i_keyCode == KeyCodes::RightMouseButton) {
+		if (KeyState::lastFrameKeyState[130] == 1 && KeyState::currFrameKeyState[130] == 0)
+		{
+			output = true;
+		}
+	}
+	else
+	{
+		if (KeyState::lastFrameKeyState[i_keyCode] == 1 && KeyState::currFrameKeyState[i_keyCode] == 0)
+		{
+			output = true;
+		}
+	}
+
 	return output;
 }
 

@@ -5,6 +5,7 @@
 #include <Engine/Asserts/Asserts.h>
 #include "Engine/Time/Time.h"
 #include "Engine/Graphics/Graphics.h"
+#include "Engine/Physics/PhysicsSimulation.h"
 namespace eae6320
 {
 	GameCommon::Camera mainCamera;
@@ -30,7 +31,7 @@ void eae6320::GameCommon::Camera::Initialize(Math::sVector i_position, Math::sVe
 	m_z_nearPlane = i_z_nearPlane;
 	m_z_farPlane = i_z_farPlane;
 
-	tickCount_previsouLoop = Time::GetCurrentSystemTimeTickCount();
+	tickCount_keyIsDown = 0;
 }
 
 void eae6320::GameCommon::Camera::UpdateState(const float i_secondCountToIntegrate) {
@@ -126,7 +127,36 @@ void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
 		{
 			velocity = forwardVector * -1;
 		}
-	}	
+	}
+
+	if (Graphics::renderThreadNoWait)
+	{
+		if (UserInput::IsKeyFromReleasedToPressed('P'))
+		{
+			Physics::simPause = !Physics::simPause;
+			if (Physics::simPause)
+			{
+				Physics::nextSimStep = false;
+			}
+		}
+		if (UserInput::IsKeyFromReleasedToPressed('G'))
+		{
+			Physics::nextSimStep = true;
+		}
+		if (UserInput::KeyState::currFrameKeyState['G'])
+		{
+			tickCount_keyIsDown += Time::tickCount_elapsedSinceLastLoop;
+		}
+		auto secondCount_keyIsDown = Time::ConvertTicksToSeconds(tickCount_keyIsDown);
+		if (secondCount_keyIsDown > 0.7)
+		{
+			Physics::nextSimStep = true;
+		}
+		if (UserInput::IsKeyFromPressedToReleased('G'))
+		{
+			tickCount_keyIsDown = 0;
+		}
+	}
 }
 
 eae6320::Math::cQuaternion eae6320::GameCommon::Camera::PredictFutureOrientation(const float i_secondCountToExtrapolate) const

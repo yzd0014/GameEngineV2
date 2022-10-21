@@ -11,6 +11,9 @@
 
 namespace eae6320 {
 	namespace Physics {
+		bool simPause = false;
+		bool nextSimStep = false;
+
 		std::vector<ContactManifold3D> allManifolds;
 		std::vector<PointJoint> allPointJoints;
 		std::vector<HingeJoint> allHingeJoints;

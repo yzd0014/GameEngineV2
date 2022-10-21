@@ -16,6 +16,7 @@
 #include <Engine/Platform/Platform.h>
 #include <Engine/Time/Time.h>
 #include <Engine/UserOutput/UserOutput.h>
+#include "Engine/UserInput/UserInput.h"
 #include <utility>
 
 #include "Mesh.h"
@@ -33,6 +34,12 @@ namespace eae6320
 	{
 		Concurrency::cMutex renderBufferMutex;
 		bool renderThreadNoWait = false;
+	}
+	namespace Time
+	{
+		uint64_t tickCount_systemTime_elapsed = 0;
+		uint64_t tickCount_elapsedSinceLastLoop = 0;
+		uint64_t tickCount_previousLoop = 0;	
 	}
 }
 namespace
@@ -126,6 +133,13 @@ eae6320::cResult eae6320::Graphics::SignalThatAllDataForAFrameHasBeenSubmitted()
 
 void eae6320::Graphics::RenderFrame()
 {
+	//manage system time in rendering thread instead of simulation thread because rendering thread will
+		//never be paused and thus has a better time resolution
+	uint64_t tickCount_currentLoop = Time::GetCurrentSystemTimeTickCount();
+	Time::tickCount_elapsedSinceLastLoop = tickCount_currentLoop - Time::tickCount_previousLoop;
+	Time::tickCount_systemTime_elapsed += Time::tickCount_elapsedSinceLastLoop;
+	Time::tickCount_previousLoop = tickCount_currentLoop;
+
 	if (renderThreadNoWait)
 	{
 		renderBufferMutex.Lock();
@@ -142,13 +156,9 @@ void eae6320::Graphics::RenderFrame()
 			return;
 		}
 
-		uint64_t tickCount_currentLoop = Time::GetCurrentSystemTimeTickCount();
-		uint64_t tickCount_elapsedSinceLastLoop = tickCount_currentLoop - mainCamera.tickCount_previsouLoop;
-		mainCamera.tickCount_previsouLoop = tickCount_currentLoop;
-
 		//update camera
-		mainCamera.UpdateCameraBasedOnInput();
-		mainCamera.UpdateState((float)Time::ConvertTicksToSeconds(tickCount_elapsedSinceLastLoop));
+		UpdateSimulationBasedOnInput();
+		mainCamera.UpdateState((float)Time::ConvertTicksToSeconds(Time::tickCount_elapsedSinceLastLoop));
 
 		//submit data
 		Math::sVector position = mainCamera.position;
@@ -236,6 +246,23 @@ void eae6320::Graphics::RenderFrame()
 	}
 }
 
+void eae6320::Graphics::UpdateSimulationBasedOnInput()
+{
+	UserInput::TrackKeyState();
+	
+	mainCamera.UpdateCameraBasedOnInput();
+	size_t numOfObjects = colliderObjects.size();
+	for (size_t i = 0; i < numOfObjects; i++) {
+		colliderObjects[i]->UpdateGameObjectBasedOnInput();
+	}
+	numOfObjects = noColliderObjects.size();
+	for (size_t i = 0; i < numOfObjects; i++) {
+		noColliderObjects[i]->UpdateGameObjectBasedOnInput();
+	}
+	
+	UserInput::UpdateLastFrameKeyState();
+}
+
 void eae6320::Graphics::ClearDataBeingSubmittedByApplicationThread()
 {
 	// Once everything has been drawn the data that was submitted for this frame
@@ -259,6 +286,8 @@ void eae6320::Graphics::ClearDataBeingSubmittedByApplicationThread()
 
 eae6320::cResult eae6320::Graphics::Initialize(const sInitializationParameters& i_initializationParameters)
 {
+	Time::tickCount_previousLoop = Time::GetCurrentSystemTimeTickCount();
+	
 	auto result = Results::Success;	
 	// Initialize the platform-specific context
 	if (!(result = sContext::g_context.Initialize(i_initializationParameters)))

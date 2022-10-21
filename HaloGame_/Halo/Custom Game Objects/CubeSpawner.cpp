@@ -36,7 +36,7 @@ void eae6320::CubeSpawner::UpdateGameObjectBasedOnInput() {
 		//m_State.acceleration = Math::sVector(0, 0, -5);
 	}
 
-	if (UserInput::IsKeyEdgeTriggered(UserInput::KeyCodes::Space)) 
+	if (UserInput::IsKeyFromReleasedToPressed(UserInput::KeyCodes::Space))
 	{
 		{
 			Physics::AABB boundingBox;
@@ -54,7 +54,7 @@ void eae6320::CubeSpawner::UpdateGameObjectBasedOnInput() {
 			colliderObjects.push_back(pGameObject);
 		}
 	}
-	else if (UserInput::IsKeyEdgeTriggered(UserInput::KeyCodes::F))
+	else if (UserInput::IsKeyFromReleasedToPressed(UserInput::KeyCodes::F))
 	{
 		Physics::sRigidBodyState objState;
 		objState.position = m_State.position;

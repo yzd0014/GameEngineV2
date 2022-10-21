@@ -27,9 +27,12 @@ namespace eae6320
 		// For special keys use one of the KeyCodes enumerations below
 
 		bool IsKeyPressed( const uint_fast8_t i_keyCode );
-		bool IsKeyEdgeTriggered(const uint_fast8_t i_keyCode);
+		bool IsKeyFromReleasedToPressed(const uint_fast8_t i_keyCode);
+		bool IsKeyFromPressedToReleased(const uint_fast8_t i_keyCode);
 		void GetMouseMoveDistanceInDeltaTime(int * o_xTravel, int * o_yTravel);
 		void GetCursorPositionInWindow(int* o_x, int* o_y);
+		void TrackKeyState();
+		void UpdateLastFrameKeyState();
 
 		namespace KeyCodes
 		{
@@ -100,6 +103,7 @@ namespace eae6320
 		}
 		namespace KeyState {
 			extern uint8_t lastFrameKeyState[131];
+			extern uint8_t currFrameKeyState[131];
 		}
 #if defined( EAE6320_PLATFORM_WINDOWS )
 		extern HWND mainWindow;
