@@ -226,6 +226,7 @@ namespace eae6320
 			//		It can be how much time has been simulated during the entire application,
 			//		but there is no technical reason that it couldn't be reset (e.g. when starting a new level).
 			uint64_t m_tickCount_simulationTime_totalElapsed = 0;
+			uint64_t m_tickCount_sinceLastSimulation = 0;
 			// The thread that runs the main application loop
 			// (The original process thread (or "main thread") services operating system requests and the render loop,
 			// because many operating systems require those to use the same thread that they were created/initialized with)

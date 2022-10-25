@@ -31,6 +31,8 @@ namespace eae6320
 		bool IsKeyFromPressedToReleased(const uint_fast8_t i_keyCode);
 		void GetMouseMoveDistanceInDeltaTime(int * o_xTravel, int * o_yTravel);
 		void GetCursorPositionInWindow(int* o_x, int* o_y);
+		void ConfineCursorWithinWindow();
+		void GetCursorDisplacementSinceLastCall(int * o_xTravel, int * o_yTravel);
 		void TrackKeyState();
 		void UpdateLastFrameKeyState();
 

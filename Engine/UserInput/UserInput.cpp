@@ -6,8 +6,8 @@ namespace eae6320
 	{
 		namespace MouseMovement
 		{
-			int xPosCached = -1;
-			int yPosCached = -1;
+			int xPosCached = -99999;
+			int yPosCached = -99999;
 			
 		}
 		namespace KeyState {

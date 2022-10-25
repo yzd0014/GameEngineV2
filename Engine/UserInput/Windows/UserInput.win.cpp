@@ -169,3 +169,66 @@ void eae6320::UserInput::GetCursorPositionInWindow(int* o_x, int* o_y)
 	*o_x = (int)Pos[0].x;
 	*o_y = (int)Pos[0].y;
 }
+
+void eae6320::UserInput::ConfineCursorWithinWindow()
+{
+	//get window size
+	RECT rcClient;
+	GetClientRect(mainWindow, &rcClient);
+	int width = rcClient.right;
+	int height = rcClient.bottom;
+	
+	//clamp cursor position
+	POINT Pos[1];
+	GetCursorPos(Pos);
+	ScreenToClient(mainWindow, Pos);
+	if (Pos[0].x < 0)
+	{
+		Pos[0].x = width;
+	}
+	else if (Pos[0].x > width)
+	{
+		Pos[0].x = 0;
+	}
+	if (Pos[0].y < 0)
+	{
+		Pos[0].y = height;
+	}
+	else if (Pos[0].y > height)
+	{
+		Pos[0].y = 0;
+	}
+	ClientToScreen(mainWindow, Pos);
+	MouseMovement::xPosCached = Pos[0].x;
+	MouseMovement::yPosCached = Pos[0].y;
+	SetCursorPos(Pos[0].x, Pos[0].y);
+	//std::cout << Pos[0].x << ", " << Pos[0].y << std::endl;
+}
+
+void eae6320::UserInput::GetCursorDisplacementSinceLastCall(int * o_xTravel, int * o_yTravel)
+{
+	POINT screenPos[1];
+	GetCursorPos(screenPos);
+
+	int currentX = (int)screenPos[0].x;
+	if (MouseMovement::xPosCached == -99999) 
+	{
+		*o_xTravel = 0;
+	}
+	else 
+	{
+		*o_xTravel = currentX - MouseMovement::xPosCached;
+	}
+	MouseMovement::xPosCached = currentX;
+
+	int currentY = (int)screenPos[0].y;
+	if (MouseMovement::yPosCached == -99999) 
+	{
+		*o_yTravel = 0;
+	}
+	else 
+	{
+		*o_yTravel = currentY - MouseMovement::yPosCached;
+	}
+	MouseMovement::yPosCached = currentY;
+}
