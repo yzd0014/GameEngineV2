@@ -110,7 +110,7 @@ namespace eae6320
 		}
 		void UpdateGameObjectBasedOnInput() override
 		{
-			if (UserInput::IsKeyPressed(UserInput::KeyCodes::LeftMouseButton))
+			if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::LeftMouseButton])
 			{
 				Math::sVector dir_t = GameplayUtility::MouseRayCasting();
 				F_user = 10.0f * Math::NativeVector2EigenVector(dir_t);

@@ -8,12 +8,12 @@ void eae6320::Car::UpdateGameObjectBasedOnInput() {
 	Physics::allHingeJoints[backLeftJointIndex].w_motor_B2A = 0.0f;
 	Physics::allHingeJoints[backRightJointIndex].w_motor_B2A = 0.0f;
 	
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Up))
+	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::Up])
 	{
 		Physics::allHingeJoints[backLeftJointIndex].w_motor_B2A = 10.0f;
 		Physics::allHingeJoints[backRightJointIndex].w_motor_B2A = 10.0f;
 	}
-	else if (UserInput::IsKeyPressed(UserInput::KeyCodes::Down))
+	else if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::Down])
 	{
 		Physics::allHingeJoints[backLeftJointIndex].w_motor_B2A = -10.0f;
 		Physics::allHingeJoints[backRightJointIndex].w_motor_B2A = -10.0f;

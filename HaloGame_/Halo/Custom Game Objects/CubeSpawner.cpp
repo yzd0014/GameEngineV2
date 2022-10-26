@@ -7,36 +7,36 @@ void eae6320::CubeSpawner::UpdateGameObjectBasedOnInput() {
 	//gameObject movement
 	//reset to defualt velocity
 	m_State.velocity = Math::sVector(0, 0, 0);
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Right))
+	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::Right])
 	{
 		m_State.velocity = Math::sVector(5, 0, 0);
 		//m_State.acceleration = Math::sVector(5, 0, 0);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Left))
+	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::Left])
 	{
 		m_State.velocity = Math::sVector(-5, 0, 0);
 		//m_State.acceleration = Math::sVector(-5, 0, 0);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Up))
+	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::Up])
 	{
 		m_State.velocity = Math::sVector(0, 5, 0);
 		//m_State.acceleration = Math::sVector(0, 5, 0);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Down))
+	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::Down])
 	{
 		m_State.velocity = Math::sVector(0, -5, 0);
 		//m_State.acceleration = Math::sVector(0, -5, 0);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::U)) {
+	if (UserInput::KeyState::currFrameKeyState['U']) {
 		m_State.velocity = Math::sVector(0, 0, 5);
 		//m_State.acceleration = Math::sVector(0, 0, 5);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::J)) {
+	if (UserInput::KeyState::currFrameKeyState['J']) {
 		m_State.velocity = Math::sVector(0, 0, -5);
 		//m_State.acceleration = Math::sVector(0, 0, -5);
 	}
 
-	if (UserInput::IsKeyFromReleasedToPressed(UserInput::KeyCodes::Space))
+	if (UserInput::IsKeyFromReleasedToPressed(' '))
 	{
 		{
 			Physics::AABB boundingBox;
@@ -54,7 +54,7 @@ void eae6320::CubeSpawner::UpdateGameObjectBasedOnInput() {
 			colliderObjects.push_back(pGameObject);
 		}
 	}
-	else if (UserInput::IsKeyFromReleasedToPressed(UserInput::KeyCodes::F))
+	else if (UserInput::IsKeyFromReleasedToPressed('F'))
 	{
 		Physics::sRigidBodyState objState;
 		objState.position = m_State.position;

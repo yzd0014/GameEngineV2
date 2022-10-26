@@ -11,13 +11,50 @@
 //==========
 void eae6320::UserInput::TrackKeyState()
 {
-	KeyState::currFrameKeyState[128] = IsKeyPressed(KeyCodes::LeftMouseButton);
-	KeyState::currFrameKeyState[129] = IsKeyPressed(KeyCodes::MiddleMouseButton);
-	KeyState::currFrameKeyState[130] = IsKeyPressed(KeyCodes::RightMouseButton);
 	for (uint8_t i = 0; i < 128; i++)
 	{
 		KeyState::currFrameKeyState[i] = IsKeyPressed(i);
 	}
+
+	KeyState::currFrameKeyState[128] = IsKeyPressed(0x01);//LeftMouseButton = 0x01,
+	KeyState::currFrameKeyState[129] = IsKeyPressed(0x04);//MiddleMouseButton = 0x04,
+	KeyState::currFrameKeyState[130] = IsKeyPressed(0x02);//RightMouseButton = 0x02,
+	
+	KeyState::currFrameKeyState[131] = IsKeyPressed(0x25);//Left = 0x25,
+	KeyState::currFrameKeyState[132] = IsKeyPressed(0x26);//Up = 0x26,
+	KeyState::currFrameKeyState[133] = IsKeyPressed(0x27);//Right = 0x27,
+	KeyState::currFrameKeyState[134] = IsKeyPressed(0x28);//Down = 0x28,
+
+	KeyState::currFrameKeyState[135] = IsKeyPressed(0x1b);//Escape = 0x1b,
+
+	KeyState::currFrameKeyState[136] = IsKeyPressed(0x10);//Shift = 0x10,
+	KeyState::currFrameKeyState[137] = IsKeyPressed(0x11);//Control = 0x11,
+	KeyState::currFrameKeyState[138] = IsKeyPressed(0x12);//Alt = 0x12,
+
+	KeyState::currFrameKeyState[139] = IsKeyPressed(0x09);//Tab = 0x09,
+	KeyState::currFrameKeyState[140] = IsKeyPressed(0x14);//CapsLock = 0x14,
+
+	KeyState::currFrameKeyState[141] = IsKeyPressed(0x08);//BackSpace = 0x08,
+	KeyState::currFrameKeyState[142] = IsKeyPressed(0x0d);//Enter = 0x0d,
+	KeyState::currFrameKeyState[143] = IsKeyPressed(0x2e);//Delete = 0x2e,
+
+	KeyState::currFrameKeyState[144] = IsKeyPressed(0x21);//PageUp = 0x21,
+	KeyState::currFrameKeyState[145] = IsKeyPressed(0x22);//PageDown = 0x22,
+	KeyState::currFrameKeyState[146] = IsKeyPressed(0x23);//End = 0x23,
+	KeyState::currFrameKeyState[147] = IsKeyPressed(0x24);//Home = 0x24,
+
+	KeyState::currFrameKeyState[148] = IsKeyPressed(0x70);//F1 = 0x70,
+	KeyState::currFrameKeyState[149] = IsKeyPressed(0x71);//F2 = 0x71,
+	KeyState::currFrameKeyState[150] = IsKeyPressed(0x72);//F3 = 0x72,
+	KeyState::currFrameKeyState[151] = IsKeyPressed(0x73);//F4 = 0x73,
+	KeyState::currFrameKeyState[152] = IsKeyPressed(0x74);//F5 = 0x74,
+	KeyState::currFrameKeyState[153] = IsKeyPressed(0x75);//F6 = 0x75,
+	KeyState::currFrameKeyState[154] = IsKeyPressed(0x76);//F7 = 0x76,
+	KeyState::currFrameKeyState[155] = IsKeyPressed(0x77);//F8 = 0x77,
+	KeyState::currFrameKeyState[156] = IsKeyPressed(0x78);//F9 = 0x78,
+	KeyState::currFrameKeyState[157] = IsKeyPressed(0x79);//F10 = 0x79,
+	KeyState::currFrameKeyState[158] = IsKeyPressed(0x7a);//F11 = 0x7a,
+	KeyState::currFrameKeyState[159] = IsKeyPressed(0x7b);//F12 = 0x7b,
 }
 
 void eae6320::UserInput::UpdateLastFrameKeyState()

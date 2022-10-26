@@ -14,45 +14,45 @@ void eae6320::MoveableCube::UpdateGameObjectBasedOnInput() {
 	Math::sVector rightVector = localToWorldMat.GetRightDirection();
 	rightVector.Normalize();
 	m_State.angularVelocity = Math::sVector(0, 0, 0);
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::H))
+	if (UserInput::KeyState::currFrameKeyState['H'])
 	{
 		m_State.angularVelocity = Math::sVector(0, 1, 0) * Math::ConvertDegreesToRadians(-400);
 	}
-	else if (UserInput::IsKeyPressed(UserInput::KeyCodes::K))
+	else if (UserInput::KeyState::currFrameKeyState['K'])
 	{
 		m_State.angularVelocity = Math::sVector(0, 1, 0) * Math::ConvertDegreesToRadians(400);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::U))
+	if (UserInput::KeyState::currFrameKeyState['U'])
 	{
 		m_State.angularVelocity = rightVector * Math::ConvertDegreesToRadians(400);
 	}
-	else if (UserInput::IsKeyPressed(UserInput::KeyCodes::J))
+	else if (UserInput::KeyState::currFrameKeyState['J'])
 	{
 		m_State.angularVelocity = rightVector * Math::ConvertDegreesToRadians(-400);
 	}
 
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Right))
+	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::Right])
 	{
 		m_State.velocity = Math::sVector(5, 0, 0);
 		//m_State.acceleration = Math::sVector(5, 0, 0);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Left))
+	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::Left])
 	{
 		m_State.velocity = Math::sVector(-5, 0, 0);
 		//m_State.acceleration = Math::sVector(-5, 0, 0);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Up))
+	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::Up])
 	{
 		m_State.velocity = Math::sVector(0, 0, -5);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Down))
+	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::Down])
 	{
 		m_State.velocity = Math::sVector(0, 0, 5);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::F)) {
+	if (UserInput::KeyState::currFrameKeyState['F']) {
 		m_State.velocity = Math::sVector(0, -5, 0);
 	}
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::R)) {
+	if (UserInput::KeyState::currFrameKeyState['R']) {
 		m_State.velocity = Math::sVector(0, 5, 0);
 	}
 	/*

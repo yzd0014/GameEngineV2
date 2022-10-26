@@ -162,11 +162,6 @@ int eae6320::Application::cbApplication::ParseEntryPointParametersAndRun( const 
 		const auto result = Initialize_all( i_entryPointParameters );
 		if ( result )
 		{
-			if (Graphics::renderThreadNoWait)
-			{
-				SubmitDataToBeRendered(0.0f, 0.0f);
-				Graphics::SubmitElapsedTime(0.0f, 0.0f);
-			}
 			Logging::OutputMessage( "The application was successfully initialized" );
 		}
 		else
@@ -523,7 +518,7 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 	}
 	//UserInput
 	{
-		for (int i = 0; i < 131; i++) {
+		for (int i = 0; i < 160; i++) {
 			UserInput::KeyState::lastFrameKeyState[i] = 0;
 			UserInput::KeyState::currFrameKeyState[i] = 0;
 		}

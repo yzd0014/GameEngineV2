@@ -41,61 +41,45 @@ namespace eae6320
 			// These values are what the Windows-specific function expects, for simplicity
 			enum eKeyCodes
 			{
-				LeftMouseButton = 0x01,
-				RightMouseButton = 0x02,
-				MiddleMouseButton = 0x04,
+				LeftMouseButton = 128,
+				MiddleMouseButton = 129,
+				RightMouseButton = 130,
 
-				Left = 0x25,
-				Up = 0x26,
-				Right = 0x27,
-				Down = 0x28,
+				Left = 131,
+				Up = 132,
+				Right = 133,
+				Down = 134,
 
-				Space = 0x20,
+				Escape = 135,
 
-				Escape = 0x1b,
+				Shift = 136,
+				Control = 137,
+				Alt = 138,
 
-				Shift = 0x10,
-				Control = 0x11,
-				Alt = 0x12,
+				Tab = 139,
+				CapsLock = 140,
 
-				Tab = 0x09,
-				CapsLock = 0x14,
+				BackSpace = 141,
+				Enter = 142,
+				Delete = 143,
 
-				BackSpace = 0x08,
-				Enter = 0x0d,
-				Delete = 0x2e,
+				PageUp = 144,
+				PageDown = 145,
+				End = 146,
+				Home = 147,
 
-				PageUp = 0x21,
-				PageDown = 0x22,
-				End = 0x23,
-				Home = 0x24,
-
-				W = 0x57,
-				A = 0x41,
-				S = 0x53,
-				D = 0x44,
-
-				H = 0x48,
-				J = 0x4a,
-				K = 0x4b,
-				U = 0x55,
-				T = 0x54,
-				G = 0x47,
-				R = 0x52,	
-				F = 0x46,
-
-				F1 = 0x70,
-				F2 = 0x71,
-				F3 = 0x72,
-				F4 = 0x73,
-				F5 = 0x74,
-				F6 = 0x75,
-				F7 = 0x76,
-				F8 = 0x77,
-				F9 = 0x78,
-				F10 = 0x79,
-				F11 = 0x7a,
-				F12 = 0x7b,
+				F1 = 148,
+				F2 = 149,
+				F3 = 150,
+				F4 = 151,
+				F5 = 152,
+				F6 = 153,
+				F7 = 154,
+				F8 = 155,
+				F9 = 156,
+				F10 = 157,
+				F11 = 158,
+				F12 = 159,
 			};
 		}
 
@@ -104,8 +88,8 @@ namespace eae6320
 			extern int yPosCached;
 		}
 		namespace KeyState {
-			extern uint8_t lastFrameKeyState[131];
-			extern uint8_t currFrameKeyState[131];
+			extern uint8_t lastFrameKeyState[160];
+			extern uint8_t currFrameKeyState[160];
 		}
 #if defined( EAE6320_PLATFORM_WINDOWS )
 		extern HWND mainWindow;

@@ -11,8 +11,8 @@ namespace eae6320
 			
 		}
 		namespace KeyState {
-			uint8_t lastFrameKeyState[131];
-			uint8_t currFrameKeyState[131];
+			uint8_t lastFrameKeyState[160];
+			uint8_t currFrameKeyState[160];
 		}
 
 #if defined( EAE6320_PLATFORM_WINDOWS )

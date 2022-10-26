@@ -27,7 +27,7 @@
 void eae6320::SoftbodySim::UpdateBasedOnInput()
 {
 	// Is the user pressing the ESC key?
-	if (UserInput::IsKeyPressed(UserInput::KeyCodes::Escape))
+	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::Escape])
 	{
 		// Exit the application
 		const auto result = Exit(EXIT_SUCCESS);

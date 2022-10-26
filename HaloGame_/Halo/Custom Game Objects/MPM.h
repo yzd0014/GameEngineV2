@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/GameCommon/GameObject.h"
+#include "Engine/UserInput/UserInput.h"
 #include <math.h>
 
 #include "Engine/EigenLibrary/Eigen/Dense"
@@ -200,7 +201,7 @@ namespace eae6320
 		}
 		void UpdateGameObjectBasedOnInput()
 		{
-			if (UserInput::IsKeyPressed(UserInput::KeyCodes::G))
+			if (UserInput::KeyState::currFrameKeyState['G'])
 			{
 				gravity = 9.8f;
 			}
