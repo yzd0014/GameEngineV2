@@ -294,7 +294,7 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 			// Add the time elapsed since the last frame to the amount of simulation time that has not been simulated yet
 			tickCount_simulationTime_elapsedButNotYetSimulated += tickCount_toSimulate_elapsedSinceLastLoop;
 			m_tickCount_sinceLastSimulation += tickCount_toSimulate_elapsedSinceLastLoop;
-			if (Physics::simPause) tickCount_simulationTime_elapsedButNotYetSimulated = 0;
+			if (Physics::simPause && Graphics::renderThreadNoWait) tickCount_simulationTime_elapsedButNotYetSimulated = 0;
 			// Keep updating the simulation while more time has elapsed than the fixed amount used for a single update
 			// (note that the expected common behavior is to render faster than the simulation is updated,
 			// and so the amount of simulation updates per-iteration should most often be zero, should frequently be one,
@@ -304,15 +304,15 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 				// Regardless of how far the simulation is behind
 				// frames need to be rendered (and operating system messages handled)
 				// or the application will stop responding
-				&& ( simulationUpdateCount_thisIteration < maxSimulationUpdateCountWithoutRendering ) && (!Physics::simPause) ) 
-				|| (Physics::simPause && Physics::nextSimStep && m_tickCount_sinceLastSimulation > tickCount_perSimulationUpdate) )
+				&& ( simulationUpdateCount_thisIteration < maxSimulationUpdateCountWithoutRendering ) && (!Graphics::renderThreadNoWait || !Physics::simPause) )
+				|| (Graphics::renderThreadNoWait && Physics::simPause && Physics::nextSimStep && m_tickCount_sinceLastSimulation > tickCount_perSimulationUpdate) )
 			{
 				UpdateSimulationBasedOnTime( secondCount_perSimulationUpdate );
-				if (!Physics::simPause) ++simulationUpdateCount_thisIteration;
+				if (!Graphics::renderThreadNoWait || !Physics::simPause) ++simulationUpdateCount_thisIteration;
 				else m_tickCount_sinceLastSimulation = 0;
 				tickCount_simulationTime_totalElapsed += tickCount_perSimulationUpdate;
 				m_tickCount_simulationTime_totalElapsed = tickCount_simulationTime_totalElapsed;
-				if (!Physics::simPause) tickCount_simulationTime_elapsedButNotYetSimulated -= tickCount_perSimulationUpdate;
+				tickCount_simulationTime_elapsedButNotYetSimulated -= tickCount_perSimulationUpdate;
 				Physics::nextSimStep = false;
 			}
 			// If a time-based simulation update happened

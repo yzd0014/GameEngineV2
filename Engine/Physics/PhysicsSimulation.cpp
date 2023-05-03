@@ -11,7 +11,7 @@
 
 namespace eae6320 {
 	namespace Physics {
-		bool simPause = false;
+		bool simPause = true;
 		bool nextSimStep = false;
 
 		std::vector<ContactManifold3D> allManifolds;

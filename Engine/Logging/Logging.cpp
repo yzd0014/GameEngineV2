@@ -112,6 +112,10 @@ eae6320::cResult eae6320::Logging::Initialize()
 eae6320::cResult eae6320::Logging::CleanUp()
 {
 	cLogging::CleanUp();
+	if (fileOpened)
+	{
+		logStream.close();
+	}
 	return s_cleanUpResult;
 }
 
