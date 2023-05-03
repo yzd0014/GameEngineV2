@@ -7,6 +7,8 @@
 4. Enter $(GameInstallDir)$(TargetFileName) in "Command", enter "$(GameInstallDir)" in "Working Directory"
 5. Now you can compile and run
 ![](Images/instruction.png)
+6. The executable can take two arguments, they are explained down below.
+![](Images/arguments.png)
 
 ## Features
 1. "HaloGame_\Halo\Custom Game Objects\Cloth.h" and its .cpp file implement cloth simulation with distance/bending constraint, self collision.
