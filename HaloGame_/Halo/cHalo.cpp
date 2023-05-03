@@ -3,6 +3,7 @@
 //12/13/2018
 #include "cHalo.h"
 
+#include "Engine/Logging/Logging.h"
 #include <Engine/Asserts/Asserts.h>
 #include <Engine/UserInput/UserInput.h>
 #include "Engine/Graphics/Graphics.h"

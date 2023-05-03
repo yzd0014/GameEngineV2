@@ -13,6 +13,8 @@
 
 #include <Engine/Results/Results.h>
 
+#include <fstream>
+#include <iostream>
 // Interface
 //==========
 
@@ -33,7 +35,18 @@ namespace eae6320
 
 		cResult Initialize();
 		cResult CleanUp();
+
+		extern std::fstream logStream;
+		extern bool fileOpened;
 	}
 }
+
+#define LOG_TO_FILE(content)\
+if (!eae6320::Logging::fileOpened)\
+{\
+	eae6320::Logging::logStream.open("FILE_DATA.csv", std::ios::out | std::ios::app);\
+	eae6320::Logging::fileOpened = true;\
+}\
+eae6320::Logging::logStream << content;
 
 #endif	// EAE6320_LOGGING_H

@@ -29,8 +29,8 @@ namespace eae6320
 
 			r_dot.setZero();
 			r.setZero();
-			r = Vector3f(0.7f, 4.0f, 0.4f);
-			//r = Vector3f(0.0f, 0.4f, 0.0f);
+			//r = Vector3f(0.7f, 4.0f, 0.4f);
+			r = Vector3f(0.0f, 0.0f, 1.0f);
 			physicsStateUpdate();
 		}
 		void Tick(const float i_secondCountToIntegrate)
@@ -91,7 +91,7 @@ namespace eae6320
 			MatrixXf Fe;
 			Fe.resize(6, 1);
 			Fe.setZero();
-			Fe.block<3, 1>(0, 0) = Vector3f(0.0f, -9.8f, 0.0f) + F_user; //gravity
+			Fe.block<3, 1>(0, 0) = Vector3f(0.0f, -9.81f, 0.0f) + F_user; //gravity
 			//cout << Fe << endl << endl;
 			MatrixXf Fv;
 			Fv.resize(6, 1);
@@ -103,7 +103,7 @@ namespace eae6320
 			VectorXf Pr_ddot = M_r.inverse() * Q_r;
 			//integration
 			r_dot = r_dot + Pr_ddot * i_secondCountToIntegrate;
-			r_dot *= 0.99f;
+			//r_dot *= 0.99f;
 			r = r + r_dot * i_secondCountToIntegrate;
 
 			physicsStateUpdate();
@@ -130,6 +130,9 @@ namespace eae6320
 			m_State.orientation.Normalize();
 			m_State.position = -Math::sVector(uJointGlobal(0), uJointGlobal(1), uJointGlobal(2));
 			F_user.setZero(); //clear external force
+
+			LOG_TO_FILE(tickCountSimulated << ", " << m_State.position.x << ", " << -m_State.position.z << ", " << m_State.position.y << std::endl);
+			tickCountSimulated++;
 		}
 	private:
 		Vector3f r;
@@ -140,5 +143,6 @@ namespace eae6320
 		Vector3f uJointGlobal;
 		Matrix3f localInertiaTensor;
 		Matrix3f globalInertiaTensor;
+		int tickCountSimulated = 0;
 	};
 }

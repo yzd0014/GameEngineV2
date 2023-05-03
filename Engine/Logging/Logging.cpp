@@ -39,6 +39,15 @@ namespace
 	};
 }
 
+namespace eae6320
+{
+	namespace Logging
+	{
+		std::fstream logStream;
+		bool fileOpened = false;
+	}
+}
+
 // Static Data Initialization
 //===========================
 

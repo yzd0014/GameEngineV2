@@ -85,6 +85,9 @@
     <ProjectReference Include="..\..\Engine\GameCommon\GameCommon.vcxproj">
       <Project>{6d18f357-6ae1-45e5-8961-79e56982bce5}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\Engine\Logging\Logging.vcxproj">
+      <Project>{a5c152ad-26a3-4835-bb10-ef292daf94ac}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\Engine\Math\Math.vcxproj">
       <Project>{999c3d5f-7f79-4bd7-ae21-92eeed0c5962}</Project>
     </ProjectReference>
