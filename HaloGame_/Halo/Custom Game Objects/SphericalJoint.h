@@ -131,7 +131,10 @@ namespace eae6320
 			m_State.position = -Math::sVector(uJointGlobal(0), uJointGlobal(1), uJointGlobal(2));
 			F_user.setZero(); //clear external force
 
-			LOG_TO_FILE(tickCountSimulated << ", " << m_State.position.x << ", " << -m_State.position.z << ", " << m_State.position.y << std::endl);
+			if (tickCountSimulated < 5000)
+			{
+				LOG_TO_FILE(tickCountSimulated << ", " << m_State.position.x << ", " << -m_State.position.z << ", " << m_State.position.y << std::endl);
+			}
 			tickCountSimulated++;
 		}
 	private:
