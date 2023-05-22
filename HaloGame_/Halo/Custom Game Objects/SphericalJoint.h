@@ -133,7 +133,7 @@ namespace eae6320
 
 			if (tickCountSimulated < 5000)
 			{
-				LOG_TO_FILE(tickCountSimulated << ", " << m_State.position.x << ", " << -m_State.position.z << ", " << m_State.position.y << std::endl);
+				LOG_TO_FILE << tickCountSimulated << ", " << m_State.position.x << ", " << -m_State.position.z << ", " << m_State.position.y << std::endl;
 			}
 			tickCountSimulated++;
 		}
