@@ -3,7 +3,7 @@
 #include "Engine/UserInput/UserInput.h"
 #include <math.h>
 
-#include "Engine/EigenLibrary/Eigen/Dense"
+#include "External/EigenLibrary/Eigen/Dense"
 
 using namespace Eigen;
 namespace eae6320

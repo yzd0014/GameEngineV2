@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine/GameCommon/GameObject.h"
 #include <Engine/Math/sVector.h>
-#include "Engine/EigenLibrary/Eigen/Dense"
+#include "External/EigenLibrary/Eigen/Dense"
 
 using namespace Eigen;
 

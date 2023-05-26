@@ -4,7 +4,7 @@
 
 #ifndef EAE6320_MATH_SVECTOR_H
 #define EAE6320_MATH_SVECTOR_H
-#include "Engine/EigenLibrary/Eigen/Dense"
+#include "External/EigenLibrary/Eigen/Dense"
 
 using namespace Eigen;
 // Struct Declaration

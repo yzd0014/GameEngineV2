@@ -5,8 +5,8 @@
 #include "Engine/GameCommon/GameplayUtility.h"
 #include <math.h>
 
-#include "Engine/EigenLibrary/Eigen/Dense"
-#include "Engine/EigenLibrary/Eigen/Geometry"
+#include "External/EigenLibrary/Eigen/Dense"
+#include "External/EigenLibrary/Eigen/Geometry"
 using namespace Eigen;
 namespace eae6320
 {

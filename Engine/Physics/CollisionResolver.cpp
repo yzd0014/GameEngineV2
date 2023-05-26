@@ -2,7 +2,7 @@
 #include "sRigidBodyState.h"
 #include <vector>
 #include "Engine/Physics/PhysicsSimulation.h"
-#include "Engine/EigenLibrary/Eigen/Dense"
+#include "External/EigenLibrary/Eigen/Dense"
 
 using namespace Eigen;
 namespace eae6320

@@ -1,7 +1,7 @@
 #include "PhysicsSimulation.h"
 #include "PointJoint.h"
 #include "Engine/Math/cMatrix_transformation.h"
-#include "Engine/EigenLibrary/Eigen/Dense"
+#include "External/EigenLibrary/Eigen/Dense"
 
 using namespace Eigen;
 void eae6320::Physics::PointJointsResolver(float i_dt)

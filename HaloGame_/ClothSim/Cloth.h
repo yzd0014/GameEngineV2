@@ -2,8 +2,8 @@
 #include "Engine/GameCommon/GameObject.h"
 #include "Engine/Math/Functions.h"
 #include "Engine/Math/cMatrix_transformation.h"
-#include "Engine/EigenLibrary/Eigen/Dense"
-#include "Engine/EigenLibrary/Eigen/Sparse"
+#include "External/EigenLibrary/Eigen/Dense"
+#include "External/EigenLibrary/Eigen/Sparse"
 
 using namespace Eigen;
 namespace eae6320 {
