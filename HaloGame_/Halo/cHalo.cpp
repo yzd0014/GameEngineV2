@@ -20,6 +20,7 @@
 #include "Engine/Profiling/Profiling.h"
 #include "Halo/Custom Game Objects/HingeJointCube.h"
 #include "Halo/Custom Game Objects/SphericalJoint.h"
+#include "Halo/Custom Game Objects/MultiBody.h"
 // Inherited Implementation
 //=========================
 
@@ -53,26 +54,36 @@ eae6320::cResult eae6320::cHalo::Initialize()
 
 	//load effect
 	LOAD_EFFECT("data/effects/default.effect", pDefaultEffect)
-
+	
+	std::vector<GameCommon::GameObject *> links;
+	for (int i = 0; i < 2; i++)
 	{
-		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
+		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
+		links.push_back(pGameObject);
+		noColliderObjects.push_back(pGameObject);
+	}
+	{
+		/*Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_anchor, objState);
 		pGameObject->m_color = Math::sVector(1, 0, 0);
-		noColliderObjects.push_back(pGameObject);
+		noColliderObjects.push_back(pGameObject);*/
+
+		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
+		GameCommon::GameObject * pGameObject = new MultiBody(pDefaultEffect, mesh_anchor, objState, links);
 	}
 	//Ground
 	{
-		Physics::sRigidBodyState objState(Math::sVector(0.0f, -5.0f, 0.0f));
+		Physics::sRigidBodyState objState(Math::sVector(0.0f, -8.0f, 0.0f));
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_plane, objState);
 		noColliderObjects.push_back(pGameObject);
 	}
 	
 	//cube with ball joint
-	{
-		//HingeJointCube * pGameObject = new HingeJointCube(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
-		SphericalJoint *pGameObject = new SphericalJoint(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
-		noColliderObjects.push_back(pGameObject);
-	}
+	//{
+	//	//HingeJointCube * pGameObject = new HingeJointCube(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
+	//	SphericalJoint *pGameObject = new SphericalJoint(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
+	//	noColliderObjects.push_back(pGameObject);
+	//}
 	return Results::Success;
 }
 
