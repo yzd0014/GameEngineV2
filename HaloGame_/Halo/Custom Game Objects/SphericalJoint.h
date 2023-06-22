@@ -30,10 +30,10 @@ namespace eae6320
 			r_dot.setZero();
 			r.setZero();
 			//r = Vector3f(0.7f, 4.0f, 0.4f);
-			r = Vector3f(0.0f, 0.0f, 1.0f);
+			r = Vector3f(0.0f, 0.0f, -1.0f);
 			physicsStateUpdate();
 		}
-		void Tick(const float i_secondCountToIntegrate)
+		void Tick(const float i_secondCountToIntegrate) override
 		{
 			float theta = r.norm();
 			float a;

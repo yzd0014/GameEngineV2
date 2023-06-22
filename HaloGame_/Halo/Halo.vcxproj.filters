@@ -60,6 +60,9 @@
     <ClInclude Include="Custom Game Objects\HingeJointCube.h">
       <Filter>Custom Game Objects</Filter>
     </ClInclude>
+    <ClInclude Include="MultiBody.h">
+      <Filter>Custom Game Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EntryPoint.cpp" />
@@ -80,6 +83,9 @@
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
     <ClCompile Include="Custom Game Objects\DoublePendulums.cpp">
+      <Filter>Custom Game Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="MultiBody.cpp">
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
   </ItemGroup>

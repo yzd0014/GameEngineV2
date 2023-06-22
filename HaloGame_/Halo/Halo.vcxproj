@@ -44,6 +44,7 @@
     </ClInclude>
     <ClInclude Include="Custom Game Objects\SphericalJoint.h" />
     <ClInclude Include="Custom Game Objects\Tri.h" />
+    <ClInclude Include="MultiBody.h" />
     <ClInclude Include="Resource Files\Resource.h" />
     <ClInclude Include="Resource Files\targetver.h" />
   </ItemGroup>
@@ -71,6 +72,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="EntryPoint.cpp" />
+    <ClCompile Include="MultiBody.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Engine\Application\Application.vcxproj">
