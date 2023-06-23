@@ -17,7 +17,6 @@ namespace eae6320
 
 		VectorXf R; //6x1
 		VectorXf R_dot; //6x1
-		VectorXf F_user; //6x1
 		std::vector<MatrixXf> M_ds;
 		std::vector<Matrix3f> localInertiaTensors;
 		std::vector<Vector3f> w;

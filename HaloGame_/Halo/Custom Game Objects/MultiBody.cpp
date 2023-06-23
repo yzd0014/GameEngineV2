@@ -3,6 +3,7 @@
 #include "Engine/Math/sVector.h"
 #include "Engine/UserInput/UserInput.h"
 #include "Engine/GameCommon/GameplayUtility.h"
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, std::vector<GameCommon::GameObject *> & i_linkBodys):
@@ -51,6 +52,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	R_dot.setZero();
 	R.resize(3 * numOfLinks);
 	R.setZero();
+
+	physicsStateUpdate();
 }
 
 void eae6320::MultiBody::Tick(const float i_secondCountToIntegrate)
@@ -180,6 +183,16 @@ void eae6320::MultiBody::Tick(const float i_secondCountToIntegrate)
 	R_dot = R_dot + R_ddot * i_secondCountToIntegrate;
 	R = R + R_dot * i_secondCountToIntegrate;
 
+	//post check
+	for (size_t i = 0; i < numOfLinks; i++)
+	{
+		Vector3f r = R.segment(i * 3, 3);
+		if (r.norm() > 3.1f)
+		{
+			//R.segment(i * 3, 3) = R.segment(i * 3, 3) - M_PI * r.normalized();
+			std::cout << "large r!" << std::endl;
+		}
+	}
 	physicsStateUpdate();
 }
 
@@ -251,7 +264,5 @@ void eae6320::MultiBody::physicsStateUpdate()
 		Vector3f uGlobal1 = Rt * uLocals[i][1];
 		uGlobals[i][1] = uGlobal1;
 		preAnchor = linkPos + uGlobal1;
-
-		F_user.setZero();
 	}
 }
