@@ -9,17 +9,17 @@ namespace eae6320
 	class MultiBody : public eae6320::GameCommon::GameObject
 	{
 	public:
-		MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, std::vector<GameCommon::GameObject *> & i_linkBodys);
+		MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, std::vector<GameCommon::GameObject *> & i_linkBodys, int i_numOfLinks);
 		void Tick(const float i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 	private:
-		void physicsStateUpdate();
+		void ForwardKinematics();
 
 		VectorXf R; //6x1
 		VectorXf R_dot; //6x1
 		std::vector<MatrixXf> M_ds;
 		std::vector<Matrix3f> localInertiaTensors;
-		std::vector<Vector3f> w;
+		std::vector<Vector3f> w_global;
 		std::vector<std::vector<Vector3f>> uLocals;
 		std::vector<std::vector<Vector3f>> uGlobals;
 		std::vector<float> A;

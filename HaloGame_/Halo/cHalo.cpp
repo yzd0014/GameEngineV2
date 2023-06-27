@@ -56,7 +56,8 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	LOAD_EFFECT("data/effects/default.effect", pDefaultEffect)
 	
 	std::vector<GameCommon::GameObject *> links;
-	for (int i = 0; i < 2; i++)
+	int bodyNum = 2;
+	for (int i = 0; i < bodyNum; i++)
 	{
 		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
 		links.push_back(pGameObject);
@@ -69,7 +70,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		noColliderObjects.push_back(pGameObject);*/
 
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
-		GameCommon::GameObject * pGameObject = new MultiBody(pDefaultEffect, mesh_anchor, objState, links);
+		GameCommon::GameObject * pGameObject = new MultiBody(pDefaultEffect, mesh_anchor, objState, links, bodyNum);
 		noColliderObjects.push_back(pGameObject);
 	}
 	//Ground
