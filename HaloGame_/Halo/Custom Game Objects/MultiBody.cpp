@@ -51,8 +51,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 	}
-	//uLocals[0][1] = Vector3f(1.0f, -1.0f, 1.0f);
-	//uLocals[1][0] = Vector3f(-1.0f, 1.0f, -1.0f);
+	/*uLocals[0][1] = Vector3f(1.0f, -1.0f, 1.0f);
+	uLocals[1][0] = Vector3f(-1.0f, 1.0f, -1.0f);*/
 	
 	//uLocals[0][0] = Vector3f(1.0f, -1.0f, -1.0f);
 	R_dot.resize(3 * numOfLinks);
@@ -87,7 +87,7 @@ void eae6320::MultiBody::Tick(const float i_secondCountToIntegrate)
 		J.setZero();
 		Matrix3f rrt = r * r.transpose();
 		J = a * MatrixXf::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * rrt;
-		//std::cout << J.determinant() << std::endl;
+		//std::cout << J.determinant() << std::endl <<std::endl;
 		H[i].resize(6, 3);
 		H[i].setZero();
 		H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * J;
@@ -191,7 +191,7 @@ void eae6320::MultiBody::Tick(const float i_secondCountToIntegrate)
 	R_dot = R_dot + R_ddot * i_secondCountToIntegrate;
 	//R_dot *= 0.999f;
 	R = R + R_dot * i_secondCountToIntegrate;
-	std::cout << R << std::endl << std::endl;
+	//std::cout << R << std::endl << std::endl;
 
 	//post check
 	for (size_t i = 0; i < numOfLinks; i++)

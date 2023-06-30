@@ -21,6 +21,7 @@
 #include "Halo/Custom Game Objects/HingeJointCube.h"
 #include "Halo/Custom Game Objects/SphericalJoint.h"
 #include "Halo/Custom Game Objects/MultiBody.h"
+#include "Halo/Custom Game Objects/MujocoBallJoint.h"
 // Inherited Implementation
 //=========================
 
@@ -70,7 +71,8 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		noColliderObjects.push_back(pGameObject);*/
 
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
-		GameCommon::GameObject * pGameObject = new MultiBody(pDefaultEffect, mesh_anchor, objState, links, bodyNum);
+		//GameCommon::GameObject * pGameObject = new MultiBody(pDefaultEffect, mesh_anchor, objState, links, bodyNum);
+		GameCommon::GameObject * pGameObject = new MujocoBallJoint(pDefaultEffect, mesh_anchor, objState, links, bodyNum);
 		noColliderObjects.push_back(pGameObject);
 	}
 	//Ground

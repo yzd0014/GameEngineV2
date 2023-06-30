@@ -4,6 +4,7 @@
 
 #ifndef EAE6320_MATH_CQUATERNION_H
 #define EAE6320_MATH_CQUATERNION_H
+#include "External/EigenLibrary/Eigen/Dense"
 
 // Forward Declarations
 //=====================
@@ -66,6 +67,7 @@ namespace eae6320
 			cQuaternion() = default;	// Identity
 			cQuaternion( const float i_angleInRadians,	// A positive angle rotates counter-clockwise (right-handed) around the axis
 				const sVector i_axisOfRotation_normalized );
+			cQuaternion(const float i_w, const float i_x, const float i_y, const float i_z);
 
 			// Data
 			//=====
@@ -85,9 +87,6 @@ namespace eae6320
 
 			// Initialization / Shut Down
 			//---------------------------
-
-			cQuaternion( const float i_w, const float i_x, const float i_y, const float i_z );
-
 			// Friends
 			//========
 			void threeaxisrot(float r11, float r12, float r21, float r31, float r32, float res[]);
@@ -98,6 +97,7 @@ namespace eae6320
 		//========
 
 		float Dot( const cQuaternion i_lhs, const cQuaternion i_rhs );
+		cQuaternion ConvertEigenQuatToNativeQuat(Eigen::Quaternionf i_quat);
 	}
 }
 

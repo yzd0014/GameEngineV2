@@ -164,3 +164,8 @@ eae6320::Math::sVector eae6320::Math::cQuaternion::Quaternion2AxisAngle()
 
 	return rot;
 }
+
+eae6320::Math::cQuaternion eae6320::Math::ConvertEigenQuatToNativeQuat(Eigen::Quaternionf i_quat)
+{
+	return eae6320::Math::cQuaternion(i_quat.w(), i_quat.x(), i_quat.y(), i_quat.z());
+}
