@@ -24,5 +24,6 @@ namespace eae6320
 		std::vector<Quaternionf> m_orientations;
 		float rigidBodyMass = 1.0f;
 		int numOfLinks = 2;
+		int tickCountSimulated = 0;
 	};
 }

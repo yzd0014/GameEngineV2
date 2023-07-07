@@ -312,6 +312,7 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 				else m_tickCount_sinceLastSimulation = 0;
 				tickCount_simulationTime_totalElapsed += tickCount_perSimulationUpdate;
 				m_tickCount_simulationTime_totalElapsed = tickCount_simulationTime_totalElapsed;
+				Physics::totalSimulationTime = Time::ConvertTicksToSeconds(tickCount_simulationTime_totalElapsed);
 				tickCount_simulationTime_elapsedButNotYetSimulated -= tickCount_perSimulationUpdate;
 				Physics::nextSimStep = false;
 			}

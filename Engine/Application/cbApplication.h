@@ -130,7 +130,7 @@ namespace eae6320
 			// The default value is a relatively large amount of time;
 			// you may want to experiement with smaller values in your application
 			// and observe the change in responsiveness or simulation accuracy.
-			virtual float GetSimulationUpdatePeriod_inSeconds() const { return 1.0f / 1000.0f; }
+			virtual float GetSimulationUpdatePeriod_inSeconds() const { return 1.0f / 100000.0f; }
 
 		private:
 

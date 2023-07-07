@@ -43,8 +43,8 @@ eae6320::MujocoBallJoint::MujocoBallJoint(Effect * i_pEffect, Assets::cHandle<Me
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 	}
-	uLocals[0][1] = Vector3f(1.0f, -1.0f, 1.0f);
-	uLocals[1][0] = Vector3f(-1.0f, 1.0f, -1.0f);
+	/*uLocals[0][1] = Vector3f(1.0f, -1.0f, 1.0f);
+	uLocals[1][0] = Vector3f(-1.0f, 1.0f, -1.0f);*/
 	w_r.resize(3 * numOfLinks);
 	ForwardKinematics();
 }
@@ -191,5 +191,15 @@ void eae6320::MujocoBallJoint::ForwardKinematics()
 		uGlobals[i][1] = uGlobal1;
 		preAnchor = linkPos + uGlobal1;
 	}
+
+	if (tickCountSimulated <= 600010)
+	{
+		LOG_TO_FILE << tickCountSimulated << ", " << m_linkBodys[1]->m_State.position.x << ", " << -m_linkBodys[1]->m_State.position.z << ", " << m_linkBodys[1]->m_State.position.y << std::endl;
+		if (tickCountSimulated == 600000)
+		{
+			std::cout << "done!" << std::endl;
+		}
+	}
+	tickCountSimulated++;
 }
 

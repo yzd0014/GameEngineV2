@@ -8,6 +8,8 @@ namespace eae6320 {
 	struct CollisionPair;
 
 	namespace Physics {
+		extern double totalSimulationTime;
+		
 		extern bool simPause;
 		extern bool nextSimStep;
 

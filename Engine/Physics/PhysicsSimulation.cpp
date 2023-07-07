@@ -11,6 +11,8 @@
 
 namespace eae6320 {
 	namespace Physics {
+		double totalSimulationTime = 0;
+
 		bool simPause = true;
 		bool nextSimStep = false;
 
