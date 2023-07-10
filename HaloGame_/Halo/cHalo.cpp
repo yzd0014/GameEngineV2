@@ -22,6 +22,7 @@
 #include "Halo/Custom Game Objects/SphericalJoint.h"
 #include "Halo/Custom Game Objects/MultiBody.h"
 #include "Halo/Custom Game Objects/MujocoBallJoint.h"
+#include "Halo/Custom Game Objects/SphericalJointV2.h"
 // Inherited Implementation
 //=========================
 
@@ -55,6 +56,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 
 	//load effect
 	LOAD_EFFECT("data/effects/default.effect", pDefaultEffect)
+	LOAD_EFFECT("data/effects/red.effect", pRedEffect)
 	
 	std::vector<GameCommon::GameObject *> links;
 	int bodyNum = 2;
@@ -71,8 +73,9 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		noColliderObjects.push_back(pGameObject);*/
 
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
-		GameCommon::GameObject * pGameObject = new MultiBody(pDefaultEffect, mesh_anchor, objState, links, bodyNum);
+		//GameCommon::GameObject * pGameObject = new MultiBody(pDefaultEffect, mesh_anchor, objState, links, bodyNum);
 		//GameCommon::GameObject * pGameObject = new MujocoBallJoint(pDefaultEffect, mesh_anchor, objState, links, bodyNum);
+		GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		noColliderObjects.push_back(pGameObject);
 	}
 	//Ground

@@ -122,8 +122,9 @@ void eae6320::MultiBody::Tick(const float i_secondCountToIntegrate)
 		M_r = M_r + M_temp;
 	}
 /**********************************************************************************************************/
-	RK4Integration(i_secondCountToIntegrate);
-
+	EulerIntegration(i_secondCountToIntegrate);
+	ForwardKinematics();
+	
 	//post check
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
@@ -133,8 +134,9 @@ void eae6320::MultiBody::Tick(const float i_secondCountToIntegrate)
 			R.segment(i * 3, 3) = R.segment(i * 3, 3) - 2 * M_PI * r.normalized();
 			std::cout << "large r!" << std::endl;
 		}
+		//std::cout << r.norm() << ", ";
 	}
-	ForwardKinematics();
+	//std::cout << std::endl;
 }
 
 void eae6320::MultiBody::EulerIntegration(const float h)
@@ -355,14 +357,16 @@ void eae6320::MultiBody::ForwardKinematics()
 		C[i] = c;
 	}
 
-	if (eae6320::Physics::totalSimulationTime < 6)
+	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << m_linkBodys[1]->m_State.position.x << ", " << -m_linkBodys[1]->m_State.position.z << ", " << m_linkBodys[1]->m_State.position.y << std::endl;
+	//std::cout << eae6320::Physics::totalSimulationTime << std::endl;
+	/*if (eae6320::Physics::totalSimulationTime < 12)
 	{
 		LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << m_linkBodys[1]->m_State.position.x << ", " << -m_linkBodys[1]->m_State.position.z << ", " << m_linkBodys[1]->m_State.position.y << std::endl;
 	}
 	else
 	{
 		std::cout << "done!" << std::endl;
-	}
+	}*/
 }
 
 //void eae6320::MultiBody::ComputeAngularVelocityExpressionCoefficient(std::vector<float>& o_A,

@@ -66,6 +66,9 @@
     <ClInclude Include="Custom Game Objects\MujocoBallJoint.h">
       <Filter>Custom Game Objects</Filter>
     </ClInclude>
+    <ClInclude Include="Custom Game Objects\SphericalJointV2.h">
+      <Filter>Custom Game Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EntryPoint.cpp" />
@@ -92,6 +95,9 @@
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
     <ClCompile Include="Custom Game Objects\MujocoBallJoint.cpp">
+      <Filter>Custom Game Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Custom Game Objects\SphericalJointV2.cpp">
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
   </ItemGroup>
