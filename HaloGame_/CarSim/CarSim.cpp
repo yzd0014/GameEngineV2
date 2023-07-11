@@ -183,7 +183,7 @@ void eae6320::CarSim::UpdateSimulationBasedOnInput() {
 	}
 }
 
-void  eae6320::CarSim::UpdateSimulationBasedOnTime(const float i_elapsedSecondCount_sinceLastUpdate) {
+void  eae6320::CarSim::UpdateSimulationBasedOnTime(const double i_elapsedSecondCount_sinceLastUpdate) {
 	if (isGameOver == false)
 	{
 		cbApplication::UpdateSimulationBasedOnTime(i_elapsedSecondCount_sinceLastUpdate);

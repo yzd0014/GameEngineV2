@@ -74,7 +74,7 @@ namespace eae6320
 		//----
 
 		virtual void UpdateBasedOnInput() override;
-		virtual void UpdateSimulationBasedOnTime(const float i_elapsedSecondCount_sinceLastUpdate) override;
+		virtual void UpdateSimulationBasedOnTime(const double i_elapsedSecondCount_sinceLastUpdate) override;
 		virtual void UpdateSimulationBasedOnInput() override;
 		// Initialization / Clean Up
 		//--------------------------

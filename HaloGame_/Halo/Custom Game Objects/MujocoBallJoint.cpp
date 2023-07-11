@@ -26,7 +26,7 @@ eae6320::MujocoBallJoint::MujocoBallJoint(Effect * i_pEffect, Assets::cHandle<Me
 		M_ds[i](2, 2) = rigidBodyMass;
 
 		localInertiaTensors[i].setIdentity();
-		localInertiaTensors[i] = localInertiaTensors[i] * (1.0f / 12.0f)* rigidBodyMass * 8;
+		localInertiaTensors[i] = localInertiaTensors[i] * (1.0f / 12.0f) * rigidBodyMass * 8.0;
 		M_ds[i].block<3, 3>(3, 3) = localInertiaTensors[i];
 
 		std::vector<Vector3f> uPairs;
@@ -49,8 +49,10 @@ eae6320::MujocoBallJoint::MujocoBallJoint(Effect * i_pEffect, Assets::cHandle<Me
 	ForwardKinematics();
 }
 
-void eae6320::MujocoBallJoint::Tick(const float i_secondCountToIntegrate)
+void eae6320::MujocoBallJoint::Tick(const double i_secondCountToIntegrate)
 {
+	float dt = (float)i_secondCountToIntegrate;
+
 	std::vector<MatrixXf> H;
 	H.resize(numOfLinks);
 	std::vector<MatrixXf> D;
@@ -151,7 +153,7 @@ void eae6320::MujocoBallJoint::Tick(const float i_secondCountToIntegrate)
 	}
 	/**********************************************************************************************************/
 	VectorXf w_rdot = M_r.inverse() * Q_r;
-	w_r = w_r + w_rdot * i_secondCountToIntegrate;
+	w_r = w_r + w_rdot * dt;
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		if (i == 0)
@@ -162,7 +164,7 @@ void eae6320::MujocoBallJoint::Tick(const float i_secondCountToIntegrate)
 		{
 			w_global[i] = w_global[i - 1] + w_r.segment(i * 3, 3);
 		}
-		Vector3f deltaRotVec = w_global[i] * i_secondCountToIntegrate;
+		Vector3f deltaRotVec = w_global[i] * dt;
 		Quaternionf deltaRot(AngleAxisf(deltaRotVec.norm(), deltaRotVec.normalized()));
 		m_orientations[i] = deltaRot * m_orientations[i];
 		m_orientations[i].normalize();

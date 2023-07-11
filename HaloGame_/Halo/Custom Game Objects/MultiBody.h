@@ -3,45 +3,66 @@
 
 #include "External/EigenLibrary/Eigen/Dense"
 #include "External/EigenLibrary/Eigen/Geometry"
+
+//#define HIGH_PRECISION_MODE 
+
 using namespace Eigen;
+
+#if defined (HIGH_PRECISION_MODE)
+typedef double _Scalar;
+typedef MatrixXd _Matrix;
+typedef Matrix3d _Matrix3;
+typedef VectorXd _Vector;
+typedef Vector3d _Vector3;
+#else
+typedef float _Scalar;
+typedef MatrixXf _Matrix;
+typedef Matrix3f _Matrix3;
+typedef VectorXf _Vector;
+typedef Vector3f _Vector3;
+#endif
+
 namespace eae6320
 {
 	class MultiBody : public eae6320::GameCommon::GameObject
 	{
 	public:
 		MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, std::vector<GameCommon::GameObject *> & i_linkBodys, int i_numOfLinks);
-		void Tick(const float i_secondCountToIntegrate) override;
+		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 	private:
-		VectorXf ComputeQ_r(VectorXf i_R_dot);
-		void ComputeGamma_t(std::vector<VectorXf>& o_gamma_t, VectorXf& i_R_dot);
+		_Vector ComputeQ_r(_Vector i_R_dot);
+		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot);
 		
-		void ComputeAngularVelocity(VectorXf& i_R_dot);
-		void ComputeAngularVelocityExpressionCoefficientDerivative(std::vector<float>& o_A_dot, std::vector<float>& o_B_dot, std::vector<float>& o_C_dot, VectorXf& i_R_dot);
+		void ComputeAngularVelocity(_Vector& i_R_dot);
+		void ComputeAngularVelocityExpressionCoefficientDerivative(std::vector<_Scalar>& o_A_dot, std::vector<_Scalar>& o_B_dot, std::vector<_Scalar>& o_C_dot, _Vector& i_R_dot);
 		
-		void EulerIntegration(const float h);
-		void RK4Integration(const float h);
+		void EulerIntegration(const _Scalar h);
+		void RK4Integration(const _Scalar h);
+		void RK3Integration(const _Scalar h);
 
 		void ForwardKinematics();
 
-		VectorXf R; //6x1
-		VectorXf R_dot; //6x1
-		MatrixXf M_r;
-		std::vector<MatrixXf> M_ds;
-		std::vector<Matrix3f> localInertiaTensors;
-		std::vector<Vector3f> w_global;
-		std::vector<std::vector<Vector3f>> uLocals;
-		std::vector<std::vector<Vector3f>> uGlobals;
-		std::vector<float> A;
-		//std::vector<float> A_dot;
-		std::vector<float> B;
-		//std::vector<float> B_dot;
-		std::vector<float> C;
-		//std::vector<float> C_dot;
-		std::vector<MatrixXf> D;
-		std::vector<MatrixXf> H_t;
+		_Vector R; //6x1
+		_Vector R_dot; //6x1
+		_Matrix M_r;
+		std::vector<_Matrix> M_ds;
+		std::vector<_Matrix3> localInertiaTensors;
+		std::vector<_Vector3> w_global;
+		std::vector<std::vector<_Vector3>> uLocals;
+		std::vector<std::vector<_Vector3>> uGlobals;
+		std::vector<_Scalar> A;
+		//std::vector<_Scalar> A_dot;
+		std::vector<_Scalar> B;
+		//std::vector<_Scalar> B_dot;
+		std::vector<_Scalar> C;
+		//std::vector<_Scalar> C_dot;
+		std::vector<_Matrix> D;
+		std::vector<_Matrix> H_t;
+		
 		std::vector<GameCommon::GameObject *> m_linkBodys;
-		float rigidBodyMass = 1.0f;
+		_Scalar rigidBodyMass = 1.0f;
+		
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
 	};

@@ -51,7 +51,7 @@ eae6320::cResult eae6320::SoftbodySim::Initialize()
 	{
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
-		JellyCube* pGameObject = new JellyCube(pDefaultEffect, mesh_cube, objState, GetSimulationUpdatePeriod_inSeconds());
+		JellyCube* pGameObject = new JellyCube(pDefaultEffect, mesh_cube, objState, (float)GetSimulationUpdatePeriod_inSeconds());
 		noColliderObjects.push_back(pGameObject);
 	}
 	{
@@ -72,7 +72,7 @@ void eae6320::SoftbodySim::UpdateSimulationBasedOnInput() {
 	}
 }
 
-void  eae6320::SoftbodySim::UpdateSimulationBasedOnTime(const float i_elapsedSecondCount_sinceLastUpdate) {
+void  eae6320::SoftbodySim::UpdateSimulationBasedOnTime(const double i_elapsedSecondCount_sinceLastUpdate) {
 	if (isGameOver == false)
 	{
 		cbApplication::UpdateSimulationBasedOnTime(i_elapsedSecondCount_sinceLastUpdate);

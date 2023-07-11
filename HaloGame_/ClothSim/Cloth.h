@@ -19,7 +19,7 @@ namespace eae6320 {
 			timeConstant = 1 / pow(i_h, 2);
 			GenerateCollisionEdges();
 		}
-		void Tick(const float i_secondCountToIntegrate) override;
+		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 		void CollisionDetection(SparseMatrix<double> &o_E);
 		void SelfCollisionDetection();

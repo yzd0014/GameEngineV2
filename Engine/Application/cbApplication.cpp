@@ -18,14 +18,14 @@
 //==========
 bool eae6320::Application::enableConsole = false;
 
-void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const float i_elapsedSecondCount_sinceLastUpdate)
+void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const double i_elapsedSecondCount_sinceLastUpdate)
 {
 	size_t size_physicsObject = colliderObjects.size();
 	// ***********************run physics****************************************************	
 			//update game objects with AABB
-	Physics::RunPhysics(colliderObjects, noColliderObjects, i_elapsedSecondCount_sinceLastUpdate);
+	Physics::RunPhysics(colliderObjects, noColliderObjects, static_cast<float>(i_elapsedSecondCount_sinceLastUpdate));
 	//update camera
-	if(!Graphics::renderThreadNoWait) mainCamera.UpdateState(i_elapsedSecondCount_sinceLastUpdate);
+	if(!Graphics::renderThreadNoWait) mainCamera.UpdateState(static_cast<float>(i_elapsedSecondCount_sinceLastUpdate));
 	
 	//run AI*********************************************************************************
 	for (size_t i = 0; i < size_physicsObject; i++) {

@@ -191,6 +191,20 @@ Matrix3f eae6320::Math::ToSkewSymmetricMatrix(Vector3f &i_vecotor)
 	return output;
 }
 
+Matrix3d eae6320::Math::ToSkewSymmetricMatrix(Vector3d &i_vecotor)
+{
+	Matrix3d output;
+	output.setZero();
+	output(0, 1) = -i_vecotor(2);
+	output(0, 2) = i_vecotor(1);
+	output(1, 0) = i_vecotor(2);
+	output(1, 2) = -i_vecotor(0);
+	output(2, 0) = -i_vecotor(1);
+	output(2, 1) = i_vecotor(0);
+
+	return output;
+}
+
 void eae6320::Math::NativeVector2EigenVector(sVector i_vector, Vector3f &o_vector)
 {
 	o_vector(0) = i_vector.x;
@@ -204,6 +218,16 @@ eae6320::Math::sVector eae6320::Math::EigenVector2nativeVector(const Vector3f &i
 	output.x = i_vector(0);
 	output.y = i_vector(1);
 	output.z = i_vector(2);
+
+	return output;
+}
+
+eae6320::Math::sVector eae6320::Math::EigenVector2nativeVector(const Vector3d &i_vector)
+{
+	sVector output;
+	output.x = static_cast<float>(i_vector(0));
+	output.y = static_cast<float>(i_vector(1));
+	output.z = static_cast<float>(i_vector(2));
 
 	return output;
 }

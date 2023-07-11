@@ -68,8 +68,10 @@ eae6320::SphericalJointV2::SphericalJointV2(Effect * i_pEffect, Assets::cHandle<
 	ForwardKinematics();
 }
 
-void eae6320::SphericalJointV2::Tick(const float i_secondCountToIntegrate)
+void eae6320::SphericalJointV2::Tick(const double i_secondCountToIntegrate)
 {
+	float dt = (float)i_secondCountToIntegrate;
+	
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		//compute D
@@ -167,8 +169,8 @@ void eae6320::SphericalJointV2::Tick(const float i_secondCountToIntegrate)
 		{
 			R_ddot[i] = -(H[i].transpose() * Mt * H[i]).inverse() *(H[i].transpose() * (Mt * D[i] * V_dot[i - 1] + Mt * gamma[i] - (Q[i] + Qr[i])));
 		}
-		R_dot[i] = R_dot[i] + R_ddot[i] * i_secondCountToIntegrate;
-		R[i] = R[i] + R_dot[i] * i_secondCountToIntegrate;
+		R_dot[i] = R_dot[i] + R_ddot[i] * dt;
+		R[i] = R[i] + R_dot[i] * dt;
 
 		if (i == 0)
 		{

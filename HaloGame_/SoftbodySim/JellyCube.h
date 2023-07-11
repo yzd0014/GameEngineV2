@@ -192,7 +192,7 @@ namespace eae6320
 			m_Mesh->updateVertexBuffer = true;
 		}
 
-		void Tick(const float i_secondCountToIntegrate)
+		void Tick(const double i_secondCountToIntegrate)
 		{
 			Mesh* m_Mesh = Mesh::s_manager.Get(GetMesh());
 			MatrixXd v(3, 8);

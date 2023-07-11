@@ -10,7 +10,7 @@ namespace eae6320
 	{
 	public:
 		MujocoBallJoint(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, std::vector<GameCommon::GameObject *> & i_linkBodys, int i_numOfLinks);
-		void Tick(const float i_secondCountToIntegrate) override;
+		void Tick(const double i_secondCountToIntegrate) override;
 	private:
 		void ForwardKinematics();
 

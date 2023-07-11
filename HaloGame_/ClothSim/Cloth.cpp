@@ -283,7 +283,7 @@ void eae6320::Cloth::InitializeCloth()
 	
 }
 
-void eae6320::Cloth::Tick(const float i_secondCountToIntegrate) {
+void eae6320::Cloth::Tick(const double i_secondCountToIntegrate) {
 	//PROFILE_UNSCOPED(0);
 	Mesh* clothMesh = Mesh::s_manager.Get(GetMesh());
 
