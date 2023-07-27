@@ -37,7 +37,7 @@ namespace eae6320
 		{
 			float theta = r.norm();
 			float a;
-			if (theta < 0.015) a = 1.0f - theta / 6.0f;
+			if (theta < 0.015) a = 1.0f - theta * theta / 6.0f;
 			else a = sin(theta) / theta;
 
 			float b;

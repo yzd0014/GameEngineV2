@@ -64,7 +64,8 @@ eae6320::SphericalJointV2::SphericalJointV2(Effect * i_pEffect, Assets::cHandle<
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 	}
-
+	/*uLocals[0][1] = Vector3f(1.0f, -1.0f, 1.0f);
+	uLocals[1][0] = Vector3f(-1.0f, 1.0f, -1.0f);*/
 	ForwardKinematics();
 }
 
@@ -172,17 +173,17 @@ void eae6320::SphericalJointV2::Tick(const double i_secondCountToIntegrate)
 		R_dot[i] = R_dot[i] + R_ddot[i] * dt;
 		R[i] = R[i] + R_dot[i] * dt;
 
-		if (i == 0)
+		/*if (i == 0)
 		{
 			V_dot[i] = H[i] * R_ddot[i] + gamma[i];
 		}
 		else
 		{
 			V_dot[i] = D[i] * V_dot[i - 1] + H[i] * R_ddot[i] + gamma[i];
-		}
+		}*/
 	}
 
-	/*for (int i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		if (i == 0)
 		{
@@ -192,7 +193,7 @@ void eae6320::SphericalJointV2::Tick(const double i_secondCountToIntegrate)
 		{
 			V_dot[i] = D[i] * V_dot[i - 1] + H[i] * R_ddot[i] + gamma[i];
 		}
-	}*/
+	}
 	ForwardKinematics();
 }
 
@@ -231,7 +232,7 @@ void eae6320::SphericalJointV2::ForwardKinematics()
 		//update a b c
 		float theta = R[i].norm();
 		float a;
-		if (theta < 0.0001) a = 1.0f - theta / 6.0f;
+		if (theta < 0.0001) a = 1.0f - theta * theta / 6.0f;
 		else a = sin(theta) / theta;
 		A[i] = a;
 

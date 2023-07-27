@@ -48,8 +48,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 	}
-	uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
-	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);
+	/*uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
+	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);*/
 	
 	//uLocals[0][0] = _Vector3(1.0f, -1.0f, -1.0f);
 
@@ -91,9 +91,19 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		//compute D
 		if (i > 0)
 		{
-			D[i].resize(6, 6);
-			D[i].setIdentity();
-			D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) - Math::ToSkewSymmetricMatrix(uGlobals[i - 1][1]);
+			if (rotationMode == LOCAL_MODE)
+			{
+				D[i].resize(6, 6);
+				D[i].setIdentity();
+				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) - Math::ToSkewSymmetricMatrix(uGlobals[i - 1][1]);
+			}
+			else if (rotationMode == GLOBAL_MODE)
+			{
+				D[i].resize(6, 6);
+				D[i].setZero();
+				D[i].block<3, 3>(0, 0) = _Matrix::Identity(3, 3);
+				D[i].block<3, 3>(0, 3) = -Math::ToSkewSymmetricMatrix(uGlobals[i - 1][1]);
+			}
 		}
 	}
 /**********************************************************************************************************/
@@ -122,8 +132,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		M_r = M_r + M_temp;
 	}
 /**********************************************************************************************************/
-	//EulerIntegration(i_secondCountToIntegrate);
-	RK3Integration(dt);
+	EulerIntegration(dt);
+	//RK3Integration(dt);
 	ForwardKinematics();
 	
 	//post check
@@ -144,7 +154,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 {
 	_Vector Q_r = ComputeQ_r(R_dot);
 	_Vector R_ddot = M_r.inverse() * Q_r;
-	//std::cout << h * M_r.inverse() * Q_r << std::endl;
+
 	R_dot = R_dot + R_ddot * h;
 	R = R + R_dot * h;
 }
@@ -268,14 +278,21 @@ void eae6320::MultiBody::ComputeAngularVelocity(_Vector& i_R_dot)
 		_Scalar b = B[i];
 		_Scalar c = C[i];
 
-		_Vector3 w_local = a * r_dot - (b * r_dot).cross(r) + c * r.dot(r_dot) * r;
-		if (i == 0)
+		if (rotationMode == LOCAL_MODE)
 		{
-			w_global[i] = w_local;
+			_Vector3 w_local = a * r_dot - (b * r_dot).cross(r) + c * r.dot(r_dot) * r;
+			if (i == 0)
+			{
+				w_global[i] = w_local;
+			}
+			else
+			{
+				w_global[i] = w_global[i - 1] + w_local;
+			}
 		}
-		else
+		else if (rotationMode == GLOBAL_MODE)
 		{
-			w_global[i] = w_global[i - 1] + w_local;
+			w_global[i] = a * r_dot - (b * r_dot).cross(r) + c * r.dot(r_dot) * r;
 		}
 	}
 }
@@ -296,10 +313,7 @@ void eae6320::MultiBody::ComputeAngularVelocityExpressionCoefficientDerivative(s
 		_Scalar b = B[i];
 		_Scalar c = C[i];
 
-		_Scalar a_dot;
-		if (theta < 0.0001) a_dot = (-1.0f / 3.0f + 1.0f / 30.0f * theta * theta) * r.dot(r_dot);
-		else a_dot = (c - b) * r.dot(r_dot);
-		o_A_dot[i] = a_dot;
+		o_A_dot[i] = (c - b) * r.dot(r_dot);
 
 		_Scalar b_dot;
 		if (theta < 0.0001) b_dot = (-1.0f / 12.0f + 1.0f / 180.0f * theta * theta) * r.dot(r_dot);
@@ -328,12 +342,26 @@ void eae6320::MultiBody::ForwardKinematics()
 		_Vector3 r = R.segment(i * 3, 3);
 		_Matrix3 R_local;
 #if defined (HIGH_PRECISION_MODE)
-		R_local = AngleAxisd(r.norm(), r.normalized());
-		R_global = R_global * R_local;
+		if (rotationMode == LOCAL_MODE)
+		{
+			R_local = AngleAxisd(r.norm(), r.normalized());
+			R_global = R_global * R_local;
+		}
+		else if (rotationMode == GLOBAL_MODE)
+		{
+			R_global = AngleAxisd(r.norm(), r.normalized());
+		}
 		AngleAxisd angleAxis_global(R_global);
 #else
-		R_local = AngleAxisf(r.norm(), r.normalized());
-		R_global = R_global * R_local;
+		if (rotationMode == LOCAL_MODE)
+		{
+			R_local = AngleAxisf(r.norm(), r.normalized());
+			R_global = R_global * R_local;
+		}
+		else if (rotationMode == GLOBAL_MODE)
+		{
+			R_global = AngleAxisf(r.norm(), r.normalized());
+		}
 		AngleAxisf angleAxis_global(R_global);
 #endif
 		//update orientation
@@ -359,7 +387,7 @@ void eae6320::MultiBody::ForwardKinematics()
 		//update a b c
 		_Scalar theta = r.norm();
 		_Scalar a;
-		if (theta < 0.0001) a = 1.0f - theta / 6.0f;
+		if (theta < 0.0001) a = 1.0f - theta * theta / 6.0f;
 		else a = sin(theta) / theta;
 		A[i] = a;
 

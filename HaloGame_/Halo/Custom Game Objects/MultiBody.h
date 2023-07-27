@@ -22,6 +22,9 @@ typedef VectorXf _Vector;
 typedef Vector3f _Vector3;
 #endif
 
+#define LOCAL_MODE 0
+#define GLOBAL_MODE 1
+
 namespace eae6320
 {
 	class MultiBody : public eae6320::GameCommon::GameObject
@@ -65,5 +68,6 @@ namespace eae6320
 		
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
+		int rotationMode = LOCAL_MODE;
 	};
 }
