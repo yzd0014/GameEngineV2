@@ -29,6 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cHalo.h" />
+    <ClInclude Include="Custom Game Objects\doublePendulumBallJoint.h" />
     <ClInclude Include="Custom Game Objects\HingeJointCube.h" />
     <ClInclude Include="Custom Game Objects\Boss.h" />
     <ClInclude Include="Custom Game Objects\Bullet.h" />
@@ -60,6 +61,7 @@
     </ClCompile>
     <ClCompile Include="Custom Game Objects\Bullet.cpp" />
     <ClCompile Include="Custom Game Objects\CubeSpawner.cpp" />
+    <ClCompile Include="Custom Game Objects\doublePendulumBallJoint.cpp" />
     <ClCompile Include="Custom Game Objects\DoublePendulums.cpp" />
     <ClCompile Include="Custom Game Objects\HomingCube.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

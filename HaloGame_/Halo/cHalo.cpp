@@ -23,6 +23,7 @@
 #include "Halo/Custom Game Objects/MultiBody.h"
 #include "Halo/Custom Game Objects/MujocoBallJoint.h"
 #include "Halo/Custom Game Objects/SphericalJointV2.h"
+#include "Halo/Custom Game Objects/doublePendulumBallJoint.h"
 // Inherited Implementation
 //=========================
 
@@ -53,13 +54,15 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	LOAD_MESH("data/meshes/square_plane.mesh", mesh_plane)
 	LOAD_MESH("data/meshes/cube.mesh", mesh_cube)
 	LOAD_MESH("data/meshes/bullet.mesh", mesh_anchor)
+	LOAD_MESH("data/meshes/pendulum1.mesh", mesh_pen1)
+	LOAD_MESH("data/meshes/pendulum2.mesh", mesh_pen2)
 
 	//load effect
 	LOAD_EFFECT("data/effects/default.effect", pDefaultEffect)
 	LOAD_EFFECT("data/effects/red.effect", pRedEffect)
 	
 	std::vector<GameCommon::GameObject *> links;
-	int bodyNum = 2;
+	int bodyNum = 0;
 	for (int i = 0; i < bodyNum; i++)
 	{
 		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
@@ -76,7 +79,22 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		GameCommon::GameObject * pGameObject = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		//GameCommon::GameObject * pGameObject = new MujocoBallJoint(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		//GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
+		//noColliderObjects.push_back(pGameObject);
+	}
+	
+	std::vector<GameCommon::GameObject *> pendulums;
+	int pendulumNum = 1;
+	for (int i = 0; i < pendulumNum; i++)
+	{
+		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_pen2, Physics::sRigidBodyState());
+		pendulums.push_back(pGameObject);
 		noColliderObjects.push_back(pGameObject);
+	}
+	{
+		Physics::sRigidBodyState objState;
+		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
+		GameCommon::GameObject * p2 = new doublePendulumBallJoint(pRedEffect, mesh_anchor, objState, pendulums, pendulumNum);
+		noColliderObjects.push_back(p2);
 	}
 	//Ground
 	{
