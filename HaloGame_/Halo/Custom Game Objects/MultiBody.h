@@ -45,6 +45,7 @@ namespace eae6320
 		void RK3Integration(const _Scalar h);
 
 		void ForwardKinematics();
+		_Scalar ComputeTotalEnergy();
 
 		_Vector R; //6x1
 		_Vector R_dot; //6x1

@@ -135,7 +135,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	EulerIntegration(dt);
 	//RK3Integration(dt);
 	ForwardKinematics();
-	
+	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+
 	//post check
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
@@ -156,6 +157,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	_Vector R_ddot = M_r.inverse() * Q_r;
 
 	R_dot = R_dot + R_ddot * h;
+	//R_dot = R_dot * 0.9999;
 	R = R + R_dot * h;
 }
 
@@ -412,6 +414,29 @@ void eae6320::MultiBody::ForwardKinematics()
 	{
 		std::cout << "done!" << std::endl;
 	}*/
+}
+
+_Scalar eae6320::MultiBody::ComputeTotalEnergy()
+{
+	_Scalar energy = 0;
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		_Scalar kineticEnergyRotation = 0;
+		kineticEnergyRotation = 0.5 * w_global[i].transpose() * M_ds[i].block<3, 3>(3, 3) * w_global[i];
+		
+		_Scalar kineticEnergyTranslaion = 0;
+		_Vector3 v = w_global[i].cross(-uGlobals[i][0]);
+		kineticEnergyTranslaion = 0.5 * v.transpose() * M_ds[i].block<3, 3>(0, 0) * v;
+
+		_Scalar potentialEnergy = 0;
+		_Vector3 g(0.0f, 9.81f, 0.0f);
+		_Vector3 x;
+		x = Math::NativeVector2EigenVector(m_linkBodys[i]->m_State.position);
+		potentialEnergy = g.transpose() * M_ds[i].block<3, 3>(0, 0) * x;
+
+		energy += kineticEnergyRotation + kineticEnergyTranslaion + potentialEnergy;
+	}
+	return energy;
 }
 
 //void eae6320::MultiBody::ComputeAngularVelocityExpressionCoefficient(std::vector<_Scalar>& o_A,

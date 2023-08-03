@@ -62,7 +62,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	LOAD_EFFECT("data/effects/red.effect", pRedEffect)
 	
 	std::vector<GameCommon::GameObject *> links;
-	int bodyNum = 0;
+	int bodyNum = 2;
 	for (int i = 0; i < bodyNum; i++)
 	{
 		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
@@ -76,13 +76,13 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		noColliderObjects.push_back(pGameObject);*/
 
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
-		GameCommon::GameObject * pGameObject = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
+		//GameCommon::GameObject * pGameObject = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		//GameCommon::GameObject * pGameObject = new MujocoBallJoint(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		//GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		//noColliderObjects.push_back(pGameObject);
+		GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
+		noColliderObjects.push_back(pGameObject);
 	}
 	
-	std::vector<GameCommon::GameObject *> pendulums;
+	/*std::vector<GameCommon::GameObject *> pendulums;
 	int pendulumNum = 1;
 	for (int i = 0; i < pendulumNum; i++)
 	{
@@ -95,7 +95,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
 		GameCommon::GameObject * p2 = new doublePendulumBallJoint(pRedEffect, mesh_anchor, objState, pendulums, pendulumNum);
 		noColliderObjects.push_back(p2);
-	}
+	}*/
 	//Ground
 	{
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, -8.0f, 0.0f));

@@ -96,36 +96,6 @@ void eae6320::SphericalJointV2::Tick(const double i_secondCountToIntegrate)
 		H[i].setZero();
 		H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * J;
 		H[i].block<3, 3>(3, 0) = J;
-		
-		//compute gamma
-		float a_dot = A_dot[i];
-		float b_dot = B_dot[i];
-		float c_dot = C_dot[i];
-		Vector3f gamma_theta;
-		gamma_theta = (c * R[i].dot(R_dot[i]) + a_dot) * R_dot[i] - (b_dot * R_dot[i]).cross(R[i]) + (c_dot * R[i].dot(R_dot[i]) + c * R_dot[i].dot(R_dot[i])) * R[i];
-		gamma[i].resize(6);
-		gamma[i].setZero();
-		if (i == 0)
-		{
-			gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_global[i].cross(w_global[i].cross(uGlobals[i][0]));
-		}
-		else
-		{
-			gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_global[i].cross(w_global[i].cross(uGlobals[i][0])) + w_global[i - 1].cross(w_global[i - 1].cross(uGlobals[i - 1][1]));
-		}
-		gamma[i].block<3, 1>(3, 0) = gamma_theta;
-
-		//compute Q
-		VectorXf Fe;
-		Fe.resize(6);
-		Fe.setZero();
-		Fe.block<3, 1>(0, 0) = Vector3f(0.0f, -9.81f, 0.0f);
-		VectorXf Fv;
-		Fv.resize(6);
-		Fv.setZero();
-		Fv.block<3, 1>(3, 0) = -w_global[i].cross(M[i].block<3, 3>(3, 3) * w_global[i]);
-		Q[i].resize(6);
-		Q[i] = Fe + Fv;
 	}
 
 	for (int i = numOfLinks - 1; i >= 0; i--)
@@ -142,36 +112,59 @@ void eae6320::SphericalJointV2::Tick(const double i_secondCountToIntegrate)
 			Mr[i] = D[i + 1].transpose() * Mt * D[i + 1]
 				- D[i + 1].transpose() * Mt * H[i + 1] * (H[i + 1].transpose() * Mt * H[i + 1]).inverse()
 				* H[i + 1].transpose() * Mt * D[i + 1];
-		}
-
-		//compute Qr
-		if (i == numOfLinks - 1)
-		{
-			Qr[i].resize(6);
-			Qr[i].setZero();
-		}
-		else
-		{
-			MatrixXf Mt = M[i + 1] + Mr[i + 1];
-			Qr[i] = -D[i + 1].transpose() * (Mt * gamma[i + 1] - (Q[i + 1] + Qr[i + 1]))
-				+ D[i + 1].transpose() * Mt * H[i + 1] * (H[i + 1].transpose() * Mt * H[i + 1]).inverse()
-				*(H[i + 1].transpose() * Mt * gamma[i + 1] - H[i + 1].transpose() * (Q[i + 1] + Qr[i + 1]));
-		}
+		}	
 	}
+
+	//EulerIntegration(dt);
+	RK3Integration(dt);
+	ForwardKinematics();
+}
+
+void eae6320::SphericalJointV2::RK3Integration(const float h)
+{
+	std::vector<Vector3f> k1;
+	std::vector<Vector3f> k2;
+	std::vector<Vector3f> k3;
+	std::vector<Vector3f> R_dot_temp;
+	R_dot_temp.resize(numOfLinks);
+
+	ComputeR_ddot(R_dot, k1);
+	
+	for (int i = 0; i < numOfLinks; i++) R_dot_temp[i] = R_dot[i] + h * 0.5 * k1[i];
+	ComputeR_ddot(R_dot_temp, k2);
+	
+	for (int i = 0; i < numOfLinks; i++) R_dot_temp[i] = R_dot[i] + h * (2.0 * k2[i] - k1[i]);
+	ComputeR_ddot(R_dot_temp, k3);
 
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		MatrixXf Mt = M[i] + Mr[i];
+		R_ddot[i] = (1.0f / 6.0f) * (k1[i] + 4 * k2[i] + k3[i]);
+		R_dot[i] = R_dot[i] + h * R_ddot[i];
+		R[i] = R[i] + R_dot[i] * h;
+	}
+	
+	//update velocity of COM for each rigid body
+	ComputeGamma(R_dot, gamma);
+	for (int i = 0; i < numOfLinks; i++)
+	{
 		if (i == 0)
 		{
-			R_ddot[i] = -(H[i].transpose() * Mt * H[i]).inverse() *(H[i].transpose() * (Mt * gamma[i] - (Q[i] + Qr[i])));
+			V_dot[i] = H[i] * R_ddot[i] + gamma[i];
 		}
 		else
 		{
-			R_ddot[i] = -(H[i].transpose() * Mt * H[i]).inverse() *(H[i].transpose() * (Mt * D[i] * V_dot[i - 1] + Mt * gamma[i] - (Q[i] + Qr[i])));
+			V_dot[i] = D[i] * V_dot[i - 1] + H[i] * R_ddot[i] + gamma[i];
 		}
-		R_dot[i] = R_dot[i] + R_ddot[i] * dt;
-		R[i] = R[i] + R_dot[i] * dt;
+	}
+}
+
+void eae6320::SphericalJointV2::EulerIntegration(const float h)
+{
+	ComputeR_ddot(R_dot, R_ddot);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		R_dot[i] = R_dot[i] + R_ddot[i] * h;
+		R[i] = R[i] + R_dot[i] * h;
 
 		/*if (i == 0)
 		{
@@ -194,9 +187,103 @@ void eae6320::SphericalJointV2::Tick(const double i_secondCountToIntegrate)
 			V_dot[i] = D[i] * V_dot[i - 1] + H[i] * R_ddot[i] + gamma[i];
 		}
 	}
-	ForwardKinematics();
 }
 
+void eae6320::SphericalJointV2::ComputeR_ddot(std::vector<Vector3f>& i_R_dot, std::vector<Vector3f>& o_R_ddot)
+{
+	o_R_ddot.resize(numOfLinks);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		float a = A[i];
+		float b = B[i];
+		float c = C[i];
+		float theta = R[i].norm();
+
+		A_dot[i] = (c - b) * R[i].dot(i_R_dot[i]);
+
+		if (theta < 0.0001) B_dot[i] = (-1.0f / 12.0f + 1.0f / 180.0f * theta * theta) * R[i].dot(i_R_dot[i]);
+		else B_dot[i] = (a - 2.0f * b) / (theta * theta) * R[i].dot(i_R_dot[i]);
+
+		if (theta < 0.0001) C_dot[i] = (-1.0f / 60.0f + 1.0f / 1260.0f * theta * theta) * R[i].dot(i_R_dot[i]);
+		else C_dot[i] = (b - 3.0f * c) / (theta * theta) * R[i].dot(i_R_dot[i]);
+
+		Vector3f w_local = a * i_R_dot[i] - (b * i_R_dot[i]).cross(R[i]) + c * R[i].dot(i_R_dot[i]) * R[i];
+		if (i == 0)
+		{
+			w_global[i] = w_local;
+		}
+		else
+		{
+			w_global[i] = w_global[i - 1] + w_local;
+		}
+
+		//compute Q
+		VectorXf Fe;
+		Fe.resize(6);
+		Fe.setZero();
+		Fe.block<3, 1>(0, 0) = Vector3f(0.0f, -9.81f, 0.0f);
+		VectorXf Fv;
+		Fv.resize(6);
+		Fv.setZero();
+		Fv.block<3, 1>(3, 0) = -w_global[i].cross(M[i].block<3, 3>(3, 3) * w_global[i]);
+		Q[i].resize(6);
+		Q[i] = Fe + Fv;
+	}
+	ComputeGamma(i_R_dot, gamma);
+
+	//compute Qr
+	for (int i = numOfLinks - 1; i >= 0; i--)
+	{
+		//compute Qr
+		if (i == numOfLinks - 1)
+		{
+			Qr[i].resize(6);
+			Qr[i].setZero();
+		}
+		else
+		{
+			MatrixXf Mt = M[i + 1] + Mr[i + 1];
+			Qr[i] = -D[i + 1].transpose() * (Mt * gamma[i + 1] - (Q[i + 1] + Qr[i + 1]))
+				+ D[i + 1].transpose() * Mt * H[i + 1] * (H[i + 1].transpose() * Mt * H[i + 1]).inverse()
+				*(H[i + 1].transpose() * Mt * gamma[i + 1] - H[i + 1].transpose() * (Q[i + 1] + Qr[i + 1]));
+		}
+	}
+
+	//compute R_ddot
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		MatrixXf Mt = M[i] + Mr[i];
+		if (i == 0)
+		{
+			o_R_ddot[i] = -(H[i].transpose() * Mt * H[i]).inverse() *(H[i].transpose() * (Mt * gamma[i] - (Q[i] + Qr[i])));
+		}
+		else
+		{
+			o_R_ddot[i] = -(H[i].transpose() * Mt * H[i]).inverse() *(H[i].transpose() * (Mt * D[i] * V_dot[i - 1] + Mt * gamma[i] - (Q[i] + Qr[i])));
+		}
+	}
+}
+void eae6320::SphericalJointV2::ComputeGamma(std::vector<Vector3f>& i_R_dot, std::vector<VectorXf>& o_gamma)
+{
+	o_gamma.resize(numOfLinks);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		//compute gamma
+		Vector3f gamma_theta;
+		gamma_theta = (C[i] * R[i].dot(i_R_dot[i]) + A_dot[i]) * i_R_dot[i] - (B_dot[i] * i_R_dot[i]).cross(R[i]) + (C_dot[i] * R[i].dot(i_R_dot[i]) + C[i] * i_R_dot[i].dot(i_R_dot[i])) * R[i];
+		o_gamma[i].resize(6);
+		o_gamma[i].setZero();
+		if (i == 0)
+		{
+			o_gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_global[i].cross(w_global[i].cross(uGlobals[i][0]));
+		}
+		else
+		{
+			o_gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_global[i].cross(w_global[i].cross(uGlobals[i][0])) + w_global[i - 1].cross(w_global[i - 1].cross(uGlobals[i - 1][1]));
+		}
+		o_gamma[i].block<3, 1>(3, 0) = gamma_theta;
+	}
+}
 void eae6320::SphericalJointV2::ForwardKinematics()
 {
 	Vector3f preAnchor(0.0f, 0.0f, 0.0f);
@@ -245,30 +332,5 @@ void eae6320::SphericalJointV2::ForwardKinematics()
 		if (theta < 0.0001) c = 1.0f / 6.0f - theta * theta / 120.0f;
 		else c = (1.0f - a) / (theta * theta);
 		C[i] = c;
-
-		float a_dot;
-		if (theta < 0.0001) a_dot = (-1.0f / 3.0f + 1.0f / 30.0f * theta * theta) * R[i].dot(R_dot[i]);
-		else a_dot = (c - b) * R[i].dot(R_dot[i]);
-		A_dot[i] = a_dot;
-
-		float b_dot;
-		if (theta < 0.0001) b_dot = (-1.0f / 12.0f + 1.0f / 180.0f * theta * theta) * R[i].dot(R_dot[i]);
-		else b_dot = (a - 2.0f * b) / (theta * theta) * R[i].dot(R_dot[i]);
-		B_dot[i] = b_dot;
-
-		float c_dot;
-		if (theta < 0.0001) c_dot = (-1.0f / 60.0f + 1.0f / 1260.0f * theta * theta) * R[i].dot(R_dot[i]);
-		else c_dot = (b - 3.0f * c) / (theta * theta) * R[i].dot(R_dot[i]);
-		C_dot[i] = c_dot;
-
-		Vector3f w_local = a * R_dot[i] - (b * R_dot[i]).cross(R[i]) + c * R[i].dot(R_dot[i]) * R[i];
-		if (i == 0)
-		{
-			w_global[i] = w_local;
-		}
-		else
-		{
-			w_global[i] = w_global[i - 1] + w_local;
-		}
 	}
 }

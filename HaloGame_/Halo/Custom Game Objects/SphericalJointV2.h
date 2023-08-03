@@ -13,7 +13,12 @@ namespace eae6320
 		SphericalJointV2(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, std::vector<GameCommon::GameObject *> & i_linkBodys, int i_numOfLinks);
 		void Tick(const double i_secondCountToIntegrate) override;
 	private:
+		void EulerIntegration(const float h);
+		void RK3Integration(const float h);
+		void ComputeR_ddot(std::vector<Vector3f>& i_R_dot, std::vector<Vector3f>& o_R_ddot);
+		void ComputeGamma(std::vector<Vector3f>& i_R_dot, std::vector<VectorXf>& o_gamma);
 		void ForwardKinematics();
+		
 		std::vector<Vector3f> R;
 		std::vector<Vector3f> R_dot;
 		std::vector<Vector3f> R_ddot;
