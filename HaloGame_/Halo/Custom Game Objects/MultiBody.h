@@ -24,6 +24,7 @@ typedef Vector3f _Vector3;
 
 #define LOCAL_MODE 0
 #define GLOBAL_MODE 1
+#define MUJOCO_MODE 2
 
 namespace eae6320
 {
@@ -64,11 +65,12 @@ namespace eae6320
 		std::vector<_Matrix> D;
 		std::vector<_Matrix> H_t;
 		
+		std::vector<Quaternionf> m_orientations;
 		std::vector<GameCommon::GameObject *> m_linkBodys;
 		_Scalar rigidBodyMass = 1.0f;
 		
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
-		int rotationMode = LOCAL_MODE;
+		int rotationMode = GLOBAL_MODE;
 	};
 }

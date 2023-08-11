@@ -70,15 +70,10 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		noColliderObjects.push_back(pGameObject);
 	}
 	{
-		/*Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_anchor, objState);
-		pGameObject->m_color = Math::sVector(1, 0, 0);
-		noColliderObjects.push_back(pGameObject);*/
-
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
 		//GameCommon::GameObject * pGameObject = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		//GameCommon::GameObject * pGameObject = new MujocoBallJoint(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
+		GameCommon::GameObject * pGameObject = new MujocoBallJoint(pRedEffect, mesh_anchor, objState, links, bodyNum);
+		//GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		noColliderObjects.push_back(pGameObject);
 	}
 	
@@ -96,6 +91,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		GameCommon::GameObject * p2 = new doublePendulumBallJoint(pRedEffect, mesh_anchor, objState, pendulums, pendulumNum);
 		noColliderObjects.push_back(p2);
 	}*/
+
 	//Ground
 	{
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, -8.0f, 0.0f));

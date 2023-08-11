@@ -78,20 +78,30 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		_Scalar c = C[i];
 
 		//compute H
-		_Matrix3 J;
-		J.setZero();
-		_Matrix3 rrt = r * r.transpose();
-		J = a * _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * rrt;
-		//std::cout << J.determinant() << std::endl <<std::endl;
-		H[i].resize(6, 3);
-		H[i].setZero();
-		H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * J;
-		H[i].block<3, 3>(3, 0) = J;
-
+		if (rotationMode == MUJOCO_MODE)
+		{
+			H[i].resize(6, 3);
+			H[i].setZero();
+			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]);
+			H[i].block<3, 3>(3, 0) = MatrixXf::Identity(3, 3);
+		}
+		else
+		{
+			_Matrix3 J;
+			J.setZero();
+			_Matrix3 rrt = r * r.transpose();
+			J = a * _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * rrt;
+			//std::cout << J.determinant() << std::endl <<std::endl;
+			H[i].resize(6, 3);
+			H[i].setZero();
+			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * J;
+			H[i].block<3, 3>(3, 0) = J;
+		}
+		
 		//compute D
 		if (i > 0)
 		{
-			if (rotationMode == LOCAL_MODE)
+			if (rotationMode == LOCAL_MODE || MUJOCO_MODE)
 			{
 				D[i].resize(6, 6);
 				D[i].setIdentity();
@@ -132,10 +142,33 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		M_r = M_r + M_temp;
 	}
 /**********************************************************************************************************/
-	EulerIntegration(dt);
-	//RK3Integration(dt);
+	if (rotationMode == MUJOCO_MODE)
+	{
+		_Vector3 R_ddot = M_r.inverse() * ComputeQ_r(R_dot);
+		R_dot = R_dot + R_ddot * dt;
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			if (i == 0)
+			{
+				w_global[i] = R_dot.segment(i * 3, 3);
+			}
+			else
+			{
+				w_global[i] = w_global[i - 1] + R_dot.segment(i * 3, 3);
+			}
+			Vector3f deltaRotVec = w_global[i] * dt;
+			Quaternionf deltaRot(AngleAxisf(deltaRotVec.norm(), deltaRotVec.normalized()));
+			m_orientations[i] = deltaRot * m_orientations[i];
+			m_orientations[i].normalize();
+		}
+	}
+	else
+	{
+		//EulerIntegration(dt);
+		RK3Integration(dt);
+	}
 	ForwardKinematics();
-	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 
 	//post check
 	for (size_t i = 0; i < numOfLinks; i++)
@@ -157,7 +190,6 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	_Vector R_ddot = M_r.inverse() * Q_r;
 
 	R_dot = R_dot + R_ddot * h;
-	//R_dot = R_dot * 0.9999;
 	R = R + R_dot * h;
 }
 
@@ -187,7 +219,11 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 
 _Vector eae6320::MultiBody::ComputeQ_r(_Vector i_R_dot)
 {
-	ComputeAngularVelocity(i_R_dot);
+	if (rotationMode == LOCAL_MODE || rotationMode == GLOBAL_MODE)
+	{
+		ComputeAngularVelocity(i_R_dot);
+	}
+	
 	std::vector<_Vector> gamma_t;
 	ComputeGamma_t(gamma_t, i_R_dot);
 
@@ -219,35 +255,54 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 	std::vector<_Scalar> m_A_dot;
 	std::vector<_Scalar> m_B_dot;
 	std::vector<_Scalar> m_C_dot;
-	ComputeAngularVelocityExpressionCoefficientDerivative(m_A_dot, m_B_dot, m_C_dot, i_R_dot);
+	if (rotationMode == LOCAL_MODE || rotationMode == GLOBAL_MODE)
+	{
+		ComputeAngularVelocityExpressionCoefficientDerivative(m_A_dot, m_B_dot, m_C_dot, i_R_dot);
+	}
 	
 	std::vector<_Vector> gamma;
 	gamma.resize(numOfLinks);
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
-		_Vector3 r = R.segment(i * 3, 3);
-		_Vector3 r_dot = i_R_dot.segment(i * 3, 3);
-		_Scalar a = A[i];
-		_Scalar b = B[i];
-		_Scalar c = C[i];
-		_Scalar a_dot = m_A_dot[i];
-		_Scalar b_dot = m_B_dot[i];
-		_Scalar c_dot = m_C_dot[i];
-
-		_Vector3 gamma_theta;
-		gamma_theta = (c * r.dot(r_dot) + a_dot) * r_dot - (b_dot * r_dot).cross(r) + (c_dot * r.dot(r_dot) + c * r_dot.dot(r_dot)) * r;
-
-		gamma[i].resize(6);
-		gamma[i].setZero();
-		if (i == 0)
+		if (rotationMode == MUJOCO_MODE)
 		{
-			gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_global[i].cross(w_global[i].cross(uGlobals[i][0]));
+			gamma[i].resize(6);
+			gamma[i].setZero();
+			if (i == 0)
+			{
+				gamma[i].block<3, 1>(0, 0) = -w_global[i].cross(w_global[i].cross(uGlobals[i][0]));
+			}
+			else
+			{
+				gamma[i].block<3, 1>(0, 0) = -w_global[i].cross(w_global[i].cross(uGlobals[i][0])) + w_global[i - 1].cross(w_global[i - 1].cross(uGlobals[i - 1][1]));
+			}
 		}
 		else
 		{
-			gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_global[i].cross(w_global[i].cross(uGlobals[i][0])) + w_global[i - 1].cross(w_global[i - 1].cross(uGlobals[i - 1][1]));
-		}
-		gamma[i].block<3, 1>(3, 0) = gamma_theta;
+			_Vector3 r = R.segment(i * 3, 3);
+			_Vector3 r_dot = i_R_dot.segment(i * 3, 3);
+			_Scalar a = A[i];
+			_Scalar b = B[i];
+			_Scalar c = C[i];
+			_Scalar a_dot = m_A_dot[i];
+			_Scalar b_dot = m_B_dot[i];
+			_Scalar c_dot = m_C_dot[i];
+
+			_Vector3 gamma_theta;
+			gamma_theta = (c * r.dot(r_dot) + a_dot) * r_dot - (b_dot * r_dot).cross(r) + (c_dot * r.dot(r_dot) + c * r_dot.dot(r_dot)) * r;
+
+			gamma[i].resize(6);
+			gamma[i].setZero();
+			if (i == 0)
+			{
+				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_global[i].cross(w_global[i].cross(uGlobals[i][0]));
+			}
+			else
+			{
+				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_global[i].cross(w_global[i].cross(uGlobals[i][0])) + w_global[i - 1].cross(w_global[i - 1].cross(uGlobals[i - 1][1]));
+			}
+			gamma[i].block<3, 1>(3, 0) = gamma_theta;
+		}	
 	}
 
 	o_gamma_t.resize(numOfLinks);
@@ -341,67 +396,88 @@ void eae6320::MultiBody::ForwardKinematics()
 	R_global.setIdentity();
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
-		_Vector3 r = R.segment(i * 3, 3);
-		_Matrix3 R_local;
+		if (rotationMode == MUJOCO_MODE)
+		{
+			R_global = m_orientations[i].toRotationMatrix();
+
+			//update orientation
+			m_linkBodys[i]->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(m_orientations[i]);
+
+			//update position
+			Vector3f uGlobal0 = R_global * uLocals[i][0];
+			uGlobals[i][0] = uGlobal0;
+			Vector3f linkPos = preAnchor - uGlobal0;
+			m_linkBodys[i]->m_State.position = Math::sVector(linkPos(0), linkPos(1), linkPos(2));
+
+			//get ready for the next iteration
+			Vector3f uGlobal1 = R_global * uLocals[i][1];
+			uGlobals[i][1] = uGlobal1;
+			preAnchor = linkPos + uGlobal1;
+		}
+		else
+		{
+			_Vector3 r = R.segment(i * 3, 3);
+			_Matrix3 R_local;
 #if defined (HIGH_PRECISION_MODE)
-		if (rotationMode == LOCAL_MODE)
-		{
-			R_local = AngleAxisd(r.norm(), r.normalized());
-			R_global = R_global * R_local;
-		}
-		else if (rotationMode == GLOBAL_MODE)
-		{
-			R_global = AngleAxisd(r.norm(), r.normalized());
-		}
-		AngleAxisd angleAxis_global(R_global);
+			if (rotationMode == LOCAL_MODE)
+			{
+				R_local = AngleAxisd(r.norm(), r.normalized());
+				R_global = R_global * R_local;
+			}
+			else if (rotationMode == GLOBAL_MODE)
+			{
+				R_global = AngleAxisd(r.norm(), r.normalized());
+			}
+			AngleAxisd angleAxis_global(R_global);
 #else
-		if (rotationMode == LOCAL_MODE)
-		{
-			R_local = AngleAxisf(r.norm(), r.normalized());
-			R_global = R_global * R_local;
-		}
-		else if (rotationMode == GLOBAL_MODE)
-		{
-			R_global = AngleAxisf(r.norm(), r.normalized());
-		}
-		AngleAxisf angleAxis_global(R_global);
+			if (rotationMode == LOCAL_MODE)
+			{
+				R_local = AngleAxisf(r.norm(), r.normalized());
+				R_global = R_global * R_local;
+			}
+			else if (rotationMode == GLOBAL_MODE)
+			{
+				R_global = AngleAxisf(r.norm(), r.normalized());
+			}
+			AngleAxisf angleAxis_global(R_global);
 #endif
-		//update orientation
-		m_linkBodys[i]->m_State.orientation = Math::cQuaternion((float)angleAxis_global.angle(), Math::EigenVector2nativeVector(angleAxis_global.axis()));
-		m_linkBodys[i]->m_State.orientation.Normalize();	
+			//update orientation
+			m_linkBodys[i]->m_State.orientation = Math::cQuaternion((float)angleAxis_global.angle(), Math::EigenVector2nativeVector(angleAxis_global.axis()));
+			m_linkBodys[i]->m_State.orientation.Normalize();
 
-		//update position
-		_Vector3 uGlobal0 = R_global * uLocals[i][0];
-		uGlobals[i][0] = uGlobal0;
-		_Vector3 linkPos = preAnchor - uGlobal0;
-		m_linkBodys[i]->m_State.position = Math::sVector((float)linkPos(0), (float)linkPos(1), (float)linkPos(2));
+			//update position
+			_Vector3 uGlobal0 = R_global * uLocals[i][0];
+			uGlobals[i][0] = uGlobal0;
+			_Vector3 linkPos = preAnchor - uGlobal0;
+			m_linkBodys[i]->m_State.position = Math::sVector((float)linkPos(0), (float)linkPos(1), (float)linkPos(2));
 
-		//get ready for the next iteration
-		_Vector3 uGlobal1 = R_global * uLocals[i][1];
-		uGlobals[i][1] = uGlobal1;
-		preAnchor = linkPos + uGlobal1;
+			//get ready for the next iteration
+			_Vector3 uGlobal1 = R_global * uLocals[i][1];
+			uGlobals[i][1] = uGlobal1;
+			preAnchor = linkPos + uGlobal1;
 
-		//update inertia tensor
-		_Matrix3 globalInertiaTensor;
-		globalInertiaTensor = R_global * localInertiaTensors[i] * R_global.transpose();
-		M_ds[i].block<3, 3>(3, 3) = globalInertiaTensor;
+			//update inertia tensor
+			_Matrix3 globalInertiaTensor;
+			globalInertiaTensor = R_global * localInertiaTensors[i] * R_global.transpose();
+			M_ds[i].block<3, 3>(3, 3) = globalInertiaTensor;
 
-		//update a b c
-		_Scalar theta = r.norm();
-		_Scalar a;
-		if (theta < 0.0001) a = 1.0f - theta * theta / 6.0f;
-		else a = sin(theta) / theta;
-		A[i] = a;
+			//update a b c
+			_Scalar theta = r.norm();
+			_Scalar a;
+			if (theta < 0.0001) a = 1.0f - theta * theta / 6.0f;
+			else a = sin(theta) / theta;
+			A[i] = a;
 
-		_Scalar b;
-		if (theta < 0.0001) b = 0.5f - theta * theta / 24.0f;
-		else b = (1.0f - cos(theta)) / (theta * theta);
-		B[i] = b;
+			_Scalar b;
+			if (theta < 0.0001) b = 0.5f - theta * theta / 24.0f;
+			else b = (1.0f - cos(theta)) / (theta * theta);
+			B[i] = b;
 
-		_Scalar c;
-		if (theta < 0.0001) c = 1.0f / 6.0f - theta * theta / 120.0f;
-		else c = (1.0f - a) / (theta * theta);
-		C[i] = c;
+			_Scalar c;
+			if (theta < 0.0001) c = 1.0f / 6.0f - theta * theta / 120.0f;
+			else c = (1.0f - a) / (theta * theta);
+			C[i] = c;
+		}
 	}
 
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << m_linkBodys[1]->m_State.position.x << ", " << -m_linkBodys[1]->m_State.position.z << ", " << m_linkBodys[1]->m_State.position.y << std::endl;
