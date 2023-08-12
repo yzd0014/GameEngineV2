@@ -46,6 +46,7 @@ eae6320::MujocoBallJoint::MujocoBallJoint(Effect * i_pEffect, Assets::cHandle<Me
 	/*uLocals[0][1] = Vector3f(1.0f, -1.0f, 1.0f);
 	uLocals[1][0] = Vector3f(-1.0f, 1.0f, -1.0f);*/
 	w_r.resize(3 * numOfLinks);
+	w_r.setZero();
 	ForwardKinematics();
 }
 
@@ -192,6 +193,11 @@ void eae6320::MujocoBallJoint::ForwardKinematics()
 		Vector3f uGlobal1 = R_global * uLocals[i][1];
 		uGlobals[i][1] = uGlobal1;
 		preAnchor = linkPos + uGlobal1;
+
+		//update inertia tensor
+		MatrixXf globalInertiaTensor;
+		globalInertiaTensor = R_global * localInertiaTensors[i] * R_global.transpose();
+		M_ds[i].block<3, 3>(3, 3) = globalInertiaTensor;
 	}
 
 	if (tickCountSimulated <= 600010)

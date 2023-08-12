@@ -13,6 +13,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	
 	m_linkBodys = i_linkBodys;
 	w_global.resize(numOfLinks);
+	m_orientations.resize(numOfLinks);
 	A.resize(numOfLinks);
 	B.resize(numOfLinks);
 	C.resize(numOfLinks);
@@ -21,6 +22,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	M_r.resize(3 * numOfLinks, 3 * numOfLinks);
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
+		w_global[i].setZero();
+		m_orientations[i].setIdentity();
 		_Matrix M_d;
 		M_d.resize(6, 6);
 		M_d.setZero();
@@ -101,7 +104,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		//compute D
 		if (i > 0)
 		{
-			if (rotationMode == LOCAL_MODE || MUJOCO_MODE)
+			if (rotationMode == LOCAL_MODE || rotationMode == MUJOCO_MODE)
 			{
 				D[i].resize(6, 6);
 				D[i].setIdentity();
@@ -143,8 +146,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	}
 /**********************************************************************************************************/
 	if (rotationMode == MUJOCO_MODE)
-	{
-		_Vector3 R_ddot = M_r.inverse() * ComputeQ_r(R_dot);
+	{		
+		_Vector R_ddot = M_r.inverse() * ComputeQ_r(R_dot);
 		R_dot = R_dot + R_ddot * dt;
 		for (int i = 0; i < numOfLinks; i++)
 		{
@@ -160,6 +163,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 			Quaternionf deltaRot(AngleAxisf(deltaRotVec.norm(), deltaRotVec.normalized()));
 			m_orientations[i] = deltaRot * m_orientations[i];
 			m_orientations[i].normalize();
+			//std::cout << m_orientations[i].w() << ", " << m_orientations[i].x() << ", " << m_orientations[i].y() << ", " << m_orientations[i].z() << std::endl;
 		}
 	}
 	else
@@ -396,23 +400,11 @@ void eae6320::MultiBody::ForwardKinematics()
 	R_global.setIdentity();
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
+		//update orientation
 		if (rotationMode == MUJOCO_MODE)
 		{
 			R_global = m_orientations[i].toRotationMatrix();
-
-			//update orientation
 			m_linkBodys[i]->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(m_orientations[i]);
-
-			//update position
-			Vector3f uGlobal0 = R_global * uLocals[i][0];
-			uGlobals[i][0] = uGlobal0;
-			Vector3f linkPos = preAnchor - uGlobal0;
-			m_linkBodys[i]->m_State.position = Math::sVector(linkPos(0), linkPos(1), linkPos(2));
-
-			//get ready for the next iteration
-			Vector3f uGlobal1 = R_global * uLocals[i][1];
-			uGlobals[i][1] = uGlobal1;
-			preAnchor = linkPos + uGlobal1;
 		}
 		else
 		{
@@ -441,25 +433,8 @@ void eae6320::MultiBody::ForwardKinematics()
 			}
 			AngleAxisf angleAxis_global(R_global);
 #endif
-			//update orientation
 			m_linkBodys[i]->m_State.orientation = Math::cQuaternion((float)angleAxis_global.angle(), Math::EigenVector2nativeVector(angleAxis_global.axis()));
 			m_linkBodys[i]->m_State.orientation.Normalize();
-
-			//update position
-			_Vector3 uGlobal0 = R_global * uLocals[i][0];
-			uGlobals[i][0] = uGlobal0;
-			_Vector3 linkPos = preAnchor - uGlobal0;
-			m_linkBodys[i]->m_State.position = Math::sVector((float)linkPos(0), (float)linkPos(1), (float)linkPos(2));
-
-			//get ready for the next iteration
-			_Vector3 uGlobal1 = R_global * uLocals[i][1];
-			uGlobals[i][1] = uGlobal1;
-			preAnchor = linkPos + uGlobal1;
-
-			//update inertia tensor
-			_Matrix3 globalInertiaTensor;
-			globalInertiaTensor = R_global * localInertiaTensors[i] * R_global.transpose();
-			M_ds[i].block<3, 3>(3, 3) = globalInertiaTensor;
 
 			//update a b c
 			_Scalar theta = r.norm();
@@ -478,6 +453,21 @@ void eae6320::MultiBody::ForwardKinematics()
 			else c = (1.0f - a) / (theta * theta);
 			C[i] = c;
 		}
+		//update position
+		_Vector3 uGlobal0 = R_global * uLocals[i][0];
+		uGlobals[i][0] = uGlobal0;
+		_Vector3 linkPos = preAnchor - uGlobal0;
+		m_linkBodys[i]->m_State.position = Math::sVector((float)linkPos(0), (float)linkPos(1), (float)linkPos(2));
+		
+		//get ready for the next iteration
+		Vector3f uGlobal1 = R_global * uLocals[i][1];
+		uGlobals[i][1] = uGlobal1;
+		preAnchor = linkPos + uGlobal1;
+		
+		//update inertia tensor
+		_Matrix3 globalInertiaTensor;
+		globalInertiaTensor = R_global * localInertiaTensors[i] * R_global.transpose();
+		M_ds[i].block<3, 3>(3, 3) = globalInertiaTensor;
 	}
 
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << m_linkBodys[1]->m_State.position.x << ", " << -m_linkBodys[1]->m_State.position.z << ", " << m_linkBodys[1]->m_State.position.y << std::endl;
