@@ -73,13 +73,6 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	H.resize(numOfLinks);
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
-		_Vector3 r = R.segment(i * 3, 3);
-		
-		_Scalar theta = r.norm();
-		_Scalar a = A[i];
-		_Scalar b = B[i];
-		_Scalar c = C[i];
-
 		//compute H
 		if (rotationMode == MUJOCO_MODE)
 		{
@@ -90,6 +83,11 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		}
 		else
 		{
+			_Vector3 r = R.segment(i * 3, 3);
+			_Scalar a = A[i];
+			_Scalar b = B[i];
+			_Scalar c = C[i];
+
 			_Matrix3 J;
 			J.setZero();
 			_Matrix3 rrt = r * r.transpose();

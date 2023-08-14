@@ -71,6 +71,6 @@ namespace eae6320
 		
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
-		int rotationMode = MUJOCO_MODE;
+		int rotationMode = GLOBAL_MODE;
 	};
 }

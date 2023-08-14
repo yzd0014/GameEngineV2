@@ -5,6 +5,9 @@
 #include "External/EigenLibrary/Eigen/Geometry"
 using namespace Eigen;
 
+#define V2_LOCAL_MODE 0
+#define V2_MUJOCO_MODE 1
+
 namespace eae6320
 {
 	class SphericalJointV2 : public eae6320::GameCommon::GameObject
@@ -15,8 +18,11 @@ namespace eae6320
 	private:
 		void EulerIntegration(const float h);
 		void RK3Integration(const float h);
-		void ComputeR_ddot(std::vector<Vector3f>& i_R_dot, std::vector<Vector3f>& o_R_ddot);
+		void ComputeR_ddotAndIntegrate(std::vector<Vector3f>& i_R_dot, std::vector<Vector3f>& o_R_dot_new, std::vector<Vector3f>& o_R_ddot, std::function<Vector3f(int)> integrateRule);
 		void ComputeGamma(std::vector<Vector3f>& i_R_dot, std::vector<VectorXf>& o_gamma);
+		void Compute_abc();
+		void Compute_abc_dot(std::vector<Vector3f>& i_R_dot);
+		void ComputeV_dot(int i);
 		void ForwardKinematics();
 		
 		std::vector<Vector3f> R;
@@ -43,9 +49,11 @@ namespace eae6320
 		std::vector<float> C;
 		std::vector<float> C_dot;
 		
+		std::vector<Quaternionf> m_orientations;
 		std::vector<GameCommon::GameObject *> m_linkBodys;
 
 		float rigidBodyMass = 1.0f;
 		int numOfLinks = 2;
+		int rotationMode = V2_MUJOCO_MODE;
 	};
 }
