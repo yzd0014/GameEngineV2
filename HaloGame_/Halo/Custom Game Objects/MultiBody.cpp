@@ -26,10 +26,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		m_orientations[i].setIdentity();
 		_Matrix M_d;
 		M_d.resize(6, 6);
-		M_d.setZero();
-		M_d(0, 0) = rigidBodyMass;
-		M_d(1, 1) = rigidBodyMass;
-		M_d(2, 2) = rigidBodyMass;
+		M_d.setIdentity();
 		M_ds.push_back(M_d);
 		
 		_Matrix3 localInertiaTensor;
@@ -51,8 +48,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 	}
-	/*uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
-	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);*/
+	uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
+	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);
 	
 	//uLocals[0][0] = _Vector3(1.0f, -1.0f, -1.0f);
 
@@ -241,7 +238,6 @@ _Vector eae6320::MultiBody::ComputeQ_r(_Vector i_R_dot)
 		_Vector Fv;
 		Fv.resize(6);
 		Fv.setZero();
-		Fv.block<3, 1>(3, 0) = -w_global[i].cross(M_ds[i].block<3, 3>(3, 3) * w_global[i]);
 		_Vector Q_temp;
 		Q_temp.resize(3 * numOfLinks);
 		Q_temp.setZero();
@@ -461,11 +457,6 @@ void eae6320::MultiBody::ForwardKinematics()
 		Vector3f uGlobal1 = R_global * uLocals[i][1];
 		uGlobals[i][1] = uGlobal1;
 		preAnchor = linkPos + uGlobal1;
-		
-		//update inertia tensor
-		_Matrix3 globalInertiaTensor;
-		globalInertiaTensor = R_global * localInertiaTensors[i] * R_global.transpose();
-		M_ds[i].block<3, 3>(3, 3) = globalInertiaTensor;
 	}
 
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << m_linkBodys[1]->m_State.position.x << ", " << -m_linkBodys[1]->m_State.position.z << ", " << m_linkBodys[1]->m_State.position.y << std::endl;
