@@ -26,6 +26,9 @@ typedef Vector3f _Vector3;
 #define GLOBAL_MODE 1
 #define MUJOCO_MODE 2
 
+#define BOX 0
+#define BALL 1
+
 namespace eae6320
 {
 	class MultiBody : public eae6320::GameCommon::GameObject
@@ -39,7 +42,8 @@ namespace eae6320
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot);
 		
 		void ComputeAngularVelocity(_Vector& i_R_dot);
-		void ComputeAngularVelocityExpressionCoefficientDerivative(std::vector<_Scalar>& o_A_dot, std::vector<_Scalar>& o_B_dot, std::vector<_Scalar>& o_C_dot, _Vector& i_R_dot);
+		void Compute_abc();
+		void Compute_abc_dot(_Vector& i_R_dot);
 		
 		void EulerIntegration(const _Scalar h);
 		void RK4Integration(const _Scalar h);
@@ -57,11 +61,11 @@ namespace eae6320
 		std::vector<std::vector<_Vector3>> uLocals;
 		std::vector<std::vector<_Vector3>> uGlobals;
 		std::vector<_Scalar> A;
-		//std::vector<_Scalar> A_dot;
+		std::vector<_Scalar> A_dot;
 		std::vector<_Scalar> B;
-		//std::vector<_Scalar> B_dot;
+		std::vector<_Scalar> B_dot;
 		std::vector<_Scalar> C;
-		//std::vector<_Scalar> C_dot;
+		std::vector<_Scalar> C_dot;
 		std::vector<_Matrix> D;
 		std::vector<_Matrix> H_t;
 		
@@ -71,6 +75,7 @@ namespace eae6320
 		
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
-		int rotationMode = LOCAL_MODE;
+		int rotationMode = GLOBAL_MODE;
+		int geometry = BOX;
 	};
 }

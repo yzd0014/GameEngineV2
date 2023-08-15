@@ -17,6 +17,9 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	A.resize(numOfLinks);
 	B.resize(numOfLinks);
 	C.resize(numOfLinks);
+	A_dot.resize(numOfLinks);
+	B_dot.resize(numOfLinks);
+	C_dot.resize(numOfLinks);
 	D.resize(numOfLinks);
 	H_t.resize(numOfLinks);
 	M_r.resize(3 * numOfLinks, 3 * numOfLinks);
@@ -26,12 +29,18 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		m_orientations[i].setIdentity();
 		_Matrix M_d;
 		M_d.resize(6, 6);
-		M_d.setIdentity();
+		M_d.setZero();
+		M_d(0, 0) = rigidBodyMass;
+		M_d(1, 1) = rigidBodyMass;
+		M_d(2, 2) = rigidBodyMass;
 		M_ds.push_back(M_d);
 		
 		_Matrix3 localInertiaTensor;
 		localInertiaTensor.setIdentity();
-		localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+		if (geometry == BOX)
+		{
+			localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+		}
 		localInertiaTensors.push_back(localInertiaTensor);
 
 		std::vector<_Vector3> uPairs;
@@ -66,6 +75,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	_Scalar dt = (_Scalar)i_secondCountToIntegrate;
 	
+	if (rotationMode == LOCAL_MODE || rotationMode == GLOBAL_MODE) Compute_abc();
 	std::vector<_Matrix> H;
 	H.resize(numOfLinks);
 	for (size_t i = 0; i < numOfLinks; i++)
@@ -163,8 +173,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	}
 	else
 	{
-		//EulerIntegration(dt);
-		RK3Integration(dt);
+		EulerIntegration(dt);
+		//RK3Integration(dt);
 	}
 	ForwardKinematics();
 	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
@@ -173,7 +183,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		_Vector3 r = R.segment(i * 3, 3);
-		if (r.norm() > 2 * M_PI - 0.001)
+		if (r.norm() > 2 * M_PI - 0.1)
 		{
 			R.segment(i * 3, 3) = R.segment(i * 3, 3) - 2 * M_PI * r.normalized();
 			std::cout << "large r!" << std::endl;
@@ -238,6 +248,7 @@ _Vector eae6320::MultiBody::ComputeQ_r(_Vector i_R_dot)
 		_Vector Fv;
 		Fv.resize(6);
 		Fv.setZero();
+		Fv.block<3, 1>(3, 0) = -w_global[i].cross(M_ds[i].block<3, 3>(3, 3) * w_global[i]);
 		_Vector Q_temp;
 		Q_temp.resize(3 * numOfLinks);
 		Q_temp.setZero();
@@ -250,12 +261,9 @@ _Vector eae6320::MultiBody::ComputeQ_r(_Vector i_R_dot)
 
 void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot)
 {
-	std::vector<_Scalar> m_A_dot;
-	std::vector<_Scalar> m_B_dot;
-	std::vector<_Scalar> m_C_dot;
 	if (rotationMode == LOCAL_MODE || rotationMode == GLOBAL_MODE)
 	{
-		ComputeAngularVelocityExpressionCoefficientDerivative(m_A_dot, m_B_dot, m_C_dot, i_R_dot);
+		Compute_abc_dot(i_R_dot);
 	}
 	
 	std::vector<_Vector> gamma;
@@ -282,9 +290,9 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			_Scalar a = A[i];
 			_Scalar b = B[i];
 			_Scalar c = C[i];
-			_Scalar a_dot = m_A_dot[i];
-			_Scalar b_dot = m_B_dot[i];
-			_Scalar c_dot = m_C_dot[i];
+			_Scalar a_dot = A_dot[i];
+			_Scalar b_dot = B_dot[i];
+			_Scalar c_dot = C_dot[i];
 
 			_Vector3 gamma_theta;
 			gamma_theta = (c * r.dot(r_dot) + a_dot) * r_dot - (b_dot * r_dot).cross(r) + (c_dot * r.dot(r_dot) + c * r_dot.dot(r_dot)) * r;
@@ -352,12 +360,8 @@ void eae6320::MultiBody::ComputeAngularVelocity(_Vector& i_R_dot)
 	}
 }
 
-void eae6320::MultiBody::ComputeAngularVelocityExpressionCoefficientDerivative(std::vector<_Scalar>& o_A_dot, std::vector<_Scalar>& o_B_dot, std::vector<_Scalar>& o_C_dot, _Vector& i_R_dot)
+void eae6320::MultiBody::Compute_abc_dot(_Vector& i_R_dot)
 {
-	o_A_dot.resize(numOfLinks);
-	o_B_dot.resize(numOfLinks);
-	o_C_dot.resize(numOfLinks);
-
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		_Vector3 r = R.segment(i * 3, 3);
@@ -368,23 +372,42 @@ void eae6320::MultiBody::ComputeAngularVelocityExpressionCoefficientDerivative(s
 		_Scalar b = B[i];
 		_Scalar c = C[i];
 
-		o_A_dot[i] = (c - b) * r.dot(r_dot);
+		A_dot[i] = (c - b) * r.dot(r_dot);
 
 		_Scalar b_dot;
 		if (theta < 0.0001) b_dot = (-1.0f / 12.0f + 1.0f / 180.0f * theta * theta) * r.dot(r_dot);
 		else b_dot = (a - 2.0f * b) / (theta * theta) * r.dot(r_dot);
-		o_B_dot[i] = b_dot;
+		B_dot[i] = b_dot;
 
 		_Scalar c_dot;
 		if (theta < 0.0001) c_dot = (-1.0f / 60.0f + 1.0f / 1260.0f * theta * theta) * r.dot(r_dot);
 		else c_dot = (b - 3.0f * c) / (theta * theta) * r.dot(r_dot);
-		o_C_dot[i] = c_dot;
+		C_dot[i] = c_dot;
 	}
 }
 
-void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
+void eae6320::MultiBody::Compute_abc()
 {
+	for (size_t i = 0; i < numOfLinks; i++)
+	{
+		_Vector3 r = R.segment(i * 3, 3);
+		//update a b c
+		_Scalar theta = r.norm();
+		_Scalar a;
+		if (theta < 0.0001) a = 1.0f - theta * theta / 6.0f;
+		else a = sin(theta) / theta;
+		A[i] = a;
 
+		_Scalar b;
+		if (theta < 0.0001) b = 0.5f - theta * theta / 24.0f;
+		else b = (1.0f - cos(theta)) / (theta * theta);
+		B[i] = b;
+
+		_Scalar c;
+		if (theta < 0.0001) c = 1.0f / 6.0f - theta * theta / 120.0f;
+		else c = (1.0f - a) / (theta * theta);
+		C[i] = c;
+	}
 }
 
 void eae6320::MultiBody::ForwardKinematics()
@@ -429,23 +452,6 @@ void eae6320::MultiBody::ForwardKinematics()
 #endif
 			m_linkBodys[i]->m_State.orientation = Math::cQuaternion((float)angleAxis_global.angle(), Math::EigenVector2nativeVector(angleAxis_global.axis()));
 			m_linkBodys[i]->m_State.orientation.Normalize();
-
-			//update a b c
-			_Scalar theta = r.norm();
-			_Scalar a;
-			if (theta < 0.0001) a = 1.0f - theta * theta / 6.0f;
-			else a = sin(theta) / theta;
-			A[i] = a;
-
-			_Scalar b;
-			if (theta < 0.0001) b = 0.5f - theta * theta / 24.0f;
-			else b = (1.0f - cos(theta)) / (theta * theta);
-			B[i] = b;
-
-			_Scalar c;
-			if (theta < 0.0001) c = 1.0f / 6.0f - theta * theta / 120.0f;
-			else c = (1.0f - a) / (theta * theta);
-			C[i] = c;
 		}
 		//update position
 		_Vector3 uGlobal0 = R_global * uLocals[i][0];
@@ -457,6 +463,11 @@ void eae6320::MultiBody::ForwardKinematics()
 		Vector3f uGlobal1 = R_global * uLocals[i][1];
 		uGlobals[i][1] = uGlobal1;
 		preAnchor = linkPos + uGlobal1;
+
+		//update inertia tensor
+		_Matrix3 globalInertiaTensor;
+		globalInertiaTensor = R_global * localInertiaTensors[i] * R_global.transpose();
+		M_ds[i].block<3, 3>(3, 3) = globalInertiaTensor;
 	}
 
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << m_linkBodys[1]->m_State.position.x << ", " << -m_linkBodys[1]->m_State.position.z << ", " << m_linkBodys[1]->m_State.position.y << std::endl;
@@ -494,32 +505,6 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 	return energy;
 }
 
-//void eae6320::MultiBody::ComputeAngularVelocityExpressionCoefficient(std::vector<_Scalar>& o_A,
-//	std::vector<_Scalar>& o_B, std::vector<_Scalar>& o_C, _Vector& i_R)
-//{
-//	o_A.resize(numOfLinks);
-//	o_B.resize(numOfLinks);
-//	o_C.resize(numOfLinks);
-//
-//	for (size_t i = 0; i < numOfLinks; i++)
-//	{
-//		_Vector3 r = i_R.segment(i * 3, 3);
-//		_Scalar theta = r.norm();
-//
-//		_Scalar theta = r.norm();
-//		_Scalar a;
-//		if (theta < 0.0001) a = 1.0f - theta / 6.0f;
-//		else a = sin(theta) / theta;
-//		o_A[i] = a;
-//
-//		_Scalar b;
-//		if (theta < 0.0001) b = 0.5f - theta * theta / 24.0f;
-//		else b = (1.0f - cos(theta)) / (theta * theta);
-//		o_B[i] = b;
-//
-//		_Scalar c;
-//		if (theta < 0.0001) c = 1.0f / 6.0f - theta * theta / 120.0f;
-//		else c = (1.0f - a) / (theta * theta);
-//		o_C[i] = c;
-//	}
-//}
+void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
+{
+}
