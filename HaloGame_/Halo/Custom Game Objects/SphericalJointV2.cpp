@@ -42,6 +42,7 @@ eae6320::SphericalJointV2::SphericalJointV2(Effect * i_pEffect, Assets::cHandle<
 
 		R[i].setZero();
 		R_dot[i].setZero();
+		R_ddot[i].setZero();
 		V_dot[i].resize(6);
 		V_dot[i].setZero();
 
@@ -68,8 +69,8 @@ eae6320::SphericalJointV2::SphericalJointV2(Effect * i_pEffect, Assets::cHandle<
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 	}
-	uLocals[0][1] = Vector3f(1.0f, -1.0f, 1.0f);
-	uLocals[1][0] = Vector3f(-1.0f, 1.0f, -1.0f);
+	/*uLocals[0][1] = Vector3f(1.0f, -1.0f, 1.0f);
+	uLocals[1][0] = Vector3f(-1.0f, 1.0f, -1.0f);*/
 	ForwardKinematics();
 }
 
@@ -136,7 +137,7 @@ void eae6320::SphericalJointV2::Tick(const double i_secondCountToIntegrate)
 			Vector3f output = R_dot[i] + dt * R_ddot[i];
 			return output;
 		};
-		ComputeR_ddotAndIntegrate(R_dot, R_dot, R_ddot, integrateRule);
+		ComputeR_ddotAndIntegrate(R_dot, R_dot, R_ddot, integrateRule);	
 		for (int i = 0; i < numOfLinks; i++)
 		{
 			if (i == 0)
