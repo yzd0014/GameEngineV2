@@ -13,6 +13,10 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	
 	m_linkBodys = i_linkBodys;
 	w_global.resize(numOfLinks);
+	w_local.resize(numOfLinks);
+	vel.resize(numOfLinks);
+	pos.resize(numOfLinks);
+	jointPos.resize(numOfLinks);
 	m_orientations.resize(numOfLinks);
 	A.resize(numOfLinks);
 	B.resize(numOfLinks);
@@ -26,6 +30,10 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		w_global[i].setZero();
+		w_local[i].setZero();
+		vel[i].setZero();
+		jointPos[i].setZero();
+		pos[i].setZero();
 		m_orientations[i].setIdentity();
 		_Matrix M_d;
 		M_d.resize(6, 6);
@@ -57,8 +65,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 	}
-	uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
-	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);
+	/*uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
+	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);*/
 	
 	//uLocals[0][0] = _Vector3(1.0f, -1.0f, -1.0f);
 
@@ -67,6 +75,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	R.resize(3 * numOfLinks);
 	R.setZero();
 	//R.block<3, 1>(0, 0) = _Vector3(0.0f, 0.0f, -1.0f);
+	//R.block<3, 1>(3, 0) = _Vector3(0.0f, 0.0f, -1.0f);
 
 	ForwardKinematics();
 }
@@ -91,6 +100,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		else
 		{
 			_Vector3 r = R.segment(i * 3, 3);
+			//std::cout << i << ", " << r.norm() << std::endl;
 			_Scalar a = A[i];
 			_Scalar b = B[i];
 			_Scalar c = C[i];
@@ -156,6 +166,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		R_dot = R_dot + R_ddot * dt;
 		for (int i = 0; i < numOfLinks; i++)
 		{
+			w_local[i] = R_dot.segment(i * 3, 3);
 			if (i == 0)
 			{
 				w_global[i] = R_dot.segment(i * 3, 3);
@@ -173,11 +184,12 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	}
 	else
 	{
-		EulerIntegration(dt);
-		//RK3Integration(dt);
+		//EulerIntegration(dt);
+		RK3Integration(dt);
 	}
 	ForwardKinematics();
-	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << ComputeTotalEnergy() << std::endl;
 
 	//post check
 	for (size_t i = 0; i < numOfLinks; i++)
@@ -343,19 +355,41 @@ void eae6320::MultiBody::ComputeAngularVelocity(_Vector& i_R_dot)
 
 		if (rotationMode == LOCAL_MODE)
 		{
-			_Vector3 w_local = a * r_dot - (b * r_dot).cross(r) + c * r.dot(r_dot) * r;
+			w_local[i] = a * r_dot - (b * r_dot).cross(r) + c * r.dot(r_dot) * r;
 			if (i == 0)
 			{
-				w_global[i] = w_local;
+				w_global[i] = w_local[i];
 			}
 			else
 			{
-				w_global[i] = w_global[i - 1] + w_local;
+				w_global[i] = w_global[i - 1] + w_local[i];
 			}
 		}
 		else if (rotationMode == GLOBAL_MODE)
 		{
 			w_global[i] = a * r_dot - (b * r_dot).cross(r) + c * r.dot(r_dot) * r;
+			if (i == 0)
+			{
+				w_local[i] = w_global[i];
+			}
+			else
+			{
+				w_local[i] = w_global[i] - w_global[i - 1];
+			}
+		}
+	}
+}
+
+void eae6320::MultiBody::ComputeVelocity()
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		vel[i].setZero();
+		for (int j = 0; j <= i; j++)
+		{
+			_Vector3 effectiveArm;
+			effectiveArm = pos[i] - jointPos[j];
+			vel[i] = vel[i] + w_local[j].cross(effectiveArm);
 		}
 	}
 }
@@ -457,18 +491,22 @@ void eae6320::MultiBody::ForwardKinematics()
 		_Vector3 uGlobal0 = R_global * uLocals[i][0];
 		uGlobals[i][0] = uGlobal0;
 		_Vector3 linkPos = preAnchor - uGlobal0;
+		pos[i] = linkPos;
 		m_linkBodys[i]->m_State.position = Math::sVector((float)linkPos(0), (float)linkPos(1), (float)linkPos(2));
 		
 		//get ready for the next iteration
-		Vector3f uGlobal1 = R_global * uLocals[i][1];
+		_Vector3 uGlobal1 = R_global * uLocals[i][1];
 		uGlobals[i][1] = uGlobal1;
 		preAnchor = linkPos + uGlobal1;
+		if (i + 1 < numOfLinks) jointPos[i + 1] = preAnchor;
 
 		//update inertia tensor
 		_Matrix3 globalInertiaTensor;
 		globalInertiaTensor = R_global * localInertiaTensors[i] * R_global.transpose();
 		M_ds[i].block<3, 3>(3, 3) = globalInertiaTensor;
 	}
+
+	ComputeVelocity();
 
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << m_linkBodys[1]->m_State.position.x << ", " << -m_linkBodys[1]->m_State.position.z << ", " << m_linkBodys[1]->m_State.position.y << std::endl;
 	//std::cout << eae6320::Physics::totalSimulationTime << std::endl;
@@ -491,8 +529,9 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 		kineticEnergyRotation = 0.5 * w_global[i].transpose() * M_ds[i].block<3, 3>(3, 3) * w_global[i];
 		
 		_Scalar kineticEnergyTranslaion = 0;
-		_Vector3 v = w_global[i].cross(-uGlobals[i][0]);
-		kineticEnergyTranslaion = 0.5 * v.transpose() * M_ds[i].block<3, 3>(0, 0) * v;
+		kineticEnergyTranslaion = 0.5 * vel[i].transpose() * M_ds[i].block<3, 3>(0, 0) * vel[i];
+		/*_Vector3 v = w_global[i].cross(-uGlobals[i][0]);
+		kineticEnergyTranslaion = 0.5 * v.transpose() * M_ds[i].block<3, 3>(0, 0) * v;*/
 
 		_Scalar potentialEnergy = 0;
 		_Vector3 g(0.0f, 9.81f, 0.0f);

@@ -42,6 +42,7 @@ namespace eae6320
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot);
 		
 		void ComputeAngularVelocity(_Vector& i_R_dot);
+		void ComputeVelocity();
 		void Compute_abc();
 		void Compute_abc_dot(_Vector& i_R_dot);
 		
@@ -58,6 +59,10 @@ namespace eae6320
 		std::vector<_Matrix> M_ds;
 		std::vector<_Matrix3> localInertiaTensors;
 		std::vector<_Vector3> w_global;
+		std::vector<_Vector3> w_local;
+		std::vector<_Vector3> vel;
+		std::vector<_Vector3> pos;
+		std::vector<_Vector3> jointPos;
 		std::vector<std::vector<_Vector3>> uLocals;
 		std::vector<std::vector<_Vector3>> uGlobals;
 		std::vector<_Scalar> A;
@@ -75,7 +80,7 @@ namespace eae6320
 		
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
-		int rotationMode = GLOBAL_MODE;
-		int geometry = BOX;
+		int rotationMode = LOCAL_MODE;
+		int geometry = BALL;
 	};
 }
