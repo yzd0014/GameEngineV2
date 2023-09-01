@@ -74,8 +74,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	R_dot.setZero();
 	R.resize(3 * numOfLinks);
 	R.setZero();
-	//R.block<3, 1>(0, 0) = _Vector3(0.0f, 0.0f, -1.0f);
-	//R.block<3, 1>(3, 0) = _Vector3(0.0f, 0.0f, -1.0f);
+	//R.block<3, 1>(0, 0) = _Vector3(0.0f, float(M_PI) * 0.25f, 0.0f);
+	//R.block<3, 1>(3, 0) = _Vector3(0.0f, float(M_PI) * 0.25f, 0.0f);
 
 	ForwardKinematics();
 }
@@ -184,11 +184,11 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	}
 	else
 	{
-		//EulerIntegration(dt);
-		RK3Integration(dt);
+		EulerIntegration(dt);
+		//RK3Integration(dt);
 	}
 	ForwardKinematics();
-	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << ComputeTotalEnergy() << std::endl;
 
 	//post check

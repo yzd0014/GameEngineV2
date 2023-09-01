@@ -53,18 +53,18 @@ namespace eae6320
 		void ForwardKinematics();
 		_Scalar ComputeTotalEnergy();
 
-		_Vector R; //6x1
-		_Vector R_dot; //6x1
+		_Vector R; //3nx1
+		_Vector R_dot; //3nx1
 		_Matrix M_r;
 		std::vector<_Matrix> M_ds;
 		std::vector<_Matrix3> localInertiaTensors;
-		std::vector<_Vector3> w_global;
-		std::vector<_Vector3> w_local;
+		std::vector<_Vector3> w_global;//absolute 
+		std::vector<_Vector3> w_local;//relative
 		std::vector<_Vector3> vel;
 		std::vector<_Vector3> pos;
 		std::vector<_Vector3> jointPos;
-		std::vector<std::vector<_Vector3>> uLocals;
-		std::vector<std::vector<_Vector3>> uGlobals;
+		std::vector<std::vector<_Vector3>> uLocals;//object
+		std::vector<std::vector<_Vector3>> uGlobals;//world
 		std::vector<_Scalar> A;
 		std::vector<_Scalar> A_dot;
 		std::vector<_Scalar> B;
@@ -81,6 +81,6 @@ namespace eae6320
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
 		int rotationMode = LOCAL_MODE;
-		int geometry = BALL;
+		int geometry = BOX;
 	};
 }
