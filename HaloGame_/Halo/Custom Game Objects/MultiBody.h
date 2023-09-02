@@ -65,12 +65,16 @@ namespace eae6320
 		std::vector<_Vector3> jointPos;
 		std::vector<std::vector<_Vector3>> uLocals;//object
 		std::vector<std::vector<_Vector3>> uGlobals;//world
+		
 		std::vector<_Scalar> A;
 		std::vector<_Scalar> A_dot;
 		std::vector<_Scalar> B;
 		std::vector<_Scalar> B_dot;
 		std::vector<_Scalar> C;
 		std::vector<_Scalar> C_dot;
+		
+		std::vector<_Matrix3> R_global;//rigidbody rotation
+		std::vector<_Matrix3> J_rot;//jotation jabobian matrix
 		std::vector<_Matrix> D;
 		std::vector<_Matrix> H_t;
 		
