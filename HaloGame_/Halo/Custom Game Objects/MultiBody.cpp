@@ -29,6 +29,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	D.resize(numOfLinks);
 	H_t.resize(numOfLinks);
 	M_r.resize(3 * numOfLinks, 3 * numOfLinks);
+	M_ds.resize(numOfLinks);
+	localInertiaTensors.resize(numOfLinks);
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		w_global[i].setZero();
@@ -44,7 +46,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		M_d(0, 0) = rigidBodyMass;
 		M_d(1, 1) = rigidBodyMass;
 		M_d(2, 2) = rigidBodyMass;
-		M_ds.push_back(M_d);
+		M_ds[i] = M_d;
 		
 		_Matrix3 localInertiaTensor;
 		localInertiaTensor.setIdentity();
@@ -52,7 +54,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		{
 			localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 		}
-		localInertiaTensors.push_back(localInertiaTensor);
+		localInertiaTensors[i] = localInertiaTensor;
+		M_ds[i].block<3, 3>(3, 3) = localInertiaTensor;
 
 		std::vector<_Vector3> uPairs;
 		uPairs.resize(2);
@@ -68,8 +71,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 	}
-	/*uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
-	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);*/
+	uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
+	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);
 	
 	//uLocals[0][0] = _Vector3(1.0f, -1.0f, -1.0f);
 
@@ -191,9 +194,10 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	{
 		//EulerIntegration(dt);
 		RK3Integration(dt);
+		//RK4Integration(dt);
 	}
 	ForwardKinematics();
-	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << ComputeTotalEnergy() << std::endl;
 
 	//post check
@@ -463,7 +467,8 @@ void eae6320::MultiBody::Compute_abc()
 
 void eae6320::MultiBody::ForwardKinematics()
 {
-	_Vector3 preAnchor(0.0f, 0.0f, 0.0f);
+	_Vector3 preAnchor;
+	preAnchor = Math::NativeVector2EigenVector(m_State.position);
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		//update orientation
@@ -523,9 +528,12 @@ void eae6320::MultiBody::ForwardKinematics()
 		if (i + 1 < numOfLinks) jointPos[i + 1] = preAnchor;
 
 		//update inertia tensor
-		_Matrix3 globalInertiaTensor;
-		globalInertiaTensor = R_global[i] * localInertiaTensors[i] * R_global[i].transpose();
-		M_ds[i].block<3, 3>(3, 3) = globalInertiaTensor;
+		if (geometry != BOX && geometry != BALL)
+		{
+			_Matrix3 globalInertiaTensor;
+			globalInertiaTensor = R_global[i] * localInertiaTensors[i] * R_global[i].transpose();
+			M_ds[i].block<3, 3>(3, 3) = globalInertiaTensor;
+		}	
 	}
 
 	ComputeVelocity();

@@ -4,10 +4,8 @@
 #include "External/EigenLibrary/Eigen/Dense"
 #include "External/EigenLibrary/Eigen/Geometry"
 
-//#define HIGH_PRECISION_MODE 
-
 using namespace Eigen;
-
+//#define HIGH_PRECISION_MODE 
 #if defined (HIGH_PRECISION_MODE)
 typedef double _Scalar;
 typedef MatrixXd _Matrix;
@@ -22,12 +20,22 @@ typedef VectorXf _Vector;
 typedef Vector3f _Vector3;
 #endif
 
+#ifndef LOCAL_MODE
 #define LOCAL_MODE 0
+#endif
+#ifndef GLOBAL_MODE
 #define GLOBAL_MODE 1
+#endif
+#ifndef MUJOCO_MODE
 #define MUJOCO_MODE 2
+#endif
 
+#ifndef BOX
 #define BOX 0
+#endif
+#ifndef BALL
 #define BALL 1
+#endif
 
 namespace eae6320
 {
