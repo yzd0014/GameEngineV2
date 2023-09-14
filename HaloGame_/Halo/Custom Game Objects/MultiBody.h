@@ -12,22 +12,21 @@ typedef MatrixXd _Matrix;
 typedef Matrix3d _Matrix3;
 typedef VectorXd _Vector;
 typedef Vector3d _Vector3;
+typedef Quaterniond _Quat;
 #else
 typedef float _Scalar;
 typedef MatrixXf _Matrix;
 typedef Matrix3f _Matrix3;
 typedef VectorXf _Vector;
 typedef Vector3f _Vector3;
+typedef Quaternionf _Quat;
 #endif
 
 #ifndef LOCAL_MODE
 #define LOCAL_MODE 0
 #endif
-#ifndef GLOBAL_MODE
-#define GLOBAL_MODE 1
-#endif
 #ifndef MUJOCO_MODE
-#define MUJOCO_MODE 2
+#define MUJOCO_MODE 1
 #endif
 
 #ifndef BOX
@@ -35,6 +34,21 @@ typedef Vector3f _Vector3;
 #endif
 #ifndef BALL
 #define BALL 1
+#endif
+
+#ifndef KINEMATIC
+#define KINEMATIC 0
+#endif
+#ifndef PD
+#define PD 1
+#endif
+
+#ifndef SPD
+#define SPD 2
+#endif
+
+#ifndef PASSIVE
+#define PASSIVE 3
 #endif
 
 namespace eae6320
@@ -61,6 +75,7 @@ namespace eae6320
 		void ForwardKinematics();
 		_Scalar ComputeTotalEnergy();
 
+		_Vector R_bar;//desired pos
 		_Vector R; //3nx1
 		_Vector R_dot; //3nx1
 		_Matrix M_r;
@@ -86,13 +101,17 @@ namespace eae6320
 		std::vector<_Matrix> D;
 		std::vector<_Matrix> H_t;
 		
-		std::vector<Quaternionf> m_orientations;
+		std::vector<_Quat> m_orientations;
+		std::vector<_Quat> t_orientations;
 		std::vector<GameCommon::GameObject *> m_linkBodys;
 		_Scalar rigidBodyMass = 1.0f;
+		_Scalar kp = 100000;
+		_Scalar kd = 5000;
 		
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
-		int rotationMode = LOCAL_MODE;
+		int rotationMode = MUJOCO_MODE;
+		int controlMode = KINEMATIC; 
 		int geometry = BOX;
 	};
 }
