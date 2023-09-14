@@ -1,6 +1,7 @@
 #include "MultiBody.h"
 #include "Engine/Physics/PhysicsSimulation.h"
 #include "Engine/Math/sVector.h"
+#include "Engine/Math/EigenHelper.h"
 #include "Engine/UserInput/UserInput.h"
 #include "Engine/GameCommon/GameplayUtility.h"
 #define _USE_MATH_DEFINES
@@ -73,8 +74,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 	}
-	/*uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
-	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);*/
+	uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
+	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);
 	
 	//uLocals[0][0] = _Vector3(1.0f, -1.0f, -1.0f);
 
@@ -508,7 +509,7 @@ void eae6320::MultiBody::Compute_abc()
 void eae6320::MultiBody::ForwardKinematics()
 {
 	_Vector3 preAnchor;
-	preAnchor = Math::NativeVector2EigenVector(m_State.position);
+	Math::NativeVector2EigenVector(m_State.position, preAnchor);
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		//update orientation

@@ -110,8 +110,8 @@ namespace eae6320
 		
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
-		int rotationMode = MUJOCO_MODE;
-		int controlMode = KINEMATIC; 
+		int rotationMode = LOCAL_MODE;
+		int controlMode = PASSIVE; 
 		int geometry = BOX;
 	};
 }
