@@ -99,8 +99,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 
 	{//compute target pose
-		_Scalar c = 10;
-		//_Scalar c = 0.5;
+		//_Scalar c = 10;
+		_Scalar c = 1;
 		R_bar(0) = sin(c*t);
 		R_bar(1) = -sin(c*t);
 		R_bar(4) = -sin(c*t);
@@ -235,25 +235,16 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	{
 		for (int i = 0; i < numOfLinks; i++)
 		{
-			/*_Quat temp_q = _Quat(0, w_global[i](0), w_global[i](1), w_global[i](2)) * m_orientations[i];
-			_Quat ori_dot = _Quat(temp_q.coeffs() * 0.5f);*/
-
-			_Vector3 deltaRotVec;
+			_Vector3 w_relative;
 			if (i == 0)
 			{
-				deltaRotVec = R_dot.segment(i * 3, 3) * h;
+				w_relative = R_dot.segment(i * 3, 3);
 			}
 			else
 			{
-				deltaRotVec = R_global[i - 1].transpose() * R_dot.segment(i * 3, 3) * h;
+				w_relative = R_global[i - 1].transpose() * R_dot.segment(i * 3, 3);
 			}
-#if defined (HIGH_PRECISION_MODE)
-			Quaterniond deltaRot(AngleAxisd(deltaRotVec.norm(), deltaRotVec.normalized()));
-#else
-			Quaternionf deltaRot(AngleAxisf(deltaRotVec.norm(), deltaRotVec.normalized()));
-#endif	
-			q[i] = deltaRot * q[i];
-			q[i].normalize();
+			Math::QuatIntegrate(q[i], w_relative, h);
 		}
 		ComputeAngularVelocity(R_dot);
 	}
@@ -343,6 +334,10 @@ _Vector eae6320::MultiBody::ComputeQ_r(_Vector i_R_dot)
 	{
 		for (int i = 0; i < numOfLinks; i++)
 		{
+			//estimate new position
+			/*_Quat newPos;
+			newPos = q[i];
+			Math::QuatIntegrate(newPos, );*/
 		}
 	}
 

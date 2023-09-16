@@ -109,8 +109,8 @@ namespace eae6320
 		std::vector<_Quat> q_bar;
 		std::vector<GameCommon::GameObject *> m_linkBodys;
 		_Scalar rigidBodyMass = 1.0f;
-		_Scalar kp = 1000000;
-		_Scalar kd = 2000;
+		_Scalar kp = 10000;
+		_Scalar kd = 20;
 		
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;

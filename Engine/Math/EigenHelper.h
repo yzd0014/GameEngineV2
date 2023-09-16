@@ -21,6 +21,24 @@ namespace eae6320
 		{
 			return eae6320::Math::cQuaternion((float)i_quat.w(), (float)i_quat.x(), (float)i_quat.y(), (float)i_quat.z());
 		}
+
+		inline void QuatIntegrate(Quaternionf& io_quat, const Vector3f& vel, float dt)
+		{
+			Vector3f deltaRotVec;
+			deltaRotVec = vel * dt;
+			Quaternionf deltaRot(AngleAxisf(deltaRotVec.norm(), deltaRotVec.normalized()));
+			io_quat = deltaRot * io_quat;
+			io_quat.normalize();
+		}
+
+		inline void QuatIntegrate(Quaterniond& io_quat, const Vector3d& vel, double dt)
+		{
+			Vector3d deltaRotVec;
+			deltaRotVec = vel * dt;
+			Quaterniond deltaRot(AngleAxisd(deltaRotVec.norm(), deltaRotVec.normalized()));
+			io_quat = deltaRot * io_quat;
+			io_quat.normalize();
+		}
 	}
 }
 
