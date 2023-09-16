@@ -84,8 +84,9 @@ namespace eae6320
 		_Matrix M_r;
 		std::vector<_Matrix> M_ds;
 		std::vector<_Matrix3> localInertiaTensors;
-		std::vector<_Vector3> w_global;//absolute 
-		std::vector<_Vector3> w_local;//relative
+		std::vector<_Vector3> w_abs_world;//absolute 
+		std::vector<_Vector3> w_rel_world;//relative
+		std::vector<_Vector3> w_rel_local;
 		std::vector<_Vector3> vel;
 		std::vector<_Vector3> pos;
 		std::vector<_Vector3> jointPos;
@@ -110,7 +111,7 @@ namespace eae6320
 		std::vector<GameCommon::GameObject *> m_linkBodys;
 		_Scalar rigidBodyMass = 1.0f;
 		_Scalar kp = 10000;
-		_Scalar kd = 20;
+		_Scalar kd = 500;
 		
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;

@@ -13,8 +13,9 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	numOfLinks = i_numOfLinks;
 	
 	m_linkBodys = i_linkBodys;
-	w_global.resize(numOfLinks);
-	w_local.resize(numOfLinks);
+	w_abs_world.resize(numOfLinks);
+	w_rel_world.resize(numOfLinks);
+	w_rel_local.resize(numOfLinks);
 	vel.resize(numOfLinks);
 	pos.resize(numOfLinks);
 	jointPos.resize(numOfLinks);
@@ -36,8 +37,9 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	localInertiaTensors.resize(numOfLinks);
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
-		w_global[i].setZero();
-		w_local[i].setZero();
+		w_abs_world[i].setZero();
+		w_rel_world[i].setZero();
+		w_rel_local[i].setZero();
 		vel[i].setZero();
 		jointPos[i].setZero();
 		pos[i].setZero();
@@ -100,7 +102,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 
 	{//compute target pose
 		//_Scalar c = 10;
-		_Scalar c = 1;
+		_Scalar c = 2;
 		R_bar(0) = sin(c*t);
 		R_bar(1) = -sin(c*t);
 		R_bar(4) = -sin(c*t);
@@ -235,16 +237,10 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	{
 		for (int i = 0; i < numOfLinks; i++)
 		{
-			_Vector3 w_relative;
-			if (i == 0)
-			{
-				w_relative = R_dot.segment(i * 3, 3);
-			}
-			else
-			{
-				w_relative = R_global[i - 1].transpose() * R_dot.segment(i * 3, 3);
-			}
-			Math::QuatIntegrate(q[i], w_relative, h);
+			if (i == 0) w_rel_local[i] = R_dot.segment(i * 3, 3);
+			else  w_rel_local[i] = R_global[i - 1].transpose() * R_dot.segment(i * 3, 3);
+			
+			Math::QuatIntegrate(q[i], w_rel_local[i], h);
 		}
 		ComputeAngularVelocity(R_dot);
 	}
@@ -304,7 +300,7 @@ _Vector eae6320::MultiBody::ComputeQ_r(_Vector i_R_dot)
 		_Vector Fv;
 		Fv.resize(6);
 		Fv.setZero();
-		Fv.block<3, 1>(3, 0) = -w_global[i].cross(M_ds[i].block<3, 3>(3, 3) * w_global[i]);
+		Fv.block<3, 1>(3, 0) = -w_abs_world[i].cross(M_ds[i].block<3, 3>(3, 3) * w_abs_world[i]);
 		_Vector Q_temp;
 		Q_temp.resize(3 * numOfLinks);
 		Q_temp.setZero();
@@ -361,11 +357,11 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			gamma[i].setZero();
 			if (i == 0)
 			{
-				gamma[i].block<3, 1>(0, 0) = -w_global[i].cross(w_global[i].cross(uGlobals[i][0]));
+				gamma[i].block<3, 1>(0, 0) = -w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0]));
 			}
 			else
 			{
-				gamma[i].block<3, 1>(0, 0) = -w_global[i].cross(w_global[i].cross(uGlobals[i][0])) + w_global[i - 1].cross(w_global[i - 1].cross(uGlobals[i - 1][1]));
+				gamma[i].block<3, 1>(0, 0) = -w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0])) + w_abs_world[i - 1].cross(w_abs_world[i - 1].cross(uGlobals[i - 1][1]));
 			}
 		}
 		else
@@ -388,18 +384,18 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			}
 			else
 			{
-				gamma_theta = Math::ToSkewSymmetricMatrix(w_global[i - 1]) * R_global[i - 1] * J_rot[i] * r_dot + R_global[i - 1] * Jdot_rdot;
-				//gamma_theta = -R_global[i - 1] * Math::ToSkewSymmetricMatrix(w_global[i - 1]) * J_rot[i] * r_dot + R_global[i - 1] * Jdot_rdot;
+				gamma_theta = Math::ToSkewSymmetricMatrix(w_abs_world[i - 1]) * R_global[i - 1] * J_rot[i] * r_dot + R_global[i - 1] * Jdot_rdot;
+				//gamma_theta = -R_global[i - 1] * Math::ToSkewSymmetricMatrix(w_abs_world[i - 1]) * J_rot[i] * r_dot + R_global[i - 1] * Jdot_rdot;
 			}
 			gamma[i].resize(6);
 			gamma[i].setZero();
 			if (i == 0)
 			{
-				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_global[i].cross(w_global[i].cross(uGlobals[i][0]));
+				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0]));
 			}
 			else
 			{
-				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_global[i].cross(w_global[i].cross(uGlobals[i][0])) + w_global[i - 1].cross(w_global[i - 1].cross(uGlobals[i - 1][1]));
+				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0])) + w_abs_world[i - 1].cross(w_abs_world[i - 1].cross(uGlobals[i - 1][1]));
 			}
 			gamma[i].block<3, 1>(3, 0) = gamma_theta;
 		}	
@@ -433,27 +429,27 @@ void eae6320::MultiBody::ComputeAngularVelocity(_Vector& i_R_dot)
 			_Vector3 r_dot = i_R_dot.segment(i * 3, 3);
 			if (i == 0)
 			{
-				w_local[i] = J_rot[i] * r_dot;
-				w_global[i] = w_local[i];
+				w_rel_world[i] = J_rot[i] * r_dot;
+				w_abs_world[i] = w_rel_world[i];
 			}
 			else
 			{
-				w_local[i] = R_global[i - 1] * J_rot[i] * r_dot;
-				//w_local[i] = R_global[i - 1].transpose() * J_rot[i] * r_dot;
-				w_global[i] = w_global[i - 1] + w_local[i];
+				w_rel_world[i] = R_global[i - 1] * J_rot[i] * r_dot;
+				//w_rel_world[i] = R_global[i - 1].transpose() * J_rot[i] * r_dot;
+				w_abs_world[i] = w_abs_world[i - 1] + w_rel_world[i];
 				
 			}
 		}
 		else if (rotationMode == MUJOCO_MODE)
 		{
-			w_local[i] = i_R_dot.segment(i * 3, 3);
+			w_rel_world[i] = i_R_dot.segment(i * 3, 3);
 			if (i == 0)
 			{
-				w_global[i] = i_R_dot.segment(i * 3, 3);
+				w_abs_world[i] = i_R_dot.segment(i * 3, 3);
 			}
 			else
 			{
-				w_global[i] = w_global[i - 1] + i_R_dot.segment(i * 3, 3);
+				w_abs_world[i] = w_abs_world[i - 1] + i_R_dot.segment(i * 3, 3);
 			}
 		}
 	}
@@ -468,7 +464,7 @@ void eae6320::MultiBody::ComputeVelocity()
 		{
 			_Vector3 effectiveArm;
 			effectiveArm = pos[i] - jointPos[j];
-			vel[i] = vel[i] + w_local[j].cross(effectiveArm);
+			vel[i] = vel[i] + w_rel_world[j].cross(effectiveArm);
 		}
 	}
 }
@@ -613,11 +609,11 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		_Scalar kineticEnergyRotation = 0;
-		kineticEnergyRotation = 0.5 * w_global[i].transpose() * M_ds[i].block<3, 3>(3, 3) * w_global[i];
+		kineticEnergyRotation = 0.5 * w_abs_world[i].transpose() * M_ds[i].block<3, 3>(3, 3) * w_abs_world[i];
 		
 		_Scalar kineticEnergyTranslaion = 0;
 		kineticEnergyTranslaion = 0.5 * vel[i].transpose() * M_ds[i].block<3, 3>(0, 0) * vel[i];
-		/*_Vector3 v = w_global[i].cross(-uGlobals[i][0]);
+		/*_Vector3 v = w_abs_world[i].cross(-uGlobals[i][0]);
 		kineticEnergyTranslaion = 0.5 * v.transpose() * M_ds[i].block<3, 3>(0, 0) * v;*/
 
 		_Scalar potentialEnergy = 0;
