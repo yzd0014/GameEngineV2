@@ -19,7 +19,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	pos.resize(numOfLinks);
 	jointPos.resize(numOfLinks);
 	m_orientations.resize(numOfLinks);
-	t_orientations.resize(numOfLinks);
+	q.resize(numOfLinks);
+	q_bar.resize(numOfLinks);
 	A.resize(numOfLinks);
 	B.resize(numOfLinks);
 	C.resize(numOfLinks);
@@ -41,7 +42,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		jointPos[i].setZero();
 		pos[i].setZero();
 		m_orientations[i].setIdentity();
-		t_orientations[i].setIdentity();
+		q[i].setIdentity();
+		q_bar[i].setIdentity();
 		R_global[i].setIdentity();
 		_Matrix M_d;
 		M_d.resize(6, 6);
@@ -74,8 +76,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 	}
-	uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
-	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);
+	/*uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
+	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);*/
 	
 	//uLocals[0][0] = _Vector3(1.0f, -1.0f, -1.0f);
 
@@ -97,7 +99,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 
 	{//compute target pose
-		_Scalar c = 5;
+		_Scalar c = 10;
+		//_Scalar c = 0.5;
 		R_bar(0) = sin(c*t);
 		R_bar(1) = -sin(c*t);
 		R_bar(4) = -sin(c*t);
@@ -108,8 +111,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 #if defined (HIGH_PRECISION_MODE)
 			Quaterniond q_bar(AngleAxisd(r_bar.norm(), r_bar.normalized()));
 #else
-			Quaternionf q_bar(AngleAxisf(r_bar.norm(), r_bar.normalized()));
-			t_orientations[i] = q_bar;
+			Quaternionf quat_target(AngleAxisf(r_bar.norm(), r_bar.normalized()));
+			q_bar[i] = quat_target;
 #endif	
 		}
 	}
@@ -123,8 +126,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		{
 			for (int i = 0; i < numOfLinks; i++)
 			{
-				m_orientations[i] = t_orientations[i];
-				m_orientations[i].normalize();
+				q[i] = q_bar[i];
+				q[i].normalize();
 			}
 		}
 	}
@@ -230,21 +233,29 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	R_dot = R_dot + R_ddot * h;
 	if (rotationMode == MUJOCO_MODE)
 	{
-		ComputeAngularVelocity(R_dot);
 		for (int i = 0; i < numOfLinks; i++)
 		{
 			/*_Quat temp_q = _Quat(0, w_global[i](0), w_global[i](1), w_global[i](2)) * m_orientations[i];
 			_Quat ori_dot = _Quat(temp_q.coeffs() * 0.5f);*/
 
-			_Vector3 deltaRotVec = w_global[i] * h;
+			_Vector3 deltaRotVec;
+			if (i == 0)
+			{
+				deltaRotVec = R_dot.segment(i * 3, 3) * h;
+			}
+			else
+			{
+				deltaRotVec = R_global[i - 1].transpose() * R_dot.segment(i * 3, 3) * h;
+			}
 #if defined (HIGH_PRECISION_MODE)
 			Quaterniond deltaRot(AngleAxisd(deltaRotVec.norm(), deltaRotVec.normalized()));
 #else
 			Quaternionf deltaRot(AngleAxisf(deltaRotVec.norm(), deltaRotVec.normalized()));
 #endif	
-			m_orientations[i] = deltaRot * m_orientations[i];
-			m_orientations[i].normalize();
+			q[i] = deltaRot * q[i];
+			q[i].normalize();
 		}
+		ComputeAngularVelocity(R_dot);
 	}
 	else
 	{
@@ -309,18 +320,29 @@ _Vector eae6320::MultiBody::ComputeQ_r(_Vector i_R_dot)
 		Q_temp = H_t[i].transpose() * (Fe + Fv - M_ds[i] * gamma_t[i]);
 		Q_r = Q_r + Q_temp;
 	}
-	if (controlMode == PD)
+	if (controlMode == PD && rotationMode == MUJOCO_MODE)
 	{
-		for (int i =0; i < numOfLinks; i++)
+		for (int i = 0; i < numOfLinks; i++)
 		{
-			_Quat delta_q = t_orientations[i] * m_orientations[i].inverse();
+			_Quat delta_q = q_bar[i] * q[i].inverse();
+			delta_q.normalize();
 #if defined (HIGH_PRECISION_MODE)		
 			AngleAxisd rotationVector(delta_q);
 #else
 			AngleAxisf rotationVector(delta_q);
 #endif	
 			_Vector3 posError = rotationVector.angle() * rotationVector.axis();
+			if (i > 0)
+			{
+				posError = R_global[i - 1] * posError;
+			}
 			Q_r.segment(i * 3, 3) = kp * posError - kd * R_dot.segment(i * 3, 3);
+		}
+	}
+	else if (controlMode == SPD && rotationMode == MUJOCO_MODE)
+	{
+		for (int i = 0; i < numOfLinks; i++)
+		{
 		}
 	}
 
@@ -515,6 +537,14 @@ void eae6320::MultiBody::ForwardKinematics()
 		//update orientation
 		if (rotationMode == MUJOCO_MODE)
 		{
+			if (i == 0)
+			{
+				m_orientations[i] = q[i];
+			}
+			else
+			{
+				m_orientations[i] = m_orientations[i - 1] * q[i];
+			}
 			R_global[i] = m_orientations[i].toRotationMatrix();
 			m_linkBodys[i]->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(m_orientations[i]);
 		}

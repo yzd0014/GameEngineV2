@@ -59,6 +59,9 @@ namespace eae6320
 		MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, std::vector<GameCommon::GameObject *> & i_linkBodys, int i_numOfLinks);
 		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
+
+		int rotationMode = MUJOCO_MODE;
+		int controlMode = KINEMATIC;
 	private:
 		_Vector ComputeQ_r(_Vector i_R_dot);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot);
@@ -102,16 +105,15 @@ namespace eae6320
 		std::vector<_Matrix> H_t;
 		
 		std::vector<_Quat> m_orientations;
-		std::vector<_Quat> t_orientations;
+		std::vector<_Quat> q;//relative rotation to parent for each body
+		std::vector<_Quat> q_bar;
 		std::vector<GameCommon::GameObject *> m_linkBodys;
 		_Scalar rigidBodyMass = 1.0f;
-		_Scalar kp = 100000;
-		_Scalar kd = 5000;
+		_Scalar kp = 1000000;
+		_Scalar kd = 2000;
 		
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
-		int rotationMode = LOCAL_MODE;
-		int controlMode = PASSIVE; 
 		int geometry = BOX;
 	};
 }
