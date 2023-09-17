@@ -63,7 +63,7 @@ namespace eae6320
 		int rotationMode = MUJOCO_MODE;
 		int controlMode = KINEMATIC;
 	private:
-		_Vector ComputeQ_r(_Vector i_R_dot);
+		_Vector ComputeQ_r(_Vector i_R_dot, _Scalar h);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot);
 		
 		void ComputeAngularVelocity(_Vector& i_R_dot);
@@ -110,8 +110,8 @@ namespace eae6320
 		std::vector<_Quat> q_bar;
 		std::vector<GameCommon::GameObject *> m_linkBodys;
 		_Scalar rigidBodyMass = 1.0f;
-		_Scalar kp = 10000;
-		_Scalar kd = 500;
+		_Scalar kp = 10000000;
+		_Scalar kd = 14500;
 		
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;

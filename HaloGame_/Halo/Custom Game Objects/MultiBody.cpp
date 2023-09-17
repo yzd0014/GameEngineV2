@@ -102,7 +102,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 
 	{//compute target pose
 		//_Scalar c = 10;
-		_Scalar c = 2;
+		_Scalar c = 10;
 		R_bar(0) = sin(c*t);
 		R_bar(1) = -sin(c*t);
 		R_bar(4) = -sin(c*t);
@@ -162,7 +162,6 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 				_Matrix3 A;
 				if (i == 0) A = J_rot[i];
 				else A = R_global[i - 1] * J_rot[i];
-				//else A = R_global[i - 1].transpose() * J_rot[i];
 				H[i].resize(6, 3);
 				H[i].setZero();
 				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * A;
@@ -203,6 +202,10 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 			_Matrix M_temp = H_t[i].transpose() * M_ds[i] * H_t[i];
 			M_r = M_r + M_temp;
 		}
+		if (controlMode == SPD || (rotationMode == LOCAL_MODE && (controlMode == SPD || controlMode == PD)))
+		{
+			M_r = M_r + _Matrix::Identity(3 * numOfLinks, 3 * numOfLinks) * dt * kd;
+		}
 		/**********************************************************************************************************/
 		EulerIntegration(dt);
 		//RK3Integration(dt);
@@ -229,7 +232,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 
 void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 {
-	_Vector Q_r = ComputeQ_r(R_dot);
+	_Vector Q_r = ComputeQ_r(R_dot, h);
 	_Vector R_ddot = M_r.inverse() * Q_r;
 
 	R_dot = R_dot + R_ddot * h;
@@ -255,10 +258,10 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 {
 	_Matrix M_rInverse = M_r.inverse();
 	
-	_Vector k1 = h * M_rInverse * ComputeQ_r(R_dot);
-	_Vector k2 = h * M_rInverse * ComputeQ_r(R_dot + 0.5 * k1);
-	_Vector k3 = h * M_rInverse * ComputeQ_r(R_dot + 0.5 * k2);
-	_Vector k4 = h * M_rInverse * ComputeQ_r(R_dot + k3);
+	_Vector k1 = h * M_rInverse * ComputeQ_r(R_dot, h);
+	_Vector k2 = h * M_rInverse * ComputeQ_r(R_dot + 0.5 * k1, h);
+	_Vector k3 = h * M_rInverse * ComputeQ_r(R_dot + 0.5 * k2, h);
+	_Vector k4 = h * M_rInverse * ComputeQ_r(R_dot + k3, h);
 
 	R_dot = R_dot + (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
 	R = R + R_dot * h;
@@ -267,15 +270,15 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 void eae6320::MultiBody::RK3Integration(const _Scalar h)
 {
 	_Matrix M_rInverse = M_r.inverse();
-	_Vector k1 = h * M_rInverse * ComputeQ_r(R_dot);
-	_Vector k2 = h * M_rInverse * ComputeQ_r(R_dot + 0.5 * k1);
-	_Vector k3 = h * M_rInverse * ComputeQ_r(R_dot + 2.0 * k2 - k1);
+	_Vector k1 = h * M_rInverse * ComputeQ_r(R_dot, h);
+	_Vector k2 = h * M_rInverse * ComputeQ_r(R_dot + 0.5 * k1, h);
+	_Vector k3 = h * M_rInverse * ComputeQ_r(R_dot + 2.0 * k2 - k1, h);
 
 	R_dot = R_dot + (1.0f / 6.0f) * (k1 + 4 * k2 + k3);
 	R = R + R_dot * h;
 }
 
-_Vector eae6320::MultiBody::ComputeQ_r(_Vector i_R_dot)
+_Vector eae6320::MultiBody::ComputeQ_r(_Vector i_R_dot, _Scalar h)
 {
 	if (rotationMode == LOCAL_MODE)
 	{
@@ -307,11 +310,22 @@ _Vector eae6320::MultiBody::ComputeQ_r(_Vector i_R_dot)
 		Q_temp = H_t[i].transpose() * (Fe + Fv - M_ds[i] * gamma_t[i]);
 		Q_r = Q_r + Q_temp;
 	}
-	if (controlMode == PD && rotationMode == MUJOCO_MODE)
+	if (rotationMode == MUJOCO_MODE && (controlMode == PD || controlMode == SPD))
 	{
 		for (int i = 0; i < numOfLinks; i++)
 		{
-			_Quat delta_q = q_bar[i] * q[i].inverse();
+			_Quat curr_q;
+			if (controlMode == PD)
+			{
+				curr_q = q[i];
+			}
+			else if (controlMode == SPD)
+			{
+				curr_q = q[i];
+				Math::QuatIntegrate(curr_q, w_rel_local[i], h);
+			}
+			
+			_Quat delta_q = q_bar[i] * curr_q.inverse();
 			delta_q.normalize();
 #if defined (HIGH_PRECISION_MODE)		
 			AngleAxisd rotationVector(delta_q);
@@ -323,18 +337,14 @@ _Vector eae6320::MultiBody::ComputeQ_r(_Vector i_R_dot)
 			{
 				posError = R_global[i - 1] * posError;
 			}
-			Q_r.segment(i * 3, 3) = kp * posError - kd * R_dot.segment(i * 3, 3);
+			Q_r.segment(i * 3, 3) = Q_r.segment(i * 3, 3) + kp * posError - kd * R_dot.segment(i * 3, 3);
 		}
 	}
-	else if (controlMode == SPD && rotationMode == MUJOCO_MODE)
+	else if (rotationMode == LOCAL_MODE && (controlMode == PD || controlMode == SPD))
 	{
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			//estimate new position
-			/*_Quat newPos;
-			newPos = q[i];
-			Math::QuatIntegrate(newPos, );*/
-		}
+		_Vector curr_pos = R + h * R_dot;
+		_Vector posError = R_bar - curr_pos;
+		Q_r = Q_r + kp * posError - kd * R_dot;
 	}
 
 	return Q_r;
@@ -385,7 +395,6 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			else
 			{
 				gamma_theta = Math::ToSkewSymmetricMatrix(w_abs_world[i - 1]) * R_global[i - 1] * J_rot[i] * r_dot + R_global[i - 1] * Jdot_rdot;
-				//gamma_theta = -R_global[i - 1] * Math::ToSkewSymmetricMatrix(w_abs_world[i - 1]) * J_rot[i] * r_dot + R_global[i - 1] * Jdot_rdot;
 			}
 			gamma[i].resize(6);
 			gamma[i].setZero();
@@ -435,9 +444,7 @@ void eae6320::MultiBody::ComputeAngularVelocity(_Vector& i_R_dot)
 			else
 			{
 				w_rel_world[i] = R_global[i - 1] * J_rot[i] * r_dot;
-				//w_rel_world[i] = R_global[i - 1].transpose() * J_rot[i] * r_dot;
 				w_abs_world[i] = w_abs_world[i - 1] + w_rel_world[i];
-				
 			}
 		}
 		else if (rotationMode == MUJOCO_MODE)
@@ -613,8 +620,6 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 		
 		_Scalar kineticEnergyTranslaion = 0;
 		kineticEnergyTranslaion = 0.5 * vel[i].transpose() * M_ds[i].block<3, 3>(0, 0) * vel[i];
-		/*_Vector3 v = w_abs_world[i].cross(-uGlobals[i][0]);
-		kineticEnergyTranslaion = 0.5 * v.transpose() * M_ds[i].block<3, 3>(0, 0) * v;*/
 
 		_Scalar potentialEnergy = 0;
 		_Vector3 g(0.0f, 9.81f, 0.0f);
