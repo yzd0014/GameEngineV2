@@ -23,7 +23,6 @@
 #include "Halo/Custom Game Objects/MultiBody.h"
 #include "Halo/Custom Game Objects/MujocoBallJoint.h"
 #include "Halo/Custom Game Objects/SphericalJointV2.h"
-#include "Halo/Custom Game Objects/doublePendulumBallJoint.h"
 // Inherited Implementation
 //=========================
 
