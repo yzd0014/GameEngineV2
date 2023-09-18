@@ -63,7 +63,7 @@ namespace eae6320
 		int rotationMode = MUJOCO_MODE;
 		int controlMode = KINEMATIC;
 	private:
-		_Vector ComputeQ_r(_Vector i_R_dot, _Scalar h);
+		_Vector ComputeQr(_Vector i_R_dot, _Scalar h);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot);
 		
 		void ComputeAngularVelocity(_Vector& i_R_dot);
@@ -78,11 +78,11 @@ namespace eae6320
 		void ForwardKinematics();
 		_Scalar ComputeTotalEnergy();
 
-		_Vector R_bar;//desired pos
+		_Vector Rbar;//desired pos
 		_Vector R; //3nx1
-		_Vector R_dot; //3nx1
-		_Matrix M_r;
-		std::vector<_Matrix> M_ds;
+		_Vector Rdot; //3nx1
+		_Matrix Mr;
+		std::vector<_Matrix> Mbody;
 		std::vector<_Matrix3> localInertiaTensors;
 		std::vector<_Vector3> w_abs_world;//absolute 
 		std::vector<_Vector3> w_rel_world;//relative
@@ -101,13 +101,13 @@ namespace eae6320
 		std::vector<_Scalar> C_dot;
 		
 		std::vector<_Matrix3> R_global;//rigidbody rotation
-		std::vector<_Matrix3> J_rot;//jotation jabobian matrix
+		std::vector<_Matrix3> J_rotation;//jotation jabobian matrix
 		std::vector<_Matrix> D;
-		std::vector<_Matrix> H_t;
+		std::vector<_Matrix> Ht;
 		
 		std::vector<_Quat> m_orientations;
 		std::vector<_Quat> q;//relative rotation to parent for each body
-		std::vector<_Quat> q_bar;
+		std::vector<_Quat> qbar;
 		std::vector<GameCommon::GameObject *> m_linkBodys;
 		_Scalar rigidBodyMass = 1.0f;
 		_Scalar kp = 10000000;
