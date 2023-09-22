@@ -83,10 +83,12 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	
 	//uLocals[0][0] = _Vector3(1.0f, -1.0f, -1.0f);
 
-	Rbar.resize(3 * numOfLinks);
+	Rbar.resize(6);
 	Rbar.setZero();
 	Rdot.resize(3 * numOfLinks);
 	Rdot.setZero();
+	Rdot(0) = 1;
+	Rdot(1) = 1;
 	R.resize(3 * numOfLinks);
 	R.setZero();
 	//R.block<3, 1>(0, 0) = _Vector3(0.0f, float(M_PI) * 0.25f, 0.0f);
@@ -103,10 +105,14 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	{//compute target pose
 		//_Scalar c = 10;
 		_Scalar c = 10;
-		Rbar(0) = sin(c*t);
+	/*	Rbar(0) = sin(c*t);
 		Rbar(1) = -sin(c*t);
 		Rbar(4) = -sin(c*t);
-		Rbar(5) = sin(c*t);
+		Rbar(5) = sin(c*t);*/
+		Rbar(0) = 1;
+		Rbar(1) = -1;
+		Rbar(4) = -1;
+		Rbar(5) = 1;
 		for (int i = 0; i < numOfLinks; i++)
 		{
 			_Vector3 r_bar = Rbar.segment(i * 3, 3);
@@ -151,14 +157,14 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 			else
 			{
 				_Vector3 r = R.segment(i * 3, 3);
-				//std::cout << i << ", " << r.norm() << std::endl;
-				_Scalar a = A[i];
+
 				_Scalar b = B[i];
 				_Scalar c = C[i];
-
-				_Matrix3 rrt = r * r.transpose();
-				J_rotation[i] = a * _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * rrt;
-				//std::cout << J.determinant() << std::endl <<std::endl;
+				J_rotation[i] = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
+				/*if (J_rotation[i].determinant() < 0.00001)
+				{
+					std::cout << J_rotation[i].determinant() << std::endl << std::endl;
+				}*/
 				_Matrix3 A;
 				if (i == 0) A = J_rotation[i];
 				else A = R_global[i - 1] * J_rotation[i];
@@ -213,7 +219,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	}
 	
 	ForwardKinematics();
-	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << ComputeTotalEnergy() << std::endl;
 
 	//post check
@@ -245,7 +251,6 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 			
 			Math::QuatIntegrate(q[i], w_rel_local[i], h);
 		}
-		ComputeAngularVelocity(Rdot);
 	}
 	else
 	{
@@ -280,10 +285,8 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 
 _Vector eae6320::MultiBody::ComputeQr(_Vector i_R_dot, _Scalar h)
 {
-	if (rotationMode == LOCAL_MODE)
-	{
-		ComputeAngularVelocity(i_R_dot);
-	}
+	
+	ComputeAngularVelocity(i_R_dot);
 	
 	std::vector<_Vector> gamma_t;
 	ComputeGamma_t(gamma_t, i_R_dot);
@@ -378,7 +381,6 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 		{
 			_Vector3 r = R.segment(i * 3, 3);
 			_Vector3 r_dot = i_R_dot.segment(i * 3, 3);
-			_Scalar a = A[i];
 			_Scalar b = B[i];
 			_Scalar c = C[i];
 			_Scalar a_dot = A_dot[i];

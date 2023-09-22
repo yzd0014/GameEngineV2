@@ -62,7 +62,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	
 	{
 		std::vector<GameCommon::GameObject *> links;
-		int bodyNum = 2;
+		int bodyNum = 1;
 		for (int i = 0; i < bodyNum; i++)
 		{
 			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
@@ -73,49 +73,49 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
 		MultiBody * pMultiBody = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		pMultiBody->rotationMode = MUJOCO_MODE;
-		pMultiBody->controlMode = SPD;
+		pMultiBody->controlMode = PASSIVE;
 		//GameCommon::GameObject * pGameObject = new MujocoBallJoint(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		//GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		noColliderObjects.push_back(pMultiBody);
 	}
 	
-	{
-		std::vector<GameCommon::GameObject *> links;
-		int bodyNum = 2;
-		for (int i = 0; i < bodyNum; i++)
-		{
-			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
-			links.push_back(pGameObject);
-			noColliderObjects.push_back(pGameObject);
-		}
+	//{
+	//	std::vector<GameCommon::GameObject *> links;
+	//	int bodyNum = 2;
+	//	for (int i = 0; i < bodyNum; i++)
+	//	{
+	//		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
+	//		links.push_back(pGameObject);
+	//		noColliderObjects.push_back(pGameObject);
+	//	}
 
-		Physics::sRigidBodyState objState(Math::sVector(6.0f, 0.0f, 0.0f));
-		MultiBody * pMultiBody = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		pMultiBody->rotationMode = LOCAL_MODE;
-		pMultiBody->controlMode = SPD;
-		//GameCommon::GameObject * pGameObject = new MujocoBallJoint(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		//GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		noColliderObjects.push_back(pMultiBody);
-	}
+	//	Physics::sRigidBodyState objState(Math::sVector(6.0f, 0.0f, 0.0f));
+	//	MultiBody * pMultiBody = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
+	//	pMultiBody->rotationMode = LOCAL_MODE;
+	//	pMultiBody->controlMode = SPD;
+	//	//GameCommon::GameObject * pGameObject = new MujocoBallJoint(pRedEffect, mesh_anchor, objState, links, bodyNum);
+	//	//GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
+	//	noColliderObjects.push_back(pMultiBody);
+	//}
 
-	{
-		std::vector<GameCommon::GameObject *> links;
-		int bodyNum = 2;
-		for (int i = 0; i < bodyNum; i++)
-		{
-			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
-			links.push_back(pGameObject);
-			noColliderObjects.push_back(pGameObject);
-		}
+	//{
+	//	std::vector<GameCommon::GameObject *> links;
+	//	int bodyNum = 2;
+	//	for (int i = 0; i < bodyNum; i++)
+	//	{
+	//		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
+	//		links.push_back(pGameObject);
+	//		noColliderObjects.push_back(pGameObject);
+	//	}
 
-		Physics::sRigidBodyState objState(Math::sVector(-6.0f, 0.0f, 0.0f));
-		MultiBody * pMultiBody = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		pMultiBody->rotationMode = MUJOCO_MODE;
-		pMultiBody->controlMode = KINEMATIC;
-		//GameCommon::GameObject * pGameObject = new MujocoBallJoint(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		//GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		noColliderObjects.push_back(pMultiBody);
-	}
+	//	Physics::sRigidBodyState objState(Math::sVector(-6.0f, 0.0f, 0.0f));
+	//	MultiBody * pMultiBody = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
+	//	pMultiBody->rotationMode = MUJOCO_MODE;
+	//	pMultiBody->controlMode = KINEMATIC;
+	//	//GameCommon::GameObject * pGameObject = new MujocoBallJoint(pRedEffect, mesh_anchor, objState, links, bodyNum);
+	//	//GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
+	//	noColliderObjects.push_back(pMultiBody);
+	//}
 
 	//Ground
 	{
