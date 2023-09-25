@@ -249,7 +249,12 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 			if (i == 0) w_rel_local[i] = Rdot.segment(i * 3, 3);
 			else  w_rel_local[i] = R_global[i - 1].transpose() * Rdot.segment(i * 3, 3);
 			
-			Math::QuatIntegrate(q[i], w_rel_local[i], h);
+			/*Math::QuatIntegrate(q[i], w_rel_local[i], h);*/
+
+			_Quat quat_w(0, w_rel_local[i](0), w_rel_local[i](1), w_rel_local[i](2));
+			_Quat quat_dot = 0.5f * quat_w * q[i];
+			q[i] = q[i] + h * quat_dot;
+			q[i].normalize();
 		}
 	}
 	else

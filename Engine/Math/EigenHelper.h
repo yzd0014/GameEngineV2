@@ -65,3 +65,15 @@ inline Quaterniond operator*(const Quaterniond& lhs, const double rhs)
 	Quaterniond out(lhs.coeffs() * rhs);
 	return out;
 }
+
+inline Quaternionf operator+(const Quaternionf& lhs, const Quaternionf& rhs)
+{
+	Quaternionf out(lhs.w() + rhs.w(), lhs.x() + rhs.x(), lhs.y() + rhs.y(), lhs.z() + rhs.z());
+	return out;
+}
+
+inline Quaterniond operator+(const Quaterniond& lhs, const Quaterniond& rhs)
+{
+	Quaterniond out(lhs.w() + rhs.w(), lhs.x() + rhs.x(), lhs.y() + rhs.y(), lhs.z() + rhs.z());
+	return out;
+}
