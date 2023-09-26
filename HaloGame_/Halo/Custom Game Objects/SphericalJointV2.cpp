@@ -25,6 +25,8 @@ eae6320::SphericalJointV2::SphericalJointV2(Effect * i_pEffect, Assets::cHandle<
 	D.resize(numOfLinks);
 	H.resize(numOfLinks);
 	gamma.resize(numOfLinks);
+	J_rotation.resize(numOfLinks);
+	R_global.resize(numOfLinks);
 
 	w_global.resize(numOfLinks);
 
@@ -42,6 +44,8 @@ eae6320::SphericalJointV2::SphericalJointV2(Effect * i_pEffect, Assets::cHandle<
 
 		R[i].setZero();
 		R_dot[i].setZero();
+		R_dot[i](0) = 1;
+		R_dot[i](1) = 1;
 		R_ddot[i].setZero();
 		V_dot[i].resize(6);
 		V_dot[i].setZero();
@@ -99,18 +103,17 @@ void eae6320::SphericalJointV2::Tick(const double i_secondCountToIntegrate)
 		}
 		else
 		{
-			float a = A[i];
 			float b = B[i];
 			float c = C[i];
-			Matrix3f J;
-			J.setZero();
-			Matrix3f rrt = R[i] * R[i].transpose();
-			J = a * MatrixXf::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(R[i]) + c * rrt;
+			J_rotation[i] = MatrixXf::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(R[i]) + c * Math::ToSkewSymmetricMatrix(R[i]) * Math::ToSkewSymmetricMatrix(R[i]);
 			//std::cout << J.determinant() << std::endl <<std::endl;
+			Matrix3f A;
+			if (i == 0) A = J_rotation[i];
+			else A = R_global[i - 1] * J_rotation[i];
 			H[i].resize(6, 3);
 			H[i].setZero();
-			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * J;
-			H[i].block<3, 3>(3, 0) = J;
+			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * A;
+			H[i].block<3, 3>(3, 0) = A;
 		}
 	}
 
@@ -177,7 +180,6 @@ void eae6320::SphericalJointV2::RK3Integration(const float h)
 	};
 	ComputeR_ddotAndIntegrate(R_dot, R_dot_temp, k1, integrateRule0);
 	
-	
 	std::function<Vector3f(int)> integrateRule1 = [&](int i)->Vector3f
 	{
 		Vector3f output = R_dot[i] + h * (2.0 * k2[i] - k1[i]);
@@ -243,11 +245,11 @@ void eae6320::SphericalJointV2::ComputeR_ddotAndIntegrate(std::vector<Vector3f>&
 			Vector3f w_local = a * i_R_dot[i] - (b * i_R_dot[i]).cross(R[i]) + c * R[i].dot(i_R_dot[i]) * R[i];
 			if (i == 0)
 			{
-				w_global[i] = w_local;
+				w_global[i] = J_rotation[i] * i_R_dot[i];
 			}
 			else
 			{
-				w_global[i] = w_global[i - 1] + w_local;
+				w_global[i] = w_global[i - 1] + R_global[i - 1] * J_rotation[i] * i_R_dot[i];
 			}
 		}
 
@@ -315,7 +317,6 @@ void eae6320::SphericalJointV2::ComputeGamma(std::vector<Vector3f>& i_R_dot, std
 			o_gamma[i].setZero();
 			if (i == 0)
 			{
-				//std::cout << -w_global[i].cross(w_global[i].cross(uGlobals[i][0])) << std::endl;
 				o_gamma[i].block<3, 1>(0, 0) = -w_global[i].cross(w_global[i].cross(uGlobals[i][0]));
 			}
 			else
@@ -325,8 +326,17 @@ void eae6320::SphericalJointV2::ComputeGamma(std::vector<Vector3f>& i_R_dot, std
 		}
 		else
 		{
+			Vector3f Jdot_rdot;
+			Jdot_rdot = (C[i] * R[i].dot(i_R_dot[i]) + A_dot[i]) * i_R_dot[i] - (B_dot[i] * i_R_dot[i]).cross(R[i]) + (C_dot[i] * R[i].dot(i_R_dot[i]) + C[i] * i_R_dot[i].dot(i_R_dot[i])) * R[i];
 			Vector3f gamma_theta;
-			gamma_theta = (C[i] * R[i].dot(i_R_dot[i]) + A_dot[i]) * i_R_dot[i] - (B_dot[i] * i_R_dot[i]).cross(R[i]) + (C_dot[i] * R[i].dot(i_R_dot[i]) + C[i] * i_R_dot[i].dot(i_R_dot[i])) * R[i];
+			if (i == 0)
+			{
+				gamma_theta = Jdot_rdot;
+			}
+			else
+			{
+				gamma_theta = Math::ToSkewSymmetricMatrix(w_global[i - 1]) * R_global[i - 1] * J_rotation[i] * i_R_dot[i] + R_global[i - 1] * Jdot_rdot;
+			}
 			o_gamma[i].resize(6);
 			o_gamma[i].setZero();
 			if (i == 0)
@@ -344,21 +354,21 @@ void eae6320::SphericalJointV2::ComputeGamma(std::vector<Vector3f>& i_R_dot, std
 void eae6320::SphericalJointV2::ForwardKinematics()
 {
 	Vector3f preAnchor(0.0f, 0.0f, 0.0f);
-	Matrix3f R_global;
-	R_global.setIdentity();
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		if (rotationMode == V2_MUJOCO_MODE)
 		{
-			R_global = m_orientations[i].toRotationMatrix();
+			R_global[i] = m_orientations[i].toRotationMatrix();
 			m_linkBodys[i]->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(m_orientations[i]);//update orientation
 		}
 		else
 		{
 			Matrix3f R_local;
 			R_local = AngleAxisf(R[i].norm(), R[i].normalized());
-			R_global = R_global * R_local;
-			AngleAxisf angleAxis_global(R_global);
+			if (i == 0) R_global[i] = R_local;
+			else R_global[i] = R_global[i - 1] * R_local;
+			
+			AngleAxisf angleAxis_global(R_global[i]);
 
 			//update orientation
 			m_linkBodys[i]->m_State.orientation = Math::cQuaternion(angleAxis_global.angle(), Math::EigenVector2nativeVector(angleAxis_global.axis()));
@@ -366,18 +376,18 @@ void eae6320::SphericalJointV2::ForwardKinematics()
 		}
 		
 		//update position
-		Vector3f uGlobal0 = R_global * uLocals[i][0];
+		Vector3f uGlobal0 = R_global[i] * uLocals[i][0];
 		uGlobals[i][0] = uGlobal0;
 		Vector3f linkPos = preAnchor - uGlobal0;
 		m_linkBodys[i]->m_State.position = Math::sVector(linkPos(0), linkPos(1), linkPos(2));
 
 		//update inertia tensor
 		Matrix3f globalInertiaTensor;
-		globalInertiaTensor = R_global * localInertiaTensors[i] * R_global.transpose();
+		globalInertiaTensor = R_global[i] * localInertiaTensors[i] * R_global[i].transpose();
 		M[i].block<3, 3>(3, 3) = globalInertiaTensor;
 		
 		//get ready for the next iteration
-		Vector3f uGlobal1 = R_global * uLocals[i][1];
+		Vector3f uGlobal1 = R_global[i] * uLocals[i][1];
 		uGlobals[i][1] = uGlobal1;
 		preAnchor = linkPos + uGlobal1;
 	}

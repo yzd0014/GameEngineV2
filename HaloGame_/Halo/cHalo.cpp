@@ -71,12 +71,11 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		}
 
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
-		MultiBody * pMultiBody = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
+	/*	MultiBody * pMultiBody = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		pMultiBody->rotationMode = MUJOCO_MODE;
-		pMultiBody->controlMode = PASSIVE;
-		//GameCommon::GameObject * pGameObject = new MujocoBallJoint(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		//GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		noColliderObjects.push_back(pMultiBody);
+		pMultiBody->controlMode = PASSIVE;*/
+		GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
+		noColliderObjects.push_back(pGameObject);
 	}
 	
 	//{

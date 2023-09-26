@@ -37,6 +37,8 @@ namespace eae6320
 		std::vector<MatrixXf> D;
 		std::vector<MatrixXf> H;
 		std::vector<VectorXf> gamma;
+		std::vector<Matrix3f> J_rotation;
+		std::vector<Matrix3f> R_global;//rigidbody rotation
 
 		std::vector<Vector3f> w_global;
 		std::vector<std::vector<Vector3f>> uLocals;
@@ -54,6 +56,6 @@ namespace eae6320
 
 		float rigidBodyMass = 1.0f;
 		int numOfLinks = 2;
-		int rotationMode = V2_MUJOCO_MODE;
+		int rotationMode = V2_LOCAL_MODE;
 	};
 }
