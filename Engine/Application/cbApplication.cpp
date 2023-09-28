@@ -453,6 +453,11 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_all( const sEnt
 		EAE6320_ASSERT( false );
 		goto OnExit;
 	}
+	//initialize physics
+	{
+		//initialize gravity
+		Physics::InitializePhysics(colliderObjects, noColliderObjects);
+	}
 
 	// Start the application loop thread
 	if ( !( result = m_applicationLoopThread.Start( EntryPoint_applicationLoopThread, this ) ) )
@@ -531,7 +536,6 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 	{
 		GameplayUtility::pGameApplication = this;
 	}
-	
 OnExit:
 
 	return result;

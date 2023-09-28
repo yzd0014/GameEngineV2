@@ -30,6 +30,27 @@ namespace eae6320 {
 			}
 		}
 
+		void InitializePhysics(std::vector<GameCommon::GameObject *> & i_colliderObjects, std::vector<GameCommon::GameObject *> & i_noColliderObjects)
+		{
+			int colliderCounts = static_cast<int>(i_colliderObjects.size());
+			for (int i = 0; i < colliderCounts; i++)
+			{
+				if (i_colliderObjects[i]->m_State.hasGravity && !i_colliderObjects[i]->m_State.isStatic)
+				{
+					i_colliderObjects[i]->m_State.acceleration = Math::sVector(0.0f, -9.8f, 0.0f);
+				}
+			}
+			
+			int noColliderCounts = static_cast<int>(i_noColliderObjects.size());
+			for (size_t i = 0; i < noColliderCounts; i++)
+			{
+				if (i_noColliderObjects[i]->m_State.hasGravity && !i_noColliderObjects[i]->m_State.isStatic)
+				{
+					i_noColliderObjects[i]->m_State.acceleration = Math::sVector(0.0f, -9.8f, 0.0f);
+				}
+			}
+		}
+
 		//void RunPhysics(std::vector<GameCommon::GameObject *> & i_colliderObjects, std::vector<GameCommon::GameObject *> & i_noColliderObjects, Assets::cHandle<Mesh> i_debugMesh, Effect* i_pDebugEffect, float i_dt)
 		void RunPhysics(std::vector<GameCommon::GameObject *> & i_colliderObjects, std::vector<GameCommon::GameObject *> & i_noColliderObjects, float i_dt)
 		{
@@ -50,14 +71,14 @@ namespace eae6320 {
 				i_colliderObjects[i]->m_State.collider.UpdateTransformation(local2World, local2WorldRot);
 				if (i_colliderObjects[i]->m_State.hasGravity && !i_colliderObjects[i]->m_State.isStatic)
 				{
-					i_colliderObjects[i]->m_State.velocity += Math::sVector(0.0f, -9.8f, 0.0f) * i_dt;
+					i_colliderObjects[i]->m_State.UpdateVelocity(i_dt);
 				}
 			}
 			for (size_t i = 0; i < i_noColliderObjects.size(); i++)
 			{
 				if (i_noColliderObjects[i]->m_State.hasGravity && !i_noColliderObjects[i]->m_State.isStatic)
 				{		
-					i_noColliderObjects[i]->m_State.velocity += Math::sVector(0.0f, -9.8f, 0.0f) * i_dt;	
+					i_noColliderObjects[i]->m_State.UpdateVelocity(i_dt);
 				}
 			}
 
@@ -138,13 +159,15 @@ namespace eae6320 {
 			//integration
 			for (int i = 0; i < colliderCounts; i++)
 			{
-				i_colliderObjects[i]->m_State.Update(i_dt);
+				i_colliderObjects[i]->m_State.UpdatePosition(i_dt);
+				i_colliderObjects[i]->m_State.UpdateOrientation(i_dt);
 			}
 			for (size_t i = 0; i < i_noColliderObjects.size(); i++)
 			{
 				if (!i_noColliderObjects[i]->m_State.isStatic)
 				{
-					i_noColliderObjects[i]->m_State.Update(i_dt);
+					i_noColliderObjects[i]->m_State.UpdatePosition(i_dt);
+					i_noColliderObjects[i]->m_State.UpdateOrientation(i_dt);
 				}
 			}
 		}
