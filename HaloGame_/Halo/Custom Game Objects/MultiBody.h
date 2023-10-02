@@ -78,10 +78,14 @@ namespace eae6320
 		void ForwardKinematics();
 		_Scalar ComputeTotalEnergy();
 
+		void JointLimitCheck();
+		void ResolveJointLimit(const _Scalar h);
+
 		_Vector Rbar;//desired pos
 		_Vector R; //3nx1
 		_Vector Rdot; //3nx1
 		_Matrix Mr;
+		_Matrix MrInverse;
 		std::vector<_Matrix> Mbody;
 		std::vector<_Matrix3> localInertiaTensors;
 		std::vector<_Vector3> w_abs_world;//absolute 
@@ -112,7 +116,15 @@ namespace eae6320
 		_Scalar rigidBodyMass = 1.0f;
 		_Scalar kp = 1000000;
 		_Scalar kd = 2000;
+
+		std::vector<_Scalar> g_limit;
+		std::vector<_Vector3> bodyRotationAxis;
+		std::vector<bool> limitReached;
+		bool nonZeroLimitJacobian = false;
+		int constrainNum = 0;
 		
+		_Scalar jointLimit = 0.785f;
+
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
 		int geometry = BOX;
