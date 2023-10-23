@@ -51,6 +51,14 @@ typedef Quaternionf _Quat;
 #define PASSIVE 3
 #endif
 
+#ifndef PBD
+#define PBD 0
+#endif
+
+#ifndef IMPULSE
+#define IMPULSE 1
+#endif
+
 namespace eae6320
 {
 	class MultiBody : public eae6320::GameCommon::GameObject
@@ -62,6 +70,7 @@ namespace eae6320
 
 		int rotationMode = MUJOCO_MODE;
 		int controlMode = KINEMATIC;
+		int constraintSolverMode = IMPULSE;
 	private:
 		_Vector ComputeQr(_Vector i_R_dot, _Scalar h);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot);
@@ -80,6 +89,7 @@ namespace eae6320
 
 		void JointLimitCheck();
 		void ResolveJointLimit(const _Scalar h);
+		void ResolveJointLimitPBD(const _Scalar h);
 
 		_Vector Rbar;//desired pos
 		_Vector R; //3nx1

@@ -71,7 +71,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		std::vector<_Vector3> uPairs;
 		uPairs.resize(2);
 		//uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
-		uPairs[0] = _Vector3(0.0f, 1.5f, 0.0f);
+		uPairs[0] = _Vector3(0.0f, 1.0f, 0.0f);
 		if (i == numOfLinks - 1)
 		{
 			uPairs[1] = _Vector3(0.0f, 0.0f, 0.0f);
@@ -94,7 +94,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	Rdot.setZero();
 	Rdot(0) = -1;
 	Rdot(1) = 1;
-	Rdot(2) = 1;
+	//Rdot(2) = 1;
 	R.resize(3 * numOfLinks);
 	R.setZero();
 	//R.block<3, 1>(0, 0) = _Vector3(0.0f, float(M_PI) * 0.25f, 0.0f);
@@ -150,7 +150,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		if (rotationMode == LOCAL_MODE)
 		{
 			Compute_abc();
-			JointLimitCheck();
+			if(constraintSolverMode == IMPULSE) JointLimitCheck();
 		}
 
 		std::vector<_Matrix> H;
@@ -261,12 +261,12 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 			if (i == 0) w_rel_local[i] = Rdot.segment(i * 3, 3);
 			else  w_rel_local[i] = R_global[i - 1].transpose() * Rdot.segment(i * 3, 3);
 			
-			/*Math::QuatIntegrate(q[i], w_rel_local[i], h);*/
+			Math::QuatIntegrate(q[i], w_rel_local[i], h);
 
-			_Quat quat_w(0, w_rel_local[i](0), w_rel_local[i](1), w_rel_local[i](2));
+			/*_Quat quat_w(0, w_rel_local[i](0), w_rel_local[i](1), w_rel_local[i](2));
 			_Quat quat_dot = 0.5f * quat_w * q[i];
 			q[i] = q[i] + h * quat_dot;
-			q[i].normalize();
+			q[i].normalize();*/
 		}
 	}
 	else
@@ -286,7 +286,7 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	_Vector k4 = h * MrInverse * ComputeQr(Rdot + k3, h);
 
 	Rdot = Rdot + (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
-	//ResolveJointLimit(h);
+	ResolveJointLimit(h);
 	R = R + Rdot * h;
 }
 
@@ -298,8 +298,13 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 	_Vector k3 = h * MrInverse * ComputeQr(Rdot + 2.0 * k2 - k1, h);
 
 	Rdot = Rdot + (1.0f / 6.0f) * (k1 + 4 * k2 + k3);
-	ResolveJointLimit(h);
+	if (constraintSolverMode == IMPULSE) ResolveJointLimit(h);
 	R = R + Rdot * h;
+	if (constraintSolverMode == PBD)
+	{
+		JointLimitCheck();
+		ResolveJointLimitPBD(h);
+	}
 }
 
 _Vector eae6320::MultiBody::ComputeQr(_Vector i_R_dot, _Scalar h)
@@ -649,6 +654,7 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 		potentialEnergy = g.transpose() * Mbody[i].block<3, 3>(0, 0) * x;
 
 		energy += kineticEnergyRotation + kineticEnergyTranslaion + potentialEnergy;
+		//energy += kineticEnergyRotation + kineticEnergyTranslaion;
 	}
 	return energy;
 }
@@ -743,6 +749,51 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 		
 	/*	JV = Jacobian_allJointLimit * Rdot;
 		std::cout << JV << ", " << lambda << ", " << RdotCorrection.transpose() << std::endl << std::endl;*/
+	}
+}
+
+void eae6320::MultiBody::ResolveJointLimitPBD(const _Scalar h)
+{
+	if (nonZeroLimitJacobian)
+	{
+		_Matrix Jacobian_allJointLimit;
+		Jacobian_allJointLimit.resize(constrainNum, 3 * numOfLinks);
+		Jacobian_allJointLimit.setZero();
+
+		int j = 0;
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			if (limitReached[i])
+			{
+				limitReached[i] = false;
+				
+				_Vector3 r = R.segment(i * 3, 3);
+				_Vector3 rdot = Rdot.segment(i * 3, 3);
+				_Scalar theta = r.norm();
+				_Scalar delta = A[i] / (2 * B[i]);
+				_Scalar S;
+				if (theta < 0.0001) S = 1.0f / 12.0f + theta * theta / 720.0f;
+				else S = (1 - delta) / (theta * theta);
+
+				_Matrix Jacobian_jointLimit;
+				Jacobian_jointLimit.resize(1, 3);
+				Jacobian_jointLimit = (2 * B[i] * r.dot(bodyRotationAxis[i]) * bodyRotationAxis[i] - (2 * S * (cos(jointLimit) - cos(theta)) + A[i]) * r).transpose();
+				Jacobian_allJointLimit.block<1, 3>(j, 3 * i) = Jacobian_jointLimit;
+				j++;
+			}
+		}
+
+		_Vector C;
+		C.resize(constrainNum, 1);
+		for (int i = 0; i < constrainNum; i++)
+		{
+			C(i) = g_limit[i];
+		}
+		_Matrix lambda;
+		lambda = (Jacobian_allJointLimit * MrInverse * Jacobian_allJointLimit.transpose()).inverse() * -C;
+		_Vector R_old = R;
+		R = R + MrInverse * Jacobian_allJointLimit * lambda;
+		Rdot = (R - R_old) / h;
 	}
 }
 
