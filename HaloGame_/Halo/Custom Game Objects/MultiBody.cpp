@@ -71,7 +71,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		std::vector<_Vector3> uPairs;
 		uPairs.resize(2);
 		//uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
-		uPairs[0] = _Vector3(0.0f, 1.5f, 0.0f);
+		uPairs[0] = _Vector3(0.0f, 1.0f, 0.0f);
 		if (i == numOfLinks - 1)
 		{
 			uPairs[1] = _Vector3(0.0f, 0.0f, 0.0f);
@@ -92,8 +92,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	Rbar.setZero();
 	Rdot.resize(3 * numOfLinks);
 	Rdot.setZero();
-	Rdot(3) = -2;
-	Rdot(4) = 2;
+	Rdot(0) = -2.0f;
+	Rdot(1) = 10;
 	//Rdot(2) = 1;
 	R.resize(3 * numOfLinks);
 	R.setZero();
@@ -172,10 +172,10 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 				_Scalar b = B[i];
 				_Scalar c = C[i];
 				J_rotation[i] = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
-				/*if (J_rotation[i].determinant() < 0.00001)
+				if (J_rotation[i].determinant() < 0.0001)
 				{
-					std::cout << J_rotation[i].determinant() << std::endl << std::endl;
-				}*/
+					std::cout << "rotation singluarity reached!" << std::endl << std::endl;
+				}
 				_Matrix3 A;
 				if (i == 0) A = J_rotation[i];
 				else A = R_global[i - 1] * J_rotation[i];
@@ -183,6 +183,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 				H[i].setZero();
 				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * A;
 				H[i].block<3, 3>(3, 0) = A;
+				//std::cout << H[i].block<3, 3>(0, 0).determinant() << std::endl;
 			}
 
 			//compute D
@@ -219,6 +220,11 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 			_Matrix M_temp = Ht[i].transpose() * Mbody[i] * Ht[i];
 			Mr = Mr + M_temp;
 		}
+		if (Mr.determinant() < 0.00001)
+		{
+			std::cout << "mass matrix singluarity reached!" << std::endl << std::endl;
+			std::cout << R.norm() << std::endl;
+		}
 		if (controlMode == SPD || (rotationMode == LOCAL_MODE && (controlMode == SPD || controlMode == PD)))
 		{
 			Mr = Mr + _Matrix::Identity(3 * numOfLinks, 3 * numOfLinks) * dt * kd;
@@ -234,17 +240,15 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << ComputeTotalEnergy() << std::endl;
 
 	//post check
-	for (size_t i = 0; i < numOfLinks; i++)
+	/*for (size_t i = 0; i < numOfLinks; i++)
 	{
 		_Vector3 r = R.segment(i * 3, 3);
 		if (r.norm() > 2 * M_PI - 0.1)
 		{
 			R.segment(i * 3, 3) = R.segment(i * 3, 3) - 2 * M_PI * r.normalized();
-			std::cout << "large r!" << std::endl;
+			std::cout << "large r: " << r.norm() << ", after: " << R.segment(i * 3, 3).norm() << std::endl;
 		}
-		//std::cout << r.norm() << ", ";
-	}
-	//std::cout << std::endl;
+	}*/
 }
 
 void eae6320::MultiBody::EulerIntegration(const _Scalar h)
@@ -292,6 +296,7 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 void eae6320::MultiBody::RK3Integration(const _Scalar h)
 {
+	//std::cout << R.norm() << std::endl;
 	MrInverse = Mr.inverse();
 	_Vector k1 = h * MrInverse * ComputeQr(Rdot, h);
 	_Vector k2 = h * MrInverse * ComputeQr(Rdot + 0.5 * k1, h);
@@ -681,7 +686,7 @@ void eae6320::MultiBody::JointLimitCheck()
 			constrainNum++;
 			_Scalar angle = acos(bodyRotationAxis[i].normalized().dot(_Vector3(0, -1, 0)));
 			//std::cout << pos[i].transpose() << ", " << jointPos[i].transpose() << std::endl;
-			//std::cout << angle << std::endl;
+			std::cout << angle << std::endl;
 		/*	if (tickCountSimulated - oldTick >= 2 && oldTick != 0)
 			{
 				std::cout << angle << std::endl;
