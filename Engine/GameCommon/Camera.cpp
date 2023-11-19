@@ -147,7 +147,7 @@ void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
 			tickCount_keyIsDown += Time::tickCount_elapsedSinceLastLoop;
 		}
 		auto secondCount_keyIsDown = Time::ConvertTicksToSeconds(tickCount_keyIsDown);
-		if (secondCount_keyIsDown > 0.7)
+		if (secondCount_keyIsDown > 0.2)
 		{
 			Physics::nextSimStep = true;
 		}

@@ -36,8 +36,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	Mbody.resize(numOfLinks);
 	localInertiaTensors.resize(numOfLinks);
 	limitReached.resize(numOfLinks);
-	g_limit.resize(numOfLinks);
-	bodyRotationAxis.resize(numOfLinks);
+	g.resize(numOfLinks);
+	//bodyRotationAxis.resize(numOfLinks);
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
@@ -71,7 +71,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		std::vector<_Vector3> uPairs;
 		uPairs.resize(2);
 		//uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
-		uPairs[0] = _Vector3(0.0f, 1.0f, 0.0f);
+		uPairs[0] = _Vector3(0.0f, 1.5f, 0.0f);
 		if (i == numOfLinks - 1)
 		{
 			uPairs[1] = _Vector3(0.0f, 0.0f, 0.0f);
@@ -92,9 +92,9 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	Rbar.setZero();
 	Rdot.resize(3 * numOfLinks);
 	Rdot.setZero();
-	Rdot(0) = -2.0f;
-	Rdot(1) = 10;
-	//Rdot(2) = 1;
+	Rdot(3) = -2.0f;
+	Rdot(4) = 5.0f;
+	//Rdot(2) = 0;
 	R.resize(3 * numOfLinks);
 	R.setZero();
 	//R.block<3, 1>(0, 0) = _Vector3(0.0f, float(M_PI) * 0.25f, 0.0f);
@@ -172,10 +172,6 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 				_Scalar b = B[i];
 				_Scalar c = C[i];
 				J_rotation[i] = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
-				if (J_rotation[i].determinant() < 0.0001)
-				{
-					std::cout << "rotation singluarity reached!" << std::endl << std::endl;
-				}
 				_Matrix3 A;
 				if (i == 0) A = J_rotation[i];
 				else A = R_global[i - 1] * J_rotation[i];
@@ -222,8 +218,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		}
 		if (Mr.determinant() < 0.00001)
 		{
-			std::cout << "mass matrix singluarity reached!" << std::endl << std::endl;
-			std::cout << R.norm() << std::endl;
+			std::cout << "mass matrix singluarity reached!" << Mr.determinant() << std::endl << std::endl;
+			//std::cout << R.norm() << std::endl;
 		}
 		if (controlMode == SPD || (rotationMode == LOCAL_MODE && (controlMode == SPD || controlMode == PD)))
 		{
@@ -238,17 +234,29 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	ForwardKinematics();
 	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << ComputeTotalEnergy() << std::endl;
+}
 
-	//post check
-	/*for (size_t i = 0; i < numOfLinks; i++)
+void eae6320::MultiBody::ClampRotationVector()
+{
+	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		_Vector3 r = R.segment(i * 3, 3);
-		if (r.norm() > 2 * M_PI - 0.1)
+		_Scalar theta = r.norm();
+		if (theta > M_PI)
 		{
-			R.segment(i * 3, 3) = R.segment(i * 3, 3) - 2 * M_PI * r.normalized();
-			std::cout << "large r: " << r.norm() << ", after: " << R.segment(i * 3, 3).norm() << std::endl;
+			_Scalar eta = (_Scalar)(1.0f - 2.0f * M_PI / theta);
+			
+			//reparameterize position
+			std::cout << "rotation vector clamped" << std::endl;
+			R.segment(i * 3, 3) = eta * r;
+			//std::cout << "large r: " << r.transpose() << ", after: " << R.segment(i * 3, 3).transpose() << std::endl;
+
+			//reparameterize velocity
+			_Vector3 r_dot = Rdot.segment(i * 3, 3);
+			_Vector3 r_dot_new = eta * r_dot + 2 * M_PI * (r.dot(r_dot) / pow(theta, 3)) * r;
+			Rdot.segment(i * 3, 3) = r_dot_new;
 		}
-	}*/
+	}
 }
 
 void eae6320::MultiBody::EulerIntegration(const _Scalar h)
@@ -276,6 +284,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	else
 	{
 		R = R + Rdot * h;
+		ClampRotationVector();
 	}
 	
 }
@@ -290,13 +299,13 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	_Vector k4 = h * MrInverse * ComputeQr(Rdot + k3, h);
 
 	Rdot = Rdot + (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
-	ResolveJointLimit(h);
+	if (constraintSolverMode == IMPULSE) ResolveJointLimit(h);
 	R = R + Rdot * h;
+	ClampRotationVector();
 }
 
 void eae6320::MultiBody::RK3Integration(const _Scalar h)
 {
-	//std::cout << R.norm() << std::endl;
 	MrInverse = Mr.inverse();
 	_Vector k1 = h * MrInverse * ComputeQr(Rdot, h);
 	_Vector k2 = h * MrInverse * ComputeQr(Rdot + 0.5 * k1, h);
@@ -305,6 +314,7 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 	Rdot = Rdot + (1.0f / 6.0f) * (k1 + 4 * k2 + k3);
 	if (constraintSolverMode == IMPULSE) ResolveJointLimit(h);
 	R = R + Rdot * h;
+	ClampRotationVector();
 	if (constraintSolverMode == PBD)
 	{
 		JointLimitCheck();
@@ -540,20 +550,10 @@ void eae6320::MultiBody::Compute_abc()
 		_Vector3 r = R.segment(i * 3, 3);
 		//update a b c
 		_Scalar theta = r.norm();
-		_Scalar a;
-		if (theta < 0.0001) a = 1.0f - theta * theta / 6.0f;
-		else a = sin(theta) / theta;
-		A[i] = a;
-
-		_Scalar b;
-		if (theta < 0.0001) b = 0.5f - theta * theta / 24.0f;
-		else b = (1.0f - cos(theta)) / (theta * theta);
-		B[i] = b;
-
-		_Scalar c;
-		if (theta < 0.0001) c = 1.0f / 6.0f - theta * theta / 120.0f;
-		else c = (1.0f - a) / (theta * theta);
-		C[i] = c;
+		
+		A[i] = Compute_a(theta);
+		B[i] = Compute_b(theta);
+		C[i] = Compute_c(theta, A[i]);
 	}
 }
 
@@ -561,6 +561,7 @@ void eae6320::MultiBody::ForwardKinematics()
 {
 	_Vector3 preAnchor;
 	Math::NativeVector2EigenVector(m_State.position, preAnchor);
+	jointPos[0] = preAnchor;
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		//update orientation
@@ -658,8 +659,8 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 		Math::NativeVector2EigenVector(m_linkBodys[i]->m_State.position, x);
 		potentialEnergy = g.transpose() * Mbody[i].block<3, 3>(0, 0) * x;
 
-		energy += kineticEnergyRotation + kineticEnergyTranslaion + potentialEnergy;
-		//energy += kineticEnergyRotation + kineticEnergyTranslaion;
+		//energy += kineticEnergyRotation + kineticEnergyTranslaion + potentialEnergy;
+		energy += kineticEnergyRotation + kineticEnergyTranslaion;
 	}
 	return energy;
 }
@@ -669,29 +670,27 @@ void eae6320::MultiBody::JointLimitCheck()
 	static int oldTick = 0;
 	tickCountSimulated++;
 	nonZeroLimitJacobian = false;
-	constrainNum = 0;
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		limitReached[i] = false;
+	}
+	jointsID.clear();
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		_Vector3 r = R.segment(i * 3, 3);
 		_Scalar theta = r.norm();
-		bodyRotationAxis[i] = (pos[i] - jointPos[i]).normalized();
-		//std::cout << p << std::endl;
 		
-		g_limit[i] = cos(theta) + B[i] * (r.dot(bodyRotationAxis[i])) * (r.dot(bodyRotationAxis[i])) - cos(jointLimit);
-		if (g_limit[i] < 0)
+		_Vector3 p = _Vector3(0, -1, 0);
+		g[i] = cos(theta) + B[i] * (r.dot(p)) * (r.dot(p)) - cos(jointLimit);
+		if (g[i] < 0)
 		{
-			//std::cout << g_limit[i] << std::endl;
-			limitReached[i] = true;
+			std::cout << i << "," << p.transpose() << std::endl;
+ 			limitReached[i] = true;
 			nonZeroLimitJacobian = true;
-			constrainNum++;
-			_Scalar angle = acos(bodyRotationAxis[i].normalized().dot(_Vector3(0, -1, 0)));
-			//std::cout << pos[i].transpose() << ", " << jointPos[i].transpose() << std::endl;
-			std::cout << angle << std::endl;
-		/*	if (tickCountSimulated - oldTick >= 2 && oldTick != 0)
-			{
-				std::cout << angle << std::endl;
-			}
-			oldTick = tickCountSimulated;*/
+			jointsID.push_back(i);
+			//_Scalar angle = acos(bodyRotationAxis[i].normalized().dot(_Vector3(0, -1, 0)));
+			//std::cout << angle << std::endl;
+			//Physics::simPause = true;
 		}
 	}
 }
@@ -700,12 +699,13 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 {
 	if (nonZeroLimitJacobian)
 	{
+		size_t constraintNum = jointsID.size();
 		_Matrix Jacobian_allJointLimit;
-		Jacobian_allJointLimit.resize(constrainNum, 3 * numOfLinks);
+		Jacobian_allJointLimit.resize(constraintNum, 3 * numOfLinks);
 		Jacobian_allJointLimit.setZero();
 		
 		_Vector b;
-		b.resize(constrainNum);
+		b.resize(constraintNum);
 		b.setZero();
 		int j = 0;
 		for (int i = 0; i < numOfLinks; i++)
@@ -717,21 +717,24 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 				_Vector3 r = R.segment(i * 3, 3);
 				_Vector3 rdot = Rdot.segment(i * 3, 3);
 				_Scalar theta = r.norm();
-				_Scalar delta = A[i] / (2 * B[i]);
-				_Scalar S;
-				if (theta < 0.0001) S = 1.0f / 12.0f + theta * theta / 720.0f;
-				else S = (1 - delta) / (theta * theta);
+				_Scalar s = Compute_s(theta, A[i], B[i]);
 
+				_Vector3 p = _Vector3(0, -1, 0);
+				if (i > 0)
+				{
+					_Matrix3 rotationParent = R_global[i - 1];
+					p = rotationParent.inverse() * p;
+				}				
 				_Matrix Jacobian_jointLimit;
 				Jacobian_jointLimit.resize(1, 3);
-				Jacobian_jointLimit = (2 * B[i] * r.dot(bodyRotationAxis[i]) * bodyRotationAxis[i] - (2 * S * (cos(jointLimit) - cos(theta)) + A[i]) * r).transpose();
+				Jacobian_jointLimit = (2 * B[i] * r.dot(p) * p - (2 * s * (cos(jointLimit) - cos(theta)) + A[i]) * r).transpose();
 				Jacobian_allJointLimit.block<1, 3>(j, 3 * i) = Jacobian_jointLimit;
 
 				_Matrix JV = Jacobian_jointLimit * rdot;
 				_Scalar beta = 0.2f;//0.4f;
 				_Scalar CR = 0.4f;// 0.2f;
 				_Scalar SlopP = 0.001f;
-				b(j) = -beta / h * std::max(-g_limit[i], 0.0f) - CR * std::max(-JV(0, 0), 0.0f);
+				b(j) = -beta / h * std::max(-g[i], 0.0f) - CR * std::max(-JV(0, 0), 0.0f);
 
 				j++;
 			}
@@ -742,7 +745,7 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 		/*JV = Jacobian_allJointLimit * Rdot;
 		std::cout << JV << ", " << lambda << std::endl;*/
 
-		for (int i = 0; i < constrainNum; i++)
+		for (int i = 0; i < constraintNum; i++)
 		{
 			if (lambda(i, 0) < 0) lambda(i, 0) = 0;
 		}
@@ -759,44 +762,43 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 
 void eae6320::MultiBody::ResolveJointLimitPBD(const _Scalar h)
 {
-	if (nonZeroLimitJacobian)
+	size_t constraintNum = jointsID.size();
+	if (constraintNum > 0)
 	{
-		_Matrix Jacobian_allJointLimit;
-		Jacobian_allJointLimit.resize(constrainNum, 3 * numOfLinks);
-		Jacobian_allJointLimit.setZero();
+		_Matrix J;
+		J.resize(constraintNum, 3 * numOfLinks);
+		J.setZero();
 
-		_Vector C;
-		C.resize(constrainNum, 1);
-		int j = 0;
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			if (limitReached[i])
-			{
-				limitReached[i] = false;
-				
-				_Vector3 r = R.segment(i * 3, 3);
-				_Vector3 rdot = Rdot.segment(i * 3, 3);
-				_Scalar theta = r.norm();
-				_Scalar delta = A[i] / (2 * B[i]);
-				_Scalar S;
-				if (theta < 0.0001) S = 1.0f / 12.0f + theta * theta / 720.0f;
-				else S = (1 - delta) / (theta * theta);
-
-				_Matrix Jacobian_jointLimit;
-				Jacobian_jointLimit.resize(1, 3);
-				Jacobian_jointLimit = (2 * B[i] * r.dot(bodyRotationAxis[i]) * bodyRotationAxis[i] - (2 * S * (cos(jointLimit) - cos(theta)) + A[i]) * r).transpose();
-				Jacobian_allJointLimit.block<1, 3>(j, 3 * i) = Jacobian_jointLimit;
-				C(j) = g_limit[i];
-				j++;
-			}
-		}
-
-		_Matrix lambda;
-		lambda = (Jacobian_allJointLimit * MrInverse * Jacobian_allJointLimit.transpose()).inverse() * -C;
 		_Vector R_old = R;
-		_Vector R_correction = MrInverse * Jacobian_allJointLimit.transpose() * lambda;
-		//std::cout << R_correction << std::endl;
-		R = R + R_correction;
+		int iterationNum = 1;
+		for (int i = 0; i < iterationNum; i++)
+		{
+			_Vector C;
+			C.resize(constraintNum, 1);
+
+			//construct total Jacobian matrix
+			for (size_t i = 0; i < constraintNum; i++)
+			{
+				size_t joint_id = jointsID[i];
+				_Vector3 r = R.segment(joint_id * 3, 3);
+				_Scalar theta = r.norm();
+
+				_Scalar a = Compute_a(theta);
+				_Scalar b = Compute_b(theta);
+				_Scalar s = Compute_s(theta, a, b);
+				_Vector3 p = _Vector3(0, -1, 0);
+				J.block<1, 3>(i, 3 * joint_id) = (2 * b * r.dot(p) * p - (2 * s * (cos(jointLimit) - cos(theta)) + a) * r).transpose();
+				C(i) = cos(theta) + b * (r.dot(p)) * (r.dot(p)) - cos(jointLimit);
+			}
+
+			_Matrix A = J * MrInverse * J.transpose();
+			_Matrix lambda = A.inverse() * -C;
+
+			_Vector R_correction = MrInverse * J.transpose() * lambda;
+			//std::cout << R_correction.transpose() << std::endl;
+			//JointLimitCheck();
+			R = R + R_correction;
+		}
 		Rdot = (R - R_old) / h;
 	}
 }

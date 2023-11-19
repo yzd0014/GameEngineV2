@@ -70,7 +70,7 @@ namespace eae6320
 
 		int rotationMode = MUJOCO_MODE;
 		int controlMode = KINEMATIC;
-		int constraintSolverMode = -1;
+		int constraintSolverMode = PBD;
 	private:
 		_Vector ComputeQr(_Vector i_R_dot, _Scalar h);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot);
@@ -85,6 +85,7 @@ namespace eae6320
 		void RK3Integration(const _Scalar h);
 
 		void ForwardKinematics();
+		void ClampRotationVector();
 		_Scalar ComputeTotalEnergy();
 
 		void JointLimitCheck();
@@ -102,7 +103,7 @@ namespace eae6320
 		std::vector<_Vector3> w_rel_world;//relative
 		std::vector<_Vector3> w_rel_local;
 		std::vector<_Vector3> vel;
-		std::vector<_Vector3> pos;
+		std::vector<_Vector3> pos;//rigid body center of mass
 		std::vector<_Vector3> jointPos;
 		std::vector<std::vector<_Vector3>> uLocals;//object
 		std::vector<std::vector<_Vector3>> uGlobals;//world
@@ -127,16 +128,50 @@ namespace eae6320
 		_Scalar kp = 1000000;
 		_Scalar kd = 2000;
 
-		std::vector<_Scalar> g_limit;
-		std::vector<_Vector3> bodyRotationAxis;
+		std::vector<_Scalar> g;
+		//std::vector<_Vector3> bodyRotationAxis;
 		std::vector<bool> limitReached;
+		std::vector<int> jointsID;
 		bool nonZeroLimitJacobian = false;
-		int constrainNum = 0;
 		
 		_Scalar jointLimit = 0.785f;
 
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
 		int geometry = BOX;
+
+/*******************************************************************************************/
+		inline _Scalar Compute_a(_Scalar theta)
+		{
+			_Scalar alpha;
+			if (theta < 0.0001) alpha = 1.0f - theta * theta / 6.0f;
+			else alpha = sin(theta) / theta;
+
+			return alpha;
+		}
+		inline _Scalar Compute_b(_Scalar theta)
+		{
+			_Scalar beta;
+			if (theta < 0.0001) beta = 0.5f - theta * theta / 24.0f;
+			else beta = (1.0f - cos(theta)) / (theta * theta);
+
+			return beta;
+		}
+		inline _Scalar Compute_c(_Scalar theta, _Scalar i_alpha)
+		{
+			_Scalar gamma;
+			if (theta < 0.0001) gamma = 1.0f / 6.0f - theta * theta / 120.0f;
+			else gamma = (1.0f - i_alpha) / (theta * theta);
+
+			return gamma;
+		}
+		inline _Scalar Compute_s(_Scalar theta, _Scalar i_a, _Scalar i_b)
+		{
+			_Scalar zeta;
+			if (theta < 0.0001) zeta = 1.0f / 12.0f + theta * theta / 720.0f;
+			else zeta = (1 - i_a / (2 * i_b)) / (theta * theta);
+
+			return zeta;
+		}
 	};
 }
