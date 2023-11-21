@@ -96,6 +96,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//Rdot(2) = 0;
 	R.resize(3 * numOfLinks);
 	R.setZero();
+	R_new.resize(3 * numOfLinks);
+	R_new.setZero();
 	//R.block<3, 1>(0, 0) = _Vector3(0.0f, float(M_PI) * 0.25f, 0.0f);
 	//R.block<3, 1>(3, 0) = _Vector3(0.0f, float(M_PI) * 0.25f, 0.0f);
 
@@ -315,13 +317,14 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 		JointLimitCheck();
 		ResolveJointLimit(h);
 	}
-	R = R + Rdot * h;
-	ClampRotationVector();
+	R_new = R + Rdot * h;
 	if (constraintSolverMode == PBD)
 	{
 		JointLimitCheck();
 		ResolveJointLimitPBD(h);
 	}
+	R = R_new;
+	ClampRotationVector();
 }
 
 _Vector eae6320::MultiBody::ComputeQr(_Vector i_R_dot, _Scalar h)
@@ -740,7 +743,6 @@ void eae6320::MultiBody::ResolveJointLimitPBD(const _Scalar h)
 		J.resize(constraintNum, 3 * numOfLinks);
 		J.setZero();
 
-		_Vector R_old = R;
 		int iterationNum = 1;
 		for (int i = 0; i < iterationNum; i++)
 		{
@@ -766,10 +768,10 @@ void eae6320::MultiBody::ResolveJointLimitPBD(const _Scalar h)
 			_Matrix lambda = A.inverse() * -C;
 
 			_Vector R_correction = MrInverse * J.transpose() * lambda;
-			R = R + R_correction;
+			R_new = R_new + R_correction;
 			ForwardKinematics();
 		}
-		Rdot = (R - R_old) / h;
+		Rdot = (R_new - R) / h;
 	}
 }
 

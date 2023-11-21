@@ -70,7 +70,7 @@ namespace eae6320
 
 		int rotationMode = MUJOCO_MODE;
 		int controlMode = KINEMATIC;
-		int constraintSolverMode = IMPULSE;
+		int constraintSolverMode = PBD;
 	private:
 		_Vector ComputeQr(_Vector i_R_dot, _Scalar h);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot);
@@ -95,6 +95,7 @@ namespace eae6320
 		_Vector Rbar;//desired pos
 		_Vector R; //3nx1
 		_Vector Rdot; //3nx1
+		_Vector R_new;
 		_Matrix Mr;
 		_Matrix MrInverse;
 		std::vector<_Matrix> Mbody;
