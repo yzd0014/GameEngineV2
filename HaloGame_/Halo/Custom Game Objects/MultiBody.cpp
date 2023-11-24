@@ -35,9 +35,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	Mr.resize(3 * numOfLinks, 3 * numOfLinks);
 	Mbody.resize(numOfLinks);
 	localInertiaTensors.resize(numOfLinks);
-	//limitReached.resize(numOfLinks);
 	g.resize(numOfLinks);
-	//bodyRotationAxis.resize(numOfLinks);
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
@@ -179,7 +177,6 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 				H[i].setZero();
 				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * A;
 				H[i].block<3, 3>(3, 0) = A;
-				//std::cout << H[i].block<3, 3>(0, 0).determinant() << std::endl;
 			}
 
 			//compute D
@@ -219,7 +216,6 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		if (Mr.determinant() < 0.00001)
 		{
 			std::cout << "mass matrix singluarity reached!" << Mr.determinant() << std::endl << std::endl;
-			//std::cout << R.norm() << std::endl;
 		}
 		if (controlMode == SPD || (rotationMode == LOCAL_MODE && (controlMode == SPD || controlMode == PD)))
 		{
@@ -249,7 +245,6 @@ void eae6320::MultiBody::ClampRotationVector()
 			//reparameterize position
 			std::cout << "rotation vector clamped" << std::endl;
 			R.segment(i * 3, 3) = eta * r;
-			//std::cout << "large r: " << r.transpose() << ", after: " << R.segment(i * 3, 3).transpose() << std::endl;
 
 			//reparameterize velocity
 			_Vector3 r_dot = Rdot.segment(i * 3, 3);
@@ -299,7 +294,6 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	_Vector k4 = h * MrInverse * ComputeQr(Rdot + k3, h);
 
 	Rdot = Rdot + (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
-	if (constraintSolverMode == IMPULSE) ResolveJointLimit(h);
 	R = R + Rdot * h;
 	ClampRotationVector();
 }
@@ -343,10 +337,10 @@ _Vector eae6320::MultiBody::ComputeQr(_Vector i_R_dot, _Scalar h)
 		_Vector Fe;
 		Fe.resize(6);
 		Fe.setZero();
-		/*if (controlMode == PASSIVE)
+		if (controlMode == PASSIVE && gravity)
 		{
 			Fe.block<3, 1>(0, 0) = _Vector3(0.0f, -9.81f, 0.0f);
-		}*/
+		}
 		_Vector Fv;
 		Fv.resize(6);
 		Fv.setZero();
@@ -664,8 +658,8 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 		Math::NativeVector2EigenVector(m_linkBodys[i]->m_State.position, x);
 		potentialEnergy = g.transpose() * Mbody[i].block<3, 3>(0, 0) * x;
 
-		//energy += kineticEnergyRotation + kineticEnergyTranslaion + potentialEnergy;
-		energy += kineticEnergyRotation + kineticEnergyTranslaion;
+		if (gravity) energy += kineticEnergyRotation + kineticEnergyTranslaion + potentialEnergy;
+		else energy += kineticEnergyRotation + kineticEnergyTranslaion;
 	}
 	return energy;
 }
@@ -682,11 +676,7 @@ void eae6320::MultiBody::JointLimitCheck()
 		g[i] = cos(theta) + B[i] * (r.dot(p)) * (r.dot(p)) - cos(jointLimit);
 		if (g[i] < 0)
 		{
-			//std::cout << i << "," << p.transpose() << std::endl;
 			jointsID.push_back(i);
-			//_Scalar angle = acos(bodyRotationAxis[i].normalized().dot(_Vector3(0, -1, 0)));
-			//std::cout << angle << std::endl;
-			//Physics::simPause = true;
 		}
 	}
 }

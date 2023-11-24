@@ -71,6 +71,7 @@ namespace eae6320
 		int rotationMode = MUJOCO_MODE;
 		int controlMode = KINEMATIC;
 		int constraintSolverMode = PBD;
+		bool gravity = FALSE;
 	private:
 		_Vector ComputeQr(_Vector i_R_dot, _Scalar h);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot);
@@ -130,8 +131,6 @@ namespace eae6320
 		_Scalar kd = 2000;
 
 		std::vector<_Scalar> g;
-		//std::vector<_Vector3> bodyRotationAxis;
-		//std::vector<bool> limitReached;
 		std::vector<int> jointsID;
 		
 		_Scalar jointLimit = 0.785f;
