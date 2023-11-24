@@ -743,7 +743,7 @@ void eae6320::MultiBody::ResolveJointLimitPBD(const _Scalar h)
 			for (size_t i = 0; i < constraintNum; i++)
 			{
 				size_t joint_id = jointsID[i];
-				_Vector3 r = R.segment(joint_id * 3, 3);
+				_Vector3 r = R_new.segment(joint_id * 3, 3);
 				_Scalar theta = r.norm();
 
 				_Scalar a = Compute_a(theta);
