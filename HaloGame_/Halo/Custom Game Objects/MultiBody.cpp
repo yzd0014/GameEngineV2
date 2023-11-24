@@ -759,7 +759,6 @@ void eae6320::MultiBody::ResolveJointLimitPBD(const _Scalar h)
 
 			_Vector R_correction = MrInverse * J.transpose() * lambda;
 			R_new = R_new + R_correction;
-			ForwardKinematics();
 		}
 		Rdot = (R_new - R) / h;
 	}
