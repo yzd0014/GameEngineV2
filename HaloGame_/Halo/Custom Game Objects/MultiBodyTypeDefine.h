@@ -14,21 +14,6 @@
 #define BALL 1
 #endif
 
-#ifndef KINEMATIC
-#define KINEMATIC 0
-#endif
-#ifndef PD
-#define PD 1
-#endif
-
-#ifndef SPD
-#define SPD 2
-#endif
-
-#ifndef PASSIVE
-#define PASSIVE 3
-#endif
-
 #ifndef PBD
 #define PBD 0
 #endif

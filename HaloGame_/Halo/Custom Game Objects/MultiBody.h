@@ -33,7 +33,6 @@ namespace eae6320
 		void UpdateGameObjectBasedOnInput() override;
 
 		int rotationMode = MUJOCO_MODE;
-		int controlMode = KINEMATIC;
 		int constraintSolverMode = PBD;
 		bool gravity = FALSE;
 	private:
@@ -61,7 +60,8 @@ namespace eae6320
 		void ResolveJointLimit(const _Scalar h);
 		void ResolveJointLimitPBD(const _Scalar h);
 
-		_Vector Rbar;//desired pos
+		//std::vector<_Vector> q;
+		//std::vector<_Vector> qdot;
 		_Vector R; //3nx1
 		_Vector Rdot; //3nx1
 		_Vector R_new;
@@ -91,9 +91,8 @@ namespace eae6320
 		std::vector<_Matrix> Ht;
 		std::vector<_Matrix> H;
 		
-		std::vector<_Quat> m_orientations;
-		std::vector<_Quat> q;//relative rotation to parent for each body
-		std::vector<_Quat> qbar;
+		std::vector<_Quat> obs_ori;
+		std::vector<_Quat> rel_ori;//relative rotation to parent for each body
 		std::vector<GameCommon::GameObject *> m_linkBodys;
 		_Scalar rigidBodyMass = 1.0f;
 		_Scalar kp = 1000000;

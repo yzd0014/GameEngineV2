@@ -19,9 +19,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	vel.resize(numOfLinks);
 	pos.resize(numOfLinks);
 	jointPos.resize(numOfLinks);
-	m_orientations.resize(numOfLinks);
-	q.resize(numOfLinks);
-	qbar.resize(numOfLinks);
+	obs_ori.resize(numOfLinks);
+	rel_ori.resize(numOfLinks);
 	A.resize(numOfLinks);
 	B.resize(numOfLinks);
 	C.resize(numOfLinks);
@@ -45,9 +44,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		vel[i].setZero();
 		jointPos[i].setZero();
 		pos[i].setZero();
-		m_orientations[i].setIdentity();
-		q[i].setIdentity();
-		qbar[i].setIdentity();
+		obs_ori[i].setIdentity();
+		rel_ori[i].setIdentity();
 		R_global[i].setIdentity();
 		_Matrix M_d;
 		M_d.resize(6, 6);
@@ -86,8 +84,6 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	
 	//uLocals[0][0] = _Vector3(1.0f, -1.0f, -1.0f);
 
-	Rbar.resize(6);
-	Rbar.setZero();
 	Rdot.resize(3 * numOfLinks);
 	Rdot.setZero();
 	Rdot(3) = -2.0f;
@@ -108,50 +104,10 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Scalar dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 
-	{//compute target pose
-		//_Scalar c = 10;
-		_Scalar c = 10;
-	/*	Rbar(0) = sin(c*t);
-		Rbar(1) = -sin(c*t);
-		Rbar(4) = -sin(c*t);
-		Rbar(5) = sin(c*t);*/
-		Rbar(0) = 1;
-		Rbar(1) = -1;
-		Rbar(4) = -1;
-		Rbar(5) = 1;
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			_Vector3 r_bar = Rbar.segment(i * 3, 3);
-#if defined (HIGH_PRECISION_MODE)
-			Quaterniond quat_target(AngleAxisd(r_bar.norm(), r_bar.normalized()));
-#else
-			Quaternionf quat_target(AngleAxisf(r_bar.norm(), r_bar.normalized()));
-#endif	
-			qbar[i] = quat_target;
-		}
-	}
-	if (controlMode == KINEMATIC)
-	{
-		if (rotationMode == LOCAL_MODE) 
-		{
-			R = Rbar;
-		}
-		else if (rotationMode == MUJOCO_MODE)
-		{
-			for (int i = 0; i < numOfLinks; i++)
-			{
-				q[i] = qbar[i];
-				q[i].normalize();
-			}
-		}
-	}
-	else
-	{
-		//EulerIntegration(dt);
-		RK3Integration(dt);
-		//RK4Integration(dt);
-	}
-	
+	//EulerIntegration(dt);
+	RK3Integration(dt);
+	//RK4Integration(dt);
+
 	ForwardKinematics();
 	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << ComputeTotalEnergy() << std::endl;
@@ -194,7 +150,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 			if (i == 0) w_rel_local[i] = Rdot.segment(i * 3, 3);
 			else  w_rel_local[i] = R_global[i - 1].transpose() * Rdot.segment(i * 3, 3);
 			
-			Math::QuatIntegrate(q[i], w_rel_local[i], h);
+			Math::QuatIntegrate(rel_ori[i], w_rel_local[i], h);
 
 			/*_Quat quat_w(0, w_rel_local[i](0), w_rel_local[i](1), w_rel_local[i](2));
 			_Quat quat_dot = 0.5f * quat_w * q[i];
@@ -336,10 +292,6 @@ void eae6320::MultiBody::ComputeMr(_Scalar h)
 	{
 		std::cout << "mass matrix singluarity reached!" << Mr.determinant() << std::endl << std::endl;
 	}
-	if (controlMode == SPD || (rotationMode == LOCAL_MODE && (controlMode == SPD || controlMode == PD)))
-	{
-		Mr = Mr + _Matrix::Identity(3 * numOfLinks, 3 * numOfLinks) * h * kd;
-	}
 }
 
 _Vector eae6320::MultiBody::ComputeQr(_Vector i_R_dot, _Scalar h)
@@ -358,7 +310,7 @@ _Vector eae6320::MultiBody::ComputeQr(_Vector i_R_dot, _Scalar h)
 		_Vector Fe;
 		Fe.resize(6);
 		Fe.setZero();
-		if (controlMode == PASSIVE && gravity)
+		if (gravity)
 		{
 			Fe.block<3, 1>(0, 0) = _Vector3(0.0f, -9.81f, 0.0f);
 		}
@@ -371,42 +323,6 @@ _Vector eae6320::MultiBody::ComputeQr(_Vector i_R_dot, _Scalar h)
 		Q_temp.setZero();
 		Q_temp = Ht[i].transpose() * (Fe + Fv - Mbody[i] * gamma_t[i]);
 		Qr = Qr + Q_temp;
-	}
-	if (rotationMode == MUJOCO_MODE && (controlMode == PD || controlMode == SPD))
-	{
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			_Quat curr_q;
-			if (controlMode == PD)
-			{
-				curr_q = q[i];
-			}
-			else if (controlMode == SPD)
-			{
-				curr_q = q[i];
-				Math::QuatIntegrate(curr_q, w_rel_local[i], h);
-			}
-			
-			_Quat delta_q = qbar[i] * curr_q.inverse();
-			delta_q.normalize();
-#if defined (HIGH_PRECISION_MODE)		
-			AngleAxisd rotationVector(delta_q);
-#else
-			AngleAxisf rotationVector(delta_q);
-#endif	
-			_Vector3 posError = rotationVector.angle() * rotationVector.axis();
-			if (i > 0)
-			{
-				posError = R_global[i - 1] * posError;
-			}
-			Qr.segment(i * 3, 3) = Qr.segment(i * 3, 3) + kp * posError - kd * Rdot.segment(i * 3, 3);
-		}
-	}
-	else if (rotationMode == LOCAL_MODE && (controlMode == PD || controlMode == SPD))
-	{
-		_Vector curr_pos = R + h * Rdot;
-		_Vector posError = Rbar - curr_pos;
-		Qr = Qr + kp * posError - kd * Rdot;
 	}
 
 	return Qr;
@@ -589,14 +505,14 @@ void eae6320::MultiBody::ForwardKinematics()
 		{
 			if (i == 0)
 			{
-				m_orientations[i] = q[i];
+				obs_ori[i] = rel_ori[i];
 			}
 			else
 			{
-				m_orientations[i] = m_orientations[i - 1] * q[i];
+				obs_ori[i] = obs_ori[i - 1] * rel_ori[i];
 			}
-			R_global[i] = m_orientations[i].toRotationMatrix();
-			m_linkBodys[i]->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(m_orientations[i]);
+			R_global[i] = obs_ori[i].toRotationMatrix();
+			m_linkBodys[i]->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(obs_ori[i]);
 		}
 		else if (rotationMode == LOCAL_MODE)
 		{
