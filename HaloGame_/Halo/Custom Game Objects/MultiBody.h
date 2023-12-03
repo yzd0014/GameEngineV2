@@ -73,6 +73,10 @@ namespace eae6320
 		int constraintSolverMode = PBD;
 		bool gravity = FALSE;
 	private:
+		void ComputeMr(_Scalar h);
+		void ComputeHt();
+		void ComputeH();
+		void ComputeD();
 		_Vector ComputeQr(_Vector i_R_dot, _Scalar h);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot);
 		
@@ -121,6 +125,7 @@ namespace eae6320
 		std::vector<_Matrix3> J_rotation;//jotation jabobian matrix
 		std::vector<_Matrix> D;
 		std::vector<_Matrix> Ht;
+		std::vector<_Matrix> H;
 		
 		std::vector<_Quat> m_orientations;
 		std::vector<_Quat> q;//relative rotation to parent for each body

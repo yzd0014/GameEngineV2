@@ -32,6 +32,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	J_rotation.resize(numOfLinks);
 	D.resize(numOfLinks);
 	Ht.resize(numOfLinks);
+	H.resize(numOfLinks);
 	Mr.resize(3 * numOfLinks, 3 * numOfLinks);
 	Mbody.resize(numOfLinks);
 	localInertiaTensors.resize(numOfLinks);
@@ -146,82 +147,6 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	}
 	else
 	{
-		if (rotationMode == LOCAL_MODE)
-		{
-			Compute_abc();
-		}
-
-		std::vector<_Matrix> H;
-		H.resize(numOfLinks);
-		for (size_t i = 0; i < numOfLinks; i++)
-		{
-			//compute H
-			if (rotationMode == MUJOCO_MODE)
-			{
-				H[i].resize(6, 3);
-				H[i].setZero();
-				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]);
-				H[i].block<3, 3>(3, 0) = _Matrix::Identity(3, 3);
-			}
-			else
-			{
-				_Vector3 r = R.segment(i * 3, 3);
-
-				_Scalar b = B[i];
-				_Scalar c = C[i];
-				J_rotation[i] = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
-				_Matrix3 A;
-				if (i == 0) A = J_rotation[i];
-				else A = R_global[i - 1] * J_rotation[i];
-				H[i].resize(6, 3);
-				H[i].setZero();
-				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * A;
-				H[i].block<3, 3>(3, 0) = A;
-			}
-
-			//compute D
-			if (i > 0)
-			{
-				D[i].resize(6, 6);
-				D[i].setIdentity();
-				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) - Math::ToSkewSymmetricMatrix(uGlobals[i - 1][1]);
-				
-			}
-		}
-		/**********************************************************************************************************/
-		for (size_t i = 0; i < numOfLinks; i++)
-		{
-			//compose Ht
-			Ht[i].resize(6, 3 * numOfLinks);
-			Ht[i].setZero();
-			for (size_t k = 0; k <= i; k++)
-			{
-				_Matrix H_temp;
-				H_temp.resize(6, 3);
-				H_temp = H[k];
-				for (size_t j = k + 1; j <= i; j++)
-				{
-					H_temp = D[j] * H_temp;
-				}
-				Ht[i].block<6, 3>(0, 3 * k) = H_temp;
-			}
-		}
-		/**********************************************************************************************************/
-		Mr.setZero();
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			_Matrix M_temp = Ht[i].transpose() * Mbody[i] * Ht[i];
-			Mr = Mr + M_temp;
-		}
-		if (Mr.determinant() < 0.00001)
-		{
-			std::cout << "mass matrix singluarity reached!" << Mr.determinant() << std::endl << std::endl;
-		}
-		if (controlMode == SPD || (rotationMode == LOCAL_MODE && (controlMode == SPD || controlMode == PD)))
-		{
-			Mr = Mr + _Matrix::Identity(3 * numOfLinks, 3 * numOfLinks) * dt * kd;
-		}
-		/**********************************************************************************************************/
 		//EulerIntegration(dt);
 		RK3Integration(dt);
 		//RK4Integration(dt);
@@ -256,8 +181,9 @@ void eae6320::MultiBody::ClampRotationVector()
 
 void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 {
-	_Vector Qr = ComputeQr(Rdot, h);
+	ComputeMr(h);
 	MrInverse = Mr.inverse();
+	_Vector Qr = ComputeQr(Rdot, h);
 	_Vector R_ddot = MrInverse * Qr;
 
 	Rdot = Rdot + R_ddot * h;
@@ -286,6 +212,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
 {
+	ComputeMr(h);
 	MrInverse = Mr.inverse();
 	
 	_Vector k1 = h * MrInverse * ComputeQr(Rdot, h);
@@ -300,6 +227,7 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 void eae6320::MultiBody::RK3Integration(const _Scalar h)
 {
+	ComputeMr(h);
 	MrInverse = Mr.inverse();
 	_Vector k1 = h * MrInverse * ComputeQr(Rdot, h);
 	_Vector k2 = h * MrInverse * ComputeQr(Rdot + 0.5 * k1, h);
@@ -319,6 +247,99 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 	}
 	R = R_new;
 	ClampRotationVector();
+}
+
+void eae6320::MultiBody::ComputeH()
+{
+	if (rotationMode == LOCAL_MODE)
+	{
+		Compute_abc();
+	}
+	
+	for (size_t i = 0; i < numOfLinks; i++)
+	{
+		//compute H
+		if (rotationMode == MUJOCO_MODE)
+		{
+			H[i].resize(6, 3);
+			H[i].setZero();
+			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]);
+			H[i].block<3, 3>(3, 0) = _Matrix::Identity(3, 3);
+		}
+		else
+		{
+			_Vector3 r = R.segment(i * 3, 3);
+
+			_Scalar b = B[i];
+			_Scalar c = C[i];
+			J_rotation[i] = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
+			_Matrix3 A;
+			if (i == 0) A = J_rotation[i];
+			else A = R_global[i - 1] * J_rotation[i];
+			H[i].resize(6, 3);
+			H[i].setZero();
+			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * A;
+			H[i].block<3, 3>(3, 0) = A;
+		}
+	}
+}
+
+void eae6320::MultiBody::ComputeD()
+{
+	for (size_t i = 0; i < numOfLinks; i++)
+	{
+		//compute D
+		if (i > 0)
+		{
+			D[i].resize(6, 6);
+			D[i].setIdentity();
+			D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) - Math::ToSkewSymmetricMatrix(uGlobals[i - 1][1]);
+		}
+	}
+}
+
+void eae6320::MultiBody::ComputeHt()
+{
+	ComputeH();
+	ComputeD();
+	
+	for (size_t i = 0; i < numOfLinks; i++)
+	{
+		//compose Ht
+		Ht[i].resize(6, 3 * numOfLinks);
+		Ht[i].setZero();
+		for (size_t k = 0; k <= i; k++)
+		{
+			_Matrix H_temp;
+			H_temp.resize(6, 3);
+			H_temp = H[k];
+			for (size_t j = k + 1; j <= i; j++)
+			{
+				H_temp = D[j] * H_temp;
+			}
+			Ht[i].block<6, 3>(0, 3 * k) = H_temp;
+		}
+	}
+}
+
+void eae6320::MultiBody::ComputeMr(_Scalar h)
+{
+	ComputeHt();
+	
+	Mr.setZero();
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		_Matrix M_temp = Ht[i].transpose() * Mbody[i] * Ht[i];
+		Mr = Mr + M_temp;
+	}
+	if (Mr.determinant() < 0.00001)
+	{
+		std::cout << "mass matrix singluarity reached!" << Mr.determinant() << std::endl << std::endl;
+	}
+	if (controlMode == SPD || (rotationMode == LOCAL_MODE && (controlMode == SPD || controlMode == PD)))
+	{
+		Mr = Mr + _Matrix::Identity(3 * numOfLinks, 3 * numOfLinks) * h * kd;
+	}
 }
 
 _Vector eae6320::MultiBody::ComputeQr(_Vector i_R_dot, _Scalar h)
