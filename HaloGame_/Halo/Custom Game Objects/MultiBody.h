@@ -3,6 +3,7 @@
 
 #include "External/EigenLibrary/Eigen/Dense"
 #include "External/EigenLibrary/Eigen/Geometry"
+#include "MultiBodyTypeDefine.h"
 
 using namespace Eigen;
 //#define HIGH_PRECISION_MODE 
@@ -20,43 +21,6 @@ typedef Matrix3f _Matrix3;
 typedef VectorXf _Vector;
 typedef Vector3f _Vector3;
 typedef Quaternionf _Quat;
-#endif
-
-#ifndef LOCAL_MODE
-#define LOCAL_MODE 0
-#endif
-#ifndef MUJOCO_MODE
-#define MUJOCO_MODE 1
-#endif
-
-#ifndef BOX
-#define BOX 0
-#endif
-#ifndef BALL
-#define BALL 1
-#endif
-
-#ifndef KINEMATIC
-#define KINEMATIC 0
-#endif
-#ifndef PD
-#define PD 1
-#endif
-
-#ifndef SPD
-#define SPD 2
-#endif
-
-#ifndef PASSIVE
-#define PASSIVE 3
-#endif
-
-#ifndef PBD
-#define PBD 0
-#endif
-
-#ifndef IMPULSE
-#define IMPULSE 1
 #endif
 
 namespace eae6320

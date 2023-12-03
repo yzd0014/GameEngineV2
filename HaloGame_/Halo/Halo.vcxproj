@@ -38,6 +38,7 @@
     <ClInclude Include="Custom Game Objects\MPM.h" />
     <ClInclude Include="Custom Game Objects\MujocoBallJoint.h" />
     <ClInclude Include="Custom Game Objects\MultiBody.h" />
+    <ClInclude Include="Custom Game Objects\MultiBodyTypeDefine.h" />
     <ClInclude Include="Custom Game Objects\Player.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
