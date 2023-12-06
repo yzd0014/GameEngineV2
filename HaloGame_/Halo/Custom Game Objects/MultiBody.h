@@ -32,25 +32,23 @@ namespace eae6320
 		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 
-		int rotationMode = MUJOCO_MODE;
-		int constraintSolverMode = PBD;
-		bool gravity = FALSE;
+		int constraintSolverMode = -1;
+		bool gravity = TRUE;
 	private:
-		void ComputeMr(_Scalar h);
+		void ComputeMr();
 		void ComputeHt();
 		void ComputeH();
 		void ComputeD();
-		_Vector ComputeQr(_Vector i_R_dot, _Scalar h);
-		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_R_dot);
+		_Vector ComputeQr(_Vector i_qdot);
+		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot);
 		
-		void ComputeAngularVelocity(_Vector& i_R_dot);
+		void ComputeAngularVelocity(_Vector& i_qdot);
 		void ComputeVelocity();
-		void Compute_abc();
-		void Compute_abc_dot(_Vector& i_R_dot);
 		
 		void EulerIntegration(const _Scalar h);
 		void RK4Integration(const _Scalar h);
 		void RK3Integration(const _Scalar h);
+		void Integrate_q(_Vector& o_q, _Vector& i_q, _Vector& i_qdot, _Scalar h);
 
 		void ForwardKinematics();
 		void ClampRotationVector();
@@ -58,13 +56,15 @@ namespace eae6320
 
 		void JointLimitCheck();
 		void ResolveJointLimit(const _Scalar h);
-		void ResolveJointLimitPBD(const _Scalar h);
+		void ResolveJointLimitPBD(_Vector& i_q, const _Scalar h);
 
-		//std::vector<_Vector> q;
-		//std::vector<_Vector> qdot;
-		_Vector R; //3nx1
-		_Vector Rdot; //3nx1
-		_Vector R_new;
+		_Vector q;
+		_Vector qdot;
+		std::vector<int> jointType;
+		std::vector<int> posDOF;
+		std::vector<int> velDOF;
+		std::vector<int> posStartIndex;
+		std::vector<int> velStartIndex;
 		_Matrix Mr;
 		_Matrix MrInverse;
 		std::vector<_Matrix> Mbody;
@@ -77,13 +77,6 @@ namespace eae6320
 		std::vector<_Vector3> jointPos;
 		std::vector<std::vector<_Vector3>> uLocals;//object
 		std::vector<std::vector<_Vector3>> uGlobals;//world
-		
-		std::vector<_Scalar> A;
-		std::vector<_Scalar> A_dot;
-		std::vector<_Scalar> B;
-		std::vector<_Scalar> B_dot;
-		std::vector<_Scalar> C;
-		std::vector<_Scalar> C_dot;
 		
 		std::vector<_Matrix3> R_global;//rigidbody rotation
 		std::vector<_Matrix3> J_rotation;//jotation jabobian matrix
@@ -105,8 +98,9 @@ namespace eae6320
 
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
+		int totalPosDOF = 0;
+		int totalVelDOF = 0;
 		int geometry = BOX;
-
 /*******************************************************************************************/
 		inline _Scalar Compute_a(_Scalar theta)
 		{
@@ -116,6 +110,12 @@ namespace eae6320
 
 			return alpha;
 		}
+		inline _Scalar Compute_a_dot(_Scalar c, _Scalar b, _Vector3& r, _Vector3& rdot)
+		{
+			_Scalar out;
+			out = (c - b) * r.dot(rdot);
+			return out;
+		}
 		inline _Scalar Compute_b(_Scalar theta)
 		{
 			_Scalar beta;
@@ -124,14 +124,33 @@ namespace eae6320
 
 			return beta;
 		}
-		inline _Scalar Compute_c(_Scalar theta, _Scalar i_alpha)
+		inline _Scalar Compute_b_dot(_Scalar theta, _Scalar a, _Scalar b, _Vector3 r, _Vector3 rdot)
+		{
+			_Scalar out;
+			if (theta < 0.0001) out = (-1.0f / 12.0f + 1.0f / 180.0f * theta * theta) * r.dot(rdot);
+			else out = (a - 2.0f * b) / (theta * theta) * r.dot(rdot);
+			
+			return out;
+		}
+
+		inline _Scalar Compute_c(_Scalar theta, _Scalar i_a)
 		{
 			_Scalar gamma;
 			if (theta < 0.0001) gamma = 1.0f / 6.0f - theta * theta / 120.0f;
-			else gamma = (1.0f - i_alpha) / (theta * theta);
+			else gamma = (1.0f - i_a) / (theta * theta);
 
 			return gamma;
 		}
+
+		inline _Scalar Compute_c_dot(_Scalar theta, _Scalar b, _Scalar c, _Vector3 r, _Vector3 rdot)
+		{
+			_Scalar out;
+			if (theta < 0.0001) out = (-1.0f / 60.0f + 1.0f / 1260.0f * theta * theta) * r.dot(rdot);
+			else out = (b - 3.0f * c) / (theta * theta) * r.dot(rdot);
+
+			return out;
+		}
+
 		inline _Scalar Compute_s(_Scalar theta, _Scalar i_a, _Scalar i_b)
 		{
 			_Scalar zeta;
