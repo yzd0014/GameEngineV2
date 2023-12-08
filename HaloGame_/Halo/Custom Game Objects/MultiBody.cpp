@@ -66,8 +66,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 
 		std::vector<_Vector3> uPairs;
 		uPairs.resize(2);
-		uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
-		//uPairs[0] = _Vector3(0.0f, 1.5f, 0.0f);
+		//uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
+		uPairs[0] = _Vector3(0.0f, 1.5f, 0.0f);
 		if (i == numOfLinks - 1)
 		{
 			uPairs[1] = _Vector3(0.0f, 0.0f, 0.0f);
@@ -81,7 +81,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 
 		jointType[i] = BALL_JOINT_3D;
 	}
-	jointType[0] = BALL_JOINT_4D;
+	//jointType[0] = BALL_JOINT_4D;
 
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
@@ -123,13 +123,13 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	qdot.resize(totalVelDOF);
 	qdot.setZero();
 
-	uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
-	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);
+	/*uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
+	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);*/
 	
 	//uLocals[0][0] = _Vector3(1.0f, -1.0f, -1.0f);
 
-	/*qdot(3) = -2.0f;
-	qdot(4) = 5.0f;*/
+	qdot(3) = -2.0f;
+	qdot(4) = 5.0f;
 
 	ForwardKinematics();
 }
@@ -144,7 +144,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//RK4Integration(dt);
 
 	ForwardKinematics();
-	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	//LOG_TO_FILE << t << ", " << ComputeTotalEnergy() << std::endl;
 }
 
@@ -339,7 +339,8 @@ void eae6320::MultiBody::ComputeMr()
 
 _Vector eae6320::MultiBody::ComputeQr(_Vector i_qdot)
 {
-	ComputeAngularVelocity(i_qdot);
+	//ComputeAngularVelocity(i_qdot);
+	ForwardAngularAndTranslationalVelocity(i_qdot);
 	
 	std::vector<_Vector> gamma_t;
 	ComputeGamma_t(gamma_t, i_qdot);
@@ -443,6 +444,17 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			}
 			o_gamma_t[i] = o_gamma_t[i] + gamma_temp;
 		}
+	}
+}
+
+void eae6320::MultiBody::ForwardAngularAndTranslationalVelocity(_Vector& i_qdot)
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		_Vector tran_rot_velocity;
+		tran_rot_velocity = Ht[i] * i_qdot;
+		vel[i] = tran_rot_velocity.segment(0, 3);
+		w_abs_world[i] = tran_rot_velocity.segment(3, 3);
 	}
 }
 
@@ -566,8 +578,7 @@ void eae6320::MultiBody::ForwardKinematics()
 			Mbody[i].block<3, 3>(3, 3) = globalInertiaTensor;
 		}	
 	}
-
-	ComputeVelocity();
+	//ComputeVelocity();
 
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << m_linkBodys[1]->m_State.position.x << ", " << -m_linkBodys[1]->m_State.position.z << ", " << m_linkBodys[1]->m_State.position.y << std::endl;
 	//std::cout << eae6320::Physics::totalSimulationTime << std::endl;

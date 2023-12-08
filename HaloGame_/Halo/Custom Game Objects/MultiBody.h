@@ -44,6 +44,7 @@ namespace eae6320
 		
 		void ComputeAngularVelocity(_Vector& i_qdot);
 		void ComputeVelocity();
+		void ForwardAngularAndTranslationalVelocity(_Vector& i_qdot);
 		
 		void EulerIntegration(const _Scalar h);
 		void RK4Integration(const _Scalar h);
