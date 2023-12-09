@@ -33,7 +33,7 @@ namespace eae6320
 		void UpdateGameObjectBasedOnInput() override;
 
 		int constraintSolverMode = -1;
-		bool gravity = TRUE;
+		bool gravity = FALSE ;
 	private:
 		void ComputeMr();
 		void ComputeHt();
@@ -54,6 +54,8 @@ namespace eae6320
 		void ForwardKinematics();
 		void ClampRotationVector();
 		_Scalar ComputeTotalEnergy();
+		_Vector3 ComputeTranslationalMomentum();
+		_Vector3 ComputeAngularMomentum();
 
 		void JointLimitCheck();
 		void ResolveJointLimit(const _Scalar h);
