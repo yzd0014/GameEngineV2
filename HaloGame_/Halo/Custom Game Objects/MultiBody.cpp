@@ -147,9 +147,9 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	ForwardKinematics();
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
-	std::cout << std::left 
-		<< "tran:" << std::setw(15) << momentum.transpose()
-		<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
+	//std::cout << std::left 
+	//	<< "tran:" << std::setw(15) << momentum.transpose()
+	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
 	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	//LOG_TO_FILE << t << ", " << ComputeTotalEnergy() << std::endl;
 }

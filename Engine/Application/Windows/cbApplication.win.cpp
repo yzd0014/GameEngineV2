@@ -106,7 +106,12 @@ eae6320::cResult eae6320::Application::cbApplication::RenderFramesWhileWaitingFo
 		if ( !hasWindowsSentAMessage )
 		{
 			// Usually there will be no messages in the queue, and a new frame can be rendered
+			auto startTickCount = Time::GetCurrentSystemTimeTickCount();
 			Graphics::RenderFrame();
+			auto endTickCount = Time::GetCurrentSystemTimeTickCount();
+			uint64_t simTickCount = endTickCount - startTickCount;
+			double simTime = Time::ConvertTicksToSeconds(simTickCount);
+			gpu_fps = static_cast<int>(1.0 / simTime);
 		}
 		else
 		{

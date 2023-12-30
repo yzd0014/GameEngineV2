@@ -291,6 +291,7 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 		}
 		// Update the simulation
 		{
+			realTime = true;
 			// Add the time elapsed since the last frame to the amount of simulation time that has not been simulated yet
 			tickCount_simulationTime_elapsedButNotYetSimulated += tickCount_toSimulate_elapsedSinceLastLoop;
 			m_tickCount_sinceLastSimulation += tickCount_toSimulate_elapsedSinceLastLoop;
@@ -305,9 +306,16 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 				// frames need to be rendered (and operating system messages handled)
 				// or the application will stop responding
 				&& ( simulationUpdateCount_thisIteration < maxSimulationUpdateCountWithoutRendering ) && (!Graphics::renderThreadNoWait || !Physics::simPause) )
+				//simulation pause only works when rendering thread doesn't wait for physics update
 				|| (Graphics::renderThreadNoWait && Physics::simPause && Physics::nextSimStep && m_tickCount_sinceLastSimulation > tickCount_perSimulationUpdate) )
 			{
+				auto startTickCount = Time::GetCurrentSystemTimeTickCount();
 				UpdateSimulationBasedOnTime( secondCount_perSimulationUpdate );
+				auto endTickCount = Time::GetCurrentSystemTimeTickCount();
+				uint64_t simTickCount = endTickCount - startTickCount;
+				double simTime = Time::ConvertTicksToSeconds(simTickCount);
+				cpu_fps = static_cast<int>(1.0 / simTime);
+
 				if (!Graphics::renderThreadNoWait || !Physics::simPause) ++simulationUpdateCount_thisIteration;
 				else m_tickCount_sinceLastSimulation = 0;
 				tickCount_simulationTime_totalElapsed += tickCount_perSimulationUpdate;
@@ -325,6 +333,26 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 			if ( simulationUpdateCount_thisIteration > 0 )
 			{
 				if(!Graphics::renderThreadNoWait) UpdateSimulationBasedOnInput();
+			}
+			if (simulationUpdateCount_thisIteration >= maxSimulationUpdateCountWithoutRendering)
+			{
+				realTime = false;
+			}
+
+			uint64_t tickCount_timeElapsedSinceLastFpsUpdate = Time::GetCurrentSystemTimeTickCount() - tickCount_fpsUpdateTime;
+			if (tickCount_timeElapsedSinceLastFpsUpdate > Time::m_tickCountPerSecond)
+			{
+				std::string simMode;
+				if (realTime) simMode = "online";
+				else simMode = "offline";
+
+#ifdef _DEBUG
+				std::string mainWindowName = "CPU FPS: " + std::to_string(cpu_fps) + " -- GPU FPS: " + std::to_string(gpu_fps) + " -- Debug -- " + simMode;
+#else
+				std::string mainWindowName = "CPU FPS: " + std::to_string(cpu_fps) + " -- GPU FPS: " + std::to_string(gpu_fps) + " -- " + simMode;
+#endif		
+				SetWindowTextA(m_mainWindow, mainWindowName.c_str());
+				tickCount_fpsUpdateTime = Time::GetCurrentSystemTimeTickCount();
 			}
 		}
 		// Submit data for the render thread to use to render a new frame
