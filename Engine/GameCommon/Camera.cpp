@@ -149,11 +149,12 @@ void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
 		auto secondCount_keyIsDown = Time::ConvertTicksToSeconds(tickCount_keyIsDown);
 		if (secondCount_keyIsDown > 0.2)
 		{
-			Physics::nextSimStep = true;
+			Physics::simPlay = true;
 		}
 		if (UserInput::IsKeyFromPressedToReleased('G'))
 		{
 			tickCount_keyIsDown = 0;
+			Physics::simPlay = false;
 		}
 	}
 }

@@ -80,7 +80,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 
-		jointType[i] = BALL_JOINT_4D;
+		jointType[i] = BALL_JOINT_3D;
 	}
 	jointType[0] = FREE_JOINT;
 

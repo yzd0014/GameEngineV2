@@ -130,7 +130,7 @@ namespace eae6320
 			// The default value is a relatively large amount of time;
 			// you may want to experiement with smaller values in your application
 			// and observe the change in responsiveness or simulation accuracy.
-			virtual double GetSimulationUpdatePeriod_inSeconds() const { return 1.0 / 1000000.0; }
+			virtual double GetSimulationUpdatePeriod_inSeconds() const { return 1.0 / 1000.0; }
 
 		private:
 
@@ -226,7 +226,6 @@ namespace eae6320
 			//		It can be how much time has been simulated during the entire application,
 			//		but there is no technical reason that it couldn't be reset (e.g. when starting a new level).
 			uint64_t m_tickCount_simulationTime_totalElapsed = 0;
-			uint64_t m_tickCount_sinceLastSimulation = 0;
 			// The thread that runs the main application loop
 			// (The original process thread (or "main thread") services operating system requests and the render loop,
 			// because many operating systems require those to use the same thread that they were created/initialized with)
@@ -248,7 +247,7 @@ namespace eae6320
 			//===============
 			int cpu_fps = 0;
 			int gpu_fps = 0;
-			bool realTime = true;
+			double timeToSimulateOneSecond = 1.0;
 			uint64_t tickCount_fpsUpdateTime = 0;
 		private:
 

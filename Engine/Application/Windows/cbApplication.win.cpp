@@ -112,6 +112,14 @@ eae6320::cResult eae6320::Application::cbApplication::RenderFramesWhileWaitingFo
 			uint64_t simTickCount = endTickCount - startTickCount;
 			double simTime = Time::ConvertTicksToSeconds(simTickCount);
 			gpu_fps = static_cast<int>(1.0 / simTime);
+
+			uint64_t tickCount_timeElapsedSinceLastFpsUpdate = Time::GetCurrentSystemTimeTickCount() - tickCount_fpsUpdateTime;
+			if (tickCount_timeElapsedSinceLastFpsUpdate > Time::m_tickCountPerSecond)
+			{
+				std::string mainWindowName = "GPU FPS: " + std::to_string(gpu_fps) + " -- Time to simulate 1s: " + std::to_string(timeToSimulateOneSecond);
+				SetWindowTextA(m_mainWindow, mainWindowName.c_str());
+				tickCount_fpsUpdateTime = Time::GetCurrentSystemTimeTickCount();
+			}
 		}
 		else
 		{
