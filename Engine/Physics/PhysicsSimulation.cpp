@@ -15,6 +15,7 @@ namespace eae6320 {
 
 		bool simPause = true;
 		bool nextSimStep = false;
+		bool simPlay = false;
 
 		std::vector<ContactManifold3D> allManifolds;
 		std::vector<PointJoint> allPointJoints;

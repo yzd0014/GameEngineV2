@@ -12,6 +12,7 @@ namespace eae6320 {
 		
 		extern bool simPause;
 		extern bool nextSimStep;
+		extern bool simPlay;
 
 		extern std::vector<ContactManifold3D> allManifolds;
 		extern std::vector<PointJoint> allPointJoints;
