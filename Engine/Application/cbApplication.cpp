@@ -311,7 +311,13 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 				&& ( simulationUpdateCount_thisIteration < maxSimulationUpdateCountWithoutRendering ) && (!Graphics::renderThreadNoWait || play) )
 				|| (Graphics::renderThreadNoWait && !play && Physics::nextSimStep) )
 			{
+				auto startTickCount = Time::GetCurrentSystemTimeTickCount();
 				UpdateSimulationBasedOnTime( secondCount_perSimulationUpdate );
+				auto endTickCount = Time::GetCurrentSystemTimeTickCount();
+				uint64_t simTickCount = endTickCount - startTickCount;
+				double simTime = Time::ConvertTicksToSeconds(simTickCount);
+				timeToSimulateOneSecond = simTime / secondCount_perSimulationUpdate;
+				CPU_FPS = static_cast<int>(1.0 / simTime);
 				
 				++simulationUpdateCount_thisIteration;
 				tickCount_simulationTime_totalElapsed += tickCount_perSimulationUpdate;

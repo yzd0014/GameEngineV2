@@ -16,6 +16,14 @@ namespace
 	uint64_t s_tickCountPerSecond = 0;
 }
 
+namespace eae6320
+{
+	namespace Time
+	{
+		uint64_t m_tickCountPerSecond = 1;
+	}
+}
+
 // Interface
 //==========
 
@@ -67,6 +75,7 @@ eae6320::cResult eae6320::Time::Initialize()
 			if ( tickCountPerSecond.QuadPart != 0 )
 			{
 				s_tickCountPerSecond = static_cast<uint64_t>( tickCountPerSecond.QuadPart );
+				m_tickCountPerSecond = s_tickCountPerSecond;
 			}
 			else
 			{

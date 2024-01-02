@@ -245,6 +245,13 @@ namespace eae6320
 
 			// Implementation
 			//===============
+			
+			int CPU_FPS = 0;
+			int avg_GPU_FPS = 0;
+			int GPU_FPS_accumlation = 0;
+			int samplingNum = 0;
+			double timeToSimulateOneSecond = 1.0;
+			uint64_t tickCount_fpsUpdateTime = 0;
 
 		private:
 

@@ -36,6 +36,8 @@ namespace eae6320
 		extern uint64_t tickCount_systemTime_elapsed;
 		extern uint64_t tickCount_elapsedSinceLastLoop;
 		extern uint64_t tickCount_previousLoop;
+
+		extern uint64_t m_tickCountPerSecond;
 	}
 }
 
