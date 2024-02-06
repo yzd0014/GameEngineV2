@@ -67,8 +67,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 
 		std::vector<_Vector3> uPairs;
 		uPairs.resize(2);
-		//uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
-		uPairs[0] = _Vector3(0.0f, 1.5f, 0.0f);
+		uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
+		//uPairs[0] = _Vector3(0.0f, 1.5f, 0.0f);
 		if (i == numOfLinks - 1)
 		{
 			uPairs[1] = _Vector3(0.0f, 0.0f, 0.0f);
@@ -82,7 +82,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 
 		jointType[i] = BALL_JOINT_3D;
 	}
-	jointType[0] = FREE_JOINT;
+	//jointType[0] = FREE_JOINT;
 
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
@@ -129,10 +129,11 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	
 	//uLocals[0][0] = _Vector3(1.0f, -1.0f, -1.0f);
 
-	qdot.segment(3, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
-	qdot.segment(6, 3) = _Vector3(4.0f, -10.0f, 0.0f);
+	/*qdot.segment(3, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
+	qdot.segment(6, 3) = _Vector3(4.0f, -10.0f, 0.0f);*/
 
-	//qdot.segment(3, 3) = _Vector3(3.0f, 3.0f, 0.0f);
+	qdot.segment(0, 3) = _Vector3(0.0f, 4.0f, 0.0f);
+	qdot.segment(3, 3) = _Vector3(-2.0f, -8.0f, 1.4f);
 
 	ForwardKinematics();
 }
@@ -142,8 +143,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Scalar dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 
-	//EulerIntegration(dt);
-	RK3Integration(dt);
+	EulerIntegration(dt);
+	//RK3Integration(dt);
 	//RK4Integration(dt);
 
 	ForwardKinematics();
@@ -153,7 +154,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//std::cout << std::left 
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
-	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	//LOG_TO_FILE << t << ", " << ComputeTotalEnergy() << std::endl;
 }
 
@@ -367,7 +368,6 @@ void eae6320::MultiBody::ComputeMr()
 
 _Vector eae6320::MultiBody::ComputeQr(_Vector i_qdot)
 {
-	//ComputeAngularVelocity(i_qdot);
 	ForwardAngularAndTranslationalVelocity(i_qdot);
 	
 	std::vector<_Vector> gamma_t;
@@ -491,53 +491,6 @@ void eae6320::MultiBody::ForwardAngularAndTranslationalVelocity(_Vector& i_qdot)
 	}
 }
 
-void eae6320::MultiBody::ComputeAngularVelocity(_Vector& i_qdot)
-{
-	for (size_t i = 0; i < numOfLinks; i++)
-	{
-		if (jointType[i] == BALL_JOINT_3D)
-		{
-			if (i == 0)
-			{
-				w_rel_world[i] = J_rotation[i] * i_qdot.segment(velStartIndex[i], 3);
-				w_abs_world[i] = w_rel_world[i];
-			}
-			else
-			{
-				w_rel_world[i] = R_global[i - 1] * J_rotation[i] * i_qdot.segment(velStartIndex[i], 3);
-				w_abs_world[i] = w_abs_world[i - 1] + w_rel_world[i];
-			}
-		}
-		else if (jointType[i] == BALL_JOINT_4D)
-		{
-			w_rel_world[i] = i_qdot.segment(velStartIndex[i], 3);
-			if (i == 0)
-			{
-				w_abs_world[i] = w_rel_world[i];
-			}
-			else
-			{
-				w_abs_world[i] = w_abs_world[i - 1] + w_rel_world[i];
-			}
-		}
-		//TODO: add free joint 
-	}
-}
-
-void eae6320::MultiBody::ComputeVelocity()
-{
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		vel[i].setZero();
-		for (int j = 0; j <= i; j++)
-		{
-			_Vector3 effectiveArm;
-			effectiveArm = pos[i] - jointPos[j];
-			vel[i] = vel[i] + w_rel_world[j].cross(effectiveArm);
-		}
-	}
-}
-
 void eae6320::MultiBody::ForwardKinematics()
 {
 	_Vector3 preAnchor;
@@ -623,7 +576,6 @@ void eae6320::MultiBody::ForwardKinematics()
 			Mbody[i].block<3, 3>(3, 3) = globalInertiaTensor;
 		}	
 	}
-	//ComputeVelocity();
 
 	//LOG_TO_FILE << eae6320::Physics::totalSimulationTime << ", " << m_linkBodys[1]->m_State.position.x << ", " << -m_linkBodys[1]->m_State.position.z << ", " << m_linkBodys[1]->m_State.position.y << std::endl;
 	//std::cout << eae6320::Physics::totalSimulationTime << std::endl;

@@ -42,8 +42,6 @@ namespace eae6320
 		_Vector ComputeQr(_Vector i_qdot);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot);
 		
-		void ComputeAngularVelocity(_Vector& i_qdot);
-		void ComputeVelocity();
 		void ForwardAngularAndTranslationalVelocity(_Vector& i_qdot);
 		
 		void EulerIntegration(const _Scalar h);
