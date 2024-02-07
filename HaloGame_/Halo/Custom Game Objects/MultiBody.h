@@ -59,6 +59,8 @@ namespace eae6320
 		void ResolveJointLimit(const _Scalar h);
 		void ResolveJointLimitPBD(_Vector& i_q, const _Scalar h);
 
+		void KineticEnergyProjection();
+
 		_Vector q;
 		_Vector qdot;
 		std::vector<int> jointType;
@@ -96,6 +98,7 @@ namespace eae6320
 		std::vector<int> jointsID;
 		
 		_Scalar jointLimit = 0.785f;
+		_Scalar initialEnergy = 0;
 
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;

@@ -135,7 +135,11 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	qdot.segment(0, 3) = _Vector3(0.0f, 4.0f, 0.0f);
 	qdot.segment(3, 3) = _Vector3(-2.0f, -8.0f, 1.4f);
 
+	ComputeHt();
+	ForwardAngularAndTranslationalVelocity(qdot);
 	ForwardKinematics();
+	initialEnergy = ComputeTotalEnergy();
+	std::cout << "initial energy: " << initialEnergy << std::endl;
 }
 
 void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
@@ -222,6 +226,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	_Vector qddot = MrInverse * Qr;
 
 	qdot = qdot + qddot * h;
+	KineticEnergyProjection();
 	Integrate_q(q, q, qdot, h);
 
 	ClampRotationVector();
@@ -614,6 +619,30 @@ _Vector3 eae6320::MultiBody::ComputeAngularMomentum()
 	//std::cout << w_abs_world[1].transpose() << std::endl;
 	//std::cout << std::endl;
 	return angularMomentum;
+}
+
+void eae6320::MultiBody::KineticEnergyProjection()
+{
+	_Matrix A(totalVelDOF, totalVelDOF);
+	A.setZero();
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		A = A + Ht[i].transpose() * Mbody[i] * Ht[i];
+	}
+
+	_Matrix J(1, totalVelDOF);
+	J = 2 * (A * qdot).transpose();
+
+	_Scalar E = ComputeTotalEnergy();
+	_Matrix T = J * J.transpose();
+	_Scalar Ts = T(0, 0);
+	if (Ts > 0.0000001)
+	{
+		_Scalar lambda = (-E + initialEnergy) / Ts;
+
+		_Vector qdotCorrection = J.transpose() * lambda;
+		qdot = qdot + qdotCorrection;
+	}	
 }
 
 _Scalar eae6320::MultiBody::ComputeTotalEnergy()
