@@ -154,11 +154,12 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	ForwardKinematics();
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
-	//std::cout << angularMomentum.norm() << std::endl;
+	//std::cout << "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
+	std::cout << "angluar norm: " << angularMomentum.norm() << std::endl;
 	//std::cout << std::left 
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
-	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	//LOG_TO_FILE << t << ", " << ComputeTotalEnergy() << std::endl;
 }
 
@@ -601,9 +602,7 @@ _Vector3 eae6320::MultiBody::ComputeTranslationalMomentum()
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		translationalMomentum += Mbody[i].block<3, 3>(0, 0) * vel[i];
-		//std::cout << vel[i].transpose() << std::endl;
 	}
-	//std::cout << std::endl;
 	return translationalMomentum;
 }
 
@@ -614,10 +613,7 @@ _Vector3 eae6320::MultiBody::ComputeAngularMomentum()
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		angularMomentum += Mbody[i].block<3, 3>(3, 3) * w_abs_world[i] + rigidBodyMass * pos[i].cross(vel[i]);
-		//std::cout << w_abs_world[i].transpose() << std::endl;
 	}
-	//std::cout << w_abs_world[1].transpose() << std::endl;
-	//std::cout << std::endl;
 	return angularMomentum;
 }
 
