@@ -138,8 +138,15 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	ComputeHt();
 	ForwardAngularAndTranslationalVelocity(qdot);
 	ForwardKinematics();
+	
 	initialEnergy = ComputeTotalEnergy();
+	initalAngularMomentum = ComputeAngularMomentum();
+	conservedQuantity.resize(4);
+	conservedQuantity(0) = initialEnergy;
+	conservedQuantity.segment(1, 3) = initalAngularMomentum;
 	std::cout << "initial energy: " << initialEnergy << std::endl;
+	std::cout << "initial angular momentum: " << initalAngularMomentum.transpose() << std::endl;
+	std::cout << "conserved quantity: " << conservedQuantity.transpose() << std::endl;
 }
 
 void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
@@ -159,7 +166,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//std::cout << std::left 
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
-	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	//LOG_TO_FILE << t << ", " << ComputeTotalEnergy() << std::endl;
 }
 
@@ -227,7 +234,8 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	_Vector qddot = MrInverse * Qr;
 
 	qdot = qdot + qddot * h;
-	KineticEnergyProjection();
+	//KineticEnergyProjection();
+	EnergyMomentumProjection();
 	Integrate_q(q, q, qdot, h);
 
 	ClampRotationVector();
@@ -627,7 +635,7 @@ void eae6320::MultiBody::KineticEnergyProjection()
 	}
 
 	_Matrix J(1, totalVelDOF);
-	J = 2 * (A * qdot).transpose();
+	J = (A * qdot).transpose();
 
 	_Scalar E = ComputeTotalEnergy();
 	_Matrix T = J * J.transpose();
@@ -639,6 +647,55 @@ void eae6320::MultiBody::KineticEnergyProjection()
 		_Vector qdotCorrection = J.transpose() * lambda;
 		qdot = qdot + qdotCorrection;
 	}	
+}
+
+void eae6320::MultiBody::EnergyMomentumProjection()
+{
+	_Matrix A(totalVelDOF, totalVelDOF);
+	A.setZero();
+	_Matrix J_angularMomentum(3, totalVelDOF);
+	J_angularMomentum.setZero();
+	_Matrix Sv(3, 6);
+	Sv.setZero();
+	Sv.block<3, 3>(0, 0) = _Matrix::Identity(3, 3);
+	//std::cout << Sv << std::endl;
+	_Matrix Sw(3, 6);
+	Sw.setZero();
+	Sw.block<3, 3>(0, 3) = _Matrix::Identity(3, 3);
+	//std::cout << Sw << std::endl;
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		A = A + Ht[i].transpose() * Mbody[i] * Ht[i];
+		J_angularMomentum = J_angularMomentum + Mbody[i].block<3, 3>(3, 3) * Sw * Ht[i] + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Sv * Ht[i];
+	}
+
+	_Matrix J_energy(1, totalVelDOF);
+	J_energy = (A * qdot).transpose();
+
+	_Matrix Jt(4, totalVelDOF);
+	Jt.block(0, 0, 1, totalVelDOF) = J_energy;
+	Jt.block(1, 0, 3, totalVelDOF) = J_angularMomentum;
+	//std::cout << Jt << std::endl;
+
+	_Vector B;
+	B.resize(4);
+	B.setZero();
+	B(0) = ComputeTotalEnergy() - (J_energy * qdot)(0);
+	//std::cout << B << std::endl;
+
+	_Vector lambda;
+	lambda.resize(4);
+	_Matrix JJTranspose = Jt * Jt.transpose();
+	if (JJTranspose.determinant() > 0.0000001)
+	{
+		lambda = (Jt * Jt.transpose()).inverse() * (-Jt * qdot - B + conservedQuantity);
+
+		_Vector qdotCorrection = Jt.transpose() * lambda;
+		//std::cout << lambda << std::endl << std::endl;
+		//std::cout << qdotCorrection << std::endl;
+		qdot = qdot + qdotCorrection;
+	}
+	
 }
 
 _Scalar eae6320::MultiBody::ComputeTotalEnergy()

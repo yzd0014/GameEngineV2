@@ -60,6 +60,7 @@ namespace eae6320
 		void ResolveJointLimitPBD(_Vector& i_q, const _Scalar h);
 
 		void KineticEnergyProjection();
+		void EnergyMomentumProjection();
 
 		_Vector q;
 		_Vector qdot;
@@ -99,6 +100,8 @@ namespace eae6320
 		
 		_Scalar jointLimit = 0.785f;
 		_Scalar initialEnergy = 0;
+		_Vector3 initalAngularMomentum;
+		_Vector conservedQuantity;
 
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
