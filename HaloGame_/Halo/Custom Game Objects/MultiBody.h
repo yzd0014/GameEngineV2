@@ -50,6 +50,7 @@ namespace eae6320
 		void Integrate_q(_Vector& o_q, _Vector& i_q, _Vector& i_qdot, _Scalar h);
 
 		void ForwardKinematics();
+		void Forward();
 		void ClampRotationVector();
 		_Scalar ComputeTotalEnergy();
 		_Vector3 ComputeTranslationalMomentum();
