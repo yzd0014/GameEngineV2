@@ -80,6 +80,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 
+		//jointType[i] = BALL_JOINT_4D;
 		jointType[i] = BALL_JOINT_3D;
 	}
 	//jointType[0] = FREE_JOINT;
@@ -227,12 +228,12 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 {
 	ComputeMr();
 	MrInverse = Mr.inverse();
-	_Vector Qr = ComputeQr(qdot);
+	_Vector Qr = ComputeQr_SikpVelocityUpdate(qdot);
 	_Vector qddot = MrInverse * Qr;
 
 	qdot = qdot + qddot * h;
 	//KineticEnergyProjection();
-	//EnergyMomentumProjection();
+	EnergyMomentumProjection();
 	Integrate_q(q, q, qdot, h);
 
 	ClampRotationVector();
@@ -242,12 +243,13 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 {
 	ComputeMr();
 	MrInverse = Mr.inverse();
-	_Vector k1 = h * MrInverse * ComputeQr(qdot);
-	_Vector k2 = h * MrInverse * ComputeQr(qdot + 0.5 * k1);
-	_Vector k3 = h * MrInverse * ComputeQr(qdot + 0.5 * k2);
-	_Vector k4 = h * MrInverse * ComputeQr(qdot + k3);
+	_Vector k1 = MrInverse * ComputeQr_SikpVelocityUpdate(qdot);
+	_Vector k2 = MrInverse * ComputeQr(qdot + 0.5 * h * k1);
+	_Vector k3 = MrInverse * ComputeQr(qdot + 0.5 * h * k2);
+	_Vector k4 = MrInverse * ComputeQr(qdot + h * k3);
 
-	qdot = qdot + (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
+	_Vector qddot = (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
+	qdot = qdot + h * qddot;
 	Integrate_q(q, q, qdot, h);
 
 	ClampRotationVector();
@@ -257,7 +259,7 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 {
 	ComputeMr();
 	MrInverse = Mr.inverse();
-	_Vector k1 = h * MrInverse * ComputeQr(qdot);
+	_Vector k1 = h * MrInverse * ComputeQr_SikpVelocityUpdate(qdot);
 	_Vector k2 = h * MrInverse * ComputeQr(qdot + 0.5 * k1);
 	_Vector k3 = h * MrInverse * ComputeQr(qdot + 2.0 * k2 - k1);
 
@@ -375,7 +377,7 @@ void eae6320::MultiBody::ComputeMr()
 	}
 }
 
-_Vector eae6320::MultiBody::ComputeQr(_Vector i_qdot)
+_Vector eae6320::MultiBody::ComputeQr_SikpVelocityUpdate(_Vector& i_qdot)
 {
 	std::vector<_Vector> gamma_t;
 	ComputeGamma_t(gamma_t, i_qdot);
@@ -404,6 +406,12 @@ _Vector eae6320::MultiBody::ComputeQr(_Vector i_qdot)
 	}
 
 	return Qr;
+}
+
+_Vector eae6320::MultiBody::ComputeQr(_Vector i_qdot)
+{
+	ForwardAngularAndTranslationalVelocity(i_qdot);
+	return ComputeQr_SikpVelocityUpdate(i_qdot);
 }
 
 void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot)
@@ -683,7 +691,8 @@ void eae6320::MultiBody::EnergyMomentumProjection()
 	int iterationNum = 10;
 	int solveCount = 0;
 	_Scalar energyErr = 1.0;
-	while (solveCount < iterationNum && energyErr > 0.5)
+	while (energyErr > 0.5)
+	//while (solveCount < iterationNum && energyErr > 0.5)
 	{
 		J_energy = (A * qdot).transpose();
 		Jt.block(0, 0, 1, totalVelDOF) = J_energy;
@@ -787,7 +796,7 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 			_Scalar beta = 0.2f;//0.4f;
 			_Scalar CR = 0.4f;// 0.2f;
 			_Scalar SlopP = 0.001f;
-			bias(i) = -beta / h * std::max(-g[joint_id], 0.0f) - CR * std::max(-JV(0, 0), 0.0f);
+			bias(i) = -beta / h * std::max(-g[joint_id], 0.0) - CR * std::max(-JV(0, 0), 0.0);
 		}
 		
 		_Matrix lambda;

@@ -6,7 +6,7 @@
 #include "MultiBodyTypeDefine.h"
 
 using namespace Eigen;
-//#define HIGH_PRECISION_MODE 
+#define HIGH_PRECISION_MODE 
 #if defined (HIGH_PRECISION_MODE)
 typedef double _Scalar;
 typedef MatrixXd _Matrix;
@@ -40,6 +40,7 @@ namespace eae6320
 		void ComputeH();
 		void ComputeD();
 		_Vector ComputeQr(_Vector i_qdot);
+		_Vector ComputeQr_SikpVelocityUpdate(_Vector& i_qdot);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot);
 		
 		void ForwardAngularAndTranslationalVelocity(_Vector& i_qdot);
