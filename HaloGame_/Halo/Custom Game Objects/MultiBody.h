@@ -63,6 +63,7 @@ namespace eae6320
 
 		void KineticEnergyProjection();
 		void EnergyMomentumProjection();
+		void MomentumProjection();
 
 		_Vector q;
 		_Vector qdot;

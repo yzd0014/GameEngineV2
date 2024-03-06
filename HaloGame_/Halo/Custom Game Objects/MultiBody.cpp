@@ -203,10 +203,7 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, _Vector& i_q, _Vector& i_qdot
 		}
 		else if (jointType[i] == BALL_JOINT_4D)
 		{
-			if (i == 0) w_rel_local[i] = i_qdot.segment(velStartIndex[i], 3);
-			else  w_rel_local[i] = R_global[i - 1].transpose() * i_qdot.segment(velStartIndex[i], 3);
-
-			Math::QuatIntegrate(rel_ori[i], w_rel_local[i], h);
+			Math::QuatIntegrate(rel_ori[i], i_qdot.segment(velStartIndex[i], 3), h);
 
 			/*_Quat quat_w(0, w_rel_local[i](0), w_rel_local[i](1), w_rel_local[i](2));
 			_Quat quat_dot = 0.5f * quat_w * rel_ori[i];
@@ -233,9 +230,9 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 
 	qdot = qdot + qddot * h;
 	//KineticEnergyProjection();
-	EnergyMomentumProjection();
+	//EnergyMomentumProjection();
+	//MomentumProjection();
 	Integrate_q(q, q, qdot, h);
-
 	ClampRotationVector();
 }
 
@@ -290,8 +287,16 @@ void eae6320::MultiBody::ComputeH()
 		{
 			H[i].resize(6, 3);
 			H[i].setZero();
-			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]);
-			H[i].block<3, 3>(3, 0) = _Matrix::Identity(3, 3);
+			if (i == 0)
+			{
+				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]);
+				H[i].block<3, 3>(3, 0) = _Matrix::Identity(3, 3);
+			}
+			else
+			{
+				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * R_global[i - 1];
+				H[i].block<3, 3>(3, 0) = R_global[i - 1];
+			}
 		}
 		else if (jointType[i] == BALL_JOINT_3D)
 		{
@@ -422,16 +427,25 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 	{
 		if (jointType[i] == BALL_JOINT_4D)
 		{
+			_Vector3 r_dot = i_qdot.segment(velStartIndex[i], 3);
+			_Vector3 gamma_theta;
+			gamma_theta.setZero();
+			if (i > 0)
+			{
+				gamma_theta = Math::ToSkewSymmetricMatrix(w_abs_world[i - 1]) * R_global[i - 1] * r_dot;
+			}
+			
 			gamma[i].resize(6);
 			gamma[i].setZero();
 			if (i == 0)
 			{
-				gamma[i].block<3, 1>(0, 0) = -w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0]));
+				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0]));
 			}
 			else
 			{
-				gamma[i].block<3, 1>(0, 0) = -w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0])) + w_abs_world[i - 1].cross(w_abs_world[i - 1].cross(uGlobals[i - 1][1]));
+				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0])) + w_abs_world[i - 1].cross(w_abs_world[i - 1].cross(uGlobals[i - 1][1]));
 			}
+			gamma[i].block<3, 1>(3, 0) = gamma_theta;
 		}
 		else if (jointType[i] == BALL_JOINT_3D)
 		{
@@ -655,6 +669,38 @@ void eae6320::MultiBody::KineticEnergyProjection()
 		_Vector qdotCorrection = J.transpose() * lambda;
 		qdot = qdot + qdotCorrection;
 	}	
+	else
+	{
+		std::cout << "Singular Constraint!" << std::endl;
+	}
+}
+
+void eae6320::MultiBody::MomentumProjection()
+{
+	_Matrix J(3, totalVelDOF);
+	J.setZero();
+	_Matrix Sv(3, 6);
+	Sv.setZero();
+	Sv.block<3, 3>(0, 0) = _Matrix::Identity(3, 3);
+	_Matrix Sw(3, 6);
+	Sw.setZero();
+	Sw.block<3, 3>(0, 3) = _Matrix::Identity(3, 3);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		J = J + Mbody[i].block<3, 3>(3, 3) * Sw * Ht[i] + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Sv * Ht[i];
+	}
+	ForwardAngularAndTranslationalVelocity(qdot);
+	_Vector3 L = ComputeAngularMomentum();
+	_Matrix A = J * J.transpose();
+	_Scalar Adet = A.determinant();
+	if (Adet > 0.0000001)
+	{
+		_Vector3 lambda = A.inverse() * (-L + initalAngularMomentum);
+		_Vector qdotCorrection = J.transpose() * lambda;
+		qdot = qdot + qdotCorrection;
+		ForwardAngularAndTranslationalVelocity(qdot);
+		std::cout << "momentum error: " << (ComputeAngularMomentum() - initalAngularMomentum).transpose() << std::endl;
+	}
 	else
 	{
 		std::cout << "Singular Constraint!" << std::endl;
