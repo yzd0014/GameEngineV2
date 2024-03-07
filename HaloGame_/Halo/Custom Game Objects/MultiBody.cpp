@@ -156,7 +156,6 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//RK3Integration(dt);
 	//RK4Integration(dt);
 
-	Forward();
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
 	//std::cout << "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
@@ -223,23 +222,21 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, _Vector& i_q, _Vector& i_qdot
 
 void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 {
-	ComputeMr();
-	MrInverse = Mr.inverse();
 	_Vector Qr = ComputeQr_SikpVelocityUpdate(qdot);
 	_Vector qddot = MrInverse * Qr;
 
 	qdot = qdot + qddot * h;
 	//KineticEnergyProjection();
-	//EnergyMomentumProjection();
 	//MomentumProjection();
 	Integrate_q(q, q, qdot, h);
+	
 	ClampRotationVector();
+	Forward();
+	EnergyMomentumProjection();
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
 {
-	ComputeMr();
-	MrInverse = Mr.inverse();
 	_Vector k1 = MrInverse * ComputeQr_SikpVelocityUpdate(qdot);
 	_Vector k2 = MrInverse * ComputeQr(qdot + 0.5 * h * k1);
 	_Vector k3 = MrInverse * ComputeQr(qdot + 0.5 * h * k2);
@@ -250,12 +247,11 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	Integrate_q(q, q, qdot, h);
 
 	ClampRotationVector();
+	Forward();
 }
 
 void eae6320::MultiBody::RK3Integration(const _Scalar h)
 {
-	ComputeMr();
-	MrInverse = Mr.inverse();
 	_Vector k1 = h * MrInverse * ComputeQr_SikpVelocityUpdate(qdot);
 	_Vector k2 = h * MrInverse * ComputeQr(qdot + 0.5 * k1);
 	_Vector k3 = h * MrInverse * ComputeQr(qdot + 2.0 * k2 - k1);
@@ -276,6 +272,7 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 	}
 	q = q_new;
 	ClampRotationVector();
+	Forward();
 }
 
 void eae6320::MultiBody::ComputeH()
@@ -622,6 +619,8 @@ void eae6320::MultiBody::Forward()
 {
 	ForwardKinematics();
 	ComputeHt();
+	ComputeMr();
+	MrInverse = Mr.inverse();
 	ForwardAngularAndTranslationalVelocity(qdot);
 }
 
@@ -709,63 +708,74 @@ void eae6320::MultiBody::MomentumProjection()
 
 void eae6320::MultiBody::EnergyMomentumProjection()
 {
-	_Matrix A(totalVelDOF, totalVelDOF);
-	A.setZero();
-	_Matrix J_angularMomentum(3, totalVelDOF);
-	J_angularMomentum.setZero();
+	_Matrix f(totalVelDOF + 4, 1);
+	_Matrix grad_f(totalVelDOF + 4, totalVelDOF + 4);
+	
+	_Vector x(totalVelDOF + 4, 1);
+	x.setZero();
+	x.segment(0, totalVelDOF) = qdot;
+
+	_Matrix K(3, totalVelDOF);
+	K.setZero();
 	_Matrix Sv(3, 6);
 	Sv.setZero();
 	Sv.block<3, 3>(0, 0) = _Matrix::Identity(3, 3);
-	//std::cout << Sv << std::endl;
 	_Matrix Sw(3, 6);
 	Sw.setZero();
 	Sw.block<3, 3>(0, 3) = _Matrix::Identity(3, 3);
-	//std::cout << Sw << std::endl;
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		A = A + Ht[i].transpose() * Mbody[i] * Ht[i];
-		J_angularMomentum = J_angularMomentum + Mbody[i].block<3, 3>(3, 3) * Sw * Ht[i] + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Sv * Ht[i];
+		K = K + Mbody[i].block<3, 3>(3, 3) * Sw * Ht[i] + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Sv * Ht[i];
 	}
-
-	_Matrix J_energy(1, totalVelDOF);
-	J_energy.setZero();
-	_Vector B;
-	B.resize(4);
-	_Matrix Jt(4, totalVelDOF);
-	Jt.block(1, 0, 3, totalVelDOF) = J_angularMomentum;
-
-	int iterationNum = 10;
-	int solveCount = 0;
+	
+	_Matrix grad_C(4, totalVelDOF);
 	_Scalar energyErr = 1.0;
-	while (energyErr > 0.5)
-	//while (solveCount < iterationNum && energyErr > 0.5)
+	grad_C.block(1, 0, 3, totalVelDOF) = K;
+	
+	_Matrix C(4, 1);
+	_Matrix HessianC_lambda(totalVelDOF, totalVelDOF);
+	_Matrix HessianL(totalVelDOF, totalVelDOF);
+
+	int i = 0;
+	while (energyErr > 0.25)
 	{
-		J_energy = (A * qdot).transpose();
-		Jt.block(0, 0, 1, totalVelDOF) = J_energy;
-
-		B.setZero();
-		B(0) = ComputeTotalEnergy() - (J_energy * qdot)(0);
-		
-		_Vector lambda;
-		lambda.resize(4);
-		_Matrix JJTranspose = Jt * Jt.transpose();
-		if (JJTranspose.determinant() > 0.0000001)
+		//compute f
+		_Matrix energy_c(1, 1);
+		energy_c(0, 0) = initialEnergy;
+		C.block<1, 1>(0, 0) = 0.5 * x.segment(0, totalVelDOF).transpose() * Mr * x.segment(0, totalVelDOF) - energy_c;
+		C.block<3, 1>(1, 0) = K * x.segment(0, totalVelDOF) - initalAngularMomentum;
+		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * x.segment(0, totalVelDOF)).transpose();
+		if (i == 0)
 		{
-			lambda = (Jt * Jt.transpose()).inverse() * (-Jt * qdot - B + conservedQuantity);
+			//initialize lambda
+			x.segment(totalVelDOF, 4) = (grad_C * grad_C.transpose()).inverse() * C;
+		}
+		f.block(0, 0, totalVelDOF, 1) = x.segment(0, totalVelDOF) - qdot - grad_C.transpose() * x.segment(totalVelDOF, 4);
+		f.block<4, 1>(totalVelDOF, 0) = C;
 
-			_Vector qdotCorrection = Jt.transpose() * lambda;
-			qdot = qdot + qdotCorrection;
-		}
-		else
-		{
-			std::cout << "Singular Constraint: " << solveCount << std::endl;
-		}
+		//compute Lagrange Hesssian
+		HessianC_lambda = x.segment(totalVelDOF, 4)(0) * Mr;
+		HessianL = _Matrix::Identity(totalVelDOF, totalVelDOF) - HessianC_lambda;
 		
-		ForwardAngularAndTranslationalVelocity(qdot);
-		energyErr = fabs(ComputeTotalEnergy() - conservedQuantity(0));
-		solveCount++;
+		//compute gradient of f
+		grad_f.setZero();
+		grad_f.block(0, 0, totalVelDOF, totalVelDOF) = HessianL;
+		grad_f.block(0, totalVelDOF, totalVelDOF, 4) = grad_C.transpose();
+		grad_f.block(totalVelDOF, 0, 4, totalVelDOF) = grad_C;
+
+		//update
+		if (grad_f.determinant() < 0.00000001)
+		{
+			EAE6320_ASSERTF(false, "grad_f is not invertable");
+		}
+		x = x - grad_f.inverse() * f;
+		_Vector qdot_new = x.segment(0, totalVelDOF);
+		ForwardAngularAndTranslationalVelocity(qdot_new);
+		energyErr = fabs(ComputeTotalEnergy() - initialEnergy);
+		std::cout << energyErr << std::endl;
+		i++;
 	}
-	std::cout << "energyErr: " << energyErr << " linear error: " << (J_energy * qdot)(0) + B(0) - conservedQuantity(0) << std::endl;
+	qdot = x.segment(0, totalVelDOF);
 }
 
 _Scalar eae6320::MultiBody::ComputeTotalEnergy()
