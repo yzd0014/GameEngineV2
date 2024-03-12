@@ -159,7 +159,9 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
 	//std::cout << "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
-	std::cout << "angluar norm: " << angularMomentum.norm() << std::endl;
+	_Vector3 momErr = angularMomentum - initalAngularMomentum;
+	//std::cout << "angluar norm: " << angularMomentum.norm() << std::endl;
+	std::cout << std::left << "err: " << std::setw(15) << momErr.transpose() << std::endl;
 	//std::cout << std::left 
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
@@ -737,7 +739,7 @@ void eae6320::MultiBody::EnergyMomentumProjection()
 	_Matrix HessianL(totalVelDOF, totalVelDOF);
 
 	int i = 0;
-	while (energyErr > 0.25)
+	while (energyErr > 0.001)
 	{
 		//compute f
 		_Matrix energy_c(1, 1);
@@ -750,17 +752,17 @@ void eae6320::MultiBody::EnergyMomentumProjection()
 			//initialize lambda
 			x.segment(totalVelDOF, 4) = (grad_C * grad_C.transpose()).inverse() * C;
 		}
-		f.block(0, 0, totalVelDOF, 1) = x.segment(0, totalVelDOF) - qdot - grad_C.transpose() * x.segment(totalVelDOF, 4);
+		f.block(0, 0, totalVelDOF, 1) = x.segment(0, totalVelDOF) - qdot - MrInverse * grad_C.transpose() * x.segment(totalVelDOF, 4);
 		f.block<4, 1>(totalVelDOF, 0) = C;
 
 		//compute Lagrange Hesssian
 		HessianC_lambda = x.segment(totalVelDOF, 4)(0) * Mr;
-		HessianL = _Matrix::Identity(totalVelDOF, totalVelDOF) - HessianC_lambda;
+		HessianL = _Matrix::Identity(totalVelDOF, totalVelDOF) - MrInverse * HessianC_lambda;
 		
 		//compute gradient of f
 		grad_f.setZero();
 		grad_f.block(0, 0, totalVelDOF, totalVelDOF) = HessianL;
-		grad_f.block(0, totalVelDOF, totalVelDOF, 4) = grad_C.transpose();
+		grad_f.block(0, totalVelDOF, totalVelDOF, 4) = -grad_C.transpose();
 		grad_f.block(totalVelDOF, 0, 4, totalVelDOF) = grad_C;
 
 		//update

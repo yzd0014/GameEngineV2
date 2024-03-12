@@ -72,7 +72,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
 		MultiBody * pMultiBody = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
-		//GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
+		//GameCommon::GameObject * pMultiBody = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		noColliderObjects.push_back(pMultiBody);
 	}
 	
