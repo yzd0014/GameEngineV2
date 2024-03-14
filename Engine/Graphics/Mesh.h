@@ -144,10 +144,15 @@ namespace eae6320
 
 #define LOAD_MESH(meshPath, meshName)\
 eae6320::Assets::cHandle<Mesh> meshName;\
+if(cbApplication::render)\
 {\
 	auto result = eae6320::Results::Success;\
 	if (!(result = Mesh::s_manager.Load(meshPath, meshName))) {\
 		EAE6320_ASSERT(false);\
 	}\
 	masterMeshArray.push_back(meshName);\
+}\
+else\
+{\
+	meshName = eae6320::Assets::cHandle<Mesh>();\
 }

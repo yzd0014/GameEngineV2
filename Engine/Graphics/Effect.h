@@ -90,5 +90,12 @@ namespace eae6320
 
 #define LOAD_EFFECT(effectPath, effectName)\
 Effect* effectName;\
-Effect::Load(effectPath, effectName);\
-masterEffectArray.push_back(effectName);
+if(cbApplication::render)\
+{\
+	Effect::Load(effectPath, effectName); \
+	masterEffectArray.push_back(effectName);\
+}\
+else\
+{\
+	effectName = nullptr;\
+}

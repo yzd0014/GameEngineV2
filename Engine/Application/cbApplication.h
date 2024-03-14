@@ -78,6 +78,7 @@ namespace eae6320
 			//==========
 
 		public:
+			bool render = true;
 			std::vector<Engine::Sound *> soundArray;
 
 			// Different platforms have different parameters that get passed to a program's entry point
@@ -269,6 +270,7 @@ namespace eae6320
 			// distinct from the main process thread (that is used to render).
 			void UpdateUntilExit();
 			static void EntryPoint_applicationLoopThread( void* const io_application );
+			void SimulationLoopWithoutRendering();
 
 			cResult Exit_platformSpecific( const int i_exitCode );
 

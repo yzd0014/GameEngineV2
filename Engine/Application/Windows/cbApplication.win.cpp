@@ -285,6 +285,10 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_base( const sEn
 {
 	auto result = Results::Success;
 
+	if (!render)
+	{
+		goto OnExit;
+	}
 	// Save the handle to this specific running instance of the application
 	const auto applicationInstance = i_entryPointParameters.applicationInstance;
 	m_thisInstanceOfTheApplication = applicationInstance;
@@ -359,30 +363,32 @@ eae6320::cResult eae6320::Application::cbApplication::PopulateUserOutputInitiali
 eae6320::cResult eae6320::Application::cbApplication::CleanUp_base()
 {
 	auto result = Results::Success;
-
-	// Main Window
-	if ( m_mainWindow )
+	if (render)
 	{
-		const auto localResult = FreeMainWindow( m_mainWindow );
-		if ( !localResult )
+		// Main Window
+		if (m_mainWindow)
 		{
-			EAE6320_ASSERT( false );
-			if ( result )
+			const auto localResult = FreeMainWindow(m_mainWindow);
+			if (!localResult)
 			{
-				result = localResult;
+				EAE6320_ASSERT(false);
+				if (result)
+				{
+					result = localResult;
+				}
 			}
 		}
-	}
-	// Main Window Class
-	if ( m_mainWindowClass )
-	{
-		const auto localResult = FreeMainWindowClass( m_thisInstanceOfTheApplication, m_mainWindowClass );
-		if ( !localResult )
+		// Main Window Class
+		if (m_mainWindowClass)
 		{
-			EAE6320_ASSERT( false );
-			if ( result )
+			const auto localResult = FreeMainWindowClass(m_thisInstanceOfTheApplication, m_mainWindowClass);
+			if (!localResult)
 			{
-				result = localResult;
+				EAE6320_ASSERT(false);
+				if (result)
+				{
+					result = localResult;
+				}
 			}
 		}
 	}

@@ -174,6 +174,7 @@ int eae6320::Application::cbApplication::ParseEntryPointParametersAndRun( const 
 		}
 	}
 	// Enter an infinite loop rendering frames until the application is ready to exit
+	if (render)
 	{
 		const auto result = RenderFramesWhileWaitingForApplicationToExit( exitCode );
 		if ( !result )
@@ -182,6 +183,10 @@ int eae6320::Application::cbApplication::ParseEntryPointParametersAndRun( const 
 			UserOutput::Print( "The application encountered an error and will now exit" );
 			goto OnExit;
 		}
+	}
+	else
+	{
+		SimulationLoopWithoutRendering();
 	}
 
 OnExit:
@@ -404,6 +409,19 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 	}
 }
 
+void eae6320::Application::cbApplication::SimulationLoopWithoutRendering()
+{
+	const double h = GetSimulationUpdatePeriod_inSeconds();
+	while (true)
+	{
+		if (!Physics::simPause)
+		{
+			UpdateSimulationBasedOnTime(h);
+		}
+		UpdateSimulationBasedOnInput();
+	}
+}
+
 void eae6320::Application::cbApplication::EntryPoint_applicationLoopThread( void* const io_application )
 {
 	auto *const application = static_cast<cbApplication*>( io_application );
@@ -420,11 +438,20 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_all( const sEnt
 	{
 		EnableConsolePrinting(true);
 	}
-	Graphics::renderThreadNoWait = false;
-	if (i_entryPointParameters.commandLineArguments[1] == '1')
+	if (i_entryPointParameters.commandLineArguments[1] == '0')
+	{
+		Graphics::renderThreadNoWait = false;
+	}
+	else if (i_entryPointParameters.commandLineArguments[1] == '1')
 	{
 		//render thread won't wait for simulation thread to submit its data
 		Graphics::renderThreadNoWait = true;
+	}
+	else if (i_entryPointParameters.commandLineArguments[1] == '2')
+	{
+		EnableConsolePrinting(true);
+		Graphics::renderThreadNoWait = true;
+		render = false;
 	}
 
 	auto result = Results::Success;
@@ -468,7 +495,7 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_all( const sEnt
 		//initialize gravity
 		Physics::InitializePhysics(colliderObjects, noColliderObjects);
 	}
-
+	if (!render) goto OnExit;
 	// Start the application loop thread
 	if ( !( result = m_applicationLoopThread.Start( EntryPoint_applicationLoopThread, this ) ) )
 	{
@@ -498,38 +525,41 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 {
 	auto result = Results::Success;
 
-	// User Output
+	if (render)
 	{
-		UserOutput::sInitializationParameters initializationParameters;
-		if ( result = PopulateUserOutputInitializationParameters( initializationParameters ) )
+		// User Output
 		{
-			if ( !( result = UserOutput::Initialize( initializationParameters ) ) )
+			UserOutput::sInitializationParameters initializationParameters;
+			if (result = PopulateUserOutputInitializationParameters(initializationParameters))
 			{
-				EAE6320_ASSERT( false );
+				if (!(result = UserOutput::Initialize(initializationParameters)))
+				{
+					EAE6320_ASSERT(false);
+					goto OnExit;
+				}
+			}
+			else
+			{
+				EAE6320_ASSERT(false);
 				goto OnExit;
 			}
 		}
-		else
+		// Graphics
 		{
-			EAE6320_ASSERT( false );
-			goto OnExit;
-		}
-	}
-	// Graphics
-	{
-		Graphics::sInitializationParameters initializationParameters;
-		if ( result = PopulateGraphicsInitializationParameters( initializationParameters ) )
-		{
-			if ( !( result = Graphics::Initialize( initializationParameters ) ) )
+			Graphics::sInitializationParameters initializationParameters;
+			if (result = PopulateGraphicsInitializationParameters(initializationParameters))
 			{
-				EAE6320_ASSERT( false );
+				if (!(result = Graphics::Initialize(initializationParameters)))
+				{
+					EAE6320_ASSERT(false);
+					goto OnExit;
+				}
+			}
+			else
+			{
+				EAE6320_ASSERT(false);
 				goto OnExit;
 			}
-		}
-		else
-		{
-			EAE6320_ASSERT( false );
-			goto OnExit;
 		}
 	}
 	//UserInput
@@ -538,9 +568,11 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 			UserInput::KeyState::lastFrameKeyState[i] = 0;
 			UserInput::KeyState::currFrameKeyState[i] = 0;
 		}
-		
-		EAE6320_ASSERT(m_mainWindow != NULL);
-		UserInput::mainWindow = m_mainWindow;
+		if (render)
+		{
+			EAE6320_ASSERT(m_mainWindow != NULL);
+			UserInput::mainWindow = m_mainWindow;
+		}
 	}
 	//GameplayUtility
 	{
@@ -561,6 +593,7 @@ eae6320::cResult eae6320::Application::cbApplication::CleanUp_all()
 	}
 
 	// Exit the application loop
+	if (render)
 	{
 		// Signal to the application loop thread that it should exit
 		m_shouldApplicationLoopExit = true;
@@ -649,31 +682,33 @@ eae6320::cResult eae6320::Application::cbApplication::CleanUp_all()
 eae6320::cResult eae6320::Application::cbApplication::CleanUp_engine()
 {
 	auto result = Results::Success;
-
-	// Graphics
+	if (render)
 	{
-		const auto localResult = Graphics::CleanUp();
-		if ( !localResult )
+		// Graphics
 		{
-			EAE6320_ASSERT( false );
-			if ( result )
+			const auto localResult = Graphics::CleanUp();
+			if (!localResult)
 			{
-				result = localResult;
+				EAE6320_ASSERT(false);
+				if (result)
+				{
+					result = localResult;
+				}
+			}
+		}
+		// User Output
+		{
+			const auto localResult = UserOutput::CleanUp();
+			if (!localResult)
+			{
+				EAE6320_ASSERT(false);
+				if (result)
+				{
+					result = localResult;
+				}
 			}
 		}
 	}
-	// User Output
-	{
-		const auto localResult = UserOutput::CleanUp();
-		if ( !localResult )
-		{
-			EAE6320_ASSERT( false );
-			if ( result )
-			{
-				result = localResult;
-			}
-		}
-	}
-
+	
 	return result;
 }

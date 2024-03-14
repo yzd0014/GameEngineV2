@@ -48,7 +48,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//initialize camera 
 	mainCamera.Initialize(Math::sVector(0.0f, 5.0f, 12.5f), Math::sVector(-30.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 	//mainCamera.Initialize(Math::sVector(5.0f, 10.0f, 15.0f), Math::sVector(-30.0f, 20.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
-
+	
 	//create two meshes
 	LOAD_MESH("data/meshes/square_plane.mesh", mesh_plane)
 	LOAD_MESH("data/meshes/cube.mesh", mesh_cube)

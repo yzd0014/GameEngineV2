@@ -11,11 +11,15 @@ namespace eae6320 {
 		public: 
 			GameObject(){}
 			GameObject(Effect * i_pEffect, eae6320::Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State) {//constructor
-				m_Mesh = i_Mesh;
-				Mesh::s_manager.Get(m_Mesh)->IncrementReferenceCount();
+				if (i_pEffect != nullptr)
+				{
+					m_Mesh = i_Mesh;
+					Mesh::s_manager.Get(m_Mesh)->IncrementReferenceCount();
+
+					i_pEffect->IncrementReferenceCount();
+					m_pEffect = i_pEffect;
+				}
 				
-				i_pEffect->IncrementReferenceCount();
-				m_pEffect = i_pEffect;
 				m_State = i_State;
 				m_State.collider.m_pParentRigidBody = &m_State;
 				active = true;
@@ -46,8 +50,11 @@ namespace eae6320 {
 				return *this;
 			}
 			virtual ~GameObject() {
-				Mesh::s_manager.Get(m_Mesh)->DecrementReferenceCount();
-				m_pEffect->DecrementReferenceCount();
+				if (m_pEffect != nullptr)
+				{
+					Mesh::s_manager.Get(m_Mesh)->DecrementReferenceCount();
+					m_pEffect->DecrementReferenceCount();
+				}
 			}
 			virtual void Tick(const float i_secondCountToIntegrate) {}//deprecated
 			virtual void Tick(const double i_secondCountToIntegrate) {}
@@ -86,7 +93,7 @@ namespace eae6320 {
 			char objectType[20];
 		private:
 			eae6320::Assets::cHandle<Mesh> m_Mesh;
-			Effect* m_pEffect;
+			Effect* m_pEffect = nullptr;
 			bool active;
 			
 		};	
