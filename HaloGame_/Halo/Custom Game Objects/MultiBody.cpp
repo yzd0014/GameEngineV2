@@ -739,7 +739,7 @@ void eae6320::MultiBody::EnergyMomentumProjection()
 	_Matrix HessianL(totalVelDOF, totalVelDOF);
 
 	int i = 0;
-	while (energyErr > 0.001)
+	while (energyErr > 0.0000001)
 	{
 		//compute f
 		_Matrix energy_c(1, 1);
@@ -752,12 +752,13 @@ void eae6320::MultiBody::EnergyMomentumProjection()
 			//initialize lambda
 			x.segment(totalVelDOF, 4) = (grad_C * grad_C.transpose()).inverse() * C;
 		}
-		f.block(0, 0, totalVelDOF, 1) = x.segment(0, totalVelDOF) - qdot - MrInverse * grad_C.transpose() * x.segment(totalVelDOF, 4);
+		f.block(0, 0, totalVelDOF, 1) = Mr * (x.segment(0, totalVelDOF) - qdot) - grad_C.transpose() * x.segment(totalVelDOF, 4);
 		f.block<4, 1>(totalVelDOF, 0) = C;
 
 		//compute Lagrange Hesssian
 		HessianC_lambda = x.segment(totalVelDOF, 4)(0) * Mr;
-		HessianL = _Matrix::Identity(totalVelDOF, totalVelDOF) - MrInverse * HessianC_lambda;
+		//HessianL = _Matrix::Identity(totalVelDOF, totalVelDOF) - HessianC_lambda;
+		HessianL = Mr - HessianC_lambda;
 		
 		//compute gradient of f
 		grad_f.setZero();
