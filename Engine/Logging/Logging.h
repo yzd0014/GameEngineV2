@@ -44,7 +44,7 @@ namespace eae6320
 #define LOG_TO_FILE \
 if (!eae6320::Logging::fileOpened)\
 {\
-	eae6320::Logging::logStream.open("FILE_DATA.csv", std::ios::out | std::ios::app);\
+	eae6320::Logging::logStream.open("sim_data.csv", std::ios::out | std::ios::app);\
 	eae6320::Logging::fileOpened = true;\
 }\
 eae6320::Logging::logStream

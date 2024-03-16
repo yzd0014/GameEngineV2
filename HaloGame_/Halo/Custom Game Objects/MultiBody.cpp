@@ -165,7 +165,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//std::cout << std::left 
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
-	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	//LOG_TO_FILE << t << ", " << ComputeTotalEnergy() << std::endl;
 }
 
@@ -234,7 +234,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	
 	ClampRotationVector();
 	Forward();
-	EnergyMomentumProjection();
+	//EnergyMomentumProjection();
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)

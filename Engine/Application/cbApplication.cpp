@@ -34,6 +34,7 @@ void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const doub
 	for (size_t i = 0; i < noColliderObjects.size(); i++) {
 		noColliderObjects[i]->Tick(i_elapsedSecondCount_sinceLastUpdate);
 	}
+	Physics::totalSimulationTime += i_elapsedSecondCount_sinceLastUpdate;
 }
 
 void eae6320::Application::cbApplication::UpdateSimulationBasedOnInput()
@@ -327,7 +328,6 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 				++simulationUpdateCount_thisIteration;
 				tickCount_simulationTime_totalElapsed += tickCount_perSimulationUpdate;
 				m_tickCount_simulationTime_totalElapsed = tickCount_simulationTime_totalElapsed;
-				Physics::totalSimulationTime = Time::ConvertTicksToSeconds(tickCount_simulationTime_totalElapsed);
 				tickCount_simulationTime_elapsedButNotYetSimulated -= tickCount_perSimulationUpdate;
 				Physics::nextSimStep = false;
 			}
