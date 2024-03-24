@@ -161,7 +161,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//std::cout << "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
 	_Vector3 momErr = angularMomentum - initalAngularMomentum;
 	//std::cout << "angluar norm: " << angularMomentum.norm() << std::endl;
-	std::cout << std::left << "err: " << std::setw(15) << momErr.transpose() << std::endl;
+	std::cout << std::left << "err: " << std::setw(15) << momErr.transpose() << std::endl << std::endl;
 	//std::cout << std::left 
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
@@ -230,11 +230,12 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	qdot = qdot + qddot * h;
 	//KineticEnergyProjection();
 	//MomentumProjection();
+	//EnergyMomentumProjection();
 	Integrate_q(q, q, qdot, h);
 	
 	ClampRotationVector();
 	Forward();
-	//EnergyMomentumProjection();
+	EnergyMomentumProjection();
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
@@ -750,7 +751,7 @@ void eae6320::MultiBody::EnergyMomentumProjection()
 		if (i == 0)
 		{
 			//initialize lambda
-			x.segment(totalVelDOF, 4) = (grad_C * grad_C.transpose()).inverse() * C;
+			x.segment(totalVelDOF, 4) = (grad_C * grad_C.transpose()).inverse() * -C;
 		}
 		f.block(0, 0, totalVelDOF, 1) = Mr * (x.segment(0, totalVelDOF) - qdot) - grad_C.transpose() * x.segment(totalVelDOF, 4);
 		f.block<4, 1>(totalVelDOF, 0) = C;
