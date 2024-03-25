@@ -152,21 +152,29 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Scalar dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 
-	EulerIntegration(dt);
+	//EulerIntegration(dt);
 	//RK3Integration(dt);
-	//RK4Integration(dt);
+	RK4Integration(dt);
 
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
 	//std::cout << "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
 	_Vector3 momErr = angularMomentum - initalAngularMomentum;
 	//std::cout << "angluar norm: " << angularMomentum.norm() << std::endl;
-	std::cout << std::left << "err: " << std::setw(15) << momErr.transpose() << std::endl << std::endl;
+	//std::cout << std::left << "err: " << std::setw(15) << momErr.transpose() << std::endl << std::endl;
 	//std::cout << std::left 
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
-	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	//LOG_TO_FILE << t << ", " << ComputeTotalEnergy() << std::endl;
+	/*std::cout << t << std::endl;
+	if (t >= 3.0)
+	{
+		_Scalar curr_energy = ComputeTotalEnergy();
+		_Scalar err = abs(curr_energy - initialEnergy) / initialEnergy;
+		LOG_TO_FILE << err << std::endl;
+		Physics::simPause = true;
+	}*/
 }
 
 void eae6320::MultiBody::ClampRotationVector()
@@ -235,7 +243,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	
 	ClampRotationVector();
 	Forward();
-	EnergyMomentumProjection();
+	//EnergyMomentumProjection();
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
