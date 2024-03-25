@@ -135,16 +135,17 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 
 	qdot.segment(0, 3) = _Vector3(0.0f, 4.0f, 0.0f);
 	qdot.segment(3, 3) = _Vector3(-2.0f, -8.0f, 1.4f);
+	/*qdot.segment(0, 3) = _Vector3(0.0f, 2.0f, 0.0f);
+	qdot.segment(3, 3) = _Vector3(0.0f, 0.0f, 2.0f);*/
 	Forward();
 	
-	initialEnergy = ComputeTotalEnergy();
-	initalAngularMomentum = ComputeAngularMomentum();
-	conservedQuantity.resize(4);
-	conservedQuantity(0) = initialEnergy;
-	conservedQuantity.segment(1, 3) = initalAngularMomentum;
-	std::cout << "initial energy: " << initialEnergy << std::endl;
-	std::cout << "initial angular momentum: " << initalAngularMomentum.transpose() << std::endl;
-	std::cout << "conserved quantity: " << conservedQuantity.transpose() << std::endl;
+	kineticEnergy0 = ComputeKineticEnergy();
+	totalEnergy0 = ComputeTotalEnergy();
+	angularMomentum0 = ComputeAngularMomentum();
+	linearMomentum0 = ComputeTranslationalMomentum();
+	std::cout << "initial total energy: " << totalEnergy0 << std::endl;
+	std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
+	std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
 }
 
 void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
@@ -152,14 +153,14 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Scalar dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 
-	//EulerIntegration(dt);
+	EulerIntegration(dt);
 	//RK3Integration(dt);
-	RK4Integration(dt);
+	//RK4Integration(dt);
 
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
 	//std::cout << "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
-	_Vector3 momErr = angularMomentum - initalAngularMomentum;
+	_Vector3 momErr = angularMomentum - angularMomentum0;
 	//std::cout << "angluar norm: " << angularMomentum.norm() << std::endl;
 	//std::cout << std::left << "err: " << std::setw(15) << momErr.transpose() << std::endl << std::endl;
 	//std::cout << std::left 
@@ -171,7 +172,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	if (t >= 3.0)
 	{
 		_Scalar curr_energy = ComputeTotalEnergy();
-		_Scalar err = abs(curr_energy - initialEnergy) / initialEnergy;
+		_Scalar err = abs(curr_energy - kineticEnergy0) / kineticEnergy0;
 		LOG_TO_FILE << err << std::endl;
 		Physics::simPause = true;
 	}*/
@@ -243,7 +244,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	
 	ClampRotationVector();
 	Forward();
-	//EnergyMomentumProjection();
+	EnergyMomentumProjection();
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
@@ -674,7 +675,7 @@ void eae6320::MultiBody::KineticEnergyProjection()
 	_Scalar Ts = T(0, 0);
 	if (Ts > 0.0000001)
 	{
-		_Scalar lambda = (-E + initialEnergy) / Ts;
+		_Scalar lambda = (-E + kineticEnergy0) / Ts;
 
 		_Vector qdotCorrection = J.transpose() * lambda;
 		qdot = qdot + qdotCorrection;
@@ -705,11 +706,11 @@ void eae6320::MultiBody::MomentumProjection()
 	_Scalar Adet = A.determinant();
 	if (Adet > 0.0000001)
 	{
-		_Vector3 lambda = A.inverse() * (-L + initalAngularMomentum);
+		_Vector3 lambda = A.inverse() * (-L + angularMomentum0);
 		_Vector qdotCorrection = J.transpose() * lambda;
 		qdot = qdot + qdotCorrection;
 		ForwardAngularAndTranslationalVelocity(qdot);
-		std::cout << "momentum error: " << (ComputeAngularMomentum() - initalAngularMomentum).transpose() << std::endl;
+		std::cout << "momentum error: " << (ComputeAngularMomentum() - angularMomentum0).transpose() << std::endl;
 	}
 	else
 	{
@@ -719,6 +720,22 @@ void eae6320::MultiBody::MomentumProjection()
 
 void eae6320::MultiBody::EnergyMomentumProjection()
 {
+	//recompute H
+	if (gravity)
+	{
+		kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
+	}
+	//recompute P
+	if (jointType[0] != FREE_JOINT || gravity)
+	{
+		linearMomentum0 = ComputeTranslationalMomentum();
+	}
+	//recompute L
+	if (gravity)
+	{
+		angularMomentum0 = ComputeAngularMomentum();
+	}
+
 	_Matrix f(totalVelDOF + 4, 1);
 	_Matrix grad_f(totalVelDOF + 4, totalVelDOF + 4);
 	
@@ -752,9 +769,9 @@ void eae6320::MultiBody::EnergyMomentumProjection()
 	{
 		//compute f
 		_Matrix energy_c(1, 1);
-		energy_c(0, 0) = initialEnergy;
+		energy_c(0, 0) = kineticEnergy0;
 		C.block<1, 1>(0, 0) = 0.5 * x.segment(0, totalVelDOF).transpose() * Mr * x.segment(0, totalVelDOF) - energy_c;
-		C.block<3, 1>(1, 0) = K * x.segment(0, totalVelDOF) - initalAngularMomentum;
+		C.block<3, 1>(1, 0) = K * x.segment(0, totalVelDOF) - angularMomentum0;
 		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * x.segment(0, totalVelDOF)).transpose();
 		if (i == 0)
 		{
@@ -783,33 +800,49 @@ void eae6320::MultiBody::EnergyMomentumProjection()
 		x = x - grad_f.inverse() * f;
 		_Vector qdot_new = x.segment(0, totalVelDOF);
 		ForwardAngularAndTranslationalVelocity(qdot_new);
-		energyErr = fabs(ComputeTotalEnergy() - initialEnergy);
+		energyErr = fabs(ComputeTotalEnergy() - kineticEnergy0);
 		std::cout << energyErr << std::endl;
 		i++;
 	}
 	qdot = x.segment(0, totalVelDOF);
 }
 
-_Scalar eae6320::MultiBody::ComputeTotalEnergy()
+_Scalar eae6320::MultiBody::ComputeKineticEnergy()
 {
-	_Scalar energy = 0;
+	_Scalar out = 0;
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		_Scalar kineticEnergyRotation = 0;
 		kineticEnergyRotation = 0.5 * w_abs_world[i].transpose() * Mbody[i].block<3, 3>(3, 3) * w_abs_world[i];
-		
+
 		_Scalar kineticEnergyTranslaion = 0;
 		kineticEnergyTranslaion = 0.5 * vel[i].transpose() * Mbody[i].block<3, 3>(0, 0) * vel[i];
 
+		out += kineticEnergyRotation + kineticEnergyTranslaion;
+	}
+	return out;
+}
+
+_Scalar eae6320::MultiBody::ComputePotentialEnergy()
+{
+	_Scalar out = 0;
+	for (int i = 0; i < numOfLinks; i++)
+	{
 		_Scalar potentialEnergy = 0;
 		_Vector3 g(0.0f, 9.81f, 0.0f);
 		_Vector3 x;
 		Math::NativeVector2EigenVector(m_linkBodys[i]->m_State.position, x);
 		potentialEnergy = g.transpose() * Mbody[i].block<3, 3>(0, 0) * x;
 
-		if (gravity) energy += kineticEnergyRotation + kineticEnergyTranslaion + potentialEnergy;
-		else energy += kineticEnergyRotation + kineticEnergyTranslaion;
+		out += potentialEnergy;
 	}
+	return out;
+}
+
+_Scalar eae6320::MultiBody::ComputeTotalEnergy()
+{
+	_Scalar energy = ComputeKineticEnergy();
+	if (gravity) energy += ComputePotentialEnergy();
 	return energy;
 }
 
@@ -864,7 +897,7 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 			_Scalar beta = 0.2f;//0.4f;
 			_Scalar CR = 0.4f;// 0.2f;
 			_Scalar SlopP = 0.001f;
-			bias(i) = -beta / h * std::max(-g[joint_id], 0.0) - CR * std::max(-JV(0, 0), 0.0);
+			bias(i) = -beta / h * std::max<_Scalar>(-g[joint_id], 0.0) - CR * std::max<_Scalar>(-JV(0, 0), 0.0);
 		}
 		
 		_Matrix lambda;

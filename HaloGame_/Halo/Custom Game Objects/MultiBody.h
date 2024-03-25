@@ -53,6 +53,8 @@ namespace eae6320
 		void ForwardKinematics();
 		void Forward();
 		void ClampRotationVector();
+		_Scalar ComputeKineticEnergy();
+		_Scalar ComputePotentialEnergy();
 		_Scalar ComputeTotalEnergy();
 		_Vector3 ComputeTranslationalMomentum();
 		_Vector3 ComputeAngularMomentum();
@@ -102,9 +104,11 @@ namespace eae6320
 		std::vector<int> jointsID;
 		
 		_Scalar jointLimit = 0.785f;
-		_Scalar initialEnergy = 0;
-		_Vector3 initalAngularMomentum;
-		_Vector conservedQuantity;
+		_Scalar kineticEnergy0 = 0;
+		_Scalar totalEnergy0 = 0;
+		_Vector3 angularMomentum0;
+		_Vector3 linearMomentum0;
+		//_Vector conservedQuantity;
 
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
