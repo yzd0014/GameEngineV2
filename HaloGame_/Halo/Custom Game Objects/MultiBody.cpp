@@ -67,8 +67,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 
 		std::vector<_Vector3> uPairs;
 		uPairs.resize(2);
-		uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
-		//uPairs[0] = _Vector3(0.0f, 1.5f, 0.0f);
+		//uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
+		uPairs[0] = _Vector3(0.0f, 1.5f, 0.0f);
 		if (i == numOfLinks - 1)
 		{
 			uPairs[1] = _Vector3(0.0f, 0.0f, 0.0f);
@@ -80,8 +80,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 
-		jointType[i] = BALL_JOINT_4D;
-		//jointType[i] = BALL_JOINT_3D;
+		//jointType[i] = BALL_JOINT_4D;
+		jointType[i] = BALL_JOINT_3D;
 	}
 	//jointType[0] = FREE_JOINT;
 
@@ -133,10 +133,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	/*qdot.segment(3, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
 	qdot.segment(6, 3) = _Vector3(4.0f, -10.0f, 0.0f);*/
 
-	qdot.segment(0, 3) = _Vector3(0.0f, 4.0f, 0.0f);
-	qdot.segment(3, 3) = _Vector3(-2.0f, -8.0f, 1.4f);
-	/*qdot.segment(0, 3) = _Vector3(0.0f, 2.0f, 0.0f);
-	qdot.segment(3, 3) = _Vector3(0.0f, 0.0f, 2.0f);*/
+	qdot.segment(0, 3) = _Vector3(-2.0f, 2.0f, 0.0f);
+	//qdot.segment(3, 3) = _Vector3(-2.0f, -8.0f, 1.4f);
 	Forward();
 	
 	kineticEnergy0 = ComputeKineticEnergy();
@@ -153,16 +151,16 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Scalar dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 
-	EulerIntegration(dt);
+	//EulerIntegration(dt);
 	//RK3Integration(dt);
-	//RK4Integration(dt);
+	RK4Integration(dt);
 
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
 	//std::cout << "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
 	_Vector3 momErr = angularMomentum - angularMomentum0;
 	//std::cout << "angluar norm: " << angularMomentum.norm() << std::endl;
-	std::cout << std::left << "angular mom err: " << std::setw(15) << momErr.transpose() << std::endl << std::endl;
+	//std::cout << std::left << "angular mom err: " << std::setw(15) << momErr.transpose() << std::endl << std::endl;
 	//std::cout << std::left 
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
@@ -260,7 +258,15 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 	_Vector qddot = (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
 	qdot = qdot + h * qddot;
-	Integrate_q(q, q, qdot, h);
+	
+	_Vector q_new(totalPosDOF);
+	Integrate_q(q_new, q, qdot, h);
+	if (constraintSolverMode == PBD)
+	{
+		JointLimitCheck();
+		ResolveJointLimitPBD(q_new, h);
+	}
+	q = q_new;
 
 	ClampRotationVector();
 	Forward();

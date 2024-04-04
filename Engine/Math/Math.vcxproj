@@ -30,6 +30,7 @@
     <ClInclude Include="cMatrix_transformation.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="cQuaternion.h" />
+    <ClInclude Include="DataTypeDefine.h" />
     <ClInclude Include="EigenHelper.h" />
     <ClInclude Include="Functions.h" />
     <ClInclude Include="sVector.h" />

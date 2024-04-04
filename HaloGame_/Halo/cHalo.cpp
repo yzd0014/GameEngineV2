@@ -62,7 +62,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	
 	{
 		std::vector<GameCommon::GameObject *> links;
-		int bodyNum = 3;
+		int bodyNum = 1;
 		for (int i = 0; i < bodyNum; i++)
 		{
 			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
