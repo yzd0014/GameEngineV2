@@ -233,6 +233,9 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, _Vector& i_q, _Vector& i_qdot
 
 void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 {
+	kineticEnergy0 = ComputeKineticEnergy();
+	linearMomentum0 = ComputeTranslationalMomentum();
+	angularMomentum0 = ComputeAngularMomentum();
 	_Vector Qr = ComputeQr_SikpVelocityUpdate(qdot);
 	_Vector qddot = MrInverse * Qr;
 
@@ -691,24 +694,24 @@ void eae6320::MultiBody::ManifoldProjection()
 {
 	//recompute H
 	//TODO: external force, update totalEnergy0
-	if (gravity)
-	{
-		kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
-	}
-	//recompute P
-	if (jointType[0] != FREE_JOINT || gravity)
-	{
-		linearMomentum0 = ComputeTranslationalMomentum();
-		//std::cout << linearMomentum0 << std::endl;
-	}
-	//recompute L
-	if (gravity)
-	{
-		angularMomentum0 = ComputeAngularMomentum();
-	}
+	//if (gravity)
+	//{
+	//	kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
+	//}
+	////recompute P
+	//if (jointType[0] != FREE_JOINT || gravity)
+	//{
+	//	linearMomentum0 = ComputeTranslationalMomentum();
+	//	//std::cout << linearMomentum0 << std::endl;
+	//}
+	////recompute L
+	//if (gravity)
+	//{
+	//	angularMomentum0 = ComputeAngularMomentum();
+	//}
 
 	int numOfConstraints = 7;
-	int nq = totalVelDOF + 3;
+	int nq = totalVelDOF + 2;
 	int n = nq + numOfConstraints;
 	_Matrix f(n, 1);
 	_Matrix grad_f(n, n);
@@ -725,10 +728,10 @@ void eae6320::MultiBody::ManifoldProjection()
 	D.setZero();
 	//D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
 	D.block(0, 0, totalVelDOF, totalVelDOF) = _Matrix::Identity(totalVelDOF, totalVelDOF);
-	_Scalar m_coeff = 1000;
+	_Scalar m_coeff = 0.001;
 	D(totalVelDOF, totalVelDOF) = m_coeff;
 	D(totalVelDOF + 1, totalVelDOF + 1) = m_coeff;
-	D(totalVelDOF + 2, totalVelDOF + 2) = m_coeff;
+	//D(totalVelDOF + 2, totalVelDOF + 2) = m_coeff;
 
 	_Matrix Kp(3, totalVelDOF);
 	Kp.setZero();
@@ -742,20 +745,20 @@ void eae6320::MultiBody::ManifoldProjection()
 	Sw.block<3, 3>(0, 3) = _Matrix::Identity(3, 3);
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Sw * Ht[i] + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Sv * Ht[i];
 		Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Sv * Ht[i];
+		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Sw * Ht[i] + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Sv * Ht[i];
 	}
 
+	_Scalar kineticEnergy_t = ComputeKineticEnergy();
+	_Vector linearMomentum_t = ComputeTranslationalMomentum();
+	_Vector angularMomentum_t = ComputeAngularMomentum();
 	_Matrix grad_C(7, nq);
 	grad_C.setZero();
 	grad_C.block(1, 0, 3, totalVelDOF) = Kp;
 	grad_C.block(4, 0, 3, totalVelDOF) = Kl;
-	_Scalar kineticEnergy_t = ComputeKineticEnergy();
-	grad_C(0, totalVelDOF) = kineticEnergy0 - kineticEnergy_t;
-	_Vector linearMomentum_t = ComputeTranslationalMomentum();
-	grad_C.block<3, 1>(1, totalVelDOF + 1) = linearMomentum0 - linearMomentum_t;
-	_Vector angularMomentum_t = ComputeAngularMomentum();
-	grad_C.block<3, 1>(4, totalVelDOF + 2) = angularMomentum0 - angularMomentum_t;
+	//grad_C(0, totalVelDOF) = kineticEnergy0 - kineticEnergy_t;
+	grad_C.block<3, 1>(1, totalVelDOF) = linearMomentum_t - linearMomentum0;
+	grad_C.block<3, 1>(4, totalVelDOF + 1) = angularMomentum_t - angularMomentum0;
 	//std::cout << grad_C << std::endl;
 
 	_Matrix C(7, 1);
@@ -765,15 +768,18 @@ void eae6320::MultiBody::ManifoldProjection()
 
 	_Scalar energyErr = 1.0;
 	int i = 0;
-	while (energyErr > 0.0000001 && i < 5)
+	while (energyErr > 0.0000001)
 	{
 		//compute f
-		C(0, 0) = 0.5 * (x.segment(0, totalVelDOF).transpose() * Mr * x.segment(0, totalVelDOF))(0, 0) - (1 - x(totalVelDOF)) * kineticEnergy0 - x(totalVelDOF) * kineticEnergy_t;
-		C.block<3, 1>(1, 0) = Kp * x.segment(0, totalVelDOF) - (1 - x(totalVelDOF + 1)) * linearMomentum0 - x(totalVelDOF + 1) * linearMomentum_t;
-		C.block<3, 1>(4, 0) = Kl * x.segment(0, totalVelDOF) - (1 - x(totalVelDOF + 2)) * angularMomentum0 - x(totalVelDOF + 2) * angularMomentum_t;
-		
+		C(0, 0) = 0.5 * (x.segment(0, totalVelDOF).transpose() * Mr * x.segment(0, totalVelDOF))(0, 0) - kineticEnergy0;
+		C.block<3, 1>(1, 0) = Kp * x.segment(0, totalVelDOF) - (1 - x(totalVelDOF)) * linearMomentum_t - x(totalVelDOF) * linearMomentum0;
+		C.block<3, 1>(4, 0) = Kl * x.segment(0, totalVelDOF) - (1 - x(totalVelDOF + 1)) * angularMomentum_t - x(totalVelDOF + 1) * angularMomentum0;
 		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * x.segment(0, totalVelDOF)).transpose();
-		
+		if (i == 0)
+		{
+			//initialize lambda
+			x.segment(nq, numOfConstraints) = (grad_C * grad_C.transpose()).inverse() * -C;
+		}
 		f.block(0, 0, nq, 1) = D * (x.segment(0, nq) - qt) - grad_C.transpose() * x.segment(nq, 7);
 		f.block<7, 1>(nq, 0) = C;
 
@@ -803,6 +809,7 @@ void eae6320::MultiBody::ManifoldProjection()
 		i++;
 	}
 	qdot = x.segment(0, totalVelDOF);
+	std::cout << ComputeTotalEnergy() << std::endl;
 }
 
 void eae6320::MultiBody::EnergyMomentumProjection()
