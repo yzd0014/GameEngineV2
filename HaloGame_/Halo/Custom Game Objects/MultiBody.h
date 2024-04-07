@@ -15,7 +15,7 @@ namespace eae6320
 		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 
-		int constraintSolverMode = PBD;
+		int constraintSolverMode = IMPULSE;
 		bool gravity = FALSE ;
 	private:
 		void ComputeMr();
@@ -35,6 +35,7 @@ namespace eae6320
 
 		void ForwardKinematics();
 		void Forward();
+		void UpdateBodyRotation(_Vector& i_q);
 		void ClampRotationVector();
 		_Scalar ComputeKineticEnergy();
 		_Scalar ComputePotentialEnergy();
@@ -71,7 +72,8 @@ namespace eae6320
 		std::vector<std::vector<_Vector3>> uGlobals;//world
 		
 		std::vector<_Matrix3> R_global;//rigidbody rotation
-		std::vector<_Matrix3> J_rotation;//jotation jabobian matrix
+		std::vector<_Matrix3> R_local;
+		std::vector<_Matrix3> J_rotation;//rotation jabobian matrix
 		std::vector<_Matrix> D;
 		std::vector<_Matrix> Ht;
 		std::vector<_Matrix> H;
@@ -86,7 +88,7 @@ namespace eae6320
 		std::vector<_Scalar> g;
 		std::vector<int> jointsID;
 		
-		_Scalar jointLimit = 0.785f;
+		std::vector<_Scalar> jointLimit;
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;
 		_Vector3 angularMomentum0;
