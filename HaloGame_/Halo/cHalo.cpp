@@ -53,8 +53,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	LOAD_MESH("data/meshes/square_plane.mesh", mesh_plane)
 	LOAD_MESH("data/meshes/cube.mesh", mesh_cube)
 	LOAD_MESH("data/meshes/bullet.mesh", mesh_anchor)
-	LOAD_MESH("data/meshes/pendulum1.mesh", mesh_pen1)
-	LOAD_MESH("data/meshes/pendulum2.mesh", mesh_pen2)
+	LOAD_MESH("data/meshes/capsule.mesh", mesh_capsule)
 
 	//load effect
 	LOAD_EFFECT("data/effects/default.effect", pDefaultEffect)
@@ -62,10 +61,10 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	
 	{
 		std::vector<GameCommon::GameObject *> links;
-		int bodyNum = 2;
+		int bodyNum = 1;
 		for (int i = 0; i < bodyNum; i++)
 		{
-			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
+			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_capsule, Physics::sRigidBodyState());
 			links.push_back(pGameObject);
 			noColliderObjects.push_back(pGameObject);
 		}

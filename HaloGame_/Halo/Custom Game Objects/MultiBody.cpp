@@ -72,7 +72,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		std::vector<_Vector3> uPairs;
 		uPairs.resize(2);
 		//uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
-		uPairs[0] = _Vector3(0.0f, 1.5f, 0.0f);
+		uPairs[0] = _Vector3(0.0f, 1.0f, 0.0f);
 		if (i == numOfLinks - 1)
 		{
 			uPairs[1] = _Vector3(0.0f, 0.0f, 0.0f);
@@ -137,11 +137,11 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	/*qdot.segment(3, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
 	qdot.segment(6, 3) = _Vector3(4.0f, -10.0f, 0.0f);*/
 
-	//qdot.segment(0, 3) = _Vector3(-2.0f, 2.0f, 0.0f);
-	qdot.segment(3, 3) = _Vector3(0.0, 0.0, 10.0);
+	qdot.segment(0, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
+	//qdot.segment(3, 3) = _Vector3(0.0, 0.0, 10.0);
 	Forward();
-	//jointLimit[0] = 0.785f;
-	jointLimit[1] = 0.09f;
+	jointLimit[0] = 0.785f;
+	//jointLimit[1] = 0.09f;
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();

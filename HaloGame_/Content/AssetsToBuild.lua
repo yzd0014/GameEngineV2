@@ -43,6 +43,7 @@ return
 		"Meshes/box.mesh",
 		"Meshes/shell.mesh",
 		"Meshes/material_point.mesh",
+        "Meshes/capsule.mesh",
 	},
 	effects = {
 		"Effects/default.effect",
