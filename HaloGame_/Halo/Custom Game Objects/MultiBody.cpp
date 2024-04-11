@@ -137,10 +137,17 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	/*qdot.segment(3, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
 	qdot.segment(6, 3) = _Vector3(4.0f, -10.0f, 0.0f);*/
 
-	qdot.segment(0, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
+	//qdot.segment(0, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
 	//qdot.segment(3, 3) = _Vector3(0.0, 0.0, 10.0);
+
+	//Twist test
+	q.segment(0, 3) = _Vector3(-0.785, 0.0, 0.0);
+	_Vector3 target_w = _Vector3(0.0, -2.0, 2.0);
 	Forward();
-	jointLimit[0] = 0.785f;
+	qdot.segment(0, 3) = J_rotation[0].inverse() * target_w;
+	Forward();
+	//jointLimit[0] = 0.785f;
+	jointLimit[0] = 0.5 * M_PI;
 	//jointLimit[1] = 0.09f;
 	
 	kineticEnergy0 = ComputeKineticEnergy();
@@ -266,8 +273,10 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	qdot = qdot + h * qddot;
 	if (constraintSolverMode == IMPULSE)
 	{
-		JointLimitCheck();
-		ResolveJointLimit(h);
+		/*JointLimitCheck();
+		ResolveJointLimit(h);*/
+		TwistLimitCheck();
+		ResolveTwistLimit(h);
 	}
 	
 	_Vector q_new(totalPosDOF);
@@ -1064,6 +1073,74 @@ void eae6320::MultiBody::ResolveJointLimitPBD(_Vector& i_q, const _Scalar h)
 			}
 		}
 		qdot = (i_q - q) / h;
+	}
+}
+
+void eae6320::MultiBody::TwistLimitCheck()
+{
+	jointsID.clear();
+	_Vector3 p = _Vector3(0, -1, 0);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (jointType[i] == BALL_JOINT_3D && jointLimit[i] > 0)
+		{
+			_Vector s = p.cross(R_local[i] * p);
+			g[i] = s.dot(R_local[i] * s) - s.squaredNorm() * cos(jointLimit[i]);
+			if (g[i] < 0)
+			{
+				jointsID.push_back(i);
+				//Physics::simPause = true;
+			}
+		}
+	}
+}
+
+void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
+{
+	size_t constraintNum = jointsID.size();
+	_Vector3 p = _Vector3(0, -10, 0);
+	if (constraintNum > 0)
+	{
+		_Matrix J;
+		J.resize(constraintNum, totalVelDOF);
+		J.setZero();
+		_Vector bias;
+		bias.resize(constraintNum);
+		bias.setZero();
+		for (int k = 0; k < constraintNum; k++)
+		{
+			int i = jointsID[k];
+			_Vector3 T0;
+			_Vector3 RP = R_local[i] * p;
+			T0 = -J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * R_local[i] * Math::ToSkewSymmetricMatrix(p) * RP;
+			_Vector3 T1;
+			_Vector3 RPRP = R_local[i] * Math::ToSkewSymmetricMatrix(p) * RP;
+			T1 = J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RPRP) * Math::ToSkewSymmetricMatrix(p) * RP;
+			_Vector3 T2;
+			T2 = -J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * R_local[i].transpose() * Math::ToSkewSymmetricMatrix(p) * RP;
+			_Vector3 T3;
+			T3 = 2.0 * cos(jointLimit[i]) * J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(p) * RP;
+			
+			J.block<1, 3>(k, velStartIndex[i]) = (T0 + T1 + T2 + T3).transpose();
+
+			_Vector3 rdot = qdot.segment(velStartIndex[i], 3);
+			_Matrix JV = J.block<1, 3>(k, velStartIndex[i]) * rdot;
+
+			_Scalar beta = 0.2f;//0.4f;
+			_Scalar CR = 0.4f;// 0.2f;
+			_Scalar SlopP = 0.001f;
+			bias(k) = -beta / h * std::max<_Scalar>(-g[i], 0.0) - CR * std::max<_Scalar>(-JV(0, 0), 0.0);
+		}
+		_Matrix lambda;
+		lambda = (J * MrInverse * J.transpose()).inverse() * (-J * qdot - bias);
+
+		for (int i = 0; i < constraintNum; i++)
+		{
+			if (lambda(i, 0) < 0) lambda(i, 0) = 0;
+		}
+
+		_Vector RdotCorrection = MrInverse * J.transpose() * lambda;
+		qdot = qdot + RdotCorrection;
 	}
 }
 
