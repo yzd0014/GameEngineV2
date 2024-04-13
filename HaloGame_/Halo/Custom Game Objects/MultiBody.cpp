@@ -140,11 +140,18 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//qdot.segment(0, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
 	//qdot.segment(3, 3) = _Vector3(0.0, 0.0, 10.0);
 
-	//Twist test
-	q.segment(0, 3) = _Vector3(-0.785, 0.0, 0.0);
-	_Vector3 target_w = _Vector3(0.0, -2.0, 2.0);
-	Forward();
-	qdot.segment(0, 3) = J_rotation[0].inverse() * target_w;
+	//general twist test
+	//q.segment(0, 3) = _Vector3(-0.785, 0.0, 0.0);
+	//_Vector3 target_w = _Vector3(0.0, -2.0, 2.0);
+	//Forward();
+	//qdot.segment(0, 3) = J_rotation[0].inverse() * target_w;
+
+	//twist without swing test
+	qdot.segment(0, 3) = _Vector3(0.0, -2.0, 0.0);
+
+	//swing test
+	//qdot.segment(0, 3) = _Vector3(-1.0, 0.0, 1.0);
+	
 	Forward();
 	//jointLimit[0] = 0.785f;
 	jointLimit[0] = 0.5 * M_PI;
@@ -1079,17 +1086,32 @@ void eae6320::MultiBody::ResolveJointLimitPBD(_Vector& i_q, const _Scalar h)
 void eae6320::MultiBody::TwistLimitCheck()
 {
 	jointsID.clear();
+	limitType.clear();
 	_Vector3 p = _Vector3(0, -1, 0);
+	_Vector3 local_x = _Vector3(1, 0, 0);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		if (jointType[i] == BALL_JOINT_3D && jointLimit[i] > 0)
 		{
 			_Vector s = p.cross(R_local[i] * p);
-			g[i] = s.dot(R_local[i] * s) - s.squaredNorm() * cos(jointLimit[i]);
-			if (g[i] < 0)
+			if (s.norm() < 0.0001)
 			{
-				jointsID.push_back(i);
-				//Physics::simPause = true;
+				g[i] = local_x.dot(R_local[i] * local_x) - cos(jointLimit[i]);
+				if (g[i] < 0)
+				{
+					jointsID.push_back(i);
+					limitType.push_back(TWIST_WITHOUT_SWING);
+				}
+			}
+			else
+			{
+				g[i] = s.dot(R_local[i] * s) / s.squaredNorm() - cos(jointLimit[i]);
+				if (g[i] < 0)
+				{
+					jointsID.push_back(i);
+					limitType.push_back(TWIST_WITH_SWING);
+					//Physics::simPause = true;
+				}
 			}
 		}
 	}
@@ -1099,6 +1121,7 @@ void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 {
 	size_t constraintNum = jointsID.size();
 	_Vector3 p = _Vector3(0, -10, 0);
+	_Vector3 local_x = _Vector3(1, 0, 0);
 	if (constraintNum > 0)
 	{
 		_Matrix J;
@@ -1110,18 +1133,31 @@ void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 		for (int k = 0; k < constraintNum; k++)
 		{
 			int i = jointsID[k];
-			_Vector3 T0;
-			_Vector3 RP = R_local[i] * p;
-			T0 = -J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * R_local[i] * Math::ToSkewSymmetricMatrix(p) * RP;
-			_Vector3 T1;
-			_Vector3 RPRP = R_local[i] * Math::ToSkewSymmetricMatrix(p) * RP;
-			T1 = J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RPRP) * Math::ToSkewSymmetricMatrix(p) * RP;
-			_Vector3 T2;
-			T2 = -J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * R_local[i].transpose() * Math::ToSkewSymmetricMatrix(p) * RP;
-			_Vector3 T3;
-			T3 = 2.0 * cos(jointLimit[i]) * J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(p) * RP;
-			
-			J.block<1, 3>(k, velStartIndex[i]) = (T0 + T1 + T2 + T3).transpose();
+
+			if (limitType[k] == TWIST_WITH_SWING)
+			{
+				_Vector3 T0;
+				_Vector3 RP = R_local[i] * p;
+				T0 = -J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * R_local[i] * Math::ToSkewSymmetricMatrix(p) * RP;
+				_Vector3 T1;
+				_Vector3 RPRP = R_local[i] * Math::ToSkewSymmetricMatrix(p) * RP;
+				T1 = J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RPRP) * Math::ToSkewSymmetricMatrix(p) * RP;
+				_Vector3 T2;
+				T2 = -J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * R_local[i].transpose() * Math::ToSkewSymmetricMatrix(p) * RP;
+				_Vector3 T3;
+				//T3 = 2.0 * cos(jointLimit[i]) * J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(p) * RP;
+				T3 = -2.0 * J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(p) * RP;
+
+				_Vector s = p.cross(RP);
+				_Scalar SRS = s.dot(R_local[i] * s);
+
+				J.block<1, 3>(k, velStartIndex[i]) = ((T0 + T1 + T2) / s.squaredNorm() - SRS / (s.squaredNorm() * s.squaredNorm()) * T3).transpose();
+			}
+			else if (limitType[k] == TWIST_WITHOUT_SWING)
+			{
+				_Vector3 local_x_new = R_local[i] * local_x;
+				J.block<1, 3>(i, velStartIndex[i]) = (J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(local_x_new) * local_x).transpose();
+			}
 
 			_Vector3 rdot = qdot.segment(velStartIndex[i], 3);
 			_Matrix JV = J.block<1, 3>(k, velStartIndex[i]) * rdot;
@@ -1133,6 +1169,7 @@ void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 		}
 		_Matrix lambda;
 		lambda = (J * MrInverse * J.transpose()).inverse() * (-J * qdot - bias);
+		//std::cout << lambda << std::endl;
 
 		for (int i = 0; i < constraintNum; i++)
 		{

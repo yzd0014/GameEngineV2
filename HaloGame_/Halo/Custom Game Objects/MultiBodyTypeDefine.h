@@ -6,14 +6,14 @@
 #ifndef MUJOCO_MODE
 #define MUJOCO_MODE 1
 #endif
-
+/*************************************/
 #ifndef BOX
 #define BOX 0
 #endif
 #ifndef BALL
 #define BALL 1
 #endif
-
+/*************************************/
 #ifndef PBD
 #define PBD 0
 #endif
@@ -21,7 +21,7 @@
 #ifndef IMPULSE
 #define IMPULSE 1
 #endif
-
+/*************************************/
 #ifndef BALL_JOINT_3D
 #define BALL_JOINT_3D 0
 #endif
@@ -32,4 +32,16 @@
 
 #ifndef FREE_JOINT
 #define FREE_JOINT 2
+#endif
+/*************************************/
+#ifndef TWIST_WITHOUT_SWING
+#define TWIST_WITHOUT_SWING 0
+#endif
+
+#ifndef TWIST_WITH_SWING
+#define TWIST_WITH_SWING 1
+#endif
+
+#ifndef SWING
+#define SWING 2
 #endif

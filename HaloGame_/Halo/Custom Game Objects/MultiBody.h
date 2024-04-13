@@ -89,6 +89,7 @@ namespace eae6320
 
 		std::vector<_Scalar> g;
 		std::vector<int> jointsID;
+		std::vector<int> limitType;
 		
 		std::vector<_Scalar> jointLimit;
 		_Scalar kineticEnergy0 = 0;
