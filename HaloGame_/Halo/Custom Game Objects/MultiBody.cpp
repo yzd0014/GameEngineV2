@@ -141,13 +141,23 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//qdot.segment(3, 3) = _Vector3(0.0, 0.0, 10.0);
 
 	//general twist test
-	//q.segment(0, 3) = _Vector3(-0.785, 0.0, 0.0);
-	//_Vector3 target_w = _Vector3(0.0, -2.0, 2.0);
-	//Forward();
-	//qdot.segment(0, 3) = J_rotation[0].inverse() * target_w;
+	_Vector3 rot_vec(-0.5 * M_PI, 0.0, 0.0);
+	q.segment(0, 3) = rot_vec;
+	if (jointType[0] == BALL_JOINT_4D)
+	{
+		rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	}
+	_Vector3 local_w = _Vector3(0.0, -4.0, 0.0);
+	Forward();
+	_Vector3 world_w = R_global[0] * local_w;
+	qdot.segment(0, 3) = J_rotation[0].inverse() * world_w;
+	if (jointType[0] == BALL_JOINT_4D)
+	{
+		qdot.segment(0, 3) = world_w;
+	}
 
 	//twist without swing test
-	qdot.segment(0, 3) = _Vector3(0.0, -2.0, 0.0);
+	//qdot.segment(0, 3) = _Vector3(0.0, -2.0, 0.0);
 
 	//swing test
 	//qdot.segment(0, 3) = _Vector3(-1.0, 0.0, 1.0);
@@ -266,7 +276,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	ClampRotationVector();
 	Forward();
 	//EnergyMomentumProjection();
-	ManifoldProjection();
+	//ManifoldProjection();
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
@@ -424,9 +434,9 @@ void eae6320::MultiBody::ComputeMr()
 		_Matrix M_temp = Ht[i].transpose() * Mbody[i] * Ht[i];
 		Mr = Mr + M_temp;
 	}
-	if (Mr.determinant() < 0.00001)
+	if (Mr.determinant() < 0.0000001)
 	{
-		std::cout << "mass matrix singluarity reached!" << Mr.determinant() << std::endl << std::endl;
+		EAE6320_ASSERTF(false, "mass matrix singluarity reached!");
 	}
 }
 
@@ -1101,6 +1111,7 @@ void eae6320::MultiBody::TwistLimitCheck()
 				{
 					jointsID.push_back(i);
 					limitType.push_back(TWIST_WITHOUT_SWING);
+					//Physics::simPause = true;
 				}
 			}
 			else
@@ -1177,6 +1188,8 @@ void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 		}
 
 		_Vector RdotCorrection = MrInverse * J.transpose() * lambda;
+		//std::cout << J.transpose() << std::endl << std::endl;
+		//std::cout << MrInverse << std::endl;
 		qdot = qdot + RdotCorrection;
 	}
 }

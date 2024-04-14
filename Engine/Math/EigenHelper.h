@@ -39,6 +39,100 @@ namespace eae6320
 			io_quat = deltaRot * io_quat;
 			io_quat.normalize();
 		}
+/*******************Rotation conversion for double***************************************/
+		inline Matrix3d RotationConversion_VecToMatrix(const Vector3d& i_vec)
+		{
+			Matrix3d out;
+			out = AngleAxisd(i_vec.norm(), i_vec.normalized());
+			return out;
+		}
+
+		inline Vector3d RotationConversion_MatrixToVec(const Matrix3d& i_mat)
+		{
+			AngleAxisd vec;
+			vec = i_mat;
+			Vector3d out;
+			out = vec.angle() * vec.axis();
+			return out;
+		}
+
+		inline Quaterniond RotationConversion_VecToQuat(const Vector3d& i_vec)
+		{
+			AngleAxisd vec(i_vec.norm(), i_vec.normalized());
+			Quaterniond out;
+			out = Quaterniond(vec);
+			return out;
+		}
+
+		inline Vector3d RotationConversion_QuatToVec(const Quaterniond& i_quat)
+		{
+			AngleAxisd vec;
+			vec = i_quat;
+			Vector3d out;
+			out = vec.angle() * vec.axis();
+			return out;
+		}
+
+		inline Matrix3d RotationConversion_QuatToMat(const Quaterniond& i_quat)
+		{
+			Matrix3d out;
+			out = i_quat.toRotationMatrix();
+			return out;
+		}
+
+		inline Quaterniond RotationConversion_MatToQuat(const Matrix3d& i_mat)
+		{
+			Quaterniond out;
+			out = Quaterniond(i_mat);
+			return out;
+		}
+/*******************Rotation conversion for float***************************************/
+		inline Matrix3f RotationConversion_VecToMatrix(const Vector3f& i_vec)
+		{
+			Matrix3f out;
+			out = AngleAxisf(i_vec.norm(), i_vec.normalized());
+			return out;
+		}
+
+		inline Vector3f RotationConversion_MatrixToVec(const Matrix3f& i_mat)
+		{
+			AngleAxisf vec;
+			vec = i_mat;
+			Vector3f out;
+			out = vec.angle() * vec.axis();
+			return out;
+		}
+
+		inline Quaternionf RotationConversion_VecToQuat(const Vector3f& i_vec)
+		{
+			AngleAxisf vec(i_vec.norm(), i_vec.normalized());
+			Quaternionf out;
+			out = Quaternionf(vec);
+			return out;
+		}
+
+		inline Vector3f RotationConversion_QuatToVec(const Quaternionf& i_quat)
+		{
+			AngleAxisf vec;
+			vec = i_quat;
+			Vector3f out;
+			out = vec.angle() * vec.axis();
+			return out;
+		}
+
+		inline Matrix3f RotationConversion_QuatToMat(const Quaternionf& i_quat)
+		{
+			Matrix3f out;
+			out = i_quat.toRotationMatrix();
+			return out;
+		}
+
+		inline Quaternionf RotationConversion_MatToQuat(const Matrix3f& i_mat)
+		{
+			Quaternionf out;
+			out = Quaternionf(i_mat);
+			return out;
+		}
 	}
 }
 
