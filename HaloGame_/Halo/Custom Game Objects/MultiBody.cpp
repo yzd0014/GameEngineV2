@@ -140,8 +140,9 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//qdot.segment(0, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
 	//qdot.segment(3, 3) = _Vector3(0.0, 0.0, 10.0);
 
+	//UnitTest0();
 	//general twist test
-	_Vector3 rot_vec(-0.5 * M_PI, 0.0, 0.0);
+	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
 	q.segment(0, 3) = rot_vec;
 	if (jointType[0] == BALL_JOINT_4D)
 	{
@@ -1110,7 +1111,7 @@ void eae6320::MultiBody::TwistLimitCheck()
 				if (g[i] < 0)
 				{
 					jointsID.push_back(i);
-					limitType.push_back(TWIST_WITHOUT_SWING);
+					limitType.push_back(TWIST_WITHOUT_SWING);					
 					//Physics::simPause = true;
 				}
 			}
@@ -1180,7 +1181,7 @@ void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 		}
 		_Matrix lambda;
 		lambda = (J * MrInverse * J.transpose()).inverse() * (-J * qdot - bias);
-		//std::cout << lambda << std::endl;
+		//std::cout << MrInverse << std::endl;
 
 		for (int i = 0; i < constraintNum; i++)
 		{

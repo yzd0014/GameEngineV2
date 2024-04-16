@@ -103,6 +103,9 @@
     <ClCompile Include="Custom Game Objects\SphericalJointV2.cpp">
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
+    <ClCompile Include="Custom Game Objects\UnitTest.cpp">
+      <Filter>Custom Game Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource Files\Halo.rc">

@@ -53,6 +53,9 @@ namespace eae6320
 		void EnergyMomentumProjection();
 		void ManifoldProjection();
 
+		//unit tests
+		void UnitTest0();
+
 		_Vector q;
 		_Vector qdot;
 		std::vector<int> jointType;
