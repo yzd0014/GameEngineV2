@@ -148,7 +148,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	{
 		rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
 	}
-	_Vector3 local_w = _Vector3(0.0, -4.0, 0.0);
+	_Vector3 local_w = _Vector3(0.0, -5.0, 0.0);
 	Forward();
 	_Vector3 world_w = R_global[0] * local_w;
 	qdot.segment(0, 3) = J_rotation[0].inverse() * world_w;
@@ -157,11 +157,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		qdot.segment(0, 3) = world_w;
 	}
 
-	//twist without swing test
-	//qdot.segment(0, 3) = _Vector3(0.0, -2.0, 0.0);
-
 	//swing test
-	//qdot.segment(0, 3) = _Vector3(-1.0, 0.0, 1.0);
+	//qdot.segment(0, 3) = _Vector3(-2.0, 2.0, 0.0);
 	
 	Forward();
 	//jointLimit[0] = 0.785f;
@@ -232,7 +229,7 @@ void eae6320::MultiBody::ClampRotationVector()
 	}
 }
 
-void eae6320::MultiBody::Integrate_q(_Vector& o_q, _Vector& i_q, _Vector& i_qdot, _Scalar h)
+void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, _Scalar h)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -242,7 +239,7 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, _Vector& i_q, _Vector& i_qdot
 		}
 		else if (jointType[i] == BALL_JOINT_4D)
 		{
-			Math::QuatIntegrate(rel_ori[i], i_qdot.segment(velStartIndex[i], 3), h);
+			Math::QuatIntegrate(o_quat[i], i_quat[i], i_qdot.segment(velStartIndex[i], 3), h);
 
 			/*_Quat quat_w(0, w_rel_local[i](0), w_rel_local[i](1), w_rel_local[i](2));
 			_Quat quat_dot = 0.5f * quat_w * rel_ori[i];
@@ -255,7 +252,7 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, _Vector& i_q, _Vector& i_qdot
 			o_q.segment(posStartIndex[i], 3) = i_q.segment(posStartIndex[i], 3) + i_qdot.segment(velStartIndex[i], 3) * h;
 
 			w_rel_local[i] = i_qdot.segment(velStartIndex[i] + 3, 3);
-			Math::QuatIntegrate(rel_ori[i], w_rel_local[i], h);
+			Math::QuatIntegrate(o_quat[i], i_quat[i], w_rel_local[i], h);
 		}
 	}
 }
@@ -272,7 +269,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//KineticEnergyProjection();
 	//MomentumProjection();
 	//EnergyMomentumProjection();
-	Integrate_q(q, q, qdot, h);
+	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 	
 	ClampRotationVector();
 	Forward();
@@ -298,12 +295,14 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	}
 	
 	_Vector q_new(totalPosDOF);
-	Integrate_q(q_new, q, qdot, h);
+	Integrate_q(q_new, rel_ori, q, rel_ori, qdot, h);
 	if (constraintSolverMode == PBD)
 	{
-		UpdateBodyRotation(q_new);
-		JointLimitCheck();
-		ResolveJointLimitPBD(q_new, h);
+		ComputeHt(q_new, rel_ori);
+	/*	JointLimitCheck();
+		ResolveJointLimitPBD(q_new, h);*/
+		TwistLimitCheck();
+		ResolveTwistLimitPBD(q_new, h);
 	}
 	q = q_new;
 
@@ -325,10 +324,10 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 	}
 
 	_Vector q_new(totalPosDOF);
-	Integrate_q(q_new, q, qdot, h);
+	Integrate_q(q_new, rel_ori, q, rel_ori, qdot, h);
 	if (constraintSolverMode == PBD)
 	{
-		UpdateBodyRotation(q_new);
+		ComputeHt(q_new, rel_ori);
 		JointLimitCheck();
 		ResolveJointLimitPBD(q_new, h);
 	}
@@ -337,7 +336,7 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 	Forward();
 }
 
-void eae6320::MultiBody::ComputeH()
+void eae6320::MultiBody::ComputeH(_Vector& i_q)
 {
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
@@ -359,7 +358,7 @@ void eae6320::MultiBody::ComputeH()
 		}
 		else if (jointType[i] == BALL_JOINT_3D)
 		{
-			_Vector3 r = q.segment(posStartIndex[i], 3);
+			_Vector3 r = i_q.segment(posStartIndex[i], 3);
 			_Scalar theta = r.norm();
 			_Scalar b = Compute_b(theta);
 			_Scalar a = Compute_a(theta);
@@ -403,9 +402,10 @@ void eae6320::MultiBody::ComputeD()
 	}
 }
 
-void eae6320::MultiBody::ComputeHt()
+void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 {
-	ComputeH();
+	ForwardKinematics(i_q, i_quat);
+	ComputeH(i_q);
 	ComputeD();
 	
 	for (size_t i = 0; i < numOfLinks; i++)
@@ -579,7 +579,7 @@ void eae6320::MultiBody::ForwardAngularAndTranslationalVelocity(_Vector& i_qdot)
 	}
 }
 
-void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q)
+void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat)
 {
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
@@ -588,12 +588,13 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q)
 		{
 			if (i == 0)
 			{
-				obs_ori[i] = rel_ori[i];
+				obs_ori[i] = i_quat[i];
 			}
 			else
 			{
-				obs_ori[i] = obs_ori[i - 1] * rel_ori[i];
+				obs_ori[i] = obs_ori[i - 1] * i_quat[i];
 			}
+			R_local[i] = i_quat[i].toRotationMatrix();
 			R_global[i] = obs_ori[i].toRotationMatrix();
 			m_linkBodys[i]->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(obs_ori[i]);
 		}
@@ -627,16 +628,17 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q)
 		}
 		else if (jointType[i] == FREE_JOINT)
 		{
-			obs_ori[i] = rel_ori[i];
+			obs_ori[i] = i_quat[i];
+			R_local[i] = i_quat[i];
 			R_global[i] = obs_ori[i].toRotationMatrix();
 			m_linkBodys[i]->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(obs_ori[i]);
 		}
 	}
 }
 
-void eae6320::MultiBody::ForwardKinematics()
+void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat)
 {
-	UpdateBodyRotation(q);
+	UpdateBodyRotation(i_q, i_quat);
 
 	_Vector3 preAnchor;
 	Math::NativeVector2EigenVector(m_State.position, preAnchor);
@@ -654,7 +656,7 @@ void eae6320::MultiBody::ForwardKinematics()
 		else if (jointType[i] == FREE_JOINT)
 		{
 			uGlobals[i][0] = R_global[i] * uLocals[i][0];
-			pos[i] = q.segment(posStartIndex[i], 3);
+			pos[i] = i_q.segment(posStartIndex[i], 3);
 			m_linkBodys[i]->m_State.position = Math::sVector((float)pos[i](0), (float)pos[i](1), (float)pos[i](2));
 		}
 		
@@ -686,8 +688,7 @@ void eae6320::MultiBody::ForwardKinematics()
 
 void eae6320::MultiBody::Forward()
 {
-	ForwardKinematics();
-	ComputeHt();
+	ComputeHt(q, rel_ori);
 	ComputeMr();
 	MrInverse = Mr.inverse();
 	ForwardAngularAndTranslationalVelocity(qdot);
@@ -1129,6 +1130,71 @@ void eae6320::MultiBody::TwistLimitCheck()
 	}
 }
 
+void eae6320::MultiBody::ResolveTwistLimitPBD(_Vector& i_q, const _Scalar h)
+{
+	size_t constraintNum = jointsID.size();
+	_Vector3 p = _Vector3(0, -10, 0);
+	_Vector3 local_x = _Vector3(1, 0, 0);
+	if (constraintNum > 0)
+	{
+		_Matrix J;
+		J.resize(constraintNum, totalVelDOF);
+		J.setZero();
+
+		int iterationNum = 1;
+		for (int iter = 0; iter < iterationNum; iter++)
+		{
+			_Vector C;
+			C.resize(constraintNum, 1);
+
+			//construct total Jacobian matrix
+			for (size_t k = 0; k < constraintNum; k++)
+			{
+				size_t joint_id = jointsID[k];
+				if (limitType[k] == TWIST_WITH_SWING)
+				{
+					_Vector3 T0;
+					_Vector3 RP = R_local[joint_id] * p;
+					T0 = -J_rotation[joint_id].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * R_local[joint_id] * Math::ToSkewSymmetricMatrix(p) * RP;
+					_Vector3 T1;
+					_Vector3 RPRP = R_local[joint_id] * Math::ToSkewSymmetricMatrix(p) * RP;
+					T1 = J_rotation[joint_id].transpose() * Math::ToSkewSymmetricMatrix(RPRP) * Math::ToSkewSymmetricMatrix(p) * RP;
+					_Vector3 T2;
+					T2 = -J_rotation[joint_id].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * R_local[joint_id].transpose() * Math::ToSkewSymmetricMatrix(p) * RP;
+					_Vector3 T3;
+					//T3 = 2.0 * cos(jointLimit[i]) * J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(p) * RP;
+					T3 = -2.0 * J_rotation[joint_id].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(p) * RP;
+
+					_Vector s = p.cross(RP);
+					_Scalar SRS = s.dot(R_local[joint_id] * s);
+					J.block<1, 3>(k, velStartIndex[joint_id]) = ((T0 + T1 + T2) / s.squaredNorm() - SRS / (s.squaredNorm() * s.squaredNorm()) * T3).transpose();
+
+					C(k) = s.dot(R_local[joint_id] * s) / s.squaredNorm() - cos(jointLimit[joint_id]);
+				}
+				else if (limitType[k] == TWIST_WITHOUT_SWING)
+				{
+					_Vector3 local_x_new = R_local[joint_id] * local_x;
+					J.block<1, 3>(k, velStartIndex[joint_id]) = (J_rotation[joint_id].transpose() * Math::ToSkewSymmetricMatrix(local_x_new) * local_x).transpose();
+
+					C(k) = local_x.dot(R_local[joint_id] * local_x) - cos(jointLimit[joint_id]);
+				}
+			}
+
+			_Matrix A = J * MrInverse * J.transpose();
+			_Matrix lambda = A.inverse() * -C;
+
+			_Vector R_correction = MrInverse * J.transpose() * lambda;
+			for (int j = 0; j < numOfLinks; j++)
+			{
+				if (posDOF[j] == velDOF[j]) i_q.segment(posStartIndex[j], posDOF[j]) = i_q.segment(posStartIndex[j], posDOF[j]) + R_correction.segment(velStartIndex[j], velDOF[j]);
+			}
+			
+			ComputeHt(i_q, rel_ori);
+		}
+		qdot = (i_q - q) / h;
+	}
+}
+
 void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 {
 	size_t constraintNum = jointsID.size();
@@ -1175,7 +1241,7 @@ void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 			_Matrix JV = J.block<1, 3>(k, velStartIndex[i]) * rdot;
 
 			_Scalar beta = 0.2f;//0.4f;
-			_Scalar CR = 0.4f;// 0.2f;
+			_Scalar CR = 0.0f;// 0.2f;
 			_Scalar SlopP = 0.001f;
 			bias(k) = -beta / h * std::max<_Scalar>(-g[i], 0.0) - CR * std::max<_Scalar>(-JV(0, 0), 0.0);
 		}

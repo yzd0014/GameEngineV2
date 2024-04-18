@@ -15,12 +15,12 @@ namespace eae6320
 		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 
-		int constraintSolverMode = IMPULSE;
+		int constraintSolverMode = PBD;
 		bool gravity = FALSE ;
 	private:
 		void ComputeMr();
-		void ComputeHt();
-		void ComputeH();
+		void ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat);
+		void ComputeH(_Vector& i_q);
 		void ComputeD();
 		_Vector ComputeQr(_Vector i_qdot);
 		_Vector ComputeQr_SikpVelocityUpdate(_Vector& i_qdot);
@@ -31,11 +31,11 @@ namespace eae6320
 		void EulerIntegration(const _Scalar h);
 		void RK4Integration(const _Scalar h);
 		void RK3Integration(const _Scalar h);
-		void Integrate_q(_Vector& o_q, _Vector& i_q, _Vector& i_qdot, _Scalar h);
+		void Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, _Scalar h);
 
-		void ForwardKinematics();
+		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void Forward();
-		void UpdateBodyRotation(_Vector& i_q);
+		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void ClampRotationVector();
 		_Scalar ComputeKineticEnergy();
 		_Scalar ComputePotentialEnergy();
@@ -48,6 +48,7 @@ namespace eae6320
 		void ResolveJointLimitPBD(_Vector& i_q, const _Scalar h);
 		void TwistLimitCheck();
 		void ResolveTwistLimit(const _Scalar h);
+		void ResolveTwistLimitPBD(_Vector& i_q, const _Scalar h);
 
 		void KineticEnergyProjection();
 		void EnergyMomentumProjection();

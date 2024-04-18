@@ -31,13 +31,13 @@ namespace eae6320
 			io_quat.normalize();
 		}
 
-		inline void QuatIntegrate(Quaterniond& io_quat, const Vector3d& vel, double dt)
+		inline void QuatIntegrate(Quaterniond& o_quat, Quaterniond& i_quat, const Vector3d& vel, double dt)
 		{
 			Vector3d deltaRotVec;
 			deltaRotVec = vel * dt;
 			Quaterniond deltaRot(AngleAxisd(deltaRotVec.norm(), deltaRotVec.normalized()));
-			io_quat = deltaRot * io_quat;
-			io_quat.normalize();
+			o_quat = deltaRot * i_quat;
+			o_quat.normalize();
 		}
 /*******************Rotation conversion for double***************************************/
 		inline Matrix3d RotationConversion_VecToMatrix(const Vector3d& i_vec)
