@@ -143,23 +143,24 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 
 	//UnitTest0();
 	//general twist test
-	//_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
-	//q.segment(0, 3) = rot_vec;
-	//if (jointType[0] == BALL_JOINT_4D)
-	//{
-	//	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
-	//}
-	//_Vector3 local_w = _Vector3(0.0, 5.0, 0.0);
-	//Forward();
-	//_Vector3 world_w = R_global[0] * local_w;
-	//qdot.segment(0, 3) = J_rotation[0].inverse() * world_w;
-	//if (jointType[0] == BALL_JOINT_4D)
-	//{
-	//	qdot.segment(0, 3) = world_w;
-	//}
+	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
+	q.segment(0, 3) = rot_vec;
+	if (jointType[0] == BALL_JOINT_4D)
+	{
+		rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	}
+	_Vector3 local_w = _Vector3(0.0, 5.0, 0.0);
+	Forward();
+	_Vector3 world_w = R_global[0] * local_w;
+	qdot.segment(0, 3) = J_rotation[0].inverse() * world_w;
+	if (jointType[0] == BALL_JOINT_4D)
+	{
+		qdot.segment(0, 3) = world_w;
+	}
 
 	//swing test
-	qdot.segment(0, 3) = _Vector3(-2.0, 2.0, 0.0);
+	//qdot.segment(0, 3) = _Vector3(-2.0, 2.0, 0.0);
+	//qdot.segment(3, 3) = _Vector3(0.0, 4.0, 0.0);
 	
 	Forward();
 	//jointLimit[0] = 0.785f;
@@ -289,11 +290,10 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	qdot = qdot + h * qddot;
 	if (constraintSolverMode == IMPULSE)
 	{
-		JointLimitCheck();
-		ResolveJointLimit(h);
-	/*	TwistLimitCheck();
-		ResolveTwistLimit(h);*/
-		//ResolveAngularVelocityLimit();
+		/*SwingLimitCheck();
+		ResolveSwingLimit(h);*/
+		TwistLimitCheck();
+		ResolveTwistLimit(h);
 	}
 
 	_Vector q_new(totalPosDOF);
@@ -319,21 +319,9 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 	_Vector k3 = h * MrInverse * ComputeQr(qdot + 2.0 * k2 - k1);
 
 	qdot = qdot + (1.0f / 6.0f) * (k1 + 4 * k2 + k3);
-	if (constraintSolverMode == IMPULSE)
-	{
-		JointLimitCheck();
-		ResolveJointLimit(h);
-	}
+	
+	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
-	_Vector q_new(totalPosDOF);
-	Integrate_q(q_new, rel_ori, q, rel_ori, qdot, h);
-	if (constraintSolverMode == PBD)
-	{
-		ComputeHt(q_new, rel_ori);
-		JointLimitCheck();
-		ResolveJointLimitPBD(q_new, h);
-	}
-	q = q_new;
 	ClampRotationVector();
 	Forward();
 }

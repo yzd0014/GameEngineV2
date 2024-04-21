@@ -44,9 +44,9 @@ namespace eae6320
 		_Vector3 ComputeTranslationalMomentum();
 		_Vector3 ComputeAngularMomentum();
 
-		void JointLimitCheck();
-		void ResolveJointLimit(const _Scalar h);
-		void ResolveJointLimitPBD(_Vector& i_q, const _Scalar h);
+		void SwingLimitCheck();
+		void ResolveSwingLimit(const _Scalar h);
+		void ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h);
 		void TwistLimitCheck();
 		void ResolveTwistLimit(const _Scalar h);
 		void ResolveTwistLimitPBD(_Vector& i_q, const _Scalar h);

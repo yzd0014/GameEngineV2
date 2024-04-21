@@ -302,7 +302,7 @@ namespace eae6320
 			Vector3d swingAxis;
 			swingAxis = i_twistAxis.cross(rotatedTwistAxis);
 
-			if (swingAxis.norm() < 0.0001)
+			if (swingAxis.norm() < 0.00001)
 			{
 				Matrix3d twist = i_Rot;
 				o_twist = twist;
@@ -317,7 +317,7 @@ namespace eae6320
 
 				Vector3d rotatedSwingAxis = i_Rot * swingAxis;
 				Vector3d realTwistAxis = swingAxis.cross(rotatedSwingAxis);
-				if (realTwistAxis.norm() < 0.0001)
+				if (realTwistAxis.norm() < 0.00001)
 				{
 					realTwistAxis = rotatedSwingAxis;
 				}

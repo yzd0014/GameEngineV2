@@ -8,7 +8,7 @@
 #include <math.h>
 #include <iomanip>
 
-void eae6320::MultiBody::JointLimitCheck()
+void eae6320::MultiBody::SwingLimitCheck()
 {
 	jointsID.clear();
 	for (int i = 0; i < numOfLinks; i++)
@@ -25,7 +25,7 @@ void eae6320::MultiBody::JointLimitCheck()
 	}
 }
 
-void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
+void eae6320::MultiBody::ResolveSwingLimit(const _Scalar h)
 {
 	size_t constraintNum = jointsID.size();
 	if (constraintNum > 0)
@@ -57,19 +57,21 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 				_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 				vec_swing.normalize();
 				vec_swing = -vec_swing;
-				J.block<1, 3>(i, velStartIndex[i]) = vec_swing.transpose();
+				J.block<1, 3>(i, velStartIndex[joint_id]) = vec_swing.transpose();
 			}
 			_Vector3 rdot = qdot.segment(velStartIndex[joint_id], 3);
 			_Matrix JV = J.block<1, 3>(i, velStartIndex[joint_id]) * rdot;
 
-			_Scalar beta = 0.2f;//0.4f;
-			_Scalar CR = 0.4f;// 0.2f;
-			_Scalar SlopP = 0.001f;
-			bias(i) = -beta / h * std::max<_Scalar>(-g[joint_id], 0.0) - CR * std::max<_Scalar>(-JV(0, 0), 0.0);
+			//_Scalar beta = 0.2f;//0.4f;
+			//_Scalar CR = 0.4f;// 0.2f;
+			//_Scalar SlopP = 0.001f;
+			//bias(i) = -beta / h * std::max<_Scalar>(-g[joint_id], 0.0) - CR * std::max<_Scalar>(-JV(0, 0), 0.0);
 		}
 
+		//std::cout << J << std::endl;
 		_Matrix lambda;
 		lambda = (J * MrInverse * J.transpose()).inverse() * (-J * qdot - bias);
+		//std::cout << lambda.transpose() << std::endl;
 
 		for (int i = 0; i < constraintNum; i++)
 		{
@@ -81,7 +83,7 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 	}
 }
 
-void eae6320::MultiBody::ResolveJointLimitPBD(_Vector& i_q, const _Scalar h)
+void eae6320::MultiBody::ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h)
 {
 	size_t constraintNum = jointsID.size();
 	if (constraintNum > 0)
