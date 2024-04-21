@@ -1,4 +1,5 @@
 #pragma once
+#include "External/EigenLibrary/Eigen/Geometry"
 #include "External/EigenLibrary/Eigen/Dense"
 #include "sVector.h"
 
@@ -20,5 +21,16 @@ namespace eae6320
 		Math::sVector GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c, bool guaranteeOutwards = false);
 		void Barycentric(Math::sVector& p, Math::sVector& a, Math::sVector& b, Math::sVector& c, float &u, float &v, float &w);
 		float SqDistPointTriangle(Math::sVector& vPoint, Math::sVector& vA, Math::sVector& vB, Math::sVector& vC);
+
+		void TwistSwingDecompsition(Matrix3d& i_Rot, Vector3d& i_twistAxis, Matrix3d& o_twist, Matrix3d& o_swing);
+
+		/**************************************inline functions************************************************************************/
+		inline double GetAngleBetweenTwoVectors(Vector3d& vec0, Vector3d& vec1)
+		{
+			double dotProduct = vec0.normalized().dot(vec1.normalized());
+			double angle = acos(dotProduct);
+
+			return angle;
+		}
 	}
 }

@@ -103,7 +103,10 @@
     <ClCompile Include="Custom Game Objects\SphericalJointV2.cpp">
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
-    <ClCompile Include="Custom Game Objects\UnitTest.cpp">
+    <ClCompile Include="Custom Game Objects\MultiBodyExperimental.cpp">
+      <Filter>Custom Game Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Custom Game Objects\MultiBodyUnitTest.cpp">
       <Filter>Custom Game Objects</Filter>
     </ClCompile>
   </ItemGroup>

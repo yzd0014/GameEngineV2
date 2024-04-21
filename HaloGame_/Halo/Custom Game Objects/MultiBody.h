@@ -5,6 +5,7 @@
 #include "External/EigenLibrary/Eigen/Geometry"
 #include "MultiBodyTypeDefine.h"
 #include "Engine/Math/DataTypeDefine.h"
+#include "Engine/Math/3DMathHelpers.h"
 
 namespace eae6320
 {
@@ -15,7 +16,7 @@ namespace eae6320
 		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 
-		int constraintSolverMode = PBD;
+		int constraintSolverMode = IMPULSE;
 		bool gravity = FALSE ;
 	private:
 		void ComputeMr();
@@ -49,6 +50,7 @@ namespace eae6320
 		void TwistLimitCheck();
 		void ResolveTwistLimit(const _Scalar h);
 		void ResolveTwistLimitPBD(_Vector& i_q, const _Scalar h);
+		void ResolveAngularVelocityLimit();
 
 		void KineticEnergyProjection();
 		void EnergyMomentumProjection();
@@ -56,6 +58,7 @@ namespace eae6320
 
 		//unit tests
 		void UnitTest0();
+		void UnitTest1();
 
 		_Vector q;
 		_Vector qdot;

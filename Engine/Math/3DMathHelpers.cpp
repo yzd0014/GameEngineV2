@@ -1,4 +1,5 @@
 #include "3DMathHelpers.h"
+#include "EigenHelper.h"
 
 namespace eae6320
 {
@@ -291,6 +292,43 @@ namespace eae6320
 			Barycentric(vPoint, vA, vB, vC, fU, fV, fW);
 			Math::sVector vClosestPoint = vA * fU + vB * fV + vC * fW;
 			return (vClosestPoint - vPoint).GetLengthSQ();
+		}
+
+		void TwistSwingDecompsition(Matrix3d& i_Rot, Vector3d& i_twistAxis, Matrix3d& o_twist, Matrix3d& o_swing)
+		{
+			Vector3d rotatedTwistAxis;
+			rotatedTwistAxis = i_Rot * i_twistAxis;
+
+			Vector3d swingAxis;
+			swingAxis = i_twistAxis.cross(rotatedTwistAxis);
+
+			if (swingAxis.norm() < 0.0001)
+			{
+				Matrix3d twist = i_Rot;
+				o_twist = twist;
+				o_swing = MatrixXd::Identity(3, 3);
+			}
+			else
+			{
+				double swingAngle = GetAngleBetweenTwoVectors(rotatedTwistAxis, i_twistAxis);
+				swingAxis.normalize();
+				Vector3d swingVector = swingAxis * swingAngle;
+				o_swing = RotationConversion_VecToMatrix(swingVector);
+
+				Vector3d rotatedSwingAxis = i_Rot * swingAxis;
+				Vector3d realTwistAxis = swingAxis.cross(rotatedSwingAxis);
+				if (realTwistAxis.norm() < 0.0001)
+				{
+					realTwistAxis = rotatedSwingAxis;
+				}
+				else
+				{
+					realTwistAxis.normalize();
+				}
+				double twistAangle = GetAngleBetweenTwoVectors(rotatedSwingAxis, swingAxis);
+				Vector3d twistVector = realTwistAxis * twistAangle;
+				o_twist = RotationConversion_VecToMatrix(twistVector);
+			}
 		}
 	}
 }

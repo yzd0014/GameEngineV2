@@ -70,6 +70,7 @@
     </ClCompile>
     <ClCompile Include="Custom Game Objects\MujocoBallJoint.cpp" />
     <ClCompile Include="Custom Game Objects\MultiBody.cpp" />
+    <ClCompile Include="Custom Game Objects\MultiBodyExperimental.cpp" />
     <ClCompile Include="Custom Game Objects\Player.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -77,7 +78,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Custom Game Objects\SphericalJointV2.cpp" />
-    <ClCompile Include="Custom Game Objects\UnitTest.cpp" />
+    <ClCompile Include="Custom Game Objects\MultiBodyUnitTest.cpp" />
     <ClCompile Include="EntryPoint.cpp" />
   </ItemGroup>
   <ItemGroup>

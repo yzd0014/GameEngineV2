@@ -61,3 +61,23 @@ void eae6320::MultiBody::UnitTest0()
 	gradC = (T0 + T1 + T2) / s.squaredNorm() - SRS / (s.squaredNorm() * s.squaredNorm()) * T3;
 	std::cout << gradC.transpose() << std::endl;
 }
+
+//test swing twist decomposition
+void eae6320::MultiBody::UnitTest1()
+{
+	_Vector3 p(0, -1, 0);
+	_Vector3 s(1, 0, 1);
+	_Matrix3 R_s = Math::RotationConversion_VecToMatrix(s);
+	_Vector3 rotated_p = R_s * p;
+	_Matrix3 R_t = Math::RotationConversion_VecToMatrix(rotated_p);
+	_Matrix3 R = R_t * R_s;
+	
+	_Matrix3 R_t_bar;
+	_Matrix3 R_s_bar;
+	Math::TwistSwingDecompsition(R, p, R_t_bar, R_s_bar);
+	
+	std::cout << s.transpose() << std::endl;
+	std::cout << Math::RotationConversion_MatrixToVec(R_s_bar).transpose() << std::endl << std::endl;
+	std::cout << rotated_p.transpose() << std::endl;
+	std::cout << Math::RotationConversion_MatrixToVec(R_t_bar).transpose() << std::endl << std::endl;
+}
