@@ -40,6 +40,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	velDOF.resize(numOfLinks);
 	velStartIndex.resize(numOfLinks);
 	jointLimit.resize(numOfLinks);
+	jointRange.resize(numOfLinks);
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
@@ -60,6 +61,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		M_d(2, 2) = rigidBodyMass;
 		Mbody[i] = M_d;
 		jointLimit[i] = -1;
+		std::pair<_Scalar, _Scalar> defaultRange(-1, -1);
+		jointRange[i] = defaultRange;
 		
 		_Matrix3 localInertiaTensor;
 		localInertiaTensor.setIdentity();
@@ -85,8 +88,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 
-		jointType[i] = BALL_JOINT_4D;
-		//jointType[i] = BALL_JOINT_3D;
+		//jointType[i] = BALL_JOINT_4D;
+		jointType[i] = BALL_JOINT_3D;
 	}
 	//jointType[0] = FREE_JOINT;
 
@@ -144,12 +147,12 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest0();
 	//general twist test
 	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
-	q.segment(0, 3) = rot_vec;
+	//q.segment(0, 3) = rot_vec;
 	if (jointType[0] == BALL_JOINT_4D)
 	{
 		rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
 	}
-	_Vector3 local_w = _Vector3(0.0, 5.0, 0.0);
+	_Vector3 local_w = _Vector3(0.0, 2.0, 0.0);
 	Forward();
 	_Vector3 world_w = R_global[0] * local_w;
 	qdot.segment(0, 3) = J_rotation[0].inverse() * world_w;
@@ -159,13 +162,17 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	}
 
 	//swing test
-	//qdot.segment(0, 3) = _Vector3(-2.0, 2.0, 0.0);
-	//qdot.segment(3, 3) = _Vector3(0.0, 4.0, 0.0);
+	//qdot.segment(0, 3) = _Vector3(-4.0, 4.0, 0.0);
+	//q.segment(0, 3) = _Vector3(0.0, 0.5 * M_PI, 0.0);
+	//qdot.segment(0, 3) = _Vector3(-2.0, 0.0, 2.0);
 	
 	Forward();
 	//jointLimit[0] = 0.785f;
 	jointLimit[0] = 0.5 * M_PI;
 	//jointLimit[1] = 0.09f;
+
+	//jointRange[0].first = 0.5 * M_PI;
+	//jointRange[0].second = 0.5 * M_PI;
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -288,10 +295,11 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 	_Vector qddot = (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
 	qdot = qdot + h * qddot;
+	
 	if (constraintSolverMode == IMPULSE)
 	{
-		/*SwingLimitCheck();
-		ResolveSwingLimit(h);*/
+	/*	BallJointLimitCheck();
+		ResolveJointLimit(h);*/
 		TwistLimitCheck();
 		ResolveTwistLimit(h);
 	}
@@ -303,10 +311,14 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 		ComputeHt(q_new, rel_ori);
 	/*	JointLimitCheck();
 		ResolveJointLimitPBD(q_new, h);*/
+		
 		TwistLimitCheck();
 		ResolveTwistLimitPBD(q_new, h);
+		/*SwingLimitCheck();
+		ResolveSwingLimitPBD(q_new, h);*/
 	}
 	q = q_new;
+	//std::cout << q.transpose() << std::endl;
 
 	ClampRotationVector();
 	Forward();
@@ -706,245 +718,6 @@ _Vector3 eae6320::MultiBody::ComputeAngularMomentum()
 	return angularMomentum;
 }
 
-void eae6320::MultiBody::KineticEnergyProjection()
-{
-	_Matrix A(totalVelDOF, totalVelDOF);
-	A.setZero();
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		A = A + Ht[i].transpose() * Mbody[i] * Ht[i];
-	}
-
-	_Matrix J(1, totalVelDOF);
-	J = (A * qdot).transpose();
-
-	_Scalar E = ComputeTotalEnergy();
-	_Matrix T = J * J.transpose();
-	_Scalar Ts = T(0, 0);
-	if (Ts > 0.0000001)
-	{
-		_Scalar lambda = (-E + kineticEnergy0) / Ts;
-
-		_Vector qdotCorrection = J.transpose() * lambda;
-		qdot = qdot + qdotCorrection;
-	}	
-	else
-	{
-		std::cout << "Singular Constraint!" << std::endl;
-	}
-}
-
-void eae6320::MultiBody::ManifoldProjection()
-{
-	//recompute H
-	//TODO: external force, update totalEnergy0
-	//if (gravity)
-	//{
-	//	kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
-	//}
-	////recompute P
-	//if (jointType[0] != FREE_JOINT || gravity)
-	//{
-	//	linearMomentum0 = ComputeTranslationalMomentum();
-	//	//std::cout << linearMomentum0 << std::endl;
-	//}
-	////recompute L
-	//if (gravity)
-	//{
-	//	angularMomentum0 = ComputeAngularMomentum();
-	//}
-
-	int numOfConstraints = 7;
-	int nq = totalVelDOF + 2;
-	int n = nq + numOfConstraints;
-	_Matrix f(n, 1);
-	_Matrix grad_f(n, n);
-
-	_Vector x(n);
-	x.setZero();
-	x.segment(0, totalVelDOF) = qdot;
-
-	_Vector qt(nq);
-	qt.setZero();
-	qt.segment(0, totalVelDOF) = qdot;
-
-	_Matrix D(nq, nq);
-	D.setZero();
-	//D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
-	D.block(0, 0, totalVelDOF, totalVelDOF) = _Matrix::Identity(totalVelDOF, totalVelDOF);
-	_Scalar m_coeff = 0.001;
-	D(totalVelDOF, totalVelDOF) = m_coeff;
-	D(totalVelDOF + 1, totalVelDOF + 1) = m_coeff;
-	//D(totalVelDOF + 2, totalVelDOF + 2) = m_coeff;
-
-	_Matrix Kp(3, totalVelDOF);
-	Kp.setZero();
-	_Matrix Kl(3, totalVelDOF);
-	Kl.setZero();
-	_Matrix Sv(3, 6);
-	Sv.setZero();
-	Sv.block<3, 3>(0, 0) = _Matrix::Identity(3, 3);
-	_Matrix Sw(3, 6);
-	Sw.setZero();
-	Sw.block<3, 3>(0, 3) = _Matrix::Identity(3, 3);
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Sv * Ht[i];
-		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Sw * Ht[i] + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Sv * Ht[i];
-	}
-
-	_Scalar kineticEnergy_t = ComputeKineticEnergy();
-	_Vector linearMomentum_t = ComputeTranslationalMomentum();
-	_Vector angularMomentum_t = ComputeAngularMomentum();
-	_Matrix grad_C(7, nq);
-	grad_C.setZero();
-	grad_C.block(1, 0, 3, totalVelDOF) = Kp;
-	grad_C.block(4, 0, 3, totalVelDOF) = Kl;
-	//grad_C(0, totalVelDOF) = kineticEnergy0 - kineticEnergy_t;
-	grad_C.block<3, 1>(1, totalVelDOF) = linearMomentum_t - linearMomentum0;
-	grad_C.block<3, 1>(4, totalVelDOF + 1) = angularMomentum_t - angularMomentum0;
-	//std::cout << grad_C << std::endl;
-
-	_Matrix C(7, 1);
-	_Matrix HessianC_lambda(nq, nq);
-	HessianC_lambda.setZero();
-	_Matrix HessianL(totalVelDOF, totalVelDOF);
-
-	_Scalar energyErr = 1.0;
-	int i = 0;
-	while (energyErr > 0.0000001)
-	{
-		//compute f
-		C(0, 0) = 0.5 * (x.segment(0, totalVelDOF).transpose() * Mr * x.segment(0, totalVelDOF))(0, 0) - kineticEnergy0;
-		C.block<3, 1>(1, 0) = Kp * x.segment(0, totalVelDOF) - (1 - x(totalVelDOF)) * linearMomentum_t - x(totalVelDOF) * linearMomentum0;
-		C.block<3, 1>(4, 0) = Kl * x.segment(0, totalVelDOF) - (1 - x(totalVelDOF + 1)) * angularMomentum_t - x(totalVelDOF + 1) * angularMomentum0;
-		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * x.segment(0, totalVelDOF)).transpose();
-		if (i == 0)
-		{
-			//initialize lambda
-			x.segment(nq, numOfConstraints) = (grad_C * grad_C.transpose()).inverse() * -C;
-		}
-		f.block(0, 0, nq, 1) = D * (x.segment(0, nq) - qt) - grad_C.transpose() * x.segment(nq, 7);
-		f.block<7, 1>(nq, 0) = C;
-
-		//compute Lagrange Hesssian
-		HessianC_lambda.block(0, 0, totalVelDOF, totalVelDOF) = x(nq) * Mr;
-		//HessianL = _Matrix::Identity(totalVelDOF, totalVelDOF) - HessianC_lambda;
-		HessianL = D - HessianC_lambda;
-
-		//compute gradient of f
-		grad_f.setZero();
-		grad_f.block(0, 0, nq, nq) = HessianL;
-		grad_f.block(0, nq, nq, 7) = -grad_C.transpose();
-		grad_f.block(nq, 0, 7, nq) = grad_C;
-
-		//std::cout << grad_f << std::endl;
-		//update
-		if (grad_f.determinant() < 0.000001)
-		{
-			EAE6320_ASSERTF(false, "grad_f is not invertable");
-		}
-		x = x - grad_f.inverse() * f;
-		//std::cout << std::endl << x << std::endl;
-		_Vector qdot_new = x.segment(0, totalVelDOF);
-		ForwardAngularAndTranslationalVelocity(qdot_new);
-		energyErr = fabs(ComputeTotalEnergy() - kineticEnergy0);
-		std::cout << energyErr << std::endl;
-		i++;
-	}
-	qdot = x.segment(0, totalVelDOF);
-	std::cout << ComputeTotalEnergy() << std::endl;
-}
-
-void eae6320::MultiBody::EnergyMomentumProjection()
-{
-	//recompute H
-	if (gravity)
-	{
-		kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
-	}
-	//recompute P
-	if (jointType[0] != FREE_JOINT || gravity)
-	{
-		linearMomentum0 = ComputeTranslationalMomentum();
-	}
-	//recompute L
-	if (gravity)
-	{
-		angularMomentum0 = ComputeAngularMomentum();
-	}
-
-	_Matrix f(totalVelDOF + 4, 1);
-	_Matrix grad_f(totalVelDOF + 4, totalVelDOF + 4);
-
-	_Vector x(totalVelDOF + 4, 1);
-	x.setZero();
-	x.segment(0, totalVelDOF) = qdot;
-
-	_Matrix K(3, totalVelDOF);
-	K.setZero();
-	_Matrix Sv(3, 6);
-	Sv.setZero();
-	Sv.block<3, 3>(0, 0) = _Matrix::Identity(3, 3);
-	_Matrix Sw(3, 6);
-	Sw.setZero();
-	Sw.block<3, 3>(0, 3) = _Matrix::Identity(3, 3);
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		K = K + Mbody[i].block<3, 3>(3, 3) * Sw * Ht[i] + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Sv * Ht[i];
-	}
-
-	_Matrix grad_C(4, totalVelDOF);
-	_Scalar energyErr = 1.0;
-	grad_C.block(1, 0, 3, totalVelDOF) = K;
-
-	_Matrix C(4, 1);
-	_Matrix HessianC_lambda(totalVelDOF, totalVelDOF);
-	_Matrix HessianL(totalVelDOF, totalVelDOF);
-
-	int i = 0;
-	while (energyErr > 0.0000001)
-	{
-		//compute f
-		_Matrix energy_c(1, 1);
-		energy_c(0, 0) = kineticEnergy0;
-		C.block<1, 1>(0, 0) = 0.5 * x.segment(0, totalVelDOF).transpose() * Mr * x.segment(0, totalVelDOF) - energy_c;
-		C.block<3, 1>(1, 0) = K * x.segment(0, totalVelDOF) - angularMomentum0;
-		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * x.segment(0, totalVelDOF)).transpose();
-		if (i == 0)
-		{
-			//initialize lambda
-			x.segment(totalVelDOF, 4) = (grad_C * grad_C.transpose()).inverse() * -C;
-		}
-		f.block(0, 0, totalVelDOF, 1) = Mr * (x.segment(0, totalVelDOF) - qdot) - grad_C.transpose() * x.segment(totalVelDOF, 4);
-		f.block<4, 1>(totalVelDOF, 0) = C;
-
-		//compute Lagrange Hesssian
-		HessianC_lambda = x.segment(totalVelDOF, 4)(0) * Mr;
-		//HessianL = _Matrix::Identity(totalVelDOF, totalVelDOF) - HessianC_lambda;
-		HessianL = Mr - HessianC_lambda;
-
-		//compute gradient of f
-		grad_f.setZero();
-		grad_f.block(0, 0, totalVelDOF, totalVelDOF) = HessianL;
-		grad_f.block(0, totalVelDOF, totalVelDOF, 4) = -grad_C.transpose();
-		grad_f.block(totalVelDOF, 0, 4, totalVelDOF) = grad_C;
-
-		//update
-		if (grad_f.determinant() < 0.00000001)
-		{
-			EAE6320_ASSERTF(false, "grad_f is not invertable");
-		}
-		x = x - grad_f.inverse() * f;
-		_Vector qdot_new = x.segment(0, totalVelDOF);
-		ForwardAngularAndTranslationalVelocity(qdot_new);
-		energyErr = fabs(ComputeTotalEnergy() - kineticEnergy0);
-		//std::cout << energyErr << std::endl;
-		i++;
-	}
-	qdot = x.segment(0, totalVelDOF);
-}
-
 _Scalar eae6320::MultiBody::ComputeKineticEnergy()
 {
 	_Scalar out = 0;
@@ -982,6 +755,131 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 	_Scalar energy = ComputeKineticEnergy();
 	if (gravity) energy += ComputePotentialEnergy();
 	return energy;
+}
+
+void eae6320::MultiBody::BallJointLimitCheck()
+{
+	jointsID.clear();
+	constraintValue.clear();
+	limitType.clear();
+	
+	_Vector3 p = _Vector3(0, -1, 0);
+	_Vector3 local_x = _Vector3(1, 0, 0);
+	_Matrix3 R_swing;
+	_Matrix3 R_twist;
+	_Vector3 twistAxis(0, -1, 0);
+	Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
+	_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
+	std::cout << vec_twist.norm() << std::endl;
+	//LOG_TO_FILE << vec_twist.norm() << std::endl;
+	
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (jointType[i] == BALL_JOINT_4D)
+		{
+			if (jointRange[i].first > 0)//check swing constraint
+			{
+				_Scalar c = p.dot(R_local[i] * p) - cos(jointRange[i].first);
+				if (c < 0)
+				{
+					jointsID.push_back(i);
+					constraintValue.push_back(c);
+					limitType.push_back(SWING);
+				}
+			}
+
+			if (jointRange[i].second > 0) //check twist constraint
+			{
+				_Vector s = p.cross(R_local[i] * p);
+				if (s.norm() < 0.0001)
+				{
+					_Scalar c = local_x.dot(R_local[i] * local_x) - cos(jointRange[i].second);
+					if (c < 0)
+					{
+						jointsID.push_back(i);
+						constraintValue.push_back(c);
+						limitType.push_back(TWIST_WITHOUT_SWING);
+					}
+				}
+				else
+				{
+					_Scalar c = s.dot(R_local[i] * s) / s.squaredNorm() - cos(jointRange[i].second);
+					if (c < 0)
+					{
+						jointsID.push_back(i);
+						constraintValue.push_back(c);
+						limitType.push_back(TWIST_WITH_SWING);
+					}
+				}
+			}
+		}
+	}
+}
+
+void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
+{
+	size_t constraintNum = jointsID.size();
+	if (constraintNum > 0)
+	{
+		_Matrix J;
+		J.resize(constraintNum, totalVelDOF);
+		J.setZero();
+
+		_Vector bias;
+		bias.resize(constraintNum);
+		bias.setZero();
+		// compute J and bias
+		for (int k = 0; k < constraintNum; k++)
+		{
+			int i = jointsID[k];
+			if (jointType[i] == BALL_JOINT_4D)
+			{
+				_Matrix3 R_swing;
+				_Matrix3 R_twist;
+				_Vector3 twistAxis(0, -1, 0);
+				Math::TwistSwingDecompsition(R_local[i], twistAxis, R_twist, R_swing);
+				if (limitType[k] == TWIST_WITHOUT_SWING || limitType[k] == TWIST_WITH_SWING)
+				{
+					_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
+					//std::cout << vec_twist.norm() << std::endl;
+   					vec_twist.normalize();
+					vec_twist = -vec_twist;
+					J.block<1, 3>(k, velStartIndex[i]) = vec_twist.transpose();
+					//Physics::simPause = true;
+				}
+				else if (limitType[k] == SWING)
+				{
+					_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
+					vec_swing.normalize();
+					vec_swing = -vec_swing;
+					J.block<1, 3>(k, velStartIndex[i]) = vec_swing.transpose();
+				}
+			}
+			_Vector3 rdot = qdot.segment(velStartIndex[i], 3);
+			_Matrix JV = J.block<1, 3>(k, velStartIndex[i]) * rdot;
+			
+			_Scalar beta = 0.1;//0.4f;
+			_Scalar CR = 0.0;// 0.2f;
+			_Scalar penetrationSlop = 0.001;
+			bias(k) = -beta / h * std::max<_Scalar>(-constraintValue[k] - penetrationSlop, 0.0) - CR * std::max<_Scalar>(-JV(0, 0), 0.0);
+		}
+
+		//solve constraint
+		_Matrix lambda;
+		//std::cout << J << std::endl;
+		lambda = (J * MrInverse * J.transpose()).inverse() * (-J * qdot - bias);
+		
+		for (int i = 0; i < constraintNum; i++)
+		{
+			if (lambda(i, 0) < 0)
+			{
+				lambda(i, 0) = 0;
+			}
+		}
+
+		_Vector RdotCorrection = MrInverse * J.transpose() * lambda;
+		qdot = qdot + RdotCorrection;
+	}
 }
 
 void eae6320::MultiBody::UpdateGameObjectBasedOnInput()

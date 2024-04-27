@@ -28,6 +28,8 @@ namespace eae6320
 		inline double GetAngleBetweenTwoVectors(Vector3d& vec0, Vector3d& vec1)
 		{
 			double dotProduct = vec0.normalized().dot(vec1.normalized());
+			if (dotProduct > 1) dotProduct = 1;
+			if (dotProduct < -1) dotProduct = -1;
 			double angle = acos(dotProduct);
 
 			return angle;

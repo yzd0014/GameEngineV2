@@ -1,5 +1,6 @@
 #include "3DMathHelpers.h"
 #include "EigenHelper.h"
+#include <iostream>
 
 namespace eae6320
 {
@@ -315,18 +316,11 @@ namespace eae6320
 				Vector3d swingVector = swingAxis * swingAngle;
 				o_swing = RotationConversion_VecToMatrix(swingVector);
 
+				//std::cout << swingAxis.transpose() << std::endl;
 				Vector3d rotatedSwingAxis = i_Rot * swingAxis;
-				Vector3d realTwistAxis = swingAxis.cross(rotatedSwingAxis);
-				if (realTwistAxis.norm() < 0.00001)
-				{
-					realTwistAxis = rotatedSwingAxis;
-				}
-				else
-				{
-					realTwistAxis.normalize();
-				}
+				//std::cout << rotatedSwingAxis.transpose() << std::endl;
 				double twistAangle = GetAngleBetweenTwoVectors(rotatedSwingAxis, swingAxis);
-				Vector3d twistVector = realTwistAxis * twistAangle;
+				Vector3d twistVector = rotatedTwistAxis * twistAangle;
 				o_twist = RotationConversion_VecToMatrix(twistVector);
 			}
 		}
