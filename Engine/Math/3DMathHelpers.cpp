@@ -316,11 +316,18 @@ namespace eae6320
 				Vector3d swingVector = swingAxis * swingAngle;
 				o_swing = RotationConversion_VecToMatrix(swingVector);
 
-				//std::cout << swingAxis.transpose() << std::endl;
 				Vector3d rotatedSwingAxis = i_Rot * swingAxis;
-				//std::cout << rotatedSwingAxis.transpose() << std::endl;
+				Vector3d signedTwistAxis = swingAxis.cross(rotatedSwingAxis);
+				if (signedTwistAxis.norm() < 0.00001)
+				{
+					signedTwistAxis = rotatedTwistAxis;
+				}
+				else
+				{
+					signedTwistAxis.normalize();
+				}
 				double twistAangle = GetAngleBetweenTwoVectors(rotatedSwingAxis, swingAxis);
-				Vector3d twistVector = rotatedTwistAxis * twistAangle;
+				Vector3d twistVector = signedTwistAxis * twistAangle;
 				o_twist = RotationConversion_VecToMatrix(twistVector);
 			}
 		}
