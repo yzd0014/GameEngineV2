@@ -16,7 +16,8 @@ namespace eae6320
 		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 
-		int constraintSolverMode = PBD;
+		int constraintSolverMode = IMPULSE;
+		int constraintType = TWIST_C;
 		bool gravity = FALSE ;
 	private:
 		void ComputeMr();
@@ -50,10 +51,13 @@ namespace eae6320
 		void TwistLimitCheck();
 		void ResolveTwistLimit(const _Scalar h);
 		void ResolveTwistLimitPBD(_Vector& i_q, const _Scalar h);
-		void ResolveAngularVelocityLimit();
+		
+		void _BallJointLimitCheck();
+		void _ResolveJointLimit(const _Scalar h);
+		void _ResolveJointLimitPBD(_Vector& i_q, const _Scalar h);
+		
 		void BallJointLimitCheck();
 		void ResolveJointLimit(const _Scalar h);
-		void ResolveJointLimitPBD(_Vector& i_q, const _Scalar h);
 
 		void KineticEnergyProjection();
 		void EnergyMomentumProjection();

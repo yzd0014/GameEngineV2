@@ -251,13 +251,13 @@ void eae6320::MultiBody::EnergyMomentumProjection()
 /***************************************joint limit constraint*************************************************************/
 void eae6320::MultiBody::SwingLimitCheck()
 {
-	_Matrix3 R_swing;
+	/*_Matrix3 R_swing;
 	_Matrix3 R_twist;
 	_Vector3 twistAxis(0, -1, 0);
 	Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
 	_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
 	_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
-	//std::cout << "twist: " << vec_twist.norm() << ", swing: " << vec_swing.norm() << std::endl;
+	std::cout << "twist: " << vec_twist.norm() << ", swing: " << vec_swing.norm() << std::endl;*/
 	
 	jointsID.clear();
 	for (int i = 0; i < numOfLinks; i++)
@@ -341,7 +341,7 @@ void eae6320::MultiBody::ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h)
 		J.resize(constraintNum, totalVelDOF);
 		J.setZero();
 
-	/*	{
+		{
 			_Matrix3 R_swing;
 			_Matrix3 R_twist;
 			_Vector3 twistAxis(0, -1, 0);
@@ -349,7 +349,7 @@ void eae6320::MultiBody::ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h)
 			_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
 			_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 			std::cout << "twist: " << vec_twist.norm() << ", swing: " << vec_swing.norm() << std::endl;
-		}*/
+		}
 
 		int iterationNum = 1;
 		for (int i = 0; i < iterationNum; i++)
@@ -382,7 +382,8 @@ void eae6320::MultiBody::ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h)
 			}
 		}
 
-		/*{
+		{
+			UpdateBodyRotation(i_q, rel_ori);
 			_Matrix3 R_swing;
 			_Matrix3 R_twist;
 			_Vector3 twistAxis(0, -1, 0);
@@ -390,7 +391,7 @@ void eae6320::MultiBody::ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h)
 			_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
 			_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 			std::cout << "twist: " << vec_twist.norm() << ", swing: " << vec_swing.norm() << std::endl;
-		}*/
+		}
 
 		qdot = (i_q - q) / h;
 	}
@@ -518,22 +519,6 @@ void eae6320::MultiBody::ResolveTwistLimitPBD(_Vector& i_q, const _Scalar h)
 	}
 }
 
-void eae6320::MultiBody::ResolveAngularVelocityLimit()
-{
-	size_t constraintNum = jointsID.size();
-	if (constraintNum > 0 && jointType[0] == BALL_JOINT_4D)
-	{
-		_Vector3 p = _Vector3(0, -1, 0);
-		_Vector3 RP = R_local[0] * p;
-		_Scalar twist_norm = RP.dot(qdot.segment(0, 3));
-		_Vector3 twist_w = twist_norm * RP;
-		std::cout << twist_w.transpose() << std::endl;
-		std::cout << qdot.segment(0, 3).transpose() << std::endl;
-		qdot.segment(0, 3) = qdot.segment(0, 3) - 1.5 * twist_w;
-		std::cout << qdot.segment(0, 3).transpose() << std::endl;
-	}
-}
-
 void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 {
 	size_t constraintNum = jointsID.size();
@@ -596,10 +581,10 @@ void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 			_Vector3 rdot = qdot.segment(velStartIndex[i], 3);
 			_Matrix JV = J.block<1, 3>(k, velStartIndex[i]) * rdot;
 
-			//_Scalar beta = 0.2f;//0.4f;
-			//_Scalar CR = 0.4f;// 0.2f;
-			//_Scalar SlopP = 0.001f;
-			//bias(k) = -beta / h * std::max<_Scalar>(-g[i], 0.0) - CR * std::max<_Scalar>(-JV(0, 0), 0.0);
+			_Scalar beta = 0.2f;//0.4f;
+			_Scalar CR = 0.4f;// 0.2f;
+			_Scalar SlopP = 0.001f;
+			bias(k) = -beta / h * std::max<_Scalar>(-g[i], 0.0) - CR * std::max<_Scalar>(-JV(0, 0), 0.0);
 		}
 		_Matrix lambda;
 		lambda = (J * MrInverse * J.transpose()).inverse() * (-J * qdot - bias);
@@ -618,5 +603,41 @@ void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 		qdot = qdot + RdotCorrection;
 	/*	std::cout << qdot.transpose() << std::endl;
 		std::cout << RdotCorrection.norm() << std::endl;*/
+	}
+}
+
+void eae6320::MultiBody::_BallJointLimitCheck()
+{
+	if (constraintType == SWING_C)
+	{
+		SwingLimitCheck();
+	}
+	else if (constraintType == TWIST_C)
+	{
+		TwistLimitCheck();
+	}
+}
+
+void eae6320::MultiBody::_ResolveJointLimit(const _Scalar h)
+{
+	if (constraintType == SWING_C)
+	{
+		ResolveSwingLimit(h);
+	}
+	else if (constraintType == TWIST_C)
+	{
+		ResolveTwistLimit(h);
+	}
+}
+
+void eae6320::MultiBody::_ResolveJointLimitPBD(_Vector& i_q, const _Scalar h)
+{
+	if (constraintType == SWING_C)
+	{
+		ResolveSwingLimitPBD(i_q, h);
+	}
+	else if (constraintType == TWIST_C)
+	{
+		ResolveTwistLimitPBD(i_q, h);
 	}
 }

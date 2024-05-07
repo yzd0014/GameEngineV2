@@ -45,3 +45,12 @@
 #ifndef SWING
 #define SWING 2
 #endif
+
+/*************************************/
+#ifndef SWING_C
+#define SWING_C 0
+#endif
+
+#ifndef TWIST_C
+#define TWIST_C 1
+#endif
