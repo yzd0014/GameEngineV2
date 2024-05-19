@@ -139,24 +139,25 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	/*qdot.segment(3, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
 	qdot.segment(6, 3) = _Vector3(4.0f, -10.0f, 0.0f);*/
 
-	//qdot.segment(0, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
-	//qdot.segment(3, 3) = _Vector3(0.0, 0.0, 10.0);
+	//qdot.segment(0, 3) = _Vector3(-2.0f, 2.0f, 0.0f);
+	//qdot.segment(3, 3) = _Vector3(2.0, 2.0, 0.0);
 
 	//UnitTest0();
 	//general twist test
-	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
+	_Vector3 rot_vec(-0.15 * M_PI, 0.0, 0.0);
 	q.segment(0, 3) = rot_vec;
 	if (jointType[0] == BALL_JOINT_4D)
 	{
 		rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
 	}
-	_Vector3 local_w = _Vector3(0.0, 2.0, 0.0);
+	_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
 	Forward();
 	_Vector3 world_w = R_global[0] * local_w;
 	qdot.segment(0, 3) = J_rotation[0].inverse() * world_w;
 	if (jointType[0] == BALL_JOINT_4D)
 	{
 		qdot.segment(0, 3) = world_w;
+		//qdot.segment(0, 3) = local_w;
 	}
 
 	//swing test
@@ -307,7 +308,8 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 	_Vector qddot = (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
 	qdot = qdot + h * qddot;
-	
+	//std::cout << qdot.transpose() << std::endl;
+
 	if (constraintSolverMode == IMPULSE)
 	{
 		/*BallJointLimitCheck();

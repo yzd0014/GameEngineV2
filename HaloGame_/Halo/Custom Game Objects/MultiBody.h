@@ -45,9 +45,11 @@ namespace eae6320
 		_Vector3 ComputeTranslationalMomentum();
 		_Vector3 ComputeAngularMomentum();
 
+		_Scalar ComputeAngularVelocityConstraint(_Vector3 w, _Matrix3& Rot, int i_limitType, _Scalar phi);
 		void SwingLimitCheck();
 		void ResolveSwingLimit(const _Scalar h);
 		void ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h);
+		
 		void TwistLimitCheck();
 		void ResolveTwistLimit(const _Scalar h);
 		void ResolveTwistLimitPBD(_Vector& i_q, const _Scalar h);
