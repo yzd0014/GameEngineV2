@@ -17,7 +17,7 @@ namespace eae6320
 		void UpdateGameObjectBasedOnInput() override;
 
 		int constraintSolverMode = IMPULSE;
-		int constraintType = TWIST_C;
+		int constraintType = SWING_C;
 		bool gravity = FALSE ;
 	private:
 		void ComputeMr();

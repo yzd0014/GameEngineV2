@@ -144,36 +144,36 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 
 	//UnitTest0();
 	//general twist test
-	_Vector3 rot_vec(-0.15 * M_PI, 0.0, 0.0);
+	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
 	q.segment(0, 3) = rot_vec;
 	if (jointType[0] == BALL_JOINT_4D)
 	{
 		rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
 	}
-	_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
+	_Vector3 local_w = _Vector3(0.0, -2.0, -2.0);
 	Forward();
 	_Vector3 world_w = R_global[0] * local_w;
 	qdot.segment(0, 3) = J_rotation[0].inverse() * world_w;
 	if (jointType[0] == BALL_JOINT_4D)
 	{
-		qdot.segment(0, 3) = world_w;
-		//qdot.segment(0, 3) = local_w;
+		//qdot.segment(0, 3) = world_w;
+		qdot.segment(0, 3) = local_w;
 	}
 
 	//swing test
-	/*_Vector3 rot_vec(0.0, 0.7 * M_PI, 0.0);
-	q.segment(0, 3) = rot_vec;
-	if (jointType[0] == BALL_JOINT_4D)
-	{
-		rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
-	}
-	_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);
-	Forward();
-	qdot.segment(0, 3) = J_rotation[0].inverse() * local_w;
-	if (jointType[0] == BALL_JOINT_4D)
-	{
-		qdot.segment(0, 3) = local_w;
-	}*/
+	//_Vector3 rot_vec(0.0, 0.7 * M_PI, 0.0);
+	//q.segment(0, 3) = rot_vec;
+	//if (jointType[0] == BALL_JOINT_4D)
+	//{
+	//	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	//}
+	//_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);
+	//Forward();
+	//qdot.segment(0, 3) = J_rotation[0].inverse() * local_w;
+	//if (jointType[0] == BALL_JOINT_4D)
+	//{
+	//	qdot.segment(0, 3) = local_w;
+	//}
 	
 	//qdot.segment(0, 3) = _Vector3(-2.0, 2.0, 0.0);
 	//q.segment(0, 3) = _Vector3(0.0, 0.5 * M_PI, 0.0);
