@@ -313,7 +313,7 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 				// frames need to be rendered (and operating system messages handled)
 				// or the application will stop responding
 				// Simulation pause and stepping to the next frame only work when rendering thread doesn't wait for physics update
-				// The last "and" is the basic check to decide if simulation needs to be executed or not
+				// Logic format is (s1 || s2)
 				&& ( simulationUpdateCount_thisIteration < maxSimulationUpdateCountWithoutRendering ) && (!Graphics::renderThreadNoWait || play) )
 				|| (Graphics::renderThreadNoWait && !play && Physics::nextSimStep) )
 			{
@@ -330,6 +330,7 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 				m_tickCount_simulationTime_totalElapsed = tickCount_simulationTime_totalElapsed;
 				tickCount_simulationTime_elapsedButNotYetSimulated -= tickCount_perSimulationUpdate;
 				Physics::nextSimStep = false;
+				play = !Physics::simPause || Physics::simPlay;
 			}
 			// If a time-based simulation update happened
 			// then update simulation state based on input.

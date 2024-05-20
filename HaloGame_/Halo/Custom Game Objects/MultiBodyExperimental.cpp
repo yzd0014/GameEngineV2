@@ -249,36 +249,6 @@ void eae6320::MultiBody::EnergyMomentumProjection()
 }
 
 /***************************************joint limit constraint*************************************************************/
-_Scalar eae6320::MultiBody::ComputeAngularVelocityConstraint(_Vector3 w, _Matrix3& Rot, int i_limitType, _Scalar phi)
-{
-	_Scalar C = 0;
-	_Vector3 p = _Vector3(0, -1, 0);
-	_Vector3 s = _Vector3(1, 0, 0);
-	if (i_limitType == TWIST_WITH_SWING)
-	{
-		_Scalar t0, t1, t2, d0, d1;
-		t0 = (Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(w) * Rot * p).dot(Rot * Math::ToSkewSymmetricMatrix(p) * Rot * p);
-		t1 = (Math::ToSkewSymmetricMatrix(p) * Rot * p).dot(Math::ToSkewSymmetricMatrix(w) * Rot * Math::ToSkewSymmetricMatrix(p) * Rot * p);
-		t2 = (Math::ToSkewSymmetricMatrix(p) * Rot * p).dot(Rot * Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(w) * Rot * p);
-		d0 = t0 + t1 + t2;
-		d1 = 2 * (Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(w) * Rot * p).dot(Math::ToSkewSymmetricMatrix(p) * Rot * p);
-
-		_Vector s = p.cross(Rot * p);
-		_Scalar t3 = s.dot(Rot * s);
-
-		C = d0 / s.squaredNorm() - t3 * d1 / (s.squaredNorm() * s.squaredNorm());
-	}
-	else if (i_limitType == TWIST_WITHOUT_SWING)
-	{
-		C = s.dot(Math::ToSkewSymmetricMatrix(w) * Rot * s);
-	}
-	else if (i_limitType == SWING)
-	{
-		C = p.dot(Math::ToSkewSymmetricMatrix(w) * Rot * p);
-	}
-	return C;
-}
-
 void eae6320::MultiBody::SwingLimitCheck()
 {
 	/*_Matrix3 R_swing;
@@ -333,19 +303,19 @@ void eae6320::MultiBody::ResolveSwingLimit(const _Scalar h)
 			}
 			else if (jointType[joint_id] == BALL_JOINT_4D)
 			{
-				_Scalar j0 = ComputeAngularVelocityConstraint(_Vector3(1, 0, 0), R_local[i], limitType[joint_id], jointLimit[i]);
-				_Scalar j1 = ComputeAngularVelocityConstraint(_Vector3(0, 1, 0), R_local[i], limitType[joint_id], jointLimit[i]);
-				_Scalar j2 = ComputeAngularVelocityConstraint(_Vector3(0, 0, 1), R_local[i], limitType[joint_id], jointLimit[i]);
+				_Scalar j0 = ComputeAngularVelocityConstraint(_Vector3(1, 0, 0), R_local[joint_id], limitType[i], jointLimit[joint_id]);
+				_Scalar j1 = ComputeAngularVelocityConstraint(_Vector3(0, 1, 0), R_local[joint_id], limitType[i], jointLimit[joint_id]);
+				_Scalar j2 = ComputeAngularVelocityConstraint(_Vector3(0, 0, 1), R_local[joint_id], limitType[i], jointLimit[joint_id]);
 				J.block<1, 3>(i, velStartIndex[joint_id]) = _Vector3(j0, j1, j2);
 
-				_Vector3 pRotated = R_local[i] * p;
+				_Vector3 pRotated = R_local[joint_id] * p;
 				_Vector3 s = p.cross(pRotated);
 				if (s.norm() < 0.00001)
 				{
 					s = local_x;
 				}
 				s.normalize();
-				_Scalar cTest = ComputeAngularVelocityConstraint(s, R_local[i], limitType[joint_id], jointLimit[i]);
+				_Scalar cTest = ComputeAngularVelocityConstraint(s, R_local[joint_id], limitType[i], jointLimit[joint_id]);
 				if (cTest < 0)
 				{
 					s = -s;

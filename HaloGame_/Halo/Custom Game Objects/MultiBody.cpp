@@ -144,21 +144,22 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 
 	//UnitTest0();
 	//general twist test
-	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
-	q.segment(0, 3) = rot_vec;
-	if (jointType[0] == BALL_JOINT_4D)
-	{
-		rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
-	}
-	_Vector3 local_w = _Vector3(0.0, -2.0, -2.0);
-	Forward();
-	_Vector3 world_w = R_global[0] * local_w;
-	qdot.segment(0, 3) = J_rotation[0].inverse() * world_w;
-	if (jointType[0] == BALL_JOINT_4D)
-	{
-		//qdot.segment(0, 3) = world_w;
-		qdot.segment(0, 3) = local_w;
-	}
+	//_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
+	//q.segment(0, 3) = rot_vec;
+	//if (jointType[0] == BALL_JOINT_4D)
+	//{
+	//	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	//}
+	//_Vector3 local_w = _Vector3(0.0, -2.0, -2.0);
+	////_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
+	//Forward();
+	//_Vector3 world_w = R_global[0] * local_w;
+	//qdot.segment(0, 3) = J_rotation[0].inverse() * world_w;
+	//if (jointType[0] == BALL_JOINT_4D)
+	//{
+	//	//qdot.segment(0, 3) = world_w;
+	//	qdot.segment(0, 3) = local_w;
+	//}
 
 	//swing test
 	//_Vector3 rot_vec(0.0, 0.7 * M_PI, 0.0);
@@ -175,17 +176,17 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//	qdot.segment(0, 3) = local_w;
 	//}
 	
-	//qdot.segment(0, 3) = _Vector3(-2.0, 2.0, 0.0);
+	qdot.segment(0, 3) = _Vector3(-2.0, 2.0, 0.0);
 	//q.segment(0, 3) = _Vector3(0.0, 0.5 * M_PI, 0.0);
 	//qdot.segment(0, 3) = _Vector3(-2.0, 0.0, 2.0);
 	
 	Forward();
 	//jointLimit[0] = 0.785f;
-	jointLimit[0] = 0.5 * M_PI;
+	//jointLimit[0] = 0.5 * M_PI;
 	//jointLimit[1] = 0.09f;
 
 	//jointRange[0].first = 0.5 * M_PI;//swing
-	//jointRange[0].second = 0.5 * M_PI;//twist
+	jointRange[0].second = 0.5 * M_PI;//twist
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -312,10 +313,10 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 	if (constraintSolverMode == IMPULSE)
 	{
-		/*BallJointLimitCheck();
-		ResolveJointLimit(h);*/
-		_BallJointLimitCheck();
-		_ResolveJointLimit(h);
+		BallJointLimitCheck();
+		ResolveJointLimit(h);
+		/*_BallJointLimitCheck();
+		_ResolveJointLimit(h);*/
 	}
 
 	_Vector q_new(totalPosDOF);
@@ -334,6 +335,31 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 	ClampRotationVector();
 	Forward();
+	//{
+	//	_Vector3 p = _Vector3(0, -1, 0);
+	//	_Vector3 local_x = _Vector3(1, 0, 0);
+
+	//	_Matrix3 R_swing;
+	//	_Matrix3 R_twist;
+	//	_Vector3 twistAxis(0, -1, 0);
+	//	Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
+	//	_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
+	//	_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
+
+	//	_Vector s = p.cross(R_local[0] * p);
+	//	std::cout << "twist: " << vec_twist.transpose() << " swing: " << vec_swing.transpose() << std::endl;
+	//	//std::cout << "twist: " << vec_twist.norm() <<" swing: "<< vec_swing.norm() << " w: " << qdot.transpose() << " s: " << s.norm() << std::endl;
+	//	//_Vector3 rotVec = Math::RotationConversion_MatrixToVec(R_local[0]);
+	//	//std::cout << rel_ori[0].w() << " " << rel_ori[0].x() << " " << rel_ori[0].y() << " " << rel_ori[0].z() << std::endl;
+	//	if (s.norm() < 0.01 && Physics::totalSimulationTime > 0.2)
+	//	{
+	//		Physics::simPause = true;
+	//		std::cout << "paused!" << std::endl;
+	//		//_Matrix3 Rt = R_twist * R_swing;
+	//		//std::cout << Rt - R_local[0] << std::endl << std::endl;
+	//		//jointRange[0].second = -1;
+	//	}
+	//}
 }
 
 void eae6320::MultiBody::RK3Integration(const _Scalar h)
@@ -768,36 +794,51 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 	return energy;
 }
 
+_Scalar eae6320::MultiBody::ComputeAngularVelocityConstraint(_Vector3 w, _Matrix3& Rot, int i_limitType, _Scalar phi)
+{
+	_Scalar C = 0;
+	_Vector3 p = _Vector3(0, -1, 0);
+	_Vector3 s = _Vector3(1, 0, 0);
+	if (i_limitType == TWIST_WITH_SWING)
+	{
+		_Scalar t0, t1, t2, d0, d1;
+		t0 = (Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(w) * Rot * p).dot(Rot * Math::ToSkewSymmetricMatrix(p) * Rot * p);
+		t1 = (Math::ToSkewSymmetricMatrix(p) * Rot * p).dot(Math::ToSkewSymmetricMatrix(w) * Rot * Math::ToSkewSymmetricMatrix(p) * Rot * p);
+		t2 = (Math::ToSkewSymmetricMatrix(p) * Rot * p).dot(Rot * Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(w) * Rot * p);
+		d0 = t0 + t1 + t2;
+		d1 = 2 * (Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(w) * Rot * p).dot(Math::ToSkewSymmetricMatrix(p) * Rot * p);
+
+		_Vector s = p.cross(Rot * p);
+		_Scalar t3 = s.dot(Rot * s);
+
+		C = d0 / s.squaredNorm() - t3 * d1 / (s.squaredNorm() * s.squaredNorm());
+	}
+	else if (i_limitType == TWIST_WITHOUT_SWING)
+	{
+		C = s.dot(Math::ToSkewSymmetricMatrix(w) * Rot * s);
+	}
+	else if (i_limitType == SWING)
+	{
+		C = p.dot(Math::ToSkewSymmetricMatrix(w) * Rot * p);
+	}
+	return C;
+}
+
 void eae6320::MultiBody::BallJointLimitCheck()
 {
 	jointsID.clear();
 	constraintValue.clear();
 	limitType.clear();
-	
 	_Vector3 p = _Vector3(0, -1, 0);
 	_Vector3 local_x = _Vector3(1, 0, 0);
-	//_Matrix3 R_swing;
-	//_Matrix3 R_twist;
-	//_Vector3 twistAxis(0, -1, 0);
-	//Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
-	//_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
-	//std::cout << vec_twist.norm() << std::endl;
-	//LOG_TO_FILE << vec_twist.norm() << std::endl;
 	
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		if (jointType[i] == BALL_JOINT_4D || jointType[i] == BALL_JOINT_3D)
+		if (jointType[i] == BALL_JOINT_4D)
 		{
-			_Matrix3 R_swing;
-			_Matrix3 R_twist;
-			_Vector3 twistAxis(0, -1, 0);
-			Math::TwistSwingDecompsition(R_local[i], twistAxis, R_twist, R_swing);
-			_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
-			_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
-			
 			if (jointRange[i].first > 0)//check swing constraint
 			{
-				_Scalar c = jointRange[i].first - vec_swing.norm();
+				_Scalar c = p.dot(R_local[i] * p) - cos(jointRange[i].first);
 				if (c < 0)
 				{
 					jointsID.push_back(i);
@@ -808,12 +849,26 @@ void eae6320::MultiBody::BallJointLimitCheck()
 
 			if (jointRange[i].second > 0) //check twist constraint
 			{
-				_Scalar c = jointRange[i].second - vec_twist.norm();
-				if (c < 0)
+				_Vector s = p.cross(R_local[i] * p);
+				if (s.norm() < swingEpsilon)
 				{
-					jointsID.push_back(i);
-					constraintValue.push_back(c);
-					limitType.push_back(TWIST_WITH_SWING);
+					_Scalar c = local_x.dot(R_local[i] * local_x) - cos(jointRange[i].second);
+					if (c < 0)
+					{
+						jointsID.push_back(i);
+						constraintValue.push_back(c);
+						limitType.push_back(TWIST_WITHOUT_SWING);
+					}
+				}
+				else
+				{
+					_Scalar c = s.dot(R_local[i] * s) / s.squaredNorm() - cos(jointRange[i].second);
+					if (c < 0)
+					{
+						jointsID.push_back(i);
+						constraintValue.push_back(c);
+						limitType.push_back(TWIST_WITH_SWING);
+					}
 				}
 			}
 		}
@@ -822,6 +877,90 @@ void eae6320::MultiBody::BallJointLimitCheck()
 
 void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 {
+	size_t constraintNum = jointsID.size();
+	_Vector3 p = _Vector3(0, -1, 0);
+	_Vector3 local_x = _Vector3(1, 0, 0);
+	if (constraintNum > 0)
+	{
+		_Matrix J;
+		J.resize(constraintNum, totalVelDOF);
+		J.setZero();
+		_Matrix K;
+		K = J;
+		_Vector bias;
+		bias.resize(constraintNum);
+		bias.setZero();
+		for (int k = 0; k < constraintNum; k++)
+		{
+			int i = jointsID[k];
+			//compute J and K
+			if (jointType[i] == BALL_JOINT_4D)
+			{
+				if (limitType[k] == TWIST_WITH_SWING || limitType[k] == TWIST_WITHOUT_SWING)
+				{
+					//compute J
+					_Scalar j0 = ComputeAngularVelocityConstraint(_Vector3(1, 0, 0), R_local[i], limitType[k], jointRange[i].second);
+					_Scalar j1 = ComputeAngularVelocityConstraint(_Vector3(0, 1, 0), R_local[i], limitType[k], jointRange[i].second);
+					_Scalar j2 = ComputeAngularVelocityConstraint(_Vector3(0, 0, 1), R_local[i], limitType[k], jointRange[i].second);
+					J.block<1, 3>(k, velStartIndex[i]) = _Vector3(j0, j1, j2);
+
+					//compute K
+					_Vector3 pRotated = R_local[i] * p;
+					_Scalar cTest = ComputeAngularVelocityConstraint(pRotated, R_local[i], limitType[k], jointRange[i].second);
+					if (cTest < 0)
+					{
+						pRotated = -pRotated;
+					}
+					K.block<1, 3>(k, velStartIndex[i]) = pRotated;
+					//K.block<1, 3>(k, velStartIndex[i]) = J.block<1, 3>(k, velStartIndex[i]);
+				}
+				else if (limitType[k] == SWING)
+				{
+					//compute J
+					_Scalar j0 = ComputeAngularVelocityConstraint(_Vector3(1, 0, 0), R_local[i], limitType[k], jointRange[i].first);
+					_Scalar j1 = ComputeAngularVelocityConstraint(_Vector3(0, 1, 0), R_local[i], limitType[k], jointRange[i].first);
+					_Scalar j2 = ComputeAngularVelocityConstraint(_Vector3(0, 0, 1), R_local[i], limitType[k], jointRange[i].first);
+					J.block<1, 3>(k, velStartIndex[i]) = _Vector3(j0, j1, j2);
+
+					//compute K
+					_Vector3 pRotated = R_local[i] * p;
+					_Vector3 s = p.cross(pRotated);
+					if (s.norm() < 0.00001)
+					{
+						s = local_x;
+					}
+					s.normalize();
+					_Scalar cTest = ComputeAngularVelocityConstraint(s, R_local[i], limitType[k], jointRange[i].first);
+					if (cTest < 0)
+					{
+						s = -s;
+					}
+					K.block<1, 3>(k, velStartIndex[i]) = s;
+				}
+			}
+
+			//compute bias
+		/*	_Vector3 v = qdot.segment(velStartIndex[i], 3);
+			_Matrix C_dot = J.block<1, 3>(k, velStartIndex[i]) * v;
+			_Scalar beta = 0.1f;
+			_Scalar CR = 0.4f;
+			_Scalar SlopP = 0.001f;
+			bias(k) = -beta / h * std::max<_Scalar>(-constraintValue[i] - SlopP, 0.0) - CR * std::max<_Scalar>(-C_dot(0, 0), 0.0);*/
+		}
+		_Matrix lambda;
+		lambda = (J * MrInverse * K.transpose()).inverse() * (-J * qdot - bias);
+		for (int k = 0; k < constraintNum; k++)
+		{
+			if (lambda(k, 0) < 0)
+			{
+				lambda(k, 0) = 0;
+			}
+		}
+		_Vector qdotCorrection = MrInverse * K.transpose() * lambda;
+		qdot = qdot + qdotCorrection;
+	/*	_Scalar myC = ComputeAngularVelocityConstraint(qdot, R_local[0], limitType[0], jointRange[0].first);
+		std::cout << myC << std::endl;*/
+	}
 }
 
 void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
