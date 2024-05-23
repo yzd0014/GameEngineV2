@@ -335,31 +335,38 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 	ClampRotationVector();
 	Forward();
-	//{
-	//	_Vector3 p = _Vector3(0, -1, 0);
-	//	_Vector3 local_x = _Vector3(1, 0, 0);
+	{
+		_Vector3 p = _Vector3(0, -1, 0);
+		_Vector3 local_x = _Vector3(1, 0, 0);
 
-	//	_Matrix3 R_swing;
-	//	_Matrix3 R_twist;
-	//	_Vector3 twistAxis(0, -1, 0);
-	//	Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
-	//	_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
-	//	_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
+		_Matrix3 R_swing;
+		_Matrix3 R_twist;
+		_Vector3 twistAxis(0, -1, 0);
+		Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
+		_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
+		_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 
-	//	_Vector s = p.cross(R_local[0] * p);
-	//	std::cout << "twist: " << vec_twist.transpose() << " swing: " << vec_swing.transpose() << std::endl;
-	//	//std::cout << "twist: " << vec_twist.norm() <<" swing: "<< vec_swing.norm() << " w: " << qdot.transpose() << " s: " << s.norm() << std::endl;
-	//	//_Vector3 rotVec = Math::RotationConversion_MatrixToVec(R_local[0]);
-	//	//std::cout << rel_ori[0].w() << " " << rel_ori[0].x() << " " << rel_ori[0].y() << " " << rel_ori[0].z() << std::endl;
-	//	if (s.norm() < 0.01 && Physics::totalSimulationTime > 0.2)
-	//	{
-	//		Physics::simPause = true;
-	//		std::cout << "paused!" << std::endl;
-	//		//_Matrix3 Rt = R_twist * R_swing;
-	//		//std::cout << Rt - R_local[0] << std::endl << std::endl;
-	//		//jointRange[0].second = -1;
-	//	}
-	//}
+		_Vector s = p.cross(R_local[0] * p);
+		std::cout << "twist: " << vec_twist.norm() << " swing: " << vec_swing.norm() << std::endl;
+		/*if (jointsID.size() > 0)
+		{
+			_Scalar cValue = ComputeAngularVelocityConstraint(qdot, R_local[0], limitType[0], jointRange[0].second);
+			std::cout << "C dot: " << cValue << " qdot: " << qdot.transpose() << std::endl << std::endl;
+		}*/
+	
+		//std::cout << vec_swing.transpose() << std::endl << std::endl;
+		//std::cout << "twist: " << vec_twist.norm() <<" swing: "<< vec_swing.norm() << " s: " << s.norm() << std::endl;
+		//_Vector3 rotVec = Math::RotationConversion_MatrixToVec(R_local[0]);
+		//std::cout << rel_ori[0].w() << " " << rel_ori[0].x() << " " << rel_ori[0].y() << " " << rel_ori[0].z() << std::endl;
+		if (s.norm() < 0.01 && Physics::totalSimulationTime > 0.2)
+		{
+			//Physics::simPause = true;
+			//std::cout << "paused!" << std::endl;
+			//_Matrix3 Rt = R_twist * R_swing;
+			//std::cout << Rt - R_local[0] << std::endl << std::endl;
+			//jointRange[0].second = -1;
+		}
+	}
 }
 
 void eae6320::MultiBody::RK3Integration(const _Scalar h)
@@ -913,6 +920,8 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 					}
 					K.block<1, 3>(k, velStartIndex[i]) = pRotated;
 					//K.block<1, 3>(k, velStartIndex[i]) = J.block<1, 3>(k, velStartIndex[i]);
+					_Scalar cValue = ComputeAngularVelocityConstraint(qdot, R_local[i], limitType[k], jointRange[i].second);
+					//std::cout << "after velocity integration: " << cValue << " qdot: " << qdot.transpose() << std::endl;
 				}
 				else if (limitType[k] == SWING)
 				{
@@ -923,19 +932,7 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 					J.block<1, 3>(k, velStartIndex[i]) = _Vector3(j0, j1, j2);
 
 					//compute K
-					_Vector3 pRotated = R_local[i] * p;
-					_Vector3 s = p.cross(pRotated);
-					if (s.norm() < 0.00001)
-					{
-						s = local_x;
-					}
-					s.normalize();
-					_Scalar cTest = ComputeAngularVelocityConstraint(s, R_local[i], limitType[k], jointRange[i].first);
-					if (cTest < 0)
-					{
-						s = -s;
-					}
-					K.block<1, 3>(k, velStartIndex[i]) = s;
+					K.block<1, 3>(k, velStartIndex[i]) = _Vector3(j0, j1, j2);
 				}
 			}
 
@@ -949,17 +946,19 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 		}
 		_Matrix lambda;
 		lambda = (J * MrInverse * K.transpose()).inverse() * (-J * qdot - bias);
-		for (int k = 0; k < constraintNum; k++)
+		//std::cout << J * qdot << std::endl;
+		/*for (int k = 0; k < constraintNum; k++)
 		{
 			if (lambda(k, 0) < 0)
 			{
 				lambda(k, 0) = 0;
 			}
-		}
+		}*/
 		_Vector qdotCorrection = MrInverse * K.transpose() * lambda;
 		qdot = qdot + qdotCorrection;
-	/*	_Scalar myC = ComputeAngularVelocityConstraint(qdot, R_local[0], limitType[0], jointRange[0].first);
-		std::cout << myC << std::endl;*/
+		_Scalar myC = ComputeAngularVelocityConstraint(qdot, R_local[0], limitType[0], jointRange[0].second);
+		//_Matrix myC2 = J * qdot;
+		//std::cout << "after: " << myC << std::endl;
 	}
 }
 

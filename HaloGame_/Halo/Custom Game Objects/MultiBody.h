@@ -110,7 +110,7 @@ namespace eae6320
 		
 		std::vector<_Scalar> jointLimit;
 		std::vector<std::pair<_Scalar, _Scalar>> jointRange;
-		_Scalar swingEpsilon = 0.005;
+		_Scalar swingEpsilon = 0.00001;
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;
 		_Vector3 angularMomentum0;
