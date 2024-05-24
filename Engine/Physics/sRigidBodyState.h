@@ -42,6 +42,7 @@ namespace eae6320
 			//Math::sVector angularVelocity_axis_local = Math::sVector( 0.0f, 1.0f, 0.0f );	// In local space (not world space)
 			//float angularSpeed = 0.0f;	// Radians per-second (positive values rotate right-handed, negative rotate left-handed)
 			Math::sVector angularVelocity;
+			Math::cMatrix_transformation transform;
 
 			//float euler_x = 0.0f; //in degrees;
 			//float euler_y = 0.0f;
@@ -56,6 +57,7 @@ namespace eae6320
 			bool movementInterpolation = false;
 			bool isStatic = false;
 			bool hasGravity = false;
+			bool useTransform = false;
 			// Interface
 			//==========
 			sRigidBodyState();

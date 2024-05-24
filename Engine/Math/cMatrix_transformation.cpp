@@ -203,15 +203,3 @@ eae6320::Math::cMatrix_transformation::cMatrix_transformation(
 
 }
 
-void eae6320::Math::NativeMatrix2EigenMatrix(cMatrix_transformation &i_matrix, Matrix3f &o_matrix)
-{
-	o_matrix(0, 0) = i_matrix.m_00;
-	o_matrix(0, 1) = i_matrix.m_01;
-	o_matrix(0, 2) = i_matrix.m_02;
-	o_matrix(1, 0) = i_matrix.m_10;
-	o_matrix(1, 1) = i_matrix.m_11;
-	o_matrix(1, 2) = i_matrix.m_12;
-	o_matrix(2, 0) = i_matrix.m_20;
-	o_matrix(2, 1) = i_matrix.m_21;
-	o_matrix(2, 2) = i_matrix.m_22;
-}

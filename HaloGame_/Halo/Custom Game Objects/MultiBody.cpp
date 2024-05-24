@@ -964,4 +964,27 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 
 void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
 {
+	if (UserInput::IsKeyFromReleasedToPressed('F'))
+	{
+		_Matrix3 R_swing;
+		_Matrix3 R_twist;
+		_Vector3 twistAxis(0, -1, 0);
+		Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
+		_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
+		_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
+		
+		if (twistArrow != nullptr)
+		{
+			twistArrow->DestroyGameObject();
+			twistArrow = nullptr;
+		}
+		twistArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_twist.normalized(), 0.5);
+
+		/*if (swingArrow != nullptr)
+		{
+			swingArrow->DestroyGameObject();
+			swingArrow = nullptr;
+		}*/
+		swingArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_swing.normalized(), 0.5);
+	}
 }

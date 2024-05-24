@@ -54,24 +54,21 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	LOAD_MESH("data/meshes/cube.mesh", mesh_cube)
 	LOAD_MESH("data/meshes/bullet.mesh", mesh_anchor)
 	LOAD_MESH("data/meshes/capsule.mesh", mesh_capsule)
-
-	//load effect
-	LOAD_EFFECT("data/effects/default.effect", pDefaultEffect)
-	LOAD_EFFECT("data/effects/red.effect", pRedEffect)
 	
 	{
 		std::vector<GameCommon::GameObject *> links;
 		int bodyNum = 1;
 		for (int i = 0; i < bodyNum; i++)
 		{
-			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_capsule, Physics::sRigidBodyState());
+			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(defaultEffect, mesh_capsule, Physics::sRigidBodyState());
 			links.push_back(pGameObject);
 			noColliderObjects.push_back(pGameObject);
 		}
 
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
-		MultiBody * pMultiBody = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
+		MultiBody * pMultiBody = new MultiBody(defaultEffect, mesh_anchor, objState, links, bodyNum);
 		//GameCommon::GameObject * pMultiBody = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
+		pMultiBody->m_color = Math::sVector(1, 0, 0);
 		noColliderObjects.push_back(pMultiBody);
 	}
 	
@@ -116,7 +113,7 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	//Ground
 	{
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, -8.0f, 0.0f));
-		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_plane, objState);
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(defaultEffect, mesh_plane, objState);
 		noColliderObjects.push_back(pGameObject);
 	}
 	
@@ -145,7 +142,6 @@ void  eae6320::cHalo::UpdateSimulationBasedOnTime(const double i_elapsedSecondCo
 	{
 		GameCommon::ResetAllGameObjectsVelo(colliderObjects, noColliderObjects, mainCamera);
 	}
-	GameCommon::RemoveInactiveGameObjects(colliderObjects);
 }
 
 

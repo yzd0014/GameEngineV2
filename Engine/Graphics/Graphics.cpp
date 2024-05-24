@@ -261,6 +261,11 @@ void eae6320::Graphics::UpdateSimulationBasedOnInput()
 	}
 	
 	UserInput::UpdateLastFrameKeyState();
+	//remove inactive game objects
+	{
+		GameCommon::RemoveInactiveGameObjects(colliderObjects);
+		GameCommon::RemoveInactiveGameObjects(noColliderObjects);
+	}
 }
 
 void eae6320::Graphics::ClearDataBeingSubmittedByApplicationThread()

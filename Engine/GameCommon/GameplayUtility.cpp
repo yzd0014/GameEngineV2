@@ -4,12 +4,15 @@
 #include "Camera.h"
 #include "GameplayUtility.h"
 #include <cmath>
+#include "Engine/Math/3DMathHelpers.h"
+#include "Engine/Math/EigenHelper.h"
 
 namespace eae6320
 {
 	namespace GameplayUtility
 	{
 		Application::cbApplication* pGameApplication = nullptr;
+		eae6320::Assets::cHandle<Mesh> arrowMesh;
 		
 		Math::sVector MouseRayCasting()//return a ray direction in word sapce 
 		{
@@ -31,6 +34,43 @@ namespace eae6320
 			output = local2World * p;
 
 			return output;
+		}
+
+		GameCommon::GameObject* DrawArrow(Vector3d startPoint, Vector3d dir, double scaling)
+		{
+			//get arrow transform
+			dir.normalize();
+			Vector3d defaultDir(0, 1, 0);
+			double rotAngle = Math::GetAngleBetweenTwoVectors(defaultDir, dir);
+			Vector3d rotVec = defaultDir.cross(dir);
+			Matrix3d rotMatEigen;
+			if (rotAngle > 0.001)
+			{
+				rotMatEigen = AngleAxisd(rotAngle, rotVec.normalized());
+			}
+			else
+			{
+				rotMatEigen.setIdentity();
+			}
+			Matrix3d scaleMatEigen;
+			scaleMatEigen.setIdentity();
+			scaleMatEigen = scaling * scaleMatEigen;
+			Matrix3d transformEigen = rotMatEigen * scaleMatEigen;
+			
+			Math::cMatrix_transformation transformTotal;
+			Math::EigenMatrix2NativeMatrix(transformEigen, transformTotal);
+			transformTotal.m_03 = static_cast<float>(startPoint(0));
+			transformTotal.m_13 = static_cast<float>(startPoint(1));
+			transformTotal.m_23 = static_cast<float>(startPoint(2));
+
+			//creat game object
+			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(defaultEffect, arrowMesh, Physics::sRigidBodyState());
+			pGameObject->m_State.useTransform = true;
+			pGameObject->m_State.transform = transformTotal;
+			pGameObject->m_color = Math::sVector(1, 0, 0);
+			noColliderObjects.push_back(pGameObject);
+
+			return pGameObject;
 		}
 	}
 }

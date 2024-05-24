@@ -86,6 +86,7 @@ namespace eae6320
 	extern std::vector<Effect*> masterEffectArray;
 	extern Math::sVector lightSourceADir;
 	extern Math::sVector lightSourceBDir;
+	extern Effect* defaultEffect;
 }
 
 #define LOAD_EFFECT(effectPath, effectName)\

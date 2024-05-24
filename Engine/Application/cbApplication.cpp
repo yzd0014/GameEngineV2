@@ -87,9 +87,15 @@ void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_e
 			orientation = noColliderObjects[i]->m_State.orientation;
 		}
 		//submit
-		eae6320::Graphics::SubmitObject(noColliderObjects[i]->m_color, Math::cMatrix_transformation(orientation, position),
-			noColliderObjects[i]->GetEffect(), Mesh::s_manager.Get(noColliderObjects[i]->GetMesh()));
-
+		if (noColliderObjects[i]->m_State.useTransform)
+		{
+			eae6320::Graphics::SubmitObject(noColliderObjects[i]->m_color, noColliderObjects[i]->m_State.transform, noColliderObjects[i]->GetEffect(), Mesh::s_manager.Get(noColliderObjects[i]->GetMesh()));
+		}
+		else
+		{
+			eae6320::Graphics::SubmitObject(noColliderObjects[i]->m_color, Math::cMatrix_transformation(orientation, position),
+				noColliderObjects[i]->GetEffect(), Mesh::s_manager.Get(noColliderObjects[i]->GetMesh()));
+		}
 	}
 
 	//submit camera
@@ -557,6 +563,13 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 				EAE6320_ASSERT(false);
 				goto OnExit;
 			}
+		}
+		//initialize rendering primitive
+		{
+			LOAD_MESH("data/meshes/arrow.mesh", mesh_arrow)
+			eae6320::GameplayUtility::arrowMesh = mesh_arrow;
+			LOAD_EFFECT("data/effects/default.effect", pDefaultEffect)
+			defaultEffect = pDefaultEffect;
 		}
 	}
 	//UserInput

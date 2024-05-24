@@ -117,6 +117,8 @@ namespace eae6320
 		_Vector3 linearMomentum0;
 		//_Vector conservedQuantity;
 
+		GameObject* swingArrow = nullptr;
+		GameObject* twistArrow = nullptr;
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
 		int totalPosDOF = 0;

@@ -11,7 +11,9 @@ namespace eae6320
 	namespace GameplayUtility
 	{
 		extern Application::cbApplication* pGameApplication;
+		extern eae6320::Assets::cHandle<Mesh> arrowMesh;
 
 		Math::sVector MouseRayCasting();
+		GameCommon::GameObject* DrawArrow(Vector3d startPoint, Vector3d dir, double scaling);
 	}
 }

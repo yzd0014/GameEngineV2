@@ -128,8 +128,55 @@ namespace eae6320
 				const float i_02, const float i_12, const float i_22, const float i_32,
 				const float i_03, const float i_13, const float i_23, const float i_33 );
 		};
-
-		void NativeMatrix2EigenMatrix(cMatrix_transformation &i_matrix, Matrix3f &o_matrix);
+/******************************inline functions*************************************************************/
+		inline void NativeMatrix2EigenMatrix(cMatrix_transformation &i_matrix, Matrix3f &o_matrix)
+		{
+			o_matrix(0, 0) = i_matrix.m_00;
+			o_matrix(0, 1) = i_matrix.m_01;
+			o_matrix(0, 2) = i_matrix.m_02;
+			o_matrix(1, 0) = i_matrix.m_10;
+			o_matrix(1, 1) = i_matrix.m_11;
+			o_matrix(1, 2) = i_matrix.m_12;
+			o_matrix(2, 0) = i_matrix.m_20;
+			o_matrix(2, 1) = i_matrix.m_21;
+			o_matrix(2, 2) = i_matrix.m_22;
+		}
+		inline void NativeMatrix2EigenMatrix(cMatrix_transformation &i_matrix, Matrix3d &o_matrix)
+		{
+			o_matrix(0, 0) = i_matrix.m_00;
+			o_matrix(0, 1) = i_matrix.m_01;
+			o_matrix(0, 2) = i_matrix.m_02;
+			o_matrix(1, 0) = i_matrix.m_10;
+			o_matrix(1, 1) = i_matrix.m_11;
+			o_matrix(1, 2) = i_matrix.m_12;
+			o_matrix(2, 0) = i_matrix.m_20;
+			o_matrix(2, 1) = i_matrix.m_21;
+			o_matrix(2, 2) = i_matrix.m_22;
+		}
+		inline void EigenMatrix2NativeMatrix(Matrix3f &i_matrix, cMatrix_transformation &o_matrix)
+		{
+			o_matrix.m_00 = i_matrix(0, 0);
+			o_matrix.m_01 = i_matrix(0, 1);
+			o_matrix.m_02 = i_matrix(0, 2);
+			o_matrix.m_10 = i_matrix(1, 0);
+			o_matrix.m_11 = i_matrix(1, 1);
+			o_matrix.m_12 = i_matrix(1, 2);
+			o_matrix.m_20 = i_matrix(2, 0);
+			o_matrix.m_21 = i_matrix(2, 1);
+			o_matrix.m_22 = i_matrix(2, 2);
+		}
+		inline void EigenMatrix2NativeMatrix(Matrix3d &i_matrix, cMatrix_transformation &o_matrix)
+		{
+			o_matrix.m_00 = static_cast<float>(i_matrix(0, 0));
+			o_matrix.m_01 = static_cast<float>(i_matrix(0, 1));
+			o_matrix.m_02 = static_cast<float>(i_matrix(0, 2));
+			o_matrix.m_10 = static_cast<float>(i_matrix(1, 0));
+			o_matrix.m_11 = static_cast<float>(i_matrix(1, 1));
+			o_matrix.m_12 = static_cast<float>(i_matrix(1, 2));
+			o_matrix.m_20 = static_cast<float>(i_matrix(2, 0));
+			o_matrix.m_21 = static_cast<float>(i_matrix(2, 1));
+			o_matrix.m_22 = static_cast<float>(i_matrix(2, 2));
+		}
 	}
 }
 
