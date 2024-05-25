@@ -53,7 +53,7 @@ eae6320::cResult eae6320::ClothSim::Initialize()
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, -6.0f, -2.0f);
 		MoveableCube* pGameObject = new MoveableCube(pDefaultEffect, mesh_sphere, objState);
-		noColliderObjects.push_back(pGameObject);
+		//noColliderObjects.push_back(pGameObject);
 	}
 	//add cloth
 	{
@@ -61,7 +61,7 @@ eae6320::cResult eae6320::ClothSim::Initialize()
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
 		Cloth* pGameObject = new Cloth(pDefaultEffect, mesh_cloth, objState, (float)GetSimulationUpdatePeriod_inSeconds());
 		pGameObject->m_color = Math::sVector(1.0f, 0.0f, 0.0f);
-		noColliderObjects.push_back(pGameObject);
+		//noColliderObjects.push_back(pGameObject);
 	}
 
 	//add ground mesh
@@ -70,7 +70,7 @@ eae6320::cResult eae6320::ClothSim::Initialize()
 		objState.position = Math::sVector(0.0f, -11.0f, 0.0f);
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_plane, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
-		noColliderObjects.push_back(pGameObject);
+		//noColliderObjects.push_back(pGameObject);
 	}
 	return Results::Success;
 }

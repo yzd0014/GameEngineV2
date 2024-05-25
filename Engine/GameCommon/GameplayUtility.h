@@ -14,6 +14,6 @@ namespace eae6320
 		extern eae6320::Assets::cHandle<Mesh> arrowMesh;
 
 		Math::sVector MouseRayCasting();
-		GameCommon::GameObject* DrawArrow(Vector3d startPoint, Vector3d dir, double scaling);
+		GameCommon::GameObject* DrawArrow(Vector3d startPoint, Vector3d dir, Math::sVector color, double scaling);
 	}
 }

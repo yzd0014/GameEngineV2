@@ -117,13 +117,16 @@ namespace eae6320
 		_Vector3 linearMomentum0;
 		//_Vector conservedQuantity;
 
-		GameObject* swingArrow = nullptr;
-		GameObject* twistArrow = nullptr;
 		int tickCountSimulated = 0;
 		int numOfLinks = 2;
 		int totalPosDOF = 0;
 		int totalVelDOF = 0;
 		int geometry = BOX;
+
+		//debug related parameters
+		GameObject* swingArrow = nullptr;
+		GameObject* twistArrow = nullptr;
+		bool isButtonGClicked = false;
 /*******************************************************************************************/
 		inline _Scalar Compute_a(_Scalar theta)
 		{

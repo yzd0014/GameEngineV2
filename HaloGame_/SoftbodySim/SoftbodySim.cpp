@@ -52,14 +52,14 @@ eae6320::cResult eae6320::SoftbodySim::Initialize()
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
 		JellyCube* pGameObject = new JellyCube(pDefaultEffect, mesh_cube, objState, (float)GetSimulationUpdatePeriod_inSeconds());
-		noColliderObjects.push_back(pGameObject);
+		//noColliderObjects.push_back(pGameObject);
 	}
 	{
 		Physics::sRigidBodyState objState;
 		objState.position = Math::sVector(0.0f, -5.0f, 0.0f);
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_plane, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
-		noColliderObjects.push_back(pGameObject);
+		//noColliderObjects.push_back(pGameObject);
 	}
 	//EnableConsolePrinting(true);
 	return Results::Success;

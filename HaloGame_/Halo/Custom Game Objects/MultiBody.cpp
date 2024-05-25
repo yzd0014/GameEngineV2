@@ -188,6 +188,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//jointRange[0].first = 0.5 * M_PI;//swing
 	jointRange[0].second = 0.5 * M_PI;//twist
 	
+	GameplayUtility::DrawArrow(Vector3d(0, 0, 0), Vector3d(0, -1, 0), Math::sVector(0, 0, 1), 0.5);
+	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
 	angularMomentum0 = ComputeAngularMomentum();
@@ -347,7 +349,7 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 		_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 
 		_Vector s = p.cross(R_local[0] * p);
-		std::cout << "twist: " << vec_twist.norm() << " swing: " << vec_swing.norm() << std::endl;
+		//std::cout << "twist: " << vec_twist.norm() << " swing: " << vec_swing.norm() << std::endl;
 		/*if (jointsID.size() > 0)
 		{
 			_Scalar cValue = ComputeAngularVelocityConstraint(qdot, R_local[0], limitType[0], jointRange[0].second);
@@ -358,13 +360,32 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 		//std::cout << "twist: " << vec_twist.norm() <<" swing: "<< vec_swing.norm() << " s: " << s.norm() << std::endl;
 		//_Vector3 rotVec = Math::RotationConversion_MatrixToVec(R_local[0]);
 		//std::cout << rel_ori[0].w() << " " << rel_ori[0].x() << " " << rel_ori[0].y() << " " << rel_ori[0].z() << std::endl;
-		if (s.norm() < 0.01 && Physics::totalSimulationTime > 0.2)
+		
+		if (s.norm() < 0.05 && Physics::totalSimulationTime > 0.2)
 		{
-			//Physics::simPause = true;
-			//std::cout << "paused!" << std::endl;
+			Physics::simPause = true;
+			std::cout << "paused!" << std::endl;
 			//_Matrix3 Rt = R_twist * R_swing;
 			//std::cout << Rt - R_local[0] << std::endl << std::endl;
 			//jointRange[0].second = -1;
+		}
+		if (isButtonGClicked)
+		{
+			isButtonGClicked = false;
+			std::cout << "twist: " << vec_twist.transpose() << " twist norm: " << vec_twist.norm() << " swing norm: " << vec_swing.norm() << std::endl;
+			if (twistArrow != nullptr)
+			{
+				twistArrow->DestroyGameObject();
+				twistArrow = nullptr;
+			}
+			twistArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_twist.normalized(), Math::sVector(0, 1, 0), 0.5);
+
+			/*if (swingArrow != nullptr)
+			{
+				swingArrow->DestroyGameObject();
+				swingArrow = nullptr;
+			}*/
+			swingArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_swing.normalized(), Math::sVector(1, 0, 0), 0.5);
 		}
 	}
 }
@@ -947,13 +968,13 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 		_Matrix lambda;
 		lambda = (J * MrInverse * K.transpose()).inverse() * (-J * qdot - bias);
 		//std::cout << J * qdot << std::endl;
-		/*for (int k = 0; k < constraintNum; k++)
+		for (int k = 0; k < constraintNum; k++)
 		{
 			if (lambda(k, 0) < 0)
 			{
 				lambda(k, 0) = 0;
 			}
-		}*/
+		}
 		_Vector qdotCorrection = MrInverse * K.transpose() * lambda;
 		qdot = qdot + qdotCorrection;
 		_Scalar myC = ComputeAngularVelocityConstraint(qdot, R_local[0], limitType[0], jointRange[0].second);
@@ -964,27 +985,8 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 
 void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
 {
-	if (UserInput::IsKeyFromReleasedToPressed('F'))
+	if (UserInput::IsKeyFromReleasedToPressed('G'))
 	{
-		_Matrix3 R_swing;
-		_Matrix3 R_twist;
-		_Vector3 twistAxis(0, -1, 0);
-		Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
-		_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
-		_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
-		
-		if (twistArrow != nullptr)
-		{
-			twistArrow->DestroyGameObject();
-			twistArrow = nullptr;
-		}
-		twistArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_twist.normalized(), 0.5);
-
-		/*if (swingArrow != nullptr)
-		{
-			swingArrow->DestroyGameObject();
-			swingArrow = nullptr;
-		}*/
-		swingArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_swing.normalized(), 0.5);
+		isButtonGClicked = true;
 	}
 }

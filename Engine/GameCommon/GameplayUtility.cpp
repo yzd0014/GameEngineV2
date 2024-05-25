@@ -36,7 +36,7 @@ namespace eae6320
 			return output;
 		}
 
-		GameCommon::GameObject* DrawArrow(Vector3d startPoint, Vector3d dir, double scaling)
+		GameCommon::GameObject* DrawArrow(Vector3d startPoint, Vector3d dir, Math::sVector color, double scaling)
 		{
 			//get arrow transform
 			dir.normalize();
@@ -44,7 +44,7 @@ namespace eae6320
 			double rotAngle = Math::GetAngleBetweenTwoVectors(defaultDir, dir);
 			Vector3d rotVec = defaultDir.cross(dir);
 			Matrix3d rotMatEigen;
-			if (rotAngle > 0.001)
+			if (rotAngle > 0.000001)
 			{
 				rotMatEigen = AngleAxisd(rotAngle, rotVec.normalized());
 			}
@@ -67,8 +67,8 @@ namespace eae6320
 			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(defaultEffect, arrowMesh, Physics::sRigidBodyState());
 			pGameObject->m_State.useTransform = true;
 			pGameObject->m_State.transform = transformTotal;
-			pGameObject->m_color = Math::sVector(1, 0, 0);
-			noColliderObjects.push_back(pGameObject);
+			pGameObject->m_color = color;
+			//noColliderObjects.push_back(pGameObject);
 
 			return pGameObject;
 		}

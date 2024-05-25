@@ -6,6 +6,15 @@
 
 using namespace Eigen;
 namespace eae6320 {
+	namespace GameCommon
+	{
+		class GameObject;
+	}
+
+	extern std::vector<GameCommon::GameObject *> colliderObjects;//game objects with colliders
+	extern std::vector<GameCommon::GameObject *> noColliderObjects;//game objects without colliders
+	extern Concurrency::cMutex gameObjectArrayMutex;
+
 	namespace GameCommon {
 		class GameObject {
 		public: 
@@ -26,6 +35,14 @@ namespace eae6320 {
 				Math::cMatrix_transformation local2WorldRot(m_State.orientation, Math::sVector(0, 0, 0));
 				Math::cMatrix_transformation world2LocalRot = Math::cMatrix_transformation::CreateWorldToCameraTransform(local2WorldRot);
 				m_State.globalInverseInertiaTensor = local2WorldRot * m_State.localInverseInertiaTensor * world2LocalRot;
+				if (i_State.collision)
+				{
+					colliderObjects.push_back(this);
+				}
+				else
+				{
+					noColliderObjects.push_back(this);
+				}
 			}
 			GameObject(const GameObject & i_other) {//copy constructor
 				m_pEffect = i_other.GetEffect();
@@ -35,6 +52,14 @@ namespace eae6320 {
 				Mesh::s_manager.Get(m_Mesh)->IncrementReferenceCount();
 
 				m_State = i_other.m_State;
+				if (m_State.collision)
+				{
+					colliderObjects.push_back(this);
+				}
+				else
+				{
+					noColliderObjects.push_back(this);
+				}
 			}
 			GameObject & operator=(const GameObject &i_other) {//assignment operator
 				Mesh::s_manager.Get(m_Mesh)->DecrementReferenceCount();
@@ -94,15 +119,11 @@ namespace eae6320 {
 		private:
 			eae6320::Assets::cHandle<Mesh> m_Mesh;
 			Effect* m_pEffect = nullptr;
-			bool active;
-			
+			bool active = true;
 		};	
 	
 		class Camera;
 		void RemoveInactiveGameObjects(std::vector<GameObject *> & o_allGameObjects);
 		void ResetAllGameObjectsVelo(std::vector<GameObject *> & o_gameObjectsWithCollider, std::vector<GameObject *> & o_gameObjectsWithoutCollider, Camera & o_camera);
 	}
-
-	extern std::vector<GameCommon::GameObject *> colliderObjects;//game objects with colliders
-	extern std::vector<GameCommon::GameObject *> noColliderObjects;//game objects without colliders
 }

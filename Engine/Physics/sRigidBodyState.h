@@ -58,6 +58,7 @@ namespace eae6320
 			bool isStatic = false;
 			bool hasGravity = false;
 			bool useTransform = false;
+			bool collision = false;
 			// Interface
 			//==========
 			sRigidBodyState();

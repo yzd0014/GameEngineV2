@@ -3,6 +3,7 @@
 namespace eae6320 {
 	std::vector<GameCommon::GameObject *> colliderObjects;//game objects with colliders
 	std::vector<GameCommon::GameObject *> noColliderObjects;//game objects without colliders
+	Concurrency::cMutex gameObjectArrayMutex;
 
 	namespace GameCommon {
 		void RemoveInactiveGameObjects(std::vector<GameObject *> & o_allGameObjects) {

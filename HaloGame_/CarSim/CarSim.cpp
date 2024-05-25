@@ -65,7 +65,6 @@ eae6320::cResult eae6320::CarSim::Initialize()
 		objState.hasGravity = true;
 		pCar = new Car(pEffect_white, mesh_box, objState);
 		pCar->m_color = Math::sVector(1, 0, 0);
-		noColliderObjects.push_back(pCar);
 	}
 
 	{//front left wheel
@@ -80,9 +79,9 @@ eae6320::cResult eae6320::CarSim::Initialize()
 		objState.localInverseInertiaTensor.m_11 = 1.0f / ((2.0f / 5.0f)* r * r);
 		objState.localInverseInertiaTensor.m_22 = 1.0f / ((2.0f / 5.0f)* r * r);
 		objState.position = Math::sVector(-2.0f, 2.0f, -4.0f);
+		objState.collision = true;
 
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_wheel, objState);
-		colliderObjects.push_back(pGameObject);
 	}
 
 	{//front right wheel
@@ -97,9 +96,9 @@ eae6320::cResult eae6320::CarSim::Initialize()
 		objState.localInverseInertiaTensor.m_11 = 1.0f / ((2.0f / 5.0f)* r * r);
 		objState.localInverseInertiaTensor.m_22 = 1.0f / ((2.0f / 5.0f)* r * r);
 		objState.position = Math::sVector(2.0f, 2.0f, -4.0f);
+		objState.collision = true;
 
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_wheel, objState);
-		colliderObjects.push_back(pGameObject);
 	}
 	{//back left wheel
 		Physics::sRigidBodyState objState;
@@ -113,9 +112,9 @@ eae6320::cResult eae6320::CarSim::Initialize()
 		objState.localInverseInertiaTensor.m_11 = 1.0f / ((2.0f / 5.0f)* r * r);
 		objState.localInverseInertiaTensor.m_22 = 1.0f / ((2.0f / 5.0f)* r * r);
 		objState.position = Math::sVector(-2.0f, 2.0f, 4.0f);
+		objState.collision = true;
 
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_wheel, objState);
-		colliderObjects.push_back(pGameObject);
 	}
 	{//back right wheel
 		Physics::sRigidBodyState objState;
@@ -129,9 +128,9 @@ eae6320::cResult eae6320::CarSim::Initialize()
 		objState.localInverseInertiaTensor.m_11 = 1.0f / ((2.0f / 5.0f)* r * r);
 		objState.localInverseInertiaTensor.m_22 = 1.0f / ((2.0f / 5.0f)* r * r);
 		objState.position = Math::sVector(2.0f, 2.0f, 4.0f);
+		objState.collision = true;
 
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_wheel, objState);
-		colliderObjects.push_back(pGameObject);
 	}
 	{
 		Physics::HingeJoint hingeJoint0(noColliderObjects[0], colliderObjects[0], Math::sVector(-2.0f, -0.5f, -4.0f), Math::sVector(0.0f, 0.0f, 0.0f), Math::sVector(1.0f, 0.0f, 0.0f));
@@ -160,9 +159,10 @@ eae6320::cResult eae6320::CarSim::Initialize()
 		objState.collider.InitializeCollider(boundingBox);
 		objState.position = Math::sVector(0.0f, 0.0f, 0.0f);
 		objState.collider.m_type = Box;
+		objState.collision = true;
+		
 		Ground* pGameObject = new Ground(pEffect_white, mesh_dot, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
-		colliderObjects.push_back(pGameObject);
 	}
 	//add ground mesh
 	{
@@ -170,7 +170,6 @@ eae6320::cResult eae6320::CarSim::Initialize()
 		objState.position = Math::sVector(0.0f, 1.0f, 0.0f);
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(pEffect_white, mesh_plane, objState);
 		strcpy_s(pGameObject->objectType, "Ground");
-		noColliderObjects.push_back(pGameObject);
 	}
 
 	return Results::Success;

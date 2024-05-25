@@ -497,7 +497,11 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_all( const sEnt
 		EAE6320_ASSERT( false );
 		goto OnExit;
 	}
-	
+	//initialize physics
+	{
+		//initialize gravity
+		Physics::InitializePhysics(colliderObjects, noColliderObjects);
+	}
 	if (!render) goto OnExit;
 	// Start the application loop thread
 	if ( !( result = m_applicationLoopThread.Start( EntryPoint_applicationLoopThread, this ) ) )
@@ -583,11 +587,6 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 			EAE6320_ASSERT(m_mainWindow != NULL);
 			UserInput::mainWindow = m_mainWindow;
 		}
-	}
-	//initialize physics
-	{
-		//initialize gravity
-		Physics::InitializePhysics(colliderObjects, noColliderObjects);
 	}
 	//GameplayUtility
 	{
