@@ -34,6 +34,7 @@ namespace eae6320
 	{
 		Concurrency::cMutex renderBufferMutex;
 		bool renderThreadNoWait = false;
+		bool isDataSubmittedFromApplication = false;
 	}
 	namespace Time
 	{
@@ -142,8 +143,29 @@ void eae6320::Graphics::RenderFrame()
 
 	if (renderThreadNoWait)
 	{
+		//update camera
+		UpdateBasedOnCameraInput();
+		mainCamera.UpdateState((float)Time::ConvertTicksToSeconds(Time::tickCount_elapsedSinceLastLoop));
+		//submit data
+		Math::sVector position = mainCamera.position;
+		Math::cQuaternion orientation = mainCamera.orientation;
+		Math::cMatrix_transformation worldToCameraMat = Math::cMatrix_transformation::CreateWorldToCameraTransform(orientation, position);
+		Math::cMatrix_transformation cameraToProjectedMat = mainCamera.GetCameraToProjectedMat();
+		eae6320::Graphics::SubmitCamera(worldToCameraMat, cameraToProjectedMat);
+		
 		renderBufferMutex.Lock();
-		std::swap(s_dataBeingSubmittedByApplicationThread, s_dataBeingRenderedByRenderThread);
+		if (isDataSubmittedFromApplication)
+		{
+			isDataSubmittedFromApplication = false;
+			std::swap(s_dataBeingSubmittedByApplicationThread, s_dataBeingRenderedByRenderThread);
+		}
+		else
+		{
+			s_dataBeingRenderedByRenderThread->constantData_perFrame.g_transform_worldToCamera = s_dataBeingSubmittedByApplicationThread->constantData_perFrame.g_transform_worldToCamera;
+			s_dataBeingRenderedByRenderThread->constantData_perFrame.g_transform_cameraToProjected = s_dataBeingSubmittedByApplicationThread->constantData_perFrame.g_transform_cameraToProjected;
+			s_dataBeingRenderedByRenderThread->constantData_perFrame.g_lightSourceADir = s_dataBeingSubmittedByApplicationThread->constantData_perFrame.g_lightSourceADir;
+			s_dataBeingRenderedByRenderThread->constantData_perFrame.g_lightSourceBDir = s_dataBeingSubmittedByApplicationThread->constantData_perFrame.g_lightSourceBDir;
+		}
 		renderBufferMutex.Unlock();
 		// Once the pointers have been swapped the application loop can submit new data
 		const auto result = s_whenDataForANewFrameCanBeSubmittedFromApplicationThread.Signal();
@@ -155,17 +177,6 @@ void eae6320::Graphics::RenderFrame()
 				" The application is probably in a bad state and should be exited");
 			return;
 		}
-
-		//update camera
-		UpdateBasedOnCameraInput();
-		mainCamera.UpdateState((float)Time::ConvertTicksToSeconds(Time::tickCount_elapsedSinceLastLoop));
-
-		//submit data
-		Math::sVector position = mainCamera.position;
-		Math::cQuaternion orientation = mainCamera.orientation;
-		Math::cMatrix_transformation worldToCameraMat = Math::cMatrix_transformation::CreateWorldToCameraTransform(orientation, position);
-		Math::cMatrix_transformation cameraToProjectedMat = mainCamera.GetCameraToProjectedMat();
-		eae6320::Graphics::SubmitCamera(worldToCameraMat, cameraToProjectedMat);
 	}
 	else
 	{

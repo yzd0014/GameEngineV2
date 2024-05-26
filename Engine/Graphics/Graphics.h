@@ -84,6 +84,7 @@ namespace eae6320
 
 		extern Concurrency::cMutex renderBufferMutex;
 		extern bool renderThreadNoWait;
+		extern bool isDataSubmittedFromApplication;
 	}
 }
 

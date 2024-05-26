@@ -423,6 +423,7 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 					}();
 					Graphics::SubmitElapsedTime( elapsedSecondCount_systemTime, elapsedSecondCount_simulationTime );
 				}
+				Graphics::isDataSubmittedFromApplication = true;
 				if (Graphics::renderThreadNoWait) Graphics::renderBufferMutex.Unlock();
 			}
 			// Let the graphics system know that all of the data for this frame has been submitted
