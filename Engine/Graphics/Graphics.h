@@ -79,7 +79,7 @@ namespace eae6320
 		cResult Initialize( const sInitializationParameters& i_initializationParameters );
 		cResult CleanUp();
 
-		void UpdateSimulationBasedOnInput();
+		void UpdateBasedOnCameraInput();
 		void ClearDataBeingSubmittedByApplicationThread();
 
 		extern Concurrency::cMutex renderBufferMutex;

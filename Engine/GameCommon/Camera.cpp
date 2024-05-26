@@ -46,7 +46,7 @@ void eae6320::GameCommon::Camera::UpdateState(const float i_secondCountToIntegra
 	UserInput::GetCursorDisplacementSinceLastCall(&mouseX, &mouseY);
 	axis_X_velocity = 0.0f;
 	axis_Y_velocity = 0.0f;
-	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::RightMouseButton])
+	if (UserInput::KeyState::currFrameKeyStateCamera[UserInput::KeyCodes::RightMouseButton])
 	{
 		UserInput::ConfineCursorWithinWindow();
 		//update rotation velocity
@@ -99,7 +99,7 @@ void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
 	//reset velocity before update velocity
 	velocity = Math::sVector(0, 0, 0);
 	
-	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::RightMouseButton])
+	if (UserInput::KeyState::currFrameKeyStateCamera[UserInput::KeyCodes::RightMouseButton])
 	{
 		Math::cMatrix_transformation localToWorldMat = Math::cMatrix_transformation::cMatrix_transformation(orientation, position);
 		Math::sVector forwardVector = localToWorldMat.GetBackDirection();
@@ -110,19 +110,19 @@ void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
 		rightVector.Normalize();
 		rightVector = rightVector * 10;
 
-		if (UserInput::KeyState::currFrameKeyState['D'])
+		if (UserInput::KeyState::currFrameKeyStateCamera['D'])
 		{
 			velocity = rightVector;
 		}
-		if (UserInput::KeyState::currFrameKeyState['A'])
+		if (UserInput::KeyState::currFrameKeyStateCamera['A'])
 		{
 			velocity = -1 * rightVector;
 		}
-		if (UserInput::KeyState::currFrameKeyState['W'])
+		if (UserInput::KeyState::currFrameKeyStateCamera['W'])
 		{
 			velocity = forwardVector;
 		}
-		if (UserInput::KeyState::currFrameKeyState['S'])
+		if (UserInput::KeyState::currFrameKeyStateCamera['S'])
 		{
 			velocity = forwardVector * -1;
 		}
@@ -130,7 +130,7 @@ void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
 
 	if (Graphics::renderThreadNoWait)
 	{
-		if (UserInput::IsKeyFromReleasedToPressed(' ') && !Physics::simPlay)
+		if (UserInput::IsKeyFromReleasedToPressedCamera(' ') && !Physics::simPlay)
 		{
 			Physics::simPause = !Physics::simPause;
 			if (Physics::simPause)
@@ -138,11 +138,11 @@ void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
 				Physics::nextSimStep = false;
 			}
 		}
-		if (UserInput::IsKeyFromReleasedToPressed('G'))
+		if (UserInput::IsKeyFromReleasedToPressedCamera('G'))
 		{
 			Physics::nextSimStep = true;
 		}
-		if (UserInput::KeyState::currFrameKeyState['G'])
+		if (UserInput::KeyState::currFrameKeyStateCamera['G'])
 		{
 			tickCount_keyIsDown += Time::tickCount_elapsedSinceLastLoop;
 		}
@@ -151,7 +151,7 @@ void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
 		{
 			Physics::simPlay = true;
 		}
-		if (UserInput::IsKeyFromPressedToReleased('G'))
+		if (UserInput::IsKeyFromPressedToReleasedCamera('G'))
 		{
 			tickCount_keyIsDown = 0;
 			Physics::simPlay = false;

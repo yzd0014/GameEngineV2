@@ -68,7 +68,6 @@ namespace eae6320
 			pGameObject->m_State.useTransform = true;
 			pGameObject->m_State.transform = transformTotal;
 			pGameObject->m_color = color;
-			//noColliderObjects.push_back(pGameObject);
 
 			return pGameObject;
 		}

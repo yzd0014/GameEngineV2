@@ -369,7 +369,7 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 			//std::cout << Rt - R_local[0] << std::endl << std::endl;
 			//jointRange[0].second = -1;
 		}
-		if (isButtonGClicked)
+		if (true)
 		{
 			isButtonGClicked = false;
 			std::cout << "twist: " << vec_twist.transpose() << " twist norm: " << vec_twist.norm() << " swing norm: " << vec_swing.norm() << std::endl;
@@ -380,11 +380,11 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 			}
 			twistArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_twist.normalized(), Math::sVector(0, 1, 0), 0.5);
 
-			/*if (swingArrow != nullptr)
+			if (swingArrow != nullptr)
 			{
 				swingArrow->DestroyGameObject();
 				swingArrow = nullptr;
-			}*/
+			}
 			swingArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_swing.normalized(), Math::sVector(1, 0, 0), 0.5);
 		}
 	}

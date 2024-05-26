@@ -39,7 +39,14 @@ void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const doub
 
 void eae6320::Application::cbApplication::UpdateSimulationBasedOnInput()
 {
-	Graphics::UpdateSimulationBasedOnInput();
+	size_t numOfObjects = colliderObjects.size();
+	for (size_t i = 0; i < numOfObjects; i++) {
+		colliderObjects[i]->UpdateGameObjectBasedOnInput();
+	}
+	numOfObjects = noColliderObjects.size();
+	for (size_t i = 0; i < numOfObjects; i++) {
+		noColliderObjects[i]->UpdateGameObjectBasedOnInput();
+	}
 }
 
 void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate)
@@ -346,7 +353,20 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 			// (so, for example, something that had moved in a previous frame would suddenly reset to a different position).
 			if ( simulationUpdateCount_thisIteration > 0 )
 			{
-				if(!Graphics::renderThreadNoWait) UpdateSimulationBasedOnInput();
+				if (!Graphics::renderThreadNoWait)
+				{
+					UserInput::TrackKeyStateCamera();
+					mainCamera.UpdateCameraBasedOnInput();
+					UserInput::UpdateLastFrameKeyStateCamera();
+				}
+				UserInput::TrackKeyState();
+				UpdateSimulationBasedOnInput();
+				UserInput::UpdateLastFrameKeyState();
+			}
+			//remove inactive game objects
+			{
+				GameCommon::RemoveInactiveGameObjects(colliderObjects);
+				GameCommon::RemoveInactiveGameObjects(noColliderObjects);
 			}
 		}
 		// Submit data for the render thread to use to render a new frame

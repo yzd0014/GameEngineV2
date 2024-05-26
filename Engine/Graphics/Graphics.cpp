@@ -157,7 +157,7 @@ void eae6320::Graphics::RenderFrame()
 		}
 
 		//update camera
-		UpdateSimulationBasedOnInput();
+		UpdateBasedOnCameraInput();
 		mainCamera.UpdateState((float)Time::ConvertTicksToSeconds(Time::tickCount_elapsedSinceLastLoop));
 
 		//submit data
@@ -246,26 +246,11 @@ void eae6320::Graphics::RenderFrame()
 	}
 }
 
-void eae6320::Graphics::UpdateSimulationBasedOnInput()
+void eae6320::Graphics::UpdateBasedOnCameraInput()
 {
-	UserInput::TrackKeyState();
-	
+	UserInput::TrackKeyStateCamera();
 	mainCamera.UpdateCameraBasedOnInput();
-	size_t numOfObjects = colliderObjects.size();
-	for (size_t i = 0; i < numOfObjects; i++) {
-		colliderObjects[i]->UpdateGameObjectBasedOnInput();
-	}
-	numOfObjects = noColliderObjects.size();
-	for (size_t i = 0; i < numOfObjects; i++) {
-		noColliderObjects[i]->UpdateGameObjectBasedOnInput();
-	}
-	
-	UserInput::UpdateLastFrameKeyState();
-	//remove inactive game objects
-	{
-		GameCommon::RemoveInactiveGameObjects(colliderObjects);
-		GameCommon::RemoveInactiveGameObjects(noColliderObjects);
-	}
+	UserInput::UpdateLastFrameKeyStateCamera();
 }
 
 void eae6320::Graphics::ClearDataBeingSubmittedByApplicationThread()

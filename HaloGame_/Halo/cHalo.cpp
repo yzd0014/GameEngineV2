@@ -62,14 +62,11 @@ eae6320::cResult eae6320::cHalo::Initialize()
 		{
 			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(defaultEffect, mesh_capsule, Physics::sRigidBodyState());
 			links.push_back(pGameObject);
-			//noColliderObjects.push_back(pGameObject);
 		}
 
-		Physics::sRigidBodyState objState(Math::sVector(0.0f, 0.0f, 0.0f));
-		MultiBody * pMultiBody = new MultiBody(defaultEffect, mesh_anchor, objState, links, bodyNum);
+		MultiBody * pMultiBody = new MultiBody(defaultEffect, mesh_anchor, Physics::sRigidBodyState(), links, bodyNum);
 		//GameCommon::GameObject * pMultiBody = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		pMultiBody->m_color = Math::sVector(1, 0, 0);
-		//noColliderObjects.push_back(pMultiBody);
 	}
 	
 	//{
@@ -114,7 +111,6 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	{
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, -8.0f, 0.0f));
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(defaultEffect, mesh_plane, objState);
-		//noColliderObjects.push_back(pGameObject);
 	}
 	
 	//cube with ball joint
