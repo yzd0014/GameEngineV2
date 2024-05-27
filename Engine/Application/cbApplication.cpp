@@ -351,17 +351,19 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 			// because rendering has already happened with predicted extrapolation based on time that had already passed.
 			// If simulation state were changed _before_ then it would invalidate frames that had already been rendered
 			// (so, for example, something that had moved in a previous frame would suddenly reset to a different position).
-			if ( simulationUpdateCount_thisIteration > 0 )
+			if ( simulationUpdateCount_thisIteration > 0 && !Graphics::renderThreadNoWait)
 			{
-				if (!Graphics::renderThreadNoWait)
-				{
-					UserInput::TrackKeyStateCamera();
-					mainCamera.UpdateCameraBasedOnInput();
-					UserInput::UpdateLastFrameKeyStateCamera();
-				}
 				UserInput::TrackKeyState();
-				UpdateSimulationBasedOnInput();
+				UserInput::CheckKeyFromReleasedToPressed();
+				UserInput::CheckKeyFromPressedToReleased();
 				UserInput::UpdateLastFrameKeyState();
+				
+				mainCamera.UpdateCameraBasedOnInput();
+				UpdateSimulationBasedOnInput();
+			}
+			if (Graphics::renderThreadNoWait)
+			{
+				UpdateSimulationBasedOnInput();
 			}
 			//remove inactive game objects
 			{
@@ -602,6 +604,8 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 		for (int i = 0; i < 160; i++) {
 			UserInput::KeyState::lastFrameKeyState[i] = 0;
 			UserInput::KeyState::currFrameKeyState[i] = 0;
+			UserInput::KeyState::keyReleasedToPressedState[i] = 0;
+			UserInput::KeyState::keyPressedToReleasedState[i] = 0;
 		}
 		if (render)
 		{

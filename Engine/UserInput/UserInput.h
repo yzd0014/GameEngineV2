@@ -36,12 +36,8 @@ namespace eae6320
 		void TrackKeyState();
 		void UpdateLastFrameKeyState();
 
-		//Camera input
-		bool IsKeyFromReleasedToPressedCamera(const uint_fast8_t i_keyCode);
-		bool IsKeyFromPressedToReleasedCamera(const uint_fast8_t i_keyCode);
-		void TrackKeyStateCamera();
-		void UpdateLastFrameKeyStateCamera();
-
+		void CheckKeyFromReleasedToPressed();
+		void CheckKeyFromPressedToReleased();
 
 		namespace KeyCodes
 		{
@@ -97,8 +93,8 @@ namespace eae6320
 		namespace KeyState {
 			extern uint8_t lastFrameKeyState[160];
 			extern uint8_t currFrameKeyState[160];
-			extern uint8_t lastFrameKeyStateCamera[160];
-			extern uint8_t currFrameKeyStateCamera[160];
+			extern uint8_t keyPressedToReleasedState[160];
+			extern uint8_t keyReleasedToPressedState[160];
 		}
 #if defined( EAE6320_PLATFORM_WINDOWS )
 		extern HWND mainWindow;

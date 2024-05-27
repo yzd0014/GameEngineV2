@@ -57,54 +57,6 @@ void eae6320::UserInput::TrackKeyState()
 	KeyState::currFrameKeyState[159] = IsKeyPressed(0x7b);//F12 = 0x7b,
 }
 
-void eae6320::UserInput::TrackKeyStateCamera()
-{
-	for (uint8_t i = 0; i < 128; i++)
-	{
-		KeyState::currFrameKeyStateCamera[i] = IsKeyPressed(i);
-	}
-
-	KeyState::currFrameKeyStateCamera[128] = IsKeyPressed(0x01);//LeftMouseButton = 0x01,
-	KeyState::currFrameKeyStateCamera[129] = IsKeyPressed(0x04);//MiddleMouseButton = 0x04,
-	KeyState::currFrameKeyStateCamera[130] = IsKeyPressed(0x02);//RightMouseButton = 0x02,
-
-	KeyState::currFrameKeyStateCamera[131] = IsKeyPressed(0x25);//Left = 0x25,
-	KeyState::currFrameKeyStateCamera[132] = IsKeyPressed(0x26);//Up = 0x26,
-	KeyState::currFrameKeyStateCamera[133] = IsKeyPressed(0x27);//Right = 0x27,
-	KeyState::currFrameKeyStateCamera[134] = IsKeyPressed(0x28);//Down = 0x28,
-
-	KeyState::currFrameKeyStateCamera[135] = IsKeyPressed(0x1b);//Escape = 0x1b,
-
-	KeyState::currFrameKeyStateCamera[136] = IsKeyPressed(0x10);//Shift = 0x10,
-	KeyState::currFrameKeyStateCamera[137] = IsKeyPressed(0x11);//Control = 0x11,
-	KeyState::currFrameKeyStateCamera[138] = IsKeyPressed(0x12);//Alt = 0x12,
-
-	KeyState::currFrameKeyStateCamera[139] = IsKeyPressed(0x09);//Tab = 0x09,
-	KeyState::currFrameKeyStateCamera[140] = IsKeyPressed(0x14);//CapsLock = 0x14,
-
-	KeyState::currFrameKeyStateCamera[141] = IsKeyPressed(0x08);//BackSpace = 0x08,
-	KeyState::currFrameKeyStateCamera[142] = IsKeyPressed(0x0d);//Enter = 0x0d,
-	KeyState::currFrameKeyStateCamera[143] = IsKeyPressed(0x2e);//Delete = 0x2e,
-
-	KeyState::currFrameKeyStateCamera[144] = IsKeyPressed(0x21);//PageUp = 0x21,
-	KeyState::currFrameKeyStateCamera[145] = IsKeyPressed(0x22);//PageDown = 0x22,
-	KeyState::currFrameKeyStateCamera[146] = IsKeyPressed(0x23);//End = 0x23,
-	KeyState::currFrameKeyStateCamera[147] = IsKeyPressed(0x24);//Home = 0x24,
-
-	KeyState::currFrameKeyStateCamera[148] = IsKeyPressed(0x70);//F1 = 0x70,
-	KeyState::currFrameKeyStateCamera[149] = IsKeyPressed(0x71);//F2 = 0x71,
-	KeyState::currFrameKeyStateCamera[150] = IsKeyPressed(0x72);//F3 = 0x72,
-	KeyState::currFrameKeyStateCamera[151] = IsKeyPressed(0x73);//F4 = 0x73,
-	KeyState::currFrameKeyStateCamera[152] = IsKeyPressed(0x74);//F5 = 0x74,
-	KeyState::currFrameKeyStateCamera[153] = IsKeyPressed(0x75);//F6 = 0x75,
-	KeyState::currFrameKeyStateCamera[154] = IsKeyPressed(0x76);//F7 = 0x76,
-	KeyState::currFrameKeyStateCamera[155] = IsKeyPressed(0x77);//F8 = 0x77,
-	KeyState::currFrameKeyStateCamera[156] = IsKeyPressed(0x78);//F9 = 0x78,
-	KeyState::currFrameKeyStateCamera[157] = IsKeyPressed(0x79);//F10 = 0x79,
-	KeyState::currFrameKeyStateCamera[158] = IsKeyPressed(0x7a);//F11 = 0x7a,
-	KeyState::currFrameKeyStateCamera[159] = IsKeyPressed(0x7b);//F12 = 0x7b,
-}
-
 void eae6320::UserInput::UpdateLastFrameKeyState()
 {
 	for (int i = 0; i < 131; i++) 
@@ -113,143 +65,47 @@ void eae6320::UserInput::UpdateLastFrameKeyState()
 	}
 }
 
-void eae6320::UserInput::UpdateLastFrameKeyStateCamera()
+void eae6320::UserInput::CheckKeyFromReleasedToPressed()
 {
-	for (int i = 0; i < 131; i++)
+	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
+	for (int i = 0; i < 160; i++)
 	{
-		UserInput::KeyState::lastFrameKeyStateCamera[i] = UserInput::KeyState::currFrameKeyStateCamera[i];
+		if (KeyState::lastFrameKeyState[i] == 0 && KeyState::currFrameKeyState[i] == 1)
+		{
+			KeyState::keyReleasedToPressedState[i] = true;
+		}
+	}
+}
+
+void eae6320::UserInput::CheckKeyFromPressedToReleased()
+{
+	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
+	for (int i = 0; i < 160; i++)
+	{
+		if (KeyState::lastFrameKeyState[i] == 1 && KeyState::currFrameKeyState[i] == 0)
+		{
+			KeyState::keyPressedToReleasedState[i] = true;
+		}
 	}
 }
 
 bool eae6320::UserInput::IsKeyFromReleasedToPressed(const uint_fast8_t i_keyCode)
 {
-	bool output = false;
-	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
-	if (i_keyCode == KeyCodes::LeftMouseButton)
+	bool output = KeyState::keyReleasedToPressedState[i_keyCode];
+	if (output)
 	{
-		if (KeyState::lastFrameKeyState[128] == 0 && KeyState::currFrameKeyState[128] == 1)
-		{
-			output = true;
-		}
+		KeyState::keyReleasedToPressedState[i_keyCode] = false;
 	}
-	else if (i_keyCode == KeyCodes::MiddleMouseButton) {
-		if (KeyState::lastFrameKeyState[129] == 0 && KeyState::currFrameKeyState[129] == 1) {
-			output = true;
-		}
-	}
-	else if (i_keyCode == KeyCodes::RightMouseButton) {
-		if (KeyState::lastFrameKeyState[130] == 0 && KeyState::currFrameKeyState[130] == 1) {
-			output = true;
-		}
-	}
-	else
-	{
-		if (KeyState::lastFrameKeyState[i_keyCode] == 0 && KeyState::currFrameKeyState[i_keyCode] == 1)
-		{
-			output = true;
-		}
-	}
-
-	return output;
-}
-
-bool eae6320::UserInput::IsKeyFromReleasedToPressedCamera(const uint_fast8_t i_keyCode)
-{
-	bool output = false;
-	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
-	if (i_keyCode == KeyCodes::LeftMouseButton)
-	{
-		if (KeyState::lastFrameKeyStateCamera[128] == 0 && KeyState::currFrameKeyStateCamera[128] == 1)
-		{
-			output = true;
-		}
-	}
-	else if (i_keyCode == KeyCodes::MiddleMouseButton) {
-		if (KeyState::lastFrameKeyStateCamera[129] == 0 && KeyState::currFrameKeyStateCamera[129] == 1) {
-			output = true;
-		}
-	}
-	else if (i_keyCode == KeyCodes::RightMouseButton) {
-		if (KeyState::lastFrameKeyStateCamera[130] == 0 && KeyState::currFrameKeyStateCamera[130] == 1) {
-			output = true;
-		}
-	}
-	else
-	{
-		if (KeyState::lastFrameKeyStateCamera[i_keyCode] == 0 && KeyState::currFrameKeyStateCamera[i_keyCode] == 1)
-		{
-			output = true;
-		}
-	}
-
 	return output;
 }
 
 bool eae6320::UserInput::IsKeyFromPressedToReleased(const uint_fast8_t i_keyCode)
 {
-	bool output = false;
-	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
-	if (i_keyCode == KeyCodes::LeftMouseButton)
+	bool output = KeyState::keyPressedToReleasedState[i_keyCode];
+	if (output)
 	{
-		if (KeyState::lastFrameKeyState[128] == 1 && KeyState::currFrameKeyState[128] == 0)
-		{
-			output = true;
-		}
+		KeyState::keyPressedToReleasedState[i_keyCode] = false;
 	}
-	else if (i_keyCode == KeyCodes::MiddleMouseButton) {
-		if (KeyState::lastFrameKeyState[129] == 1 && KeyState::currFrameKeyState[129] == 0)
-		{
-			output = true;
-		}
-	}
-	else if (i_keyCode == KeyCodes::RightMouseButton) {
-		if (KeyState::lastFrameKeyState[130] == 1 && KeyState::currFrameKeyState[130] == 0)
-		{
-			output = true;
-		}
-	}
-	else
-	{
-		if (KeyState::lastFrameKeyState[i_keyCode] == 1 && KeyState::currFrameKeyState[i_keyCode] == 0)
-		{
-			output = true;
-		}
-	}
-
-	return output;
-}
-
-bool eae6320::UserInput::IsKeyFromPressedToReleasedCamera(const uint_fast8_t i_keyCode)
-{
-	bool output = false;
-	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
-	if (i_keyCode == KeyCodes::LeftMouseButton)
-	{
-		if (KeyState::lastFrameKeyStateCamera[128] == 1 && KeyState::currFrameKeyStateCamera[128] == 0)
-		{
-			output = true;
-		}
-	}
-	else if (i_keyCode == KeyCodes::MiddleMouseButton) {
-		if (KeyState::lastFrameKeyStateCamera[129] == 1 && KeyState::currFrameKeyStateCamera[129] == 0)
-		{
-			output = true;
-		}
-	}
-	else if (i_keyCode == KeyCodes::RightMouseButton) {
-		if (KeyState::lastFrameKeyStateCamera[130] == 1 && KeyState::currFrameKeyStateCamera[130] == 0)
-		{
-			output = true;
-		}
-	}
-	else
-	{
-		if (KeyState::lastFrameKeyStateCamera[i_keyCode] == 1 && KeyState::currFrameKeyStateCamera[i_keyCode] == 0)
-		{
-			output = true;
-		}
-	}
-
 	return output;
 }
 

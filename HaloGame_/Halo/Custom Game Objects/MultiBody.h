@@ -126,7 +126,6 @@ namespace eae6320
 		//debug related parameters
 		GameObject* swingArrow = nullptr;
 		GameObject* twistArrow = nullptr;
-		bool isButtonGClicked = false;
 /*******************************************************************************************/
 		inline _Scalar Compute_a(_Scalar theta)
 		{

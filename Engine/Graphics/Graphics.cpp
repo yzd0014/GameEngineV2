@@ -259,9 +259,11 @@ void eae6320::Graphics::RenderFrame()
 
 void eae6320::Graphics::UpdateBasedOnCameraInput()
 {
-	UserInput::TrackKeyStateCamera();
+	UserInput::TrackKeyState();
+	UserInput::CheckKeyFromReleasedToPressed();
+	UserInput::CheckKeyFromPressedToReleased();
+	UserInput::UpdateLastFrameKeyState();
 	mainCamera.UpdateCameraBasedOnInput();
-	UserInput::UpdateLastFrameKeyStateCamera();
 }
 
 void eae6320::Graphics::ClearDataBeingSubmittedByApplicationThread()
