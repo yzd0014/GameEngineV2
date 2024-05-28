@@ -35,6 +35,8 @@ namespace eae6320 {
 				Math::cMatrix_transformation local2WorldRot(m_State.orientation, Math::sVector(0, 0, 0));
 				Math::cMatrix_transformation world2LocalRot = Math::cMatrix_transformation::CreateWorldToCameraTransform(local2WorldRot);
 				m_State.globalInverseInertiaTensor = local2WorldRot * m_State.localInverseInertiaTensor * world2LocalRot;
+				
+				gameObjectArrayMutex.Lock();
 				if (i_State.collision)
 				{
 					colliderObjects.push_back(this);
@@ -43,6 +45,7 @@ namespace eae6320 {
 				{
 					noColliderObjects.push_back(this);
 				}
+				gameObjectArrayMutex.Unlock();
 			}
 			GameObject(const GameObject & i_other) {//copy constructor
 				m_pEffect = i_other.GetEffect();
@@ -50,8 +53,9 @@ namespace eae6320 {
 
 				m_Mesh = i_other.GetMesh();
 				Mesh::s_manager.Get(m_Mesh)->IncrementReferenceCount();
-
 				m_State = i_other.m_State;
+
+				gameObjectArrayMutex.Lock();
 				if (m_State.collision)
 				{
 					colliderObjects.push_back(this);
@@ -60,6 +64,7 @@ namespace eae6320 {
 				{
 					noColliderObjects.push_back(this);
 				}
+				gameObjectArrayMutex.Unlock();
 			}
 			GameObject & operator=(const GameObject &i_other) {//assignment operator
 				Mesh::s_manager.Get(m_Mesh)->DecrementReferenceCount();
@@ -85,6 +90,7 @@ namespace eae6320 {
 			virtual void Tick(const double i_secondCountToIntegrate) {}
 			virtual void OnHit(GameObject * i_pObjectHit) {}
 			virtual void OnOverlap(GameObject * i_pObjectOverlapped) {}
+			//In renderThreadNoWait mode, users are not allowed to add new game objects within UpdateGameObjectBasedOnInput
 			virtual void UpdateGameObjectBasedOnInput() {}
 			/*
 			void UpdateState(const float i_secondCountToIntegrate) {

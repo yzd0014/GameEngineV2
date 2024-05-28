@@ -185,6 +185,7 @@ namespace eae6320
 			// They will both be called every time the simulation is updated
 			// (i.e. whenever GetSimulationUpdatePeriod_inSeconds() of simulation time has elapsed)
 			virtual void UpdateSimulationBasedOnInput();
+			//In renderThreadNoWait mode, users are not allowed to add new game objects within UpdateGameObjectBasedOnInput
 			virtual void UpdateSimulationBasedOnTime(const double i_elapsedSecondCount_sinceLastUpdate);
 
 			// Your application should override the following function

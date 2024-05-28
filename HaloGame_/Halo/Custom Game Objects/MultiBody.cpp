@@ -377,11 +377,11 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 			}
 			twistArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_twist.normalized(), Math::sVector(0, 1, 0), 0.5);
 
-			/*if (swingArrow != nullptr)
-			{
-				swingArrow->DestroyGameObject();
-				swingArrow = nullptr;
-			}*/
+			//if (swingArrow != nullptr)
+			//{
+			//	swingArrow->DestroyGameObject();
+			//	swingArrow = nullptr;
+			//}
 			swingArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_swing.normalized(), Math::sVector(1, 0, 0), 0.5);
 		}
 	}

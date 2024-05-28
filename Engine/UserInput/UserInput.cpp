@@ -13,8 +13,6 @@ namespace eae6320
 		namespace KeyState {
 			uint8_t lastFrameKeyState[160];
 			uint8_t currFrameKeyState[160];
-			uint8_t keyPressedToReleasedState[160];
-			uint8_t keyReleasedToPressedState[160];
 		}
 
 #if defined( EAE6320_PLATFORM_WINDOWS )

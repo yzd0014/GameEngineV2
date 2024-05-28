@@ -354,21 +354,16 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 			if ( simulationUpdateCount_thisIteration > 0 && !Graphics::renderThreadNoWait)
 			{
 				UserInput::TrackKeyState();
-				UserInput::CheckKeyFromReleasedToPressed();
-				UserInput::CheckKeyFromPressedToReleased();
-				UserInput::UpdateLastFrameKeyState();
-				
 				mainCamera.UpdateCameraBasedOnInput();
 				UpdateSimulationBasedOnInput();
-			}
-			if (Graphics::renderThreadNoWait)
-			{
-				UpdateSimulationBasedOnInput();
+				UserInput::UpdateLastFrameKeyState();
 			}
 			//remove inactive game objects
 			{
+				gameObjectArrayMutex.Lock();
 				GameCommon::RemoveInactiveGameObjects(colliderObjects);
 				GameCommon::RemoveInactiveGameObjects(noColliderObjects);
+				gameObjectArrayMutex.Unlock();
 			}
 		}
 		// Submit data for the render thread to use to render a new frame
@@ -604,8 +599,6 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 		for (int i = 0; i < 160; i++) {
 			UserInput::KeyState::lastFrameKeyState[i] = 0;
 			UserInput::KeyState::currFrameKeyState[i] = 0;
-			UserInput::KeyState::keyReleasedToPressedState[i] = 0;
-			UserInput::KeyState::keyPressedToReleasedState[i] = 0;
 		}
 		if (render)
 		{

@@ -36,9 +36,6 @@ namespace eae6320
 		void TrackKeyState();
 		void UpdateLastFrameKeyState();
 
-		void CheckKeyFromReleasedToPressed();
-		void CheckKeyFromPressedToReleased();
-
 		namespace KeyCodes
 		{
 			// These values are what the Windows-specific function expects, for simplicity
@@ -93,8 +90,6 @@ namespace eae6320
 		namespace KeyState {
 			extern uint8_t lastFrameKeyState[160];
 			extern uint8_t currFrameKeyState[160];
-			extern uint8_t keyPressedToReleasedState[160];
-			extern uint8_t keyReleasedToPressedState[160];
 		}
 #if defined( EAE6320_PLATFORM_WINDOWS )
 		extern HWND mainWindow;

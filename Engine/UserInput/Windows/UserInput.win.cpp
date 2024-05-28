@@ -65,46 +65,24 @@ void eae6320::UserInput::UpdateLastFrameKeyState()
 	}
 }
 
-void eae6320::UserInput::CheckKeyFromReleasedToPressed()
-{
-	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
-	for (int i = 0; i < 160; i++)
-	{
-		if (KeyState::lastFrameKeyState[i] == 0 && KeyState::currFrameKeyState[i] == 1)
-		{
-			KeyState::keyReleasedToPressedState[i] = true;
-		}
-	}
-}
-
-void eae6320::UserInput::CheckKeyFromPressedToReleased()
-{
-	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
-	for (int i = 0; i < 160; i++)
-	{
-		if (KeyState::lastFrameKeyState[i] == 1 && KeyState::currFrameKeyState[i] == 0)
-		{
-			KeyState::keyPressedToReleasedState[i] = true;
-		}
-	}
-}
-
 bool eae6320::UserInput::IsKeyFromReleasedToPressed(const uint_fast8_t i_keyCode)
 {
-	bool output = KeyState::keyReleasedToPressedState[i_keyCode];
-	if (output)
+	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
+	bool output = false;
+	if (KeyState::lastFrameKeyState[i_keyCode] == 0 && KeyState::currFrameKeyState[i_keyCode] == 1)
 	{
-		KeyState::keyReleasedToPressedState[i_keyCode] = false;
+		output = true;
 	}
 	return output;
 }
 
 bool eae6320::UserInput::IsKeyFromPressedToReleased(const uint_fast8_t i_keyCode)
 {
-	bool output = KeyState::keyPressedToReleasedState[i_keyCode];
-	if (output)
+	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
+	bool output = false;
+	if (KeyState::lastFrameKeyState[i_keyCode] == 1 && KeyState::currFrameKeyState[i_keyCode] == 0)
 	{
-		KeyState::keyPressedToReleasedState[i_keyCode] = false;
+		output = true;
 	}
 	return output;
 }

@@ -144,7 +144,7 @@ void eae6320::Graphics::RenderFrame()
 	if (renderThreadNoWait)
 	{
 		//update camera
-		UpdateBasedOnCameraInput();
+		UpdateSimulationBasedOnInput();
 		mainCamera.UpdateState((float)Time::ConvertTicksToSeconds(Time::tickCount_elapsedSinceLastLoop));
 		//submit data
 		Math::sVector position = mainCamera.position;
@@ -257,13 +257,25 @@ void eae6320::Graphics::RenderFrame()
 	}
 }
 
-void eae6320::Graphics::UpdateBasedOnCameraInput()
+void eae6320::Graphics::UpdateSimulationBasedOnInput()
 {
 	UserInput::TrackKeyState();
-	UserInput::CheckKeyFromReleasedToPressed();
-	UserInput::CheckKeyFromPressedToReleased();
-	UserInput::UpdateLastFrameKeyState();
 	mainCamera.UpdateCameraBasedOnInput();
+	
+	gameObjectArrayMutex.Lock();
+	size_t numOfObjects = colliderObjects.size();
+	for (size_t i = 0; i < numOfObjects; i++) {
+		colliderObjects[i]->UpdateGameObjectBasedOnInput();
+	}
+	
+	numOfObjects = noColliderObjects.size();
+	for (size_t i = 0; i < numOfObjects; i++) {
+		noColliderObjects[i]->UpdateGameObjectBasedOnInput();
+	}
+	gameObjectArrayMutex.Unlock();
+
+	UserInput::UpdateLastFrameKeyState();
+	
 }
 
 void eae6320::Graphics::ClearDataBeingSubmittedByApplicationThread()
