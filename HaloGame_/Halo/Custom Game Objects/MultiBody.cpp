@@ -144,22 +144,31 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 
 	//UnitTest0();
 	//general twist test
-	//_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
-	//q.segment(0, 3) = rot_vec;
-	//if (jointType[0] == BALL_JOINT_4D)
-	//{
-	//	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
-	//}
+	//_Vector3 rot_vec(0.0, 0.0, 0.0);
+	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
+	if (jointType[0] == BALL_JOINT_4D)
+	{
+		rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	}
+	else if (jointType[0] == BALL_JOINT_3D)
+	{
+		q.segment(0, 3) = rot_vec;
+	}
 	//_Vector3 local_w = _Vector3(0.0, -2.0, -2.0);
-	////_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
-	//Forward();
-	//_Vector3 world_w = R_global[0] * local_w;
-	//qdot.segment(0, 3) = J_rotation[0].inverse() * world_w;
-	//if (jointType[0] == BALL_JOINT_4D)
-	//{
-	//	//qdot.segment(0, 3) = world_w;
-	//	qdot.segment(0, 3) = local_w;
-	//}
+	_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
+	Forward();
+	int jointID = 1;
+	_Vector3 world_w = R_global[jointID] * local_w;
+	
+	if (jointType[jointID] == BALL_JOINT_4D)
+	{
+		//qdot.segment(velStartIndex[jointID], 3) = world_w;
+		qdot.segment(velStartIndex[jointID], 3) = local_w;
+	}
+	else if (jointType[jointID] == BALL_JOINT_3D)
+	{
+		qdot.segment(velStartIndex[jointID], 3) = J_rotation[jointID].inverse() * world_w;
+	}
 
 	//swing test
 	//_Vector3 rot_vec(0.0, 0.7 * M_PI, 0.0);
@@ -176,7 +185,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//	qdot.segment(0, 3) = local_w;
 	//}
 	
-	qdot.segment(0, 3) = _Vector3(-2.0, 2.0, 0.0);
+	//qdot.segment(0, 3) = _Vector3(-2.0, 2.0, 0.0);
 	//q.segment(0, 3) = _Vector3(0.0, 0.5 * M_PI, 0.0);
 	//qdot.segment(0, 3) = _Vector3(-2.0, 0.0, 2.0);
 	
@@ -187,6 +196,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 
 	//jointRange[0].first = 0.5 * M_PI;//swing
 	jointRange[0].second = 0.5 * M_PI;//twist
+	//jointRange[1].first = 0.5 * M_PI;//swing
+	jointRange[1].second = 0.5 * M_PI;//twist
 	
 	GameplayUtility::DrawArrow(Vector3d(0, 0, 0), Vector3d(0, -1, 0), Math::sVector(0, 0, 1), 0.5);
 	
@@ -361,29 +372,26 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 		//_Vector3 rotVec = Math::RotationConversion_MatrixToVec(R_local[0]);
 		//std::cout << rel_ori[0].w() << " " << rel_ori[0].x() << " " << rel_ori[0].y() << " " << rel_ori[0].z() << std::endl;
 		
-		if (s.norm() < 0.05 && Physics::totalSimulationTime > 0.2)
-		{
-			Physics::simPause = true;
-			std::cout << "paused!" << std::endl;
-			//_Matrix3 Rt = R_twist * R_swing;
-			//std::cout << Rt - R_local[0] << std::endl << std::endl;
-			//jointRange[0].second = -1;
+		//if (s.norm() < 0.05 && Physics::totalSimulationTime > 0.2)
+		//{
+		//	Physics::simPause = true;
+		//	std::cout << "paused!" << std::endl;
 
-			std::cout << "twist: " << vec_twist.transpose() << " twist norm: " << vec_twist.norm() << " swing norm: " << vec_swing.norm() << std::endl;
-			if (twistArrow != nullptr)
-			{
-				twistArrow->DestroyGameObject();
-				twistArrow = nullptr;
-			}
-			twistArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_twist.normalized(), Math::sVector(0, 1, 0), 0.5);
+		//	std::cout << "twist: " << vec_twist.transpose() << " twist norm: " << vec_twist.norm() << " swing norm: " << vec_swing.norm() << std::endl;
+		//	if (twistArrow != nullptr)
+		//	{
+		//		twistArrow->DestroyGameObject();
+		//		twistArrow = nullptr;
+		//	}
+		//	twistArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_twist.normalized(), Math::sVector(0, 1, 0), 0.5);
 
-			//if (swingArrow != nullptr)
-			//{
-			//	swingArrow->DestroyGameObject();
-			//	swingArrow = nullptr;
-			//}
-			swingArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_swing.normalized(), Math::sVector(1, 0, 0), 0.5);
-		}
+		//	//if (swingArrow != nullptr)
+		//	//{
+		//	//	swingArrow->DestroyGameObject();
+		//	//	swingArrow = nullptr;
+		//	//}
+		//	swingArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_swing.normalized(), Math::sVector(1, 0, 0), 0.5);
+		//}
 	}
 }
 
@@ -937,9 +945,6 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 						pRotated = -pRotated;
 					}
 					K.block<1, 3>(k, velStartIndex[i]) = pRotated;
-					//K.block<1, 3>(k, velStartIndex[i]) = J.block<1, 3>(k, velStartIndex[i]);
-					_Scalar cValue = ComputeAngularVelocityConstraint(qdot, R_local[i], limitType[k], jointRange[i].second);
-					//std::cout << "after velocity integration: " << cValue << " qdot: " << qdot.transpose() << std::endl;
 				}
 				else if (limitType[k] == SWING)
 				{
@@ -964,7 +969,6 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 		}
 		_Matrix lambda;
 		lambda = (J * MrInverse * K.transpose()).inverse() * (-J * qdot - bias);
-		//std::cout << J * qdot << std::endl;
 		for (int k = 0; k < constraintNum; k++)
 		{
 			if (lambda(k, 0) < 0)
@@ -974,9 +978,6 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 		}
 		_Vector qdotCorrection = MrInverse * K.transpose() * lambda;
 		qdot = qdot + qdotCorrection;
-		_Scalar myC = ComputeAngularVelocityConstraint(qdot, R_local[0], limitType[0], jointRange[0].second);
-		//_Matrix myC2 = J * qdot;
-		//std::cout << "after: " << myC << std::endl;
 	}
 }
 
