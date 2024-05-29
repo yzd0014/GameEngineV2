@@ -15,5 +15,6 @@ namespace eae6320
 
 		Math::sVector MouseRayCasting();
 		GameCommon::GameObject* DrawArrow(Vector3d startPoint, Vector3d dir, Math::sVector color, double scaling);
+		void DrawXYZCoordinate(Vector3d pos);
 	}
 }

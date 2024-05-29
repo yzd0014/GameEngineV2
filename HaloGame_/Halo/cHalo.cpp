@@ -45,6 +45,7 @@ void eae6320::cHalo::UpdateBasedOnInput()
 
 eae6320::cResult eae6320::cHalo::Initialize()
 {
+	GameplayUtility::DrawXYZCoordinate(Vector3d(0, -8, 0));
 	//initialize camera 
 	mainCamera.Initialize(Math::sVector(0.0f, 5.0f, 12.5f), Math::sVector(-30.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 	//mainCamera.Initialize(Math::sVector(5.0f, 10.0f, 15.0f), Math::sVector(-30.0f, 20.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);

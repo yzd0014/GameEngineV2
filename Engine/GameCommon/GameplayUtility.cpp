@@ -71,5 +71,12 @@ namespace eae6320
 
 			return pGameObject;
 		}
+
+		void DrawXYZCoordinate(Vector3d pos)
+		{
+			DrawArrow(pos, Vector3d(1, 0, 0), Math::sVector(1.0, 0.0, 0.0), 0.5);
+			DrawArrow(pos, Vector3d(0, 1, 0), Math::sVector(0.0, 1.0, 0.0), 0.5);
+			DrawArrow(pos, Vector3d(0, 0, 1), Math::sVector(0.0, 0.0, 1.0), 0.5);
+		}
 	}
 }
