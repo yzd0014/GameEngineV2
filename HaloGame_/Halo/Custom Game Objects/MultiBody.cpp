@@ -12,8 +12,10 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
 	//UnitTest1(); //test swing twist decomposition
-	//UnitTest2();
-	UnitTest3();//twist invariance for two bodies
+	UnitTest2(); //test extreme case for twist with single body
+	//UnitTest3();//twist invariance for two bodies
+	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
+	//UnitTest5();//test induced twist for single body
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
