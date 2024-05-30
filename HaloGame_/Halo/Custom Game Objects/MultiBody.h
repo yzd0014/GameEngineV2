@@ -12,7 +12,7 @@ namespace eae6320
 	class MultiBody : public eae6320::GameCommon::GameObject
 	{
 	public:
-		MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, size_t meshID);
+		MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State);
 		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 
@@ -20,6 +20,10 @@ namespace eae6320
 		int constraintType = SWING_C;
 		bool gravity = FALSE ;
 	private:
+		void InitializeBodies(Assets::cHandle<Mesh> i_mesh);
+		void InitializeJoints();
+		void SetZeroInitialCondition();
+
 		void ComputeMr();
 		void ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void ComputeH(_Vector& i_q);

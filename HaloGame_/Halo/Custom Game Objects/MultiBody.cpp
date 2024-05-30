@@ -8,133 +8,14 @@
 #include <math.h>
 #include <iomanip>
 
-eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, size_t meshID):
+eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State):
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
 	//UnitTest1();
 	numOfLinks = 2;
-	m_linkBodys;
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(defaultEffect, masterMeshArray[meshID], Physics::sRigidBodyState());
-		m_linkBodys.push_back(pGameObject);
-	}
-
-	w_abs_world.resize(numOfLinks);
-	w_rel_world.resize(numOfLinks);
-	w_rel_local.resize(numOfLinks);
-	vel.resize(numOfLinks);
-	pos.resize(numOfLinks);
-	jointPos.resize(numOfLinks);
-	obs_ori.resize(numOfLinks);
-	rel_ori.resize(numOfLinks);
-	R_global.resize(numOfLinks);
-	R_local.resize(numOfLinks);
-	J_rotation.resize(numOfLinks);
-	D.resize(numOfLinks);
-	Ht.resize(numOfLinks);
-	H.resize(numOfLinks);
-	Mbody.resize(numOfLinks);
-	localInertiaTensors.resize(numOfLinks);
-	g.resize(numOfLinks);
-	jointType.resize(numOfLinks);
-	posDOF.resize(numOfLinks);
-	posStartIndex.resize(numOfLinks);
-	velDOF.resize(numOfLinks);
-	velStartIndex.resize(numOfLinks);
-	jointLimit.resize(numOfLinks);
-	jointRange.resize(numOfLinks);
-	for (size_t i = 0; i < numOfLinks; i++)
-	{
-		w_abs_world[i].setZero();
-		w_rel_world[i].setZero();
-		w_rel_local[i].setZero();
-		vel[i].setZero();
-		jointPos[i].setZero();
-		pos[i].setZero();
-		obs_ori[i].setIdentity();
-		rel_ori[i].setIdentity();
-		R_global[i].setIdentity();
-		R_local[i].setIdentity();
-		_Matrix M_d;
-		M_d.resize(6, 6);
-		M_d.setZero();
-		M_d(0, 0) = rigidBodyMass;
-		M_d(1, 1) = rigidBodyMass;
-		M_d(2, 2) = rigidBodyMass;
-		Mbody[i] = M_d;
-		jointLimit[i] = -1;
-		std::pair<_Scalar, _Scalar> defaultRange(-1, -1);
-		jointRange[i] = defaultRange;
-		
-		_Matrix3 localInertiaTensor;
-		localInertiaTensor.setIdentity();
-		if (geometry == BOX)
-		{
-			localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-		}
-		localInertiaTensors[i] = localInertiaTensor;
-		Mbody[i].block<3, 3>(3, 3) = localInertiaTensor;
-
-		std::vector<_Vector3> uPairs;
-		uPairs.resize(2);
-		//uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
-		uPairs[0] = _Vector3(0.0f, 1.0f, 0.0f);
-		if (i == numOfLinks - 1)
-		{
-			uPairs[1] = _Vector3(0.0f, 0.0f, 0.0f);
-		}
-		else
-		{
-			uPairs[1] = -uPairs[0]; //1 stores u for joint connecting to child
-		}
-		uLocals.push_back(uPairs);
-		uGlobals.push_back(uPairs);
-
-		jointType[i] = BALL_JOINT_4D;
-		//jointType[i] = BALL_JOINT_3D;
-	}
-	//jointType[0] = FREE_JOINT;
-
-	for (size_t i = 0; i < numOfLinks; i++)
-	{
-		if (jointType[i] == BALL_JOINT_3D)
-		{
-			velDOF[i] = 3;
-			posDOF[i] = 3;
-			totalVelDOF += 3;
-			totalPosDOF += 3;
-		}
-		else if (jointType[i] == BALL_JOINT_4D)
-		{	
-			velDOF[i] = 3;
-			posDOF[i] = 4;
-			totalVelDOF += 3;
-			totalPosDOF += 4;
-		}
-		else if (jointType[i] == FREE_JOINT)
-		{
-			velDOF[i] = 6;
-			posDOF[i] = 7;
-			totalVelDOF += 6;
-			totalPosDOF += 7;
-		}
-		if (i == 0)
-		{
-			velStartIndex[i] = 0;
-			posStartIndex[i] = 0;
-		}
-		else
-		{
-			velStartIndex[i] = velStartIndex[i - 1] + velDOF[i - 1];
-			posStartIndex[i] = posStartIndex[i - 1] + posDOF[i - 1];
-		}
-	}
-	Mr.resize(totalVelDOF, totalVelDOF);
-	q.resize(totalPosDOF);
-	q.setZero();
-	qdot.resize(totalVelDOF);
-	qdot.setZero();
+	InitializeBodies(masterMeshArray[4]);//4 is capsule, 3 is cube
+	InitializeJoints();
+	SetZeroInitialCondition();
 
 	/*uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
 	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);*/
@@ -204,8 +85,6 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//jointRange[1].first = 0.5 * M_PI;//swing
 	jointRange[1].second = 0.5 * M_PI;//twist
 	
-	GameplayUtility::DrawArrow(Vector3d(0, 0, 0), Vector3d(0, -1, 0), Math::sVector(0, 0, 1), 0.5);
-	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
 	angularMomentum0 = ComputeAngularMomentum();
@@ -213,6 +92,136 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	std::cout << "initial total energy: " << totalEnergy0 << std::endl;
 	std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
 	std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
+}
+
+void eae6320::MultiBody::SetZeroInitialCondition()
+{
+	q.resize(totalPosDOF);
+	q.setZero();
+	qdot.resize(totalVelDOF);
+	qdot.setZero();
+}
+
+void eae6320::MultiBody::InitializeJoints()
+{
+	for (size_t i = 0; i < numOfLinks; i++)
+	{
+		jointType[i] = BALL_JOINT_4D;
+		//jointType[i] = BALL_JOINT_3D;
+		if (jointType[i] == BALL_JOINT_3D)
+		{
+			velDOF[i] = 3;
+			posDOF[i] = 3;
+			totalVelDOF += 3;
+			totalPosDOF += 3;
+		}
+		else if (jointType[i] == BALL_JOINT_4D)
+		{
+			velDOF[i] = 3;
+			posDOF[i] = 4;
+			totalVelDOF += 3;
+			totalPosDOF += 4;
+		}
+		else if (jointType[i] == FREE_JOINT)
+		{
+			velDOF[i] = 6;
+			posDOF[i] = 7;
+			totalVelDOF += 6;
+			totalPosDOF += 7;
+		}
+		if (i == 0)
+		{
+			velStartIndex[i] = 0;
+			posStartIndex[i] = 0;
+		}
+		else
+		{
+			velStartIndex[i] = velStartIndex[i - 1] + velDOF[i - 1];
+			posStartIndex[i] = posStartIndex[i - 1] + posDOF[i - 1];
+		}
+	}
+	Mr.resize(totalVelDOF, totalVelDOF);
+}
+
+void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh)
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(defaultEffect, i_mesh, Physics::sRigidBodyState());
+		m_linkBodys.push_back(pGameObject);
+	}
+
+	w_abs_world.resize(numOfLinks);
+	w_rel_world.resize(numOfLinks);
+	w_rel_local.resize(numOfLinks);
+	vel.resize(numOfLinks);
+	pos.resize(numOfLinks);
+	jointPos.resize(numOfLinks);
+	obs_ori.resize(numOfLinks);
+	rel_ori.resize(numOfLinks);
+	R_global.resize(numOfLinks);
+	R_local.resize(numOfLinks);
+	J_rotation.resize(numOfLinks);
+	D.resize(numOfLinks);
+	Ht.resize(numOfLinks);
+	H.resize(numOfLinks);
+	Mbody.resize(numOfLinks);
+	localInertiaTensors.resize(numOfLinks);
+	g.resize(numOfLinks);
+	jointType.resize(numOfLinks);
+	posDOF.resize(numOfLinks);
+	posStartIndex.resize(numOfLinks);
+	velDOF.resize(numOfLinks);
+	velStartIndex.resize(numOfLinks);
+	jointLimit.resize(numOfLinks);
+	jointRange.resize(numOfLinks);
+	for (size_t i = 0; i < numOfLinks; i++)
+	{
+		w_abs_world[i].setZero();
+		w_rel_world[i].setZero();
+		w_rel_local[i].setZero();
+		vel[i].setZero();
+		jointPos[i].setZero();
+		pos[i].setZero();
+		obs_ori[i].setIdentity();
+		rel_ori[i].setIdentity();
+		R_global[i].setIdentity();
+		R_local[i].setIdentity();
+		_Matrix M_d;
+		M_d.resize(6, 6);
+		M_d.setZero();
+		M_d(0, 0) = rigidBodyMass;
+		M_d(1, 1) = rigidBodyMass;
+		M_d(2, 2) = rigidBodyMass;
+		Mbody[i] = M_d;
+		jointLimit[i] = -1;
+		std::pair<_Scalar, _Scalar> defaultRange(-1, -1);
+		jointRange[i] = defaultRange;
+
+		_Matrix3 localInertiaTensor;
+		localInertiaTensor.setIdentity();
+		if (geometry == BOX)
+		{
+			localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+		}
+		localInertiaTensors[i] = localInertiaTensor;
+		Mbody[i].block<3, 3>(3, 3) = localInertiaTensor;
+
+		std::vector<_Vector3> uPairs;
+		uPairs.resize(2);
+		//uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
+		uPairs[0] = _Vector3(0.0f, 1.0f, 0.0f);
+		if (i == numOfLinks - 1)
+		{
+			uPairs[1] = _Vector3(0.0f, 0.0f, 0.0f);
+		}
+		else
+		{
+			uPairs[1] = -uPairs[0]; //1 stores u for joint connecting to child
+		}
+		uLocals.push_back(uPairs);
+		uGlobals.push_back(uPairs);
+	}
 }
 
 void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)

@@ -52,13 +52,12 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	
 	//create two meshes
 	LOAD_MESH("data/meshes/square_plane.mesh", mesh_plane)
-	LOAD_MESH("data/meshes/cube.mesh", mesh_cube)
 	LOAD_MESH("data/meshes/bullet.mesh", mesh_anchor)
+	LOAD_MESH("data/meshes/cube.mesh", mesh_cube)
 	LOAD_MESH("data/meshes/capsule.mesh", mesh_capsule)
-	size_t capsuleID = masterMeshArray.size() - 1;
 
 	{
-		MultiBody * pMultiBody = new MultiBody(defaultEffect, mesh_anchor, Physics::sRigidBodyState(), capsuleID);
+		MultiBody * pMultiBody = new MultiBody(defaultEffect, mesh_anchor, Physics::sRigidBodyState());
 		//GameCommon::GameObject * pMultiBody = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		pMultiBody->m_color = Math::sVector(1, 0, 0);
 	}
