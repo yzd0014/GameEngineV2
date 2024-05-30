@@ -81,3 +81,108 @@ void eae6320::MultiBody::UnitTest1()
 	std::cout << rotated_p.transpose() << std::endl;
 	std::cout << Math::RotationConversion_MatrixToVec(R_t_bar).transpose() << std::endl << std::endl;
 }
+
+void eae6320::MultiBody::UnitTest2()
+{
+	//numOfLinks = 2;
+	//InitializeBodies(masterMeshArray[4]);//4 is capsule, 3 is cube
+	//int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D };
+	//InitializeJoints(jointTypeArray);
+	//SetZeroInitialCondition();
+
+	///*uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
+	//uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);*/
+
+	////uLocals[0][0] = _Vector3(1.0f, -1.0f, -1.0f);
+
+	///*qdot.segment(3, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
+	//qdot.segment(6, 3) = _Vector3(4.0f, -10.0f, 0.0f);*/
+
+	////qdot.segment(0, 3) = _Vector3(-2.0f, 2.0f, 0.0f);
+	////qdot.segment(3, 3) = _Vector3(2.0, 2.0, 0.0);
+
+	////UnitTest0();
+	////general twist test
+	////_Vector3 rot_vec(0.0, 0.0, 0.0);
+	//_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
+	//if (jointType[0] == BALL_JOINT_4D)
+	//{
+	//	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	//}
+	//else if (jointType[0] == BALL_JOINT_3D)
+	//{
+	//	q.segment(0, 3) = rot_vec;
+	//}
+	////_Vector3 local_w = _Vector3(0.0, -2.0, -2.0);
+	//_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
+	//Forward();
+	//int jointID = 1;
+	//_Vector3 world_w = R_global[jointID] * local_w;
+
+	//if (jointType[jointID] == BALL_JOINT_4D)
+	//{
+	//	//qdot.segment(velStartIndex[jointID], 3) = world_w;
+	//	qdot.segment(velStartIndex[jointID], 3) = local_w;
+	//}
+	//else if (jointType[jointID] == BALL_JOINT_3D)
+	//{
+	//	qdot.segment(velStartIndex[jointID], 3) = J_rotation[jointID].inverse() * world_w;
+	//}
+
+	////swing test
+	////_Vector3 rot_vec(0.0, 0.7 * M_PI, 0.0);
+	////q.segment(0, 3) = rot_vec;
+	////if (jointType[0] == BALL_JOINT_4D)
+	////{
+	////	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	////}
+	////_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);
+	////Forward();
+	////qdot.segment(0, 3) = J_rotation[0].inverse() * local_w;
+	////if (jointType[0] == BALL_JOINT_4D)
+	////{
+	////	qdot.segment(0, 3) = local_w;
+	////}
+
+	////qdot.segment(0, 3) = _Vector3(-2.0, 2.0, 0.0);
+	////q.segment(0, 3) = _Vector3(0.0, 0.5 * M_PI, 0.0);
+	////qdot.segment(0, 3) = _Vector3(-2.0, 0.0, 2.0);
+
+	//Forward();
+	////jointLimit[0] = 0.785f;
+	////jointLimit[0] = 0.5 * M_PI;
+	////jointLimit[1] = 0.09f;
+
+	////jointRange[0].first = 0.5 * M_PI;//swing
+	//jointRange[0].second = 0.5 * M_PI;//twist
+	////jointRange[1].first = 0.5 * M_PI;//swing
+	//jointRange[1].second = 0.5 * M_PI;//twist
+}
+
+void eae6320::MultiBody::UnitTest3()
+{
+	numOfLinks = 2;
+	constraintSolverMode = IMPULSE;
+	
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+	InitializeBodies(masterMeshArray[4], localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
+	
+	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D };
+	InitializeJoints(jointTypeArray);
+	
+	SetZeroInitialCondition();
+
+	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
+	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+
+	_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
+	int jointID = 1;
+	qdot.segment(velStartIndex[jointID], 3) = local_w;
+	
+	Forward();
+	
+	jointRange[0].second = 0.5 * M_PI;//twist
+	jointRange[1].second = 0.5 * M_PI;//twist
+}

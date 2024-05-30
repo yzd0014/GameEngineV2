@@ -11,79 +11,9 @@
 eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State):
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
-	//UnitTest1();
-	numOfLinks = 2;
-	InitializeBodies(masterMeshArray[4]);//4 is capsule, 3 is cube
-	InitializeJoints();
-	SetZeroInitialCondition();
-
-	/*uLocals[0][1] = _Vector3(1.0f, -1.0f, 1.0f);
-	uLocals[1][0] = _Vector3(-1.0f, 1.0f, -1.0f);*/
-	
-	//uLocals[0][0] = _Vector3(1.0f, -1.0f, -1.0f);
-
-	/*qdot.segment(3, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
-	qdot.segment(6, 3) = _Vector3(4.0f, -10.0f, 0.0f);*/
-
-	//qdot.segment(0, 3) = _Vector3(-2.0f, 2.0f, 0.0f);
-	//qdot.segment(3, 3) = _Vector3(2.0, 2.0, 0.0);
-
-	//UnitTest0();
-	//general twist test
-	//_Vector3 rot_vec(0.0, 0.0, 0.0);
-	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
-	if (jointType[0] == BALL_JOINT_4D)
-	{
-		rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
-	}
-	else if (jointType[0] == BALL_JOINT_3D)
-	{
-		q.segment(0, 3) = rot_vec;
-	}
-	//_Vector3 local_w = _Vector3(0.0, -2.0, -2.0);
-	_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
-	Forward();
-	int jointID = 1;
-	_Vector3 world_w = R_global[jointID] * local_w;
-	
-	if (jointType[jointID] == BALL_JOINT_4D)
-	{
-		//qdot.segment(velStartIndex[jointID], 3) = world_w;
-		qdot.segment(velStartIndex[jointID], 3) = local_w;
-	}
-	else if (jointType[jointID] == BALL_JOINT_3D)
-	{
-		qdot.segment(velStartIndex[jointID], 3) = J_rotation[jointID].inverse() * world_w;
-	}
-
-	//swing test
-	//_Vector3 rot_vec(0.0, 0.7 * M_PI, 0.0);
-	//q.segment(0, 3) = rot_vec;
-	//if (jointType[0] == BALL_JOINT_4D)
-	//{
-	//	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
-	//}
-	//_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);
-	//Forward();
-	//qdot.segment(0, 3) = J_rotation[0].inverse() * local_w;
-	//if (jointType[0] == BALL_JOINT_4D)
-	//{
-	//	qdot.segment(0, 3) = local_w;
-	//}
-	
-	//qdot.segment(0, 3) = _Vector3(-2.0, 2.0, 0.0);
-	//q.segment(0, 3) = _Vector3(0.0, 0.5 * M_PI, 0.0);
-	//qdot.segment(0, 3) = _Vector3(-2.0, 0.0, 2.0);
-	
-	Forward();
-	//jointLimit[0] = 0.785f;
-	//jointLimit[0] = 0.5 * M_PI;
-	//jointLimit[1] = 0.09f;
-
-	//jointRange[0].first = 0.5 * M_PI;//swing
-	jointRange[0].second = 0.5 * M_PI;//twist
-	//jointRange[1].first = 0.5 * M_PI;//swing
-	jointRange[1].second = 0.5 * M_PI;//twist
+	//UnitTest1(); //test swing twist decomposition
+	//UnitTest2();
+	UnitTest3();//twist invariance for two bodies
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -102,12 +32,11 @@ void eae6320::MultiBody::SetZeroInitialCondition()
 	qdot.setZero();
 }
 
-void eae6320::MultiBody::InitializeJoints()
+void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 {
 	for (size_t i = 0; i < numOfLinks; i++)
 	{
-		jointType[i] = BALL_JOINT_4D;
-		//jointType[i] = BALL_JOINT_3D;
+		jointType[i] = i_jointType[i];
 		if (jointType[i] == BALL_JOINT_3D)
 		{
 			velDOF[i] = 3;
@@ -143,7 +72,7 @@ void eae6320::MultiBody::InitializeJoints()
 	Mr.resize(totalVelDOF, totalVelDOF);
 }
 
-void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh)
+void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -198,27 +127,13 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh)
 		std::pair<_Scalar, _Scalar> defaultRange(-1, -1);
 		jointRange[i] = defaultRange;
 
-		_Matrix3 localInertiaTensor;
-		localInertiaTensor.setIdentity();
-		if (geometry == BOX)
-		{
-			localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-		}
-		localInertiaTensors[i] = localInertiaTensor;
-		Mbody[i].block<3, 3>(3, 3) = localInertiaTensor;
+		localInertiaTensors[i] = i_localInertiaTensor;
+		Mbody[i].block<3, 3>(3, 3) = i_localInertiaTensor;
 
 		std::vector<_Vector3> uPairs;
 		uPairs.resize(2);
-		//uPairs[0] = _Vector3(-1.0f, 1.0f, 1.0f); //0 stores u for joint connecting to parent
-		uPairs[0] = _Vector3(0.0f, 1.0f, 0.0f);
-		if (i == numOfLinks - 1)
-		{
-			uPairs[1] = _Vector3(0.0f, 0.0f, 0.0f);
-		}
-		else
-		{
-			uPairs[1] = -uPairs[0]; //1 stores u for joint connecting to child
-		}
+		uPairs[0] = i_partentJointPosition;
+		uPairs[1] = i_childJointPosition;
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 	}
