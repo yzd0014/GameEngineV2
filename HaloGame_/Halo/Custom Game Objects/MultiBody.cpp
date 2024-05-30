@@ -8,13 +8,18 @@
 #include <math.h>
 #include <iomanip>
 
-eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, std::vector<GameCommon::GameObject *> & i_linkBodys, int i_numOfLinks):
+eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, size_t meshID):
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
 	//UnitTest1();
-	numOfLinks = i_numOfLinks;
-	
-	m_linkBodys = i_linkBodys;
+	numOfLinks = 2;
+	m_linkBodys;
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(defaultEffect, masterMeshArray[meshID], Physics::sRigidBodyState());
+		m_linkBodys.push_back(pGameObject);
+	}
+
 	w_abs_world.resize(numOfLinks);
 	w_rel_world.resize(numOfLinks);
 	w_rel_local.resize(numOfLinks);

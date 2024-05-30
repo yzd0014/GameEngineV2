@@ -55,17 +55,10 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	LOAD_MESH("data/meshes/cube.mesh", mesh_cube)
 	LOAD_MESH("data/meshes/bullet.mesh", mesh_anchor)
 	LOAD_MESH("data/meshes/capsule.mesh", mesh_capsule)
-	
-	{
-		std::vector<GameCommon::GameObject *> links;
-		int bodyNum = 2;
-		for (int i = 0; i < bodyNum; i++)
-		{
-			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(defaultEffect, mesh_capsule, Physics::sRigidBodyState());
-			links.push_back(pGameObject);
-		}
+	size_t capsuleID = masterMeshArray.size() - 1;
 
-		MultiBody * pMultiBody = new MultiBody(defaultEffect, mesh_anchor, Physics::sRigidBodyState(), links, bodyNum);
+	{
+		MultiBody * pMultiBody = new MultiBody(defaultEffect, mesh_anchor, Physics::sRigidBodyState(), capsuleID);
 		//GameCommon::GameObject * pMultiBody = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		pMultiBody->m_color = Math::sVector(1, 0, 0);
 	}
