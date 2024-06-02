@@ -12,10 +12,11 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
 	//UnitTest1(); //test swing twist decomposition
-	UnitTest2(); //test extreme case for twist with single body
+	//UnitTest2(); //test extreme case for twist with single body
 	//UnitTest3();//twist invariance for two bodies
 	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
 	//UnitTest5();//test induced twist for single body
+	UnitTest6();//twist invariance for single body
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -24,6 +25,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	std::cout << "initial total energy: " << totalEnergy0 << std::endl;
 	std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
 	std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
+	GameplayUtility::DrawArrow(Vector3d(0, 0, 0), Vector3d(0, -1, 0), Math::sVector(0, 0, 1), 0.5);
 }
 
 void eae6320::MultiBody::SetZeroInitialCondition()
@@ -279,51 +281,39 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 	ClampRotationVector();
 	Forward();
-	{
-		_Vector3 p = _Vector3(0, -1, 0);
-		_Vector3 local_x = _Vector3(1, 0, 0);
+	//{
+	//	_Vector3 p = _Vector3(0, -1, 0);
+	//	_Vector3 local_x = _Vector3(1, 0, 0);
 
-		_Matrix3 R_swing;
-		_Matrix3 R_twist;
-		_Vector3 twistAxis(0, -1, 0);
-		Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
-		_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
-		_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
+	//	_Matrix3 R_swing;
+	//	_Matrix3 R_twist;
+	//	_Vector3 twistAxis(0, -1, 0);
+	//	Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
+	//	_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
+	//	_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 
-		_Vector s = p.cross(R_local[0] * p);
-		//std::cout << "twist: " << vec_twist.norm() << " swing: " << vec_swing.norm() << std::endl;
-		/*if (jointsID.size() > 0)
-		{
-			_Scalar cValue = ComputeAngularVelocityConstraint(qdot, R_local[0], limitType[0], jointRange[0].second);
-			std::cout << "C dot: " << cValue << " qdot: " << qdot.transpose() << std::endl << std::endl;
-		}*/
-	
-		//std::cout << vec_swing.transpose() << std::endl << std::endl;
-		//std::cout << "twist: " << vec_twist.norm() <<" swing: "<< vec_swing.norm() << " s: " << s.norm() << std::endl;
-		//_Vector3 rotVec = Math::RotationConversion_MatrixToVec(R_local[0]);
-		//std::cout << rel_ori[0].w() << " " << rel_ori[0].x() << " " << rel_ori[0].y() << " " << rel_ori[0].z() << std::endl;
-		
-		//if (s.norm() < 0.05 && Physics::totalSimulationTime > 0.2)
-		//{
-		//	Physics::simPause = true;
-		//	std::cout << "paused!" << std::endl;
+	//	_Vector s = p.cross(R_local[0] * p);
+	//	//std::cout << "twist: " << vec_twist.norm() << " swing: " << vec_swing.norm() << " s norm: " << s.norm() << std::endl;
+	//	std::cout << "twist: " << vec_twist.transpose().normalized() << " swing: " << vec_swing.transpose().normalized() << std::endl;
+	//	
+	//	if (s.norm() < 0.005 && Physics::totalSimulationTime > 0.2)
+	//	{
+	//		Physics::simPause = true;
+	//		if (twistArrow != nullptr)
+	//		{
+	//			twistArrow->DestroyGameObject();
+	//			twistArrow = nullptr;
+	//		}
+	//		twistArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_twist.normalized(), Math::sVector(0, 1, 0), 0.5);
 
-		//	std::cout << "twist: " << vec_twist.transpose() << " twist norm: " << vec_twist.norm() << " swing norm: " << vec_swing.norm() << std::endl;
-		//	if (twistArrow != nullptr)
-		//	{
-		//		twistArrow->DestroyGameObject();
-		//		twistArrow = nullptr;
-		//	}
-		//	twistArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_twist.normalized(), Math::sVector(0, 1, 0), 0.5);
-
-		//	//if (swingArrow != nullptr)
-		//	//{
-		//	//	swingArrow->DestroyGameObject();
-		//	//	swingArrow = nullptr;
-		//	//}
-		//	swingArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_swing.normalized(), Math::sVector(1, 0, 0), 0.5);
-		//}
-	}
+	//		if (swingArrow != nullptr)
+	//		{
+	//			swingArrow->DestroyGameObject();
+	//			swingArrow = nullptr;
+	//		}
+	//		swingArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_swing.normalized(), Math::sVector(1, 0, 0), 0.5);
+	//	}
+	//}
 }
 
 void eae6320::MultiBody::RK3Integration(const _Scalar h)
