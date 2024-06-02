@@ -295,7 +295,7 @@ namespace eae6320
 			return (vClosestPoint - vPoint).GetLengthSQ();
 		}
 
-		void TwistSwingDecompsition(Matrix3d& i_Rot, Vector3d& i_twistAxis, Matrix3d& o_twist, Matrix3d& o_swing)
+		void TwistSwingDecomposition(Matrix3d& i_Rot, Vector3d& i_twistAxis, Matrix3d& o_twist, Matrix3d& o_swing)
 		{
 			Vector3d rotatedTwistAxis;
 			rotatedTwistAxis = i_Rot * i_twistAxis;

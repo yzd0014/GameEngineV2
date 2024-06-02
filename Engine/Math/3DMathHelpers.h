@@ -22,7 +22,8 @@ namespace eae6320
 		void Barycentric(Math::sVector& p, Math::sVector& a, Math::sVector& b, Math::sVector& c, float &u, float &v, float &w);
 		float SqDistPointTriangle(Math::sVector& vPoint, Math::sVector& vA, Math::sVector& vB, Math::sVector& vC);
 
-		void TwistSwingDecompsition(Matrix3d& i_Rot, Vector3d& i_twistAxis, Matrix3d& o_twist, Matrix3d& o_swing);
+		void TwistSwingDecomposition(Matrix3d& i_Rot, Vector3d& i_twistAxis, Matrix3d& o_twist, Matrix3d& o_swing);
+		void SwingTwistDecomposition();
 
 		/**************************************inline functions************************************************************************/
 		inline double GetAngleBetweenTwoVectors(Vector3d& vec0, Vector3d& vec1)

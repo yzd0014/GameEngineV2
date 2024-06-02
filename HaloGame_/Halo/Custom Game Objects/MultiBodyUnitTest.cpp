@@ -74,7 +74,7 @@ void eae6320::MultiBody::UnitTest1()
 	
 	_Matrix3 R_t_bar;
 	_Matrix3 R_s_bar;
-	Math::TwistSwingDecompsition(R, p, R_t_bar, R_s_bar);
+	Math::TwistSwingDecomposition(R, p, R_t_bar, R_s_bar);
 	
 	std::cout << s.transpose() << std::endl;
 	std::cout << Math::RotationConversion_MatrixToVec(R_s_bar).transpose() << std::endl << std::endl;

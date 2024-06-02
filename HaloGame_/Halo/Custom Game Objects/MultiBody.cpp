@@ -288,7 +288,7 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	//	_Matrix3 R_swing;
 	//	_Matrix3 R_twist;
 	//	_Vector3 twistAxis(0, -1, 0);
-	//	Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
+	//	Math::TwistSwingDecomposition(R_local[0], twistAxis, R_twist, R_swing);
 	//	_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
 	//	_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 

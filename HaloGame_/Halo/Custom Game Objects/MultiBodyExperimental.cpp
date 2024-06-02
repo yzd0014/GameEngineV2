@@ -254,7 +254,7 @@ void eae6320::MultiBody::SwingLimitCheck()
 	/*_Matrix3 R_swing;
 	_Matrix3 R_twist;
 	_Vector3 twistAxis(0, -1, 0);
-	Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
+	Math::TwistSwingDecomposition(R_local[0], twistAxis, R_twist, R_swing);
 	_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
 	_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 	std::cout << "twist: " << vec_twist.norm() << ", swing: " << vec_swing.norm() << std::endl;*/
@@ -359,7 +359,7 @@ void eae6320::MultiBody::ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h)
 			_Matrix3 R_swing;
 			_Matrix3 R_twist;
 			_Vector3 twistAxis(0, -1, 0);
-			Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
+			Math::TwistSwingDecomposition(R_local[0], twistAxis, R_twist, R_swing);
 			_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
 			_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 			std::cout << "twist: " << vec_twist.norm() << ", swing: " << vec_swing.norm() << std::endl;
@@ -401,7 +401,7 @@ void eae6320::MultiBody::ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h)
 			_Matrix3 R_swing;
 			_Matrix3 R_twist;
 			_Vector3 twistAxis(0, -1, 0);
-			Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
+			Math::TwistSwingDecomposition(R_local[0], twistAxis, R_twist, R_swing);
 			_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
 			_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 			std::cout << "twist: " << vec_twist.norm() << ", swing: " << vec_swing.norm() << std::endl;
@@ -448,7 +448,7 @@ void eae6320::MultiBody::TwistLimitCheck()
 	//	_Matrix3 R_swing;
 	//	_Matrix3 R_twist;
 	//	_Vector3 twistAxis(0, -1, 0);
-	//	Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
+	//	Math::TwistSwingDecomposition(R_local[0], twistAxis, R_twist, R_swing);
 	//	_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
 	//	_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 	//	std::cout << "twist: " << vec_twist.norm() << ", swing: " << vec_swing.norm() << std::endl;
@@ -466,7 +466,7 @@ void eae6320::MultiBody::ResolveTwistLimitPBD(_Vector& i_q, const _Scalar h)
 		_Matrix3 R_swing;
 		_Matrix3 R_twist;
 		_Vector3 twistAxis(0, -1, 0);
-		Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
+		Math::TwistSwingDecomposition(R_local[0], twistAxis, R_twist, R_swing);
 		_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
 		_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 		std::cout << "twist: " << vec_twist.norm() << ", swing: " << vec_swing.norm() << std::endl;
@@ -534,7 +534,7 @@ void eae6320::MultiBody::ResolveTwistLimitPBD(_Vector& i_q, const _Scalar h)
 			_Matrix3 R_swing;
 			_Matrix3 R_twist;
 			_Vector3 twistAxis(0, -1, 0);
-			Math::TwistSwingDecompsition(R_local[0], twistAxis, R_twist, R_swing);
+			Math::TwistSwingDecomposition(R_local[0], twistAxis, R_twist, R_swing);
 			_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
 			_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 			std::cout << "twist: " << vec_twist.norm() << ", swing: " << vec_swing.norm() << std::endl;
@@ -600,7 +600,7 @@ void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 				/*_Matrix3 R_swing;
 				_Matrix3 R_twist;
 				_Vector3 twistAxis(0, -1, 0);
-				Math::TwistSwingDecompsition(R_local[i], twistAxis, R_twist, R_swing);
+				Math::TwistSwingDecomposition(R_local[i], twistAxis, R_twist, R_swing);
 
 				_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
 				vec_twist.normalize();
