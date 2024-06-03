@@ -331,5 +331,16 @@ namespace eae6320
 				o_twist = RotationConversion_VecToMatrix(twistVector);
 			}
 		}
+
+		void SwingTwistDecomposition(Quaterniond& i_Rot, Vector3d& i_twistAxis, Quaterniond& o_swing, Quaterniond& o_twist)
+		{
+			Vector3d r(i_Rot.x(), i_Rot.y(), i_Rot.z());
+			Vector3d twistAxis = i_twistAxis.normalized();
+			double pValue = r.dot(twistAxis);
+			Vector3d p = pValue * twistAxis;
+			o_twist = Quaterniond(i_Rot.w(), p.x(), p.y(), p.z());
+			o_twist.normalize();
+			o_swing = i_Rot * o_twist.inverse();
+		}
 	}
 }

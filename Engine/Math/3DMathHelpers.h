@@ -23,7 +23,7 @@ namespace eae6320
 		float SqDistPointTriangle(Math::sVector& vPoint, Math::sVector& vA, Math::sVector& vB, Math::sVector& vC);
 
 		void TwistSwingDecomposition(Matrix3d& i_Rot, Vector3d& i_twistAxis, Matrix3d& o_twist, Matrix3d& o_swing);
-		void SwingTwistDecomposition();
+		void SwingTwistDecomposition(Quaterniond& i_Rot, Vector3d& i_twistAxis, Quaterniond& o_swing, Quaterniond& o_twist);
 
 		/**************************************inline functions************************************************************************/
 		inline double GetAngleBetweenTwoVectors(Vector3d& vec0, Vector3d& vec1)

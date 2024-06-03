@@ -210,3 +210,27 @@ void eae6320::MultiBody::UnitTest6()
 
 	jointRange[0].second = 0.5 * M_PI;//twist
 }
+
+void eae6320::MultiBody::UnitTest7()
+{
+	_Vector3 p(0, -1, 0);
+	_Vector3 s(M_PI, 0, 0);
+	_Vector3 t(0, M_PI, 0);
+
+	_Quat quatSwing = Math::RotationConversion_VecToQuat(s);
+	_Quat quatTwist = Math::RotationConversion_VecToQuat(t);
+	
+	_Quat quat = quatSwing * quatTwist;
+
+	_Quat quatSwing_;
+	_Quat quatTwist_;
+	Math::SwingTwistDecomposition(quat, p, quatSwing_, quatTwist_);
+
+	_Vector3 vecSwing = Math::RotationConversion_QuatToVec(quatSwing_);
+	_Vector3 vecTwist = Math::RotationConversion_QuatToVec(quatTwist_);
+
+	std::cout << s.transpose() << std::endl;
+	std::cout << vecSwing.transpose() << std::endl << std::endl;
+	std::cout << t.transpose() << std::endl;
+	std::cout << vecTwist.transpose() << std::endl << std::endl;
+}

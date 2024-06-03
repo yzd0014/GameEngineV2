@@ -77,6 +77,7 @@ namespace eae6320
 		void UnitTest4();
 		void UnitTest5();
 		void UnitTest6();
+		void UnitTest7();
 
 		_Vector q;
 		_Vector qdot;
@@ -127,7 +128,7 @@ namespace eae6320
 		//_Vector conservedQuantity;
 
 		int tickCountSimulated = 0;
-		int numOfLinks = 2;
+		int numOfLinks = 0;
 		int totalPosDOF = 0;
 		int totalVelDOF = 0;
 		int geometry = BOX;
