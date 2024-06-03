@@ -14,10 +14,10 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest1(); //test swing twist decomposition
 	//UnitTest2(); //test extreme case for twist with single body
 	//UnitTest3();//twist invariance for two bodies
-	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
+	UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
 	//UnitTest5();//test induced twist for single body
 	//UnitTest6();//twist invariance for single body
-	UnitTest7();
+	//UnitTest7();
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -791,39 +791,38 @@ void eae6320::MultiBody::BallJointLimitCheck()
 	{
 		if (jointType[i] == BALL_JOINT_4D)
 		{
-			if (jointRange[i].first > 0)//check swing constraint
+			_Quat quat = Math::RotationConversion_MatToQuat(R_local[i]);
+			_Quat twistComponent, swingComponent;
+			_Scalar twistAngle, swingAngle;
+			if (jointRange[i].first > 0 || jointRange[i].second > 0)
 			{
-				_Scalar c = p.dot(R_local[i] * p) - cos(jointRange[i].first);
-				if (c < 0)
-				{
-					jointsID.push_back(i);
-					constraintValue.push_back(c);
-					limitType.push_back(SWING);
-				}
+				Math::SwingTwistDecomposition(quat, p, swingComponent, twistComponent);
+				_Vector3 twistVec = Math::RotationConversion_QuatToVec(twistComponent);
+				twistAngle = twistVec.norm();
+				_Vector3 swingVec = Math::RotationConversion_QuatToVec(swingComponent);
+				swingAngle = swingVec.norm();
+			}
+			
+			if (jointRange[i].first > 0 && jointRange[i].first - swingAngle < 0)//check swing constraint
+			{
+				jointsID.push_back(i);
+				constraintValue.push_back(jointRange[i].first - swingAngle);
+				limitType.push_back(SWING);
 			}
 
-			if (jointRange[i].second > 0) //check twist constraint
+			if (jointRange[i].second > 0 && jointRange[i].second - twistAngle < 0) //check twist constraint
 			{
-				_Vector s = p.cross(R_local[i] * p);
-				if (s.norm() < swingEpsilon)
+				if (swingAngle < swingEpsilon || abs(swingAngle - M_PI) < swingEpsilon)
 				{
-					_Scalar c = local_x.dot(R_local[i] * local_x) - cos(jointRange[i].second);
-					if (c < 0)
-					{
-						jointsID.push_back(i);
-						constraintValue.push_back(c);
-						limitType.push_back(TWIST_WITHOUT_SWING);
-					}
+					jointsID.push_back(i);
+					constraintValue.push_back(jointRange[i].second - twistAngle);
+					limitType.push_back(TWIST_WITHOUT_SWING);
 				}
 				else
 				{
-					_Scalar c = s.dot(R_local[i] * s) / s.squaredNorm() - cos(jointRange[i].second);
-					if (c < 0)
-					{
-						jointsID.push_back(i);
-						constraintValue.push_back(c);
-						limitType.push_back(TWIST_WITH_SWING);
-					}
+					jointsID.push_back(i);
+					constraintValue.push_back(jointRange[i].second - twistAngle);
+					limitType.push_back(TWIST_WITH_SWING);
 				}
 			}
 		}

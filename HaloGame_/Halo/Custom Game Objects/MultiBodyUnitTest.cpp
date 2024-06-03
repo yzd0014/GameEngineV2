@@ -214,8 +214,8 @@ void eae6320::MultiBody::UnitTest6()
 void eae6320::MultiBody::UnitTest7()
 {
 	_Vector3 p(0, -1, 0);
-	_Vector3 s(M_PI, 0, 0);
-	_Vector3 t(0, M_PI, 0);
+	_Vector3 s(0, 0, M_PI);
+	_Vector3 t(0, 0.8, 0);
 
 	_Quat quatSwing = Math::RotationConversion_VecToQuat(s);
 	_Quat quatTwist = Math::RotationConversion_VecToQuat(t);
