@@ -46,6 +46,10 @@
 #define SWING 2
 #endif
 
+#ifndef ROTATION_MAGNITUDE_LIMIT
+#define ROTATION_MAGNITUDE_LIMIT 3
+#endif
+
 /*************************************/
 #ifndef SWING_C
 #define SWING_C 0

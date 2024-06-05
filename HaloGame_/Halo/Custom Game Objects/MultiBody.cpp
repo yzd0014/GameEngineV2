@@ -11,13 +11,14 @@
 eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State):
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
-	//UnitTest1(); //test swing twist decomposition
+	//UnitTest1(); //test swing twist decomposition with rotaion matrix
 	//UnitTest2(); //test extreme case for twist with single body
 	//UnitTest3();//twist invariance for two bodies
-	UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
+	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
 	//UnitTest5();//test induced twist for single body
 	//UnitTest6();//twist invariance for single body
-	//UnitTest7();
+	UnitTest7();//test swing twist decomp with quat
+	//UnitTest8(); //mujoco ball joint constraint test for single body
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -825,6 +826,19 @@ void eae6320::MultiBody::BallJointLimitCheck()
 					limitType.push_back(TWIST_WITH_SWING);
 				}
 			}
+			
+			if (jointLimit[i] > 0)
+			{
+				_Vector3 rotVec = Math::RotationConversion_QuatToVec(rel_ori[i]);
+				_Scalar rotAngle = rotVec.norm();
+				std::cout << rotAngle << std::endl;
+				if (jointLimit[i] - rotAngle < 0)
+				{
+					jointsID.push_back(i);
+					constraintValue.push_back(jointLimit[i] - rotAngle);
+					limitType.push_back(ROTATION_MAGNITUDE_LIMIT);
+				}
+			}
 		}
 	}
 }
@@ -877,6 +891,20 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 
 					//compute K
 					K.block<1, 3>(k, velStartIndex[i]) = _Vector3(j0, j1, j2);
+				}
+				else if (limitType[k] == ROTATION_MAGNITUDE_LIMIT)
+				{
+					_Vector3 r = Math::RotationConversion_QuatToVec(rel_ori[i]);
+					_Scalar theta = r.norm();
+					_Vector3 rNormalized = r / theta;
+					
+					_Scalar a = Compute_a(theta);
+					_Scalar b = Compute_b(theta);
+					_Scalar s = Compute_s(theta, a, b);
+					_Matrix3 G = _Matrix::Identity(3, 3) - 0.5 * Math::ToSkewSymmetricMatrix(r) + s * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
+	
+					J.block<1, 3>(k, velStartIndex[i]) = -rNormalized.transpose() * G;
+					K.block<1, 3>(k, velStartIndex[i]) = J.block<1, 3>(k, velStartIndex[i]);
 				}
 			}
 

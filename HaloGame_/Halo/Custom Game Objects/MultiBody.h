@@ -78,6 +78,7 @@ namespace eae6320
 		void UnitTest5();
 		void UnitTest6();
 		void UnitTest7();
+		void UnitTest8();
 
 		_Vector q;
 		_Vector qdot;
