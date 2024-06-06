@@ -338,9 +338,19 @@ namespace eae6320
 			Vector3d twistAxis = i_twistAxis.normalized();
 			double pValue = r.dot(twistAxis);
 			Vector3d p = pValue * twistAxis;
-			o_twist = Quaterniond(i_Rot.w(), p.x(), p.y(), p.z());
-			o_twist.normalize();
-			o_swing = i_Rot * o_twist.inverse();
+			if (i_Rot.w() <= std::numeric_limits<double>::epsilon())
+			{
+				Quaterniond twist;
+				twist.setIdentity();
+				o_twist = twist;
+				o_swing = i_Rot;
+			}
+			else
+			{
+				o_twist = Quaterniond(i_Rot.w(), p.x(), p.y(), p.z());
+				o_twist.normalize();
+				o_swing = i_Rot * o_twist.inverse();
+			}
 		}
 	}
 }

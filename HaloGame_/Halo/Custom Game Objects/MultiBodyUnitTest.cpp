@@ -216,17 +216,17 @@ void eae6320::MultiBody::UnitTest7()
 {
 	_Vector3 p(0, -1, 0);
 	_Vector3 s(1, 0, 1);
-	s = s.normalized() * M_PI;
+	//s = s.normalized() * M_PI;
 	_Vector3 t(0, -0.5 * M_PI, 0);
 
 	_Quat quatSwing = Math::RotationConversion_VecToQuat(s);
 	_Quat quatTwist = Math::RotationConversion_VecToQuat(t);
 	
 	_Quat quat = quatSwing * quatTwist;
-	quat.w() = 0.924;
-	quat.x() = 0;
+	/*quat.w() = 0;
+	quat.x() = 1;
 	quat.y() = 0;
-	quat.z() = 0.383;
+	quat.z() = 0;*/
 
 	_Quat quatSwing_;
 	_Quat quatTwist_;
