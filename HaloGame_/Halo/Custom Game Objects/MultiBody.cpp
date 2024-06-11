@@ -12,11 +12,11 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
 	//UnitTest1(); //test swing twist decomposition with rotaion matrix
-	//UnitTest2(); //test extreme case for twist with single body
+	UnitTest2(); //test extreme case for twist with single body
 	//UnitTest3();//twist invariance for two bodies
 	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
 	//UnitTest5();//test induced twist for single body
-	UnitTest6();//twist invariance for single body
+	//UnitTest6();//twist invariance for single body
 	//UnitTest7();//test swing twist decomp with quat
 	//UnitTest8(); //mujoco ball joint constraint test for single body
 	
@@ -802,6 +802,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				twistAngle = twistVec.norm();
 				_Vector3 swingVec = Math::RotationConversion_QuatToVec(swingComponent);
 				swingAngle = swingVec.norm();
+				std::cout << "twist: " << twistAngle << ", swing: " << swingAngle << std::endl;
 			}
 			
 			if (jointRange[i].first > 0 && jointRange[i].first - swingAngle < 0)//check swing constraint
@@ -831,7 +832,6 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			{
 				_Vector3 rotVec = Math::RotationConversion_QuatToVec(rel_ori[i]);
 				_Scalar rotAngle = rotVec.norm();
-				std::cout << rotAngle << std::endl;
 				if (jointLimit[i] - rotAngle < 0)
 				{
 					jointsID.push_back(i);
@@ -873,7 +873,7 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 					J.block<1, 3>(k, velStartIndex[i]) = _Vector3(j0, j1, j2);
 
 					//compute K
-					_Vector3 pRotated = R_local[i] * p;
+ 					_Vector3 pRotated = R_local[i] * p;
 					_Scalar cTest = ComputeAngularVelocityConstraint(pRotated, R_local[i], limitType[k], jointRange[i].second);
 					if (cTest < 0)
 					{

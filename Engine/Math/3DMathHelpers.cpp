@@ -338,7 +338,7 @@ namespace eae6320
 			Vector3d twistAxis = i_twistAxis.normalized();
 			double pValue = r.dot(twistAxis);
 			Vector3d p = pValue * twistAxis;
-			if (i_Rot.w() <= std::numeric_limits<double>::epsilon())
+			if (abs(i_Rot.w()) <= std::numeric_limits<double>::epsilon())
 			{
 				Quaterniond twist;
 				twist.setIdentity();

@@ -97,13 +97,13 @@ void eae6320::MultiBody::UnitTest2()
 
 	SetZeroInitialCondition();
 	int jointID = 0;
-	qdot.segment(velStartIndex[jointID], 3) = _Vector3(-2.0, 2.0, 0.0);
+	qdot.segment(velStartIndex[jointID], 3) = _Vector3(-2.0, 0.0, 0.0);
 
 	Forward();
 
-	//jointRange[0].first = 0.99 * M_PI;//swing
+	jointRange[0].first = 0.5 * M_PI;//swing
 	//jointRange[0].second = 0.5 * M_PI;//twist
-	jointLimit[0] = M_PI;
+	//jointLimit[0] = 0.5 * M_PI;
 }
 
 void eae6320::MultiBody::UnitTest5()
