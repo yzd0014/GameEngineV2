@@ -355,7 +355,7 @@ void eae6320::MultiBody::ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h)
 		J.resize(constraintNum, totalVelDOF);
 		J.setZero();
 
-		{
+		/*{
 			_Matrix3 R_swing;
 			_Matrix3 R_twist;
 			_Vector3 twistAxis(0, -1, 0);
@@ -363,7 +363,7 @@ void eae6320::MultiBody::ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h)
 			_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
 			_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
 			std::cout << "twist: " << vec_twist.norm() << ", swing: " << vec_swing.norm() << std::endl;
-		}
+		}*/
 
 		int iterationNum = 1;
 		for (int i = 0; i < iterationNum; i++)
