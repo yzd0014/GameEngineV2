@@ -291,7 +291,7 @@ void eae6320::MultiBody::ResolveSwingLimit(const _Scalar h)
 		_Vector bias;
 		bias.resize(constraintNum);
 		bias.setZero();
-		for (int i = 0; i < constraintNum; i++)
+		for (size_t i = 0; i < constraintNum; i++)
 		{
 			int joint_id = jointsID[i];
 
@@ -336,7 +336,7 @@ void eae6320::MultiBody::ResolveSwingLimit(const _Scalar h)
 		lambda = (J * MrInverse * K.transpose()).inverse() * (-J * qdot - bias);
 		//std::cout << lambda.transpose() << std::endl;
 
-		for (int i = 0; i < constraintNum; i++)
+		for (size_t i = 0; i < constraintNum; i++)
 		{
 			if (lambda(i, 0) < 0) lambda(i, 0) = 0;
 		}
@@ -558,7 +558,7 @@ void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 		_Vector bias;
 		bias.resize(constraintNum);
 		bias.setZero();
-		for (int k = 0; k < constraintNum; k++)
+		for (size_t k = 0; k < constraintNum; k++)
 		{
 			int i = jointsID[k];
 
@@ -625,7 +625,7 @@ void eae6320::MultiBody::ResolveTwistLimit(const _Scalar h)
 		lambda = (J * MrInverse * K.transpose()).inverse() * (-J * qdot - bias);
 		//lambda = (J * J.transpose()).inverse() * (-J * qdot - bias);
 
-		for (int i = 0; i < constraintNum; i++)
+		for (size_t i = 0; i < constraintNum; i++)
 		{
 			if (lambda(i, 0) < 0) 
 			{ 

@@ -42,7 +42,7 @@ namespace eae6320 {
 				}
 			}
 			
-			int noColliderCounts = static_cast<int>(i_noColliderObjects.size());
+			size_t noColliderCounts = static_cast<int>(i_noColliderObjects.size());
 			for (size_t i = 0; i < noColliderCounts; i++)
 			{
 				if (i_noColliderObjects[i]->m_State.hasGravity && !i_noColliderObjects[i]->m_State.isStatic)

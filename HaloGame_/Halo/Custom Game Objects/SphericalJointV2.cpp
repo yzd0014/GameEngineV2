@@ -354,7 +354,7 @@ void eae6320::SphericalJointV2::ComputeGamma(std::vector<Vector3f>& i_R_dot, std
 void eae6320::SphericalJointV2::ForwardKinematics()
 {
 	Vector3f preAnchor(0.0f, 0.0f, 0.0f);
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		if (rotationMode == V2_MUJOCO_MODE)
 		{
@@ -395,7 +395,7 @@ void eae6320::SphericalJointV2::ForwardKinematics()
 
 void eae6320::SphericalJointV2::Compute_abc()
 {
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		//update a b c
 		float theta = R[i].norm();

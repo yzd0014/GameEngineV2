@@ -41,7 +41,7 @@ void eae6320::MultiBody::SetZeroInitialCondition()
 
 void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 {
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		jointType[i] = i_jointType[i];
 		if (jointType[i] == BALL_JOINT_3D)
@@ -111,7 +111,7 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, _Matrix3
 	velStartIndex.resize(numOfLinks);
 	jointLimit.resize(numOfLinks);
 	jointRange.resize(numOfLinks);
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
 		w_rel_world[i].setZero();
@@ -178,7 +178,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 
 void eae6320::MultiBody::ClampRotationVector()
 {
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		if (jointType[i] == BALL_JOINT_3D)
 		{
@@ -333,7 +333,7 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 
 void eae6320::MultiBody::ComputeH(_Vector& i_q)
 {
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		//compute H
 		if (jointType[i] == BALL_JOINT_4D)
@@ -378,7 +378,7 @@ void eae6320::MultiBody::ComputeH(_Vector& i_q)
 
 void eae6320::MultiBody::ComputeD()
 {
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		if (jointType[i] == BALL_JOINT_3D || jointType[i] == BALL_JOINT_4D)
 		{
@@ -403,17 +403,17 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 	ComputeH(i_q);
 	ComputeD();
 	
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		//compose Ht
 		Ht[i].resize(6, totalVelDOF);
 		Ht[i].setZero();
-		for (size_t k = 0; k <= i; k++)
+		for (int k = 0; k <= i; k++)
 		{
 			_Matrix H_temp;
 			H_temp.resize(6, 3);
 			H_temp = H[k];
-			for (size_t j = k + 1; j <= i; j++)
+			for (int j = k + 1; j <= i; j++)
 			{
 				H_temp = D[j] * H_temp;
 			}
@@ -477,7 +477,7 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 {	
 	std::vector<_Vector> gamma;
 	gamma.resize(numOfLinks);
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		if (jointType[i] == BALL_JOINT_4D)
 		{
@@ -545,16 +545,16 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 	}
 
 	o_gamma_t.resize(numOfLinks);
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		o_gamma_t[i].resize(6);
 		o_gamma_t[i].setZero();
-		for (size_t j = 0; j <= i; j++)
+		for (int j = 0; j <= i; j++)
 		{
 			_Vector gamma_temp;
 			gamma_temp.resize(6);
 			gamma_temp = gamma[j];
-			for (size_t k = j + 1; k <= i; k++)
+			for (int k = j + 1; k <= i; k++)
 			{
 				gamma_temp = D[k] * gamma_temp;
 			}
@@ -576,7 +576,7 @@ void eae6320::MultiBody::ForwardAngularAndTranslationalVelocity(_Vector& i_qdot)
 
 void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat)
 {
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		//update orientation
 		if (jointType[i] == BALL_JOINT_4D)
@@ -637,7 +637,7 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 	_Vector3 preAnchor;
 	Math::NativeVector2EigenVector(m_State.position, preAnchor);
 	jointPos[0] = preAnchor;
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		//update position
 		if (jointType[i] == BALL_JOINT_3D || jointType[i] == BALL_JOINT_4D)
@@ -857,7 +857,7 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 		_Vector bias;
 		bias.resize(constraintNum);
 		bias.setZero();
-		for (int k = 0; k < constraintNum; k++)
+		for (size_t k = 0; k < constraintNum; k++)
 		{
 			int i = jointsID[k];
 			//compute J and K
@@ -917,7 +917,7 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 		}
 		_Matrix lambda;
 		lambda = (J * MrInverse * K.transpose()).inverse() * (-J * qdot - bias);
-		for (int k = 0; k < constraintNum; k++)
+		for (size_t k = 0; k < constraintNum; k++)
 		{
 			if (lambda(k, 0) < 0)
 			{

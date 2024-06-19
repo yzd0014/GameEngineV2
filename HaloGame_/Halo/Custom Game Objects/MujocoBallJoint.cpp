@@ -14,7 +14,7 @@ eae6320::MujocoBallJoint::MujocoBallJoint(Effect * i_pEffect, Assets::cHandle<Me
 	M_ds.resize(numOfLinks);
 	localInertiaTensors.resize(numOfLinks);
 	m_orientations.resize(numOfLinks);
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		w_global[i].setZero();
 		m_orientations[i].setIdentity();
@@ -61,7 +61,7 @@ void eae6320::MujocoBallJoint::Tick(const double i_secondCountToIntegrate)
 	std::vector<VectorXf> gamma;
 	gamma.resize(numOfLinks);
 
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		//compute H
 		H[i].resize(6, 3);
@@ -94,17 +94,17 @@ void eae6320::MujocoBallJoint::Tick(const double i_secondCountToIntegrate)
 	H_t.resize(numOfLinks);
 	std::vector<VectorXf> gamma_t;
 	gamma_t.resize(numOfLinks);
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		//compose Ht
 		H_t[i].resize(6, 3 * numOfLinks);
 		H_t[i].setZero();
-		for (size_t k = 0; k <= i; k++)
+		for (int k = 0; k <= i; k++)
 		{
 			MatrixXf H_temp;
 			H_temp.resize(6, 3);
 			H_temp = H[k];
-			for (size_t j = k + 1; j <= i; j++)
+			for (int j = k + 1; j <= i; j++)
 			{
 				H_temp = D[j] * H_temp;
 			}
@@ -114,12 +114,12 @@ void eae6320::MujocoBallJoint::Tick(const double i_secondCountToIntegrate)
 		//compose gamma_t
 		gamma_t[i].resize(6);
 		gamma_t[i].setZero();
-		for (size_t j = 0; j <= i; j++)
+		for (int j = 0; j <= i; j++)
 		{
 			VectorXf gamma_temp;
 			gamma_temp.resize(6);
 			gamma_temp = gamma[j];
-			for (size_t k = j + 1; k <= i; k++)
+			for (int k = j + 1; k <= i; k++)
 			{
 				gamma_temp = D[k] * gamma_temp;
 			}
@@ -155,7 +155,7 @@ void eae6320::MujocoBallJoint::Tick(const double i_secondCountToIntegrate)
 	/**********************************************************************************************************/
 	VectorXf w_rdot = M_r.inverse() * Q_r;
 	w_r = w_r + w_rdot * dt;
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		if (i == 0)
 		{
@@ -176,7 +176,7 @@ void eae6320::MujocoBallJoint::Tick(const double i_secondCountToIntegrate)
 void eae6320::MujocoBallJoint::ForwardKinematics()
 {
 	Vector3f preAnchor(0.0f, 0.0f, 0.0f);
-	for (size_t i = 0; i < numOfLinks; i++)
+	for (int i = 0; i < numOfLinks; i++)
 	{
 		Matrix3f R_global = m_orientations[i].toRotationMatrix();
 		

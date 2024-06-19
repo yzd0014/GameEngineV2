@@ -37,8 +37,6 @@
     <ClInclude Include="Custom Game Objects\HomingCube.h" />
     <ClInclude Include="Custom Game Objects\MPM.h" />
     <ClInclude Include="Custom Game Objects\MujocoBallJoint.h" />
-    <ClInclude Include="Custom Game Objects\MultiBody.h" />
-    <ClInclude Include="Custom Game Objects\MultiBodyTypeDefine.h" />
     <ClInclude Include="Custom Game Objects\Player.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -69,8 +67,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Custom Game Objects\MujocoBallJoint.cpp" />
-    <ClCompile Include="Custom Game Objects\MultiBody.cpp" />
-    <ClCompile Include="Custom Game Objects\MultiBodyExperimental.cpp" />
     <ClCompile Include="Custom Game Objects\Player.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -78,7 +74,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Custom Game Objects\SphericalJointV2.cpp" />
-    <ClCompile Include="Custom Game Objects\MultiBodyUnitTest.cpp" />
     <ClCompile Include="EntryPoint.cpp" />
   </ItemGroup>
   <ItemGroup>
