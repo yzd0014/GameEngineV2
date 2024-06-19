@@ -109,6 +109,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ClothSim", "HaloGame_\Cloth
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SoftbodySim", "HaloGame_\SoftbodySim\SoftbodySim.vcxproj", "{16838C60-2832-4F68-9717-E44EC44C7F4D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BallJointSim", "HaloGame_\BallJointSim\BallJointSim.vcxproj", "{616E7929-1937-4FD9-A62F-9FEF8A17882D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -397,6 +399,14 @@ Global
 		{16838C60-2832-4F68-9717-E44EC44C7F4D}.Release|x64.Build.0 = Release|x64
 		{16838C60-2832-4F68-9717-E44EC44C7F4D}.Release|x86.ActiveCfg = Release|Win32
 		{16838C60-2832-4F68-9717-E44EC44C7F4D}.Release|x86.Build.0 = Release|Win32
+		{616E7929-1937-4FD9-A62F-9FEF8A17882D}.Debug|x64.ActiveCfg = Debug|x64
+		{616E7929-1937-4FD9-A62F-9FEF8A17882D}.Debug|x64.Build.0 = Debug|x64
+		{616E7929-1937-4FD9-A62F-9FEF8A17882D}.Debug|x86.ActiveCfg = Debug|Win32
+		{616E7929-1937-4FD9-A62F-9FEF8A17882D}.Debug|x86.Build.0 = Debug|Win32
+		{616E7929-1937-4FD9-A62F-9FEF8A17882D}.Release|x64.ActiveCfg = Release|x64
+		{616E7929-1937-4FD9-A62F-9FEF8A17882D}.Release|x64.Build.0 = Release|x64
+		{616E7929-1937-4FD9-A62F-9FEF8A17882D}.Release|x86.ActiveCfg = Release|Win32
+		{616E7929-1937-4FD9-A62F-9FEF8A17882D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -438,6 +448,7 @@ Global
 		{3BFFCDCE-1E95-4FB0-B88E-772E0B3893E1} = {21313184-4A24-4F59-9A74-9E205A37191B}
 		{C1FB13D5-14EF-4454-B8DC-E5BC3CD23D3B} = {21313184-4A24-4F59-9A74-9E205A37191B}
 		{16838C60-2832-4F68-9717-E44EC44C7F4D} = {21313184-4A24-4F59-9A74-9E205A37191B}
+		{616E7929-1937-4FD9-A62F-9FEF8A17882D} = {21313184-4A24-4F59-9A74-9E205A37191B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A89F366F-0B7F-464F-90A8-A4828B273298}
