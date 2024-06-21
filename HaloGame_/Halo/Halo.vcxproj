@@ -46,6 +46,7 @@
     <ClInclude Include="Custom Game Objects\SphericalJoint.h" />
     <ClInclude Include="Custom Game Objects\SphericalJointV2.h" />
     <ClInclude Include="Custom Game Objects\Tri.h" />
+    <ClInclude Include="MyActor.h" />
     <ClInclude Include="Resource Files\Resource.h" />
     <ClInclude Include="Resource Files\targetver.h" />
   </ItemGroup>
@@ -75,6 +76,7 @@
     </ClCompile>
     <ClCompile Include="Custom Game Objects\SphericalJointV2.cpp" />
     <ClCompile Include="EntryPoint.cpp" />
+    <ClCompile Include="MyActor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Engine\Application\Application.vcxproj">

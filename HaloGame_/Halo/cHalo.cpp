@@ -18,10 +18,8 @@
 #include "Engine/Physics/PhysicsSimulation.h"
 #include "Engine/GameCommon/Ground.h"
 #include "Engine/Profiling/Profiling.h"
-#include "Halo/Custom Game Objects/HingeJointCube.h"
-#include "Halo/Custom Game Objects/SphericalJoint.h"
-#include "Halo/Custom Game Objects/MujocoBallJoint.h"
-#include "Halo/Custom Game Objects/SphericalJointV2.h"
+#include "Engine/GameCommon/GameplayUtility.h"
+#include "MyActor.h"
 // Inherited Implementation
 //=========================
 
@@ -44,11 +42,15 @@ void eae6320::cHalo::UpdateBasedOnInput()
 
 eae6320::cResult eae6320::cHalo::Initialize()
 {
-	GameplayUtility::DrawXYZCoordinate(Vector3d(0, -8, 0));
+	GameplayUtility::DrawXYZCoordinate(Vector3d(0, -5, 0));
 	//initialize camera 
 	mainCamera.Initialize(Math::sVector(0.0f, 5.0f, 12.5f), Math::sVector(-30.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
-	//mainCamera.Initialize(Math::sVector(5.0f, 10.0f, 15.0f), Math::sVector(-30.0f, 20.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
-
+	//starting mesh indexing is 1
+	LOAD_MESH("data/meshes/square_plane.mesh", mesh_plane)
+	{
+		Physics::sRigidBodyState objState(Math::sVector(0.0f, -5.0f, 0.0f));
+		MyActor* pMyActor = new MyActor(defaultEffect, mesh_plane, objState);
+	}
 	return Results::Success;
 }
 
