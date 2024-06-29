@@ -38,6 +38,11 @@ namespace eae6320
 
 		GameCommon::GameObject* DrawArrow(Vector3d startPoint, Vector3d dir, Math::sVector color, double scaling)
 		{
+			return DrawArrowScaled(startPoint, dir, color, Vector3d(scaling, scaling, scaling));
+		}
+
+		GameCommon::GameObject* DrawArrowScaled(Vector3d startPoint, Vector3d dir, Math::sVector color, Vector3d scaling)
+		{
 			//get arrow transform
 			dir.normalize();
 			Vector3d defaultDir(0, 1, 0);
@@ -53,10 +58,12 @@ namespace eae6320
 				rotMatEigen.setIdentity();
 			}
 			Matrix3d scaleMatEigen;
-			scaleMatEigen.setIdentity();
-			scaleMatEigen = scaling * scaleMatEigen;
+			scaleMatEigen.setZero();
+			scaleMatEigen(0, 0) = scaling(0);
+			scaleMatEigen(1, 1) = scaling(1);
+			scaleMatEigen(2, 2) = scaling(2);
 			Matrix3d transformEigen = rotMatEigen * scaleMatEigen;
-			
+
 			Math::cMatrix_transformation transformTotal;
 			Math::EigenMatrix2NativeMatrix(transformEigen, transformTotal);
 			transformTotal.m_03 = static_cast<float>(startPoint(0));
