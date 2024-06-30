@@ -5,6 +5,14 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="OpenGL_Debug|Win32">
+      <Configuration>OpenGL_Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="OpenGL_Debug|x64">
+      <Configuration>OpenGL_Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="OpenGL_Release|Win32">
       <Configuration>OpenGL_Release</Configuration>
       <Platform>Win32</Platform>
@@ -39,6 +47,12 @@
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -54,6 +68,12 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
@@ -84,6 +104,12 @@
     <Import Project="..\..\Engine\OpenGL.props" />
     <Import Project="..\Halo.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Engine\EngineDefaults.props" />
+    <Import Project="..\..\Engine\OpenGL.props" />
+    <Import Project="..\Halo.props" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\Engine\EngineDefaults.props" />
@@ -97,6 +123,12 @@
     <Import Project="..\Halo.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Engine\EngineDefaults.props" />
+    <Import Project="..\..\Engine\Direct3D.props" />
+    <Import Project="..\Halo.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\Engine\EngineDefaults.props" />
     <Import Project="..\..\Engine\Direct3D.props" />
@@ -135,7 +167,45 @@
       </Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>
+      </Message>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Outputs>
+      </Outputs>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>
+      </Message>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Outputs>
+      </Outputs>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
@@ -258,21 +328,27 @@
     <CustomBuild Include="..\Content\AssetsToBuild.lua">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(OutputDir)AssetBuildExe.exe" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|Win32'">"$(OutputDir)AssetBuildExe.exe" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(OutputDir)AssetBuildExe.exe" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='OpenGL_Release|Win32'">"$(OutputDir)AssetBuildExe.exe" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(OutputDir)AssetBuildExe.exe" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'">"$(OutputDir)AssetBuildExe.exe" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(OutputDir)AssetBuildExe.exe" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='OpenGL_Release|x64'">"$(OutputDir)AssetBuildExe.exe" "%(Identity)"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building $(GameName) Assets</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|Win32'">Building $(GameName) Assets</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building $(GameName) Assets</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='OpenGL_Release|Win32'">Building $(GameName) Assets</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building $(GameName) Assets</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'">Building $(GameName) Assets</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building $(GameName) Assets</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='OpenGL_Release|x64'">Building $(GameName) Assets</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ALWAYS_RUN</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|Win32'">ALWAYS_RUN</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">ALWAYS_RUN</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='OpenGL_Release|Win32'">ALWAYS_RUN</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ALWAYS_RUN</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'">ALWAYS_RUN</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ALWAYS_RUN</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='OpenGL_Release|x64'">ALWAYS_RUN</Outputs>
     </CustomBuild>

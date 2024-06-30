@@ -5,6 +5,14 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="OpenGL_Debug|Win32">
+      <Configuration>OpenGL_Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="OpenGL_Debug|x64">
+      <Configuration>OpenGL_Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="OpenGL_Release|Win32">
       <Configuration>OpenGL_Release</Configuration>
       <Platform>Win32</Platform>
@@ -58,8 +66,11 @@
   <ItemGroup>
     <CustomBuild Include="5.3.4\License.txt">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">copy "%(FullPath)" "$(LicenseDir)Lua%(Extension)" /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|Win32'">copy "%(FullPath)" "$(LicenseDir)Lua%(Extension)" /y</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Copying Lua license</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|Win32'">Copying Lua license</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(LicenseDir)Lua%(Extension)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|Win32'">$(LicenseDir)Lua%(Extension)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">copy "%(FullPath)" "$(LicenseDir)Lua%(Extension)" /y</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='OpenGL_Release|Win32'">copy "%(FullPath)" "$(LicenseDir)Lua%(Extension)" /y</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Copying Lua license</Message>
@@ -67,8 +78,11 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(LicenseDir)Lua%(Extension)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='OpenGL_Release|Win32'">$(LicenseDir)Lua%(Extension)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">copy "%(FullPath)" "$(LicenseDir)Lua%(Extension)" /y</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'">copy "%(FullPath)" "$(LicenseDir)Lua%(Extension)" /y</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Copying Lua license</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'">Copying Lua license</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(LicenseDir)Lua%(Extension)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'">$(LicenseDir)Lua%(Extension)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">copy "%(FullPath)" "$(LicenseDir)Lua%(Extension)" /y</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='OpenGL_Release|x64'">copy "%(FullPath)" "$(LicenseDir)Lua%(Extension)" /y</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Copying Lua license</Message>
@@ -126,6 +140,12 @@
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -141,6 +161,12 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
@@ -170,6 +196,11 @@
     <Import Project="..\..\Engine\EngineDefaults.props" />
     <Import Project="..\..\Engine\OpenGL.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Engine\EngineDefaults.props" />
+    <Import Project="..\..\Engine\OpenGL.props" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\Engine\EngineDefaults.props" />
@@ -181,6 +212,11 @@
     <Import Project="..\..\Engine\OpenGL.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Engine\EngineDefaults.props" />
+    <Import Project="..\..\Engine\Direct3D.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\Engine\EngineDefaults.props" />
     <Import Project="..\..\Engine\Direct3D.props" />
@@ -209,7 +245,31 @@
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
