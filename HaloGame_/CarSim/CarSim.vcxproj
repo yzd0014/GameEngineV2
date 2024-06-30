@@ -132,7 +132,7 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\Engine\EngineDefaults.props" />
-    <Import Project="..\..\Engine\Direct3D.props" />
+    <Import Project="..\..\Engine\OpenGL.props" />
     <Import Project="..\Halo.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -144,7 +144,7 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='OpenGL_Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\Engine\EngineDefaults.props" />
-    <Import Project="..\..\Engine\Direct3D.props" />
+    <Import Project="..\..\Engine\OpenGL.props" />
     <Import Project="..\Halo.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />

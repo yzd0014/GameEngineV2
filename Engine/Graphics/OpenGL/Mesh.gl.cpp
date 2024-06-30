@@ -84,7 +84,12 @@ eae6320::cResult Mesh::InitializeGeometry(uint16_t i_vertexCount, uint16_t i_ind
 	// Assign the data to the buffer
 	{
 		const auto bufferSize = i_vertexCount * sizeof(*i_vertexData);
+#ifdef _WIN64
+		EAE6320_ASSERT(bufferSize < (uint64_t(1u) << (sizeof(GLsizeiptr) * 4)));
+#else
 		EAE6320_ASSERT(bufferSize < (uint64_t(1u) << (sizeof(GLsizeiptr) * 8)));
+#endif
+		//EAE6320_ASSERT(bufferSize < (uint64_t(1u) << 8));
 		glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(bufferSize), reinterpret_cast<GLvoid*>(i_vertexData),
 			// In our class we won't ever read from the buffer
 			GL_DYNAMIC_DRAW);
@@ -129,7 +134,11 @@ eae6320::cResult Mesh::InitializeGeometry(uint16_t i_vertexCount, uint16_t i_ind
 	{
 		m_numberOfIndices = i_indexCount;
 		const auto bufferSize = i_indexCount * sizeof(uint16_t);
+#ifdef _WIN64
+		EAE6320_ASSERT(bufferSize < (uint64_t(1u) << (sizeof(GLsizeiptr) * 4)));
+#else
 		EAE6320_ASSERT(bufferSize < (uint64_t(1u) << (sizeof(GLsizeiptr) * 8)));
+#endif
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(bufferSize), reinterpret_cast<GLvoid*>(i_indexData),
 			// In our class we won't ever read from the buffer
 			GL_STATIC_DRAW);
