@@ -31,8 +31,8 @@ eae6320::MyActor::MyActor(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Phys
 			twistAxisWorld = R * twistAxis0;
 			Vector3d x0World = R * x0;
 			Vector3d z0World = R * z0;
-			GameplayUtility::DrawArrow(twistAxisWorld * rigidBodyScale, x0World, Math::sVector(1, 0, 0), 0.05);
-			GameplayUtility::DrawArrow(twistAxisWorld * rigidBodyScale, z0World, Math::sVector(0, 0, 1), 0.05);
+			GameplayUtility::DrawArrowScaled(twistAxisWorld * rigidBodyScale, x0World, Math::sVector(1, 0, 0), Vector3d(0.05, 0.1, 0.05));
+			GameplayUtility::DrawArrowScaled(twistAxisWorld * rigidBodyScale, z0World, Math::sVector(0, 0, 1), Vector3d(0.05, 0.1, 0.05));
 		}
 	}
 	
