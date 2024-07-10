@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include "sVector.h"
 #include "cQuaternion.h"
 #include "cMatrix_transformation.h"
@@ -179,4 +180,16 @@ inline Quaterniond operator+(const Quaterniond& lhs, const Quaterniond& rhs)
 {
 	Quaterniond out(lhs.w() + rhs.w(), lhs.x() + rhs.x(), lhs.y() + rhs.y(), lhs.z() + rhs.z());
 	return out;
-} 
+}
+
+inline std::ostream& operator<<(std::ostream& out, Quaterniond i_quat)
+{
+	out << i_quat.w() << ", " << i_quat.x() << ", " << i_quat.y() << ", " << i_quat.z();
+	return out;
+}
+
+inline std::ostream& operator<<(std::ostream& out, Quaternionf i_quat)
+{
+	out << i_quat.w() << ", " << i_quat.x() << ", " << i_quat.y() << ", " << i_quat.z();
+	return out;
+}
