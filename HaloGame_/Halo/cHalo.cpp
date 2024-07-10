@@ -47,9 +47,15 @@ eae6320::cResult eae6320::cHalo::Initialize()
 	mainCamera.Initialize(Math::sVector(0.0f, 5.0f, 12.5f), Math::sVector(-30.0f, 0.0f, 0.0f), Math::ConvertDegreesToRadians(45), 1.0f, 0.1f, 500.0f);
 	//starting mesh indexing is 1
 	LOAD_MESH("data/meshes/square_plane.mesh", mesh_plane)
+	LOAD_MESH("data/meshes/sphere4.mesh", mesh_sphere)
 	{
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, -5.0f, 0.0f));
 		MyActor* pMyActor = new MyActor(defaultEffect, mesh_plane, objState);
+	}
+	{
+		GameCommon::GameObject* pGameObject = new GameCommon::GameObject(defaultEffect, mesh_sphere, Physics::sRigidBodyState());
+		double s = 0.523;
+		pGameObject->scale = Vector3d(s, s, s);
 	}
 	return Results::Success;
 }

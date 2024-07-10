@@ -179,4 +179,4 @@ inline Quaterniond operator+(const Quaterniond& lhs, const Quaterniond& rhs)
 {
 	Quaterniond out(lhs.w() + rhs.w(), lhs.x() + rhs.x(), lhs.y() + rhs.y(), lhs.z() + rhs.z());
 	return out;
-}
+} 

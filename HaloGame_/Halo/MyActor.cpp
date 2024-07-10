@@ -67,7 +67,6 @@ eae6320::MyActor::MyActor(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Phys
 			GameplayUtility::DrawArrowScaled(twistAxisWorld * rigidBodyScale, newVec, Math::sVector(0, 1, 1), Vector3d(0.05, 0.05, 0.05));
 		}
 	}
-	
 }
 
 void eae6320::MyActor::Tick(const double i_secondCountToIntegrate)

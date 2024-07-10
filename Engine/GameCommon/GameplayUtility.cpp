@@ -3,6 +3,8 @@
 #include "Engine/Application/cbApplication.h"
 #include "Camera.h"
 #include "GameplayUtility.h"
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include <cmath>
 #include "Engine/Math/3DMathHelpers.h"
 #include "Engine/Math/EigenHelper.h"
@@ -49,9 +51,14 @@ namespace eae6320
 			double rotAngle = Math::GetAngleBetweenTwoVectors(defaultDir, dir);
 			Vector3d rotVec = defaultDir.cross(dir);
 			Matrix3d rotMatEigen;
-			if (rotAngle > 0.000001)
+			double eps = 0.000001;
+			if (rotAngle > eps && rotAngle < M_PI - eps)
 			{
 				rotMatEigen = AngleAxisd(rotAngle, rotVec.normalized());
+			}
+			else if (rotAngle > M_PI - eps)
+			{
+				rotMatEigen = AngleAxisd(M_PI, Vector3d(0, 0, 1));
 			}
 			else
 			{
