@@ -12,10 +12,29 @@ eae6320::MyActor::MyActor(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Phys
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
 	GameplayUtility::DrawArrow(Vector3d(0, 0, 0), Vector3d(0, -1, 0), Math::sVector(1, 0, 0), 0.9);
-	twistAxis0 = Vector3d(0, -1, 0);
-	twistAxis1 = Vector3d(0, 1, 0);
-	x0 = Vector3d(1, 0, 0);
-	z0 = Vector3d(0, 0, 1);
+	GameplayUtility::DrawArrow(Vector3d(0, 0, 0), Vector3d(1, 0, 0), Math::sVector(0, 1, 0), 0.9);
+	twistAxis = Vector3d(0, -1, 0);
+	x = Vector3d(1, 0, 0);
+	z = Vector3d(0, 0, 1);
+
+	lambda.resize(n);
+	targetAngle.resize(n);
+	targetAngle(0) = 0;
+	targetAngle(1) = M_PI;
+	normals.resize(n);
+	normals[0] = Vector3d(1, 0, 0);
+	normals[1] = Vector3d(-1, 0, 0);
+	
+	MatrixXd A;
+	A.resize(n, n);
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			A(i, j) = normals[i].dot(normals[j]) + 1;
+		}
+	}
+	lambda = A.inverse() * targetAngle;
 
 	Vector3d twistAxisWorld;
 	Matrix3d Ry;
@@ -28,11 +47,22 @@ eae6320::MyActor::MyActor(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Phys
 			r0 = Vector3d(-angleUpDown, 0, 0);
 			r0 = Ry * r0;
 			Matrix3d R = Math::RotationConversion_VecToMatrix(r0);
-			twistAxisWorld = R * twistAxis0;
-			Vector3d x0World = R * x0;
-			Vector3d z0World = R * z0;
-			GameplayUtility::DrawArrowScaled(twistAxisWorld * rigidBodyScale, x0World, Math::sVector(1, 0, 0), Vector3d(0.05, 0.1, 0.05));
-			GameplayUtility::DrawArrowScaled(twistAxisWorld * rigidBodyScale, z0World, Math::sVector(0, 0, 1), Vector3d(0.05, 0.1, 0.05));
+			twistAxisWorld = R * twistAxis;
+			
+			double angleOffset = 0;
+			for (int i = 0; i < n; i++)
+			{
+				angleOffset += lambda(i) * (twistAxisWorld.dot(normals[i]) + 1);
+			}
+			
+			Vector3d xWorld = R * x;
+			Vector3d zWorld = R * z;
+			Vector3d newVec;
+			newVec = sin(angleOffset) * zWorld + cos(angleOffset) * xWorld;
+
+			GameplayUtility::DrawArrowScaled(twistAxisWorld * rigidBodyScale, xWorld, Math::sVector(1, 0, 0), Vector3d(0.05, 0.1, 0.05));
+			//GameplayUtility::DrawArrowScaled(twistAxisWorld * rigidBodyScale, zWorld, Math::sVector(0, 0, 1), Vector3d(0.05, 0.1, 0.05));
+			GameplayUtility::DrawArrowScaled(twistAxisWorld * rigidBodyScale, newVec, Math::sVector(0, 1, 1), Vector3d(0.05, 0.1, 0.05));
 		}
 	}
 	

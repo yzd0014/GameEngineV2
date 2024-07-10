@@ -15,15 +15,20 @@ namespace eae6320
 		void Tick(const double i_secondCountToIntegrate) override;
 
 	private:
-		Vector3d twistAxis0;
-		Vector3d twistAxis1;
-		Vector3d x0;
-		Vector3d z0;
+		VectorXd lambda;
+		VectorXd targetAngle;
+		std::vector<Vector3d> normals;
+
+		Vector3d twistAxis;
+		Vector3d x;
+		Vector3d z;
 		
 		double angleUpDown = 0;
 		double angleLeftRight = 0;
 		double rigidBodyScale = 2;
 		GameObject* xArrow = nullptr;
 		GameObject* zArrow = nullptr;
+
+		int n = 2;
 	};
 }
