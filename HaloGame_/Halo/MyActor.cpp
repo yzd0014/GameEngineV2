@@ -19,10 +19,10 @@ eae6320::MyActor::MyActor(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Phys
 
 	Vector3d twistAxisWorld;
 	Matrix3d Ry;
-	for (angleLeftRight = 0; angleLeftRight <= M_PI; angleLeftRight += M_PI * 0.1)
+	for (angleLeftRight = 0; angleLeftRight <= 2 * M_PI; angleLeftRight += M_PI * 0.1)
 	{
 		Ry = Math::RotationConversion_VecToMatrix(Vector3d(0, angleLeftRight, 0));
-		for (angleUpDown = 0; angleUpDown <= 2 * M_PI; angleUpDown += M_PI * 0.1)
+		for (angleUpDown = 0; angleUpDown <= 0.91 * M_PI; angleUpDown += M_PI * 0.1)
 		{
 			Vector3d r0;
 			r0 = Vector3d(-angleUpDown, 0, 0);
