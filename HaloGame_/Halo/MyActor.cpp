@@ -21,9 +21,11 @@ eae6320::MyActor::MyActor(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Phys
 	targetAngle.resize(n);
 	targetAngle(0) = 0;
 	targetAngle(1) = M_PI;
+	//targetAngle(2) = 1.5 * M_PI;
 	normals.resize(n);
 	normals[0] = Vector3d(1, 0, 0);
 	normals[1] = Vector3d(-1, 0, 0);
+	//normals[2] = Vector3d(0, 0, -1);
 	
 	MatrixXd A;
 	A.resize(n, n);
@@ -70,51 +72,5 @@ eae6320::MyActor::MyActor(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Phys
 
 void eae6320::MyActor::Tick(const double i_secondCountToIntegrate)
 {
-	/*if (UserInput::KeyState::currFrameKeyState['F']) angleUpDown += i_secondCountToIntegrate;
-	if (UserInput::KeyState::currFrameKeyState['R']) angleLeftRight += i_secondCountToIntegrate;
-	if (angleUpDown > 2 * M_PI) angleUpDown = 0;
-	if (angleLeftRight > 2 * M_PI) angleLeftRight = 0;
-
-	Vector3d twistAxisWorld;
-	Matrix3d Ry;
-	Ry = Math::RotationConversion_VecToMatrix(Vector3d(0, angleLeftRight, 0));
-
-	Vector3d r0;
-	r0 = Vector3d(-angleUpDown, 0, 0);
-	r0 = Ry * r0;
-	Vector3d r1;
-	r1= Vector3d(M_PI - angleUpDown, 0, 0);
-	r1 = Ry * r1;
-	
-	Matrix3d R0 = Math::RotationConversion_VecToMatrix(r0);
-	Matrix3d R1 = Math::RotationConversion_VecToMatrix(r1);
-	
-	Matrix3d R;
-	if (angleUpDown < 0.5 * M_PI || angleUpDown > 1.5 * M_PI)
-	{
-		R = R0;
-		twistAxisWorld = R * twistAxis0;
-	}
-	else
-	{
-		R = R1;
-		twistAxisWorld = R * twistAxis1;
-	}
-
-	Vector3d x0World = R * x0;
-	Vector3d z0World = R * z0;
-	
-	if (xArrow != nullptr)
-	{
-		xArrow->DestroyGameObject();
-		xArrow = nullptr;
-	}
-	if (zArrow != nullptr)
-	{
-		zArrow->DestroyGameObject();
-		zArrow = nullptr;
-	}
-	xArrow = GameplayUtility::DrawArrow(twistAxisWorld * rigidBodyScale, x0World, Math::sVector(1, 0, 0), 0.5);
-	zArrow = GameplayUtility::DrawArrow(twistAxisWorld * rigidBodyScale, z0World, Math::sVector(0, 0, 1), 0.5);*/
 }
 
