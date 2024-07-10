@@ -22,6 +22,15 @@ namespace eae6320
 			return eae6320::Math::cQuaternion((float)i_quat.w(), (float)i_quat.x(), (float)i_quat.y(), (float)i_quat.z());
 		}
 
+		inline Quaterniond ConertNativeQuatToEigenQuatd(cQuaternion i_quat)
+		{
+			return Quaterniond(i_quat.w(), i_quat.x(), i_quat.y(), i_quat.z());
+		}
+		inline Quaternionf ConertNativeQuatToEigenQuatf(cQuaternion i_quat)
+		{
+			return Quaternionf(i_quat.w(), i_quat.x(), i_quat.y(), i_quat.z());
+		}
+
 		inline void QuatIntegrate(Quaternionf& io_quat, const Vector3f& vel, float dt)
 		{
 			Vector3f deltaRotVec;

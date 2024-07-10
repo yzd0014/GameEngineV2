@@ -13,6 +13,7 @@
 #include "Engine/UserInput/UserInput.h"
 #include "Engine/Physics/PhysicsSimulation.h"
 #include "Engine/GameCommon/GameplayUtility.h"
+#include "Engine/Math/EigenHelper.h"
 
 // Interface
 //==========
@@ -94,9 +95,27 @@ void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_e
 			orientation = noColliderObjects[i]->m_State.orientation;
 		}
 		//submit
-		if (noColliderObjects[i]->m_State.useTransform)
+		if (noColliderObjects[i]->scale(0) != 1 || noColliderObjects[i]->scale(1) != 1 || noColliderObjects[i]->scale(2) != 1)
 		{
-			eae6320::Graphics::SubmitObject(noColliderObjects[i]->m_color, noColliderObjects[i]->m_State.transform, noColliderObjects[i]->GetEffect(), Mesh::s_manager.Get(noColliderObjects[i]->GetMesh()));
+			Matrix3d scaleMatEigen;
+			scaleMatEigen.setZero();
+			scaleMatEigen(0, 0) = noColliderObjects[i]->scale(0);
+			scaleMatEigen(1, 1) = noColliderObjects[i]->scale(1);
+			scaleMatEigen(2, 2) = noColliderObjects[i]->scale(2);
+
+			Matrix3d rotMatEigen;
+			rotMatEigen = Math::RotationConversion_QuatToMat(Math::ConertNativeQuatToEigenQuatd(noColliderObjects[i]->m_State.orientation));
+
+			Matrix3d transformEigen;
+			transformEigen = rotMatEigen * scaleMatEigen;
+
+			Math::cMatrix_transformation transformTotal;
+			Math::EigenMatrix2NativeMatrix(transformEigen, transformTotal);
+			transformTotal.m_03 = static_cast<float>(noColliderObjects[i]->m_State.position.x);
+			transformTotal.m_13 = static_cast<float>(noColliderObjects[i]->m_State.position.y);
+			transformTotal.m_23 = static_cast<float>(noColliderObjects[i]->m_State.position.z);
+
+			eae6320::Graphics::SubmitObject(noColliderObjects[i]->m_color, transformTotal, noColliderObjects[i]->GetEffect(), Mesh::s_manager.Get(noColliderObjects[i]->GetMesh()));
 		}
 		else
 		{

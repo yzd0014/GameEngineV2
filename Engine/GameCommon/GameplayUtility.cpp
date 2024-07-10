@@ -57,23 +57,11 @@ namespace eae6320
 			{
 				rotMatEigen.setIdentity();
 			}
-			Matrix3d scaleMatEigen;
-			scaleMatEigen.setZero();
-			scaleMatEigen(0, 0) = scaling(0);
-			scaleMatEigen(1, 1) = scaling(1);
-			scaleMatEigen(2, 2) = scaling(2);
-			Matrix3d transformEigen = rotMatEigen * scaleMatEigen;
-
-			Math::cMatrix_transformation transformTotal;
-			Math::EigenMatrix2NativeMatrix(transformEigen, transformTotal);
-			transformTotal.m_03 = static_cast<float>(startPoint(0));
-			transformTotal.m_13 = static_cast<float>(startPoint(1));
-			transformTotal.m_23 = static_cast<float>(startPoint(2));
-
 			//creat game object
 			GameCommon::GameObject *pGameObject = new GameCommon::GameObject(defaultEffect, arrowMesh, Physics::sRigidBodyState());
-			pGameObject->m_State.useTransform = true;
-			pGameObject->m_State.transform = transformTotal;
+			pGameObject->scale = scaling;
+			pGameObject->m_State.position = Math::EigenVector2nativeVector(startPoint);
+			pGameObject->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(Math::RotationConversion_MatToQuat(rotMatEigen));
 			pGameObject->m_color = color;
 
 			return pGameObject;

@@ -73,6 +73,23 @@ namespace eae6320
 			//=====
 			Math::sVector Quaternion2Euler();//rotSeq is yxz
 			Math::sVector Quaternion2AxisAngle();
+			
+			float w()
+			{
+				return m_w;
+			}
+			float x()
+			{
+				return m_x;
+			}
+			float y()
+			{
+				return m_y;
+			}
+			float z()
+			{
+				return m_z;
+			}
 		private:
 
 			float m_w = 1.0f;
