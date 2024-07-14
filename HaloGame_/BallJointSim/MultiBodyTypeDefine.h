@@ -33,6 +33,14 @@
 #ifndef FREE_JOINT
 #define FREE_JOINT 2
 #endif
+
+#ifndef HINGE_JOINT_CONSTRAINT
+#define HINGE_JOINT_CONSTRAINT 3
+#endif
+
+#ifndef HINGE_JOINT
+#define HINGE_JOINT 4
+#endif
 /*************************************/
 #ifndef TWIST_WITHOUT_SWING
 #define TWIST_WITHOUT_SWING 0
@@ -49,7 +57,6 @@
 #ifndef ROTATION_MAGNITUDE_LIMIT
 #define ROTATION_MAGNITUDE_LIMIT 3
 #endif
-
 /*************************************/
 #ifndef SWING_C
 #define SWING_C 0

@@ -15,11 +15,12 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest2(); //test extreme case for twist with single body
 	//UnitTest3();//twist invariance for two bodies
 	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
-	UnitTest5();//test induced twist for single body
+	//UnitTest5();//test induced twist for single body
 	//UnitTest6();//twist invariance for single body
 	//UnitTest7();//test swing twist decomp with quat
 	//UnitTest8(); //mujoco ball joint constraint test for single body
 	//UnitTest9();//swing for 3d ball joint
+	HingeJointUnitTest0();//hinge joint with auto constraint
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -28,7 +29,6 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	std::cout << "initial total energy: " << totalEnergy0 << std::endl;
 	std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
 	std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
-	GameplayUtility::DrawArrow(Vector3d(0, 0, 0), Vector3d(0, -1, 0), Math::sVector(0, 0, 1), 0.5);
 }
 
 void eae6320::MultiBody::SetZeroInitialCondition()
@@ -41,6 +41,7 @@ void eae6320::MultiBody::SetZeroInitialCondition()
 
 void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 {
+	Math::NativeVector2EigenVector(m_State.position, jointPos[0]);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		jointType[i] = i_jointType[i];
@@ -64,6 +65,13 @@ void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 			posDOF[i] = 7;
 			totalVelDOF += 6;
 			totalPosDOF += 7;
+		}
+		else if (jointType[i] == HINGE_JOINT_CONSTRAINT || jointType[i] == HINGE_JOINT)
+		{
+			velDOF[i] = 1;
+			posDOF[i] = 1;
+			totalVelDOF += 1;
+			totalPosDOF += 1;
 		}
 		if (i == 0)
 		{
@@ -111,6 +119,10 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, _Matrix3
 	velStartIndex.resize(numOfLinks);
 	jointLimit.resize(numOfLinks);
 	jointRange.resize(numOfLinks);
+	hingeDirLocals.resize(numOfLinks);
+	hingeDirGlobals.resize(numOfLinks);
+	hingeRange.resize(numOfLinks);
+	hingeMagnitude.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
@@ -154,7 +166,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//EulerIntegration(dt);
 	//RK3Integration(dt);
 	RK4Integration(dt);
-
+	//std::cout << qdot.transpose() << std::endl;
+	
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
 	//std::cout << "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
@@ -226,6 +239,10 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _
 			w_rel_local[i] = i_qdot.segment(velStartIndex[i] + 3, 3);
 			Math::QuatIntegrate(o_quat[i], i_quat[i], w_rel_local[i], h);
 		}
+		else if (jointType[i] == HINGE_JOINT_CONSTRAINT || jointType[i] == HINGE_JOINT)
+		{
+			o_q(posStartIndex[i]) = i_q(posStartIndex[i]) + i_qdot(velStartIndex[i]) * h;
+		}
 	}
 }
 
@@ -258,7 +275,7 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 	_Vector qddot = (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
 	qdot = qdot + h * qddot;
-	//std::cout << qdot.transpose() << std::endl;
+	//std::cout << qddot.transpose() << std::endl;
 
 	if (constraintSolverMode == IMPULSE)
 	{
@@ -373,6 +390,19 @@ void eae6320::MultiBody::ComputeH(_Vector& i_q)
 			H[i].resize(6, 6);
 			H[i].setIdentity();
 		}
+		else if (jointType[i] == HINGE_JOINT_CONSTRAINT)
+		{
+			H[i].resize(6, 1);
+			_Scalar mq = i_q(posStartIndex[i]);
+			H[i].block<3, 1>(0, 0) = hingeRange[i] * cos(mq) * Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * hingeDirGlobals[i];
+			H[i].block<3, 1>(3, 0) = hingeRange[i] * cos(mq) * hingeDirGlobals[i];
+		}
+		else if (jointType[i] == HINGE_JOINT)
+		{
+			H[i].resize(6, 1);
+			H[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * hingeDirGlobals[i];
+			H[i].block<3, 1>(3, 0) = hingeDirGlobals[i];
+		}
 	}
 }
 
@@ -393,6 +423,17 @@ void eae6320::MultiBody::ComputeD()
 		{
 			D[i].resize(6, 6);
 			D[i].setZero();
+		}
+		else if (jointType[i] == HINGE_JOINT_CONSTRAINT || jointType[i] == HINGE_JOINT)
+		{
+			D[i].resize(6, 6);
+			D[i].setIdentity();
+			if (i > 0)
+			{
+				_Vector3 hingeVec = hingeMagnitude[i] * hingeDirGlobals[i];
+				_Vector3 iVec = uGlobals[i][0] - uGlobals[i - 1][1] - hingeVec;
+				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(iVec);
+			}
 		}
 	}
 }
@@ -542,6 +583,46 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			gamma[i].resize(6);
 			gamma[i].setZero();
 		}
+		else if (jointType[i] == HINGE_JOINT_CONSTRAINT)
+		{
+			_Vector3 gamma_theta;
+			_Scalar mqdot = i_qdot(velStartIndex[i]);
+			_Scalar mq = q(posStartIndex[i]);
+			gamma_theta = -hingeRange[i] * mqdot * mqdot * sin(mq) * hingeDirGlobals[i];
+			if (i > 0)
+			{
+				gamma_theta += hingeRange[i] * mqdot * cos(mq) * Math::ToSkewSymmetricMatrix(w_abs_world[i - 1]) * hingeDirGlobals[i];
+			}
+			_Vector3 gamma_r;
+			gamma_r = -w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0]));
+			_Vector3 hingeVec = hingeMagnitude[i] * hingeDirGlobals[i];
+			if (i > 0)
+			{
+				gamma_r += w_abs_world[i - 1].cross(w_abs_world[i - 1].cross(uGlobals[i - 1][1] + hingeVec));
+			}
+			gamma[i].resize(6);
+			gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta + gamma_r;
+			gamma[i].block<3, 1>(3, 0) = gamma_theta;
+		}
+		else if (jointType[i] == HINGE_JOINT)
+		{
+			_Vector3 gamma_theta;
+			gamma_theta.setZero();
+			if (i > 0)
+			{
+				gamma_theta += Math::ToSkewSymmetricMatrix(w_abs_world[i - 1]) * hingeDirGlobals[i] * i_qdot(velStartIndex[i]);
+			}
+			_Vector3 gamma_r;
+			gamma_r = -w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0]));
+			_Vector3 hingeVec = hingeMagnitude[i] * hingeDirGlobals[i];
+			if (i > 0)
+			{
+				gamma_r += w_abs_world[i - 1].cross(w_abs_world[i - 1].cross(uGlobals[i - 1][1] + hingeVec));
+			}
+			gamma[i].resize(6);
+			gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta + gamma_r;
+			gamma[i].block<3, 1>(3, 0) = gamma_theta;
+		}
 	}
 
 	o_gamma_t.resize(numOfLinks);
@@ -600,7 +681,7 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 #if defined (HIGH_PRECISION_MODE)
 			R_local[i] = AngleAxisd(r.norm(), r.normalized());
 #else
-			R_local = AngleAxisf(r.norm(), r.normalized());
+			R_local[i] = AngleAxisf(r.norm(), r.normalized());
 #endif
 			if (i == 0)
 			{
@@ -623,9 +704,35 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 		else if (jointType[i] == FREE_JOINT)
 		{
 			obs_ori[i] = i_quat[i];
-			R_local[i] = i_quat[i];
+			R_local[i] = obs_ori[i].toRotationMatrix();
 			R_global[i] = obs_ori[i].toRotationMatrix();
 			m_linkBodys[i]->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(obs_ori[i]);
+		}
+		else if (jointType[i] == HINGE_JOINT_CONSTRAINT || jointType[i] == HINGE_JOINT)
+		{
+			if (i > 0) hingeDirGlobals[i] = R_global[i - 1] * hingeDirLocals[i];
+			_Scalar angle = i_q(posStartIndex[i]);
+#if defined (HIGH_PRECISION_MODE)
+			R_local[i] = AngleAxisd(angle, hingeDirGlobals[i]);
+#else
+			R_local[i] = AngleAxisf(angle, axis);
+#endif
+			if (i == 0)
+			{
+				R_global[i] = R_local[i];
+			}
+			else
+			{
+				R_global[i] = R_global[i - 1] * R_local[i];
+			}
+#if defined (HIGH_PRECISION_MODE)
+			AngleAxisd angleAxis_global(R_global[i]);
+#else
+			AngleAxisf angleAxis_global(R_global[i]);
+#endif
+
+			m_linkBodys[i]->m_State.orientation = Math::cQuaternion((float)angleAxis_global.angle(), Math::EigenVector2nativeVector(angleAxis_global.axis()));
+			m_linkBodys[i]->m_State.orientation.Normalize();
 		}
 	}
 }
@@ -634,24 +741,23 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 {
 	UpdateBodyRotation(i_q, i_quat);
 
-	_Vector3 preAnchor;
-	Math::NativeVector2EigenVector(m_State.position, preAnchor);
-	jointPos[0] = preAnchor;
+	_Vector3 preAnchor = jointPos[0];
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		//update position
+		uGlobals[i][0] = R_global[i] * uLocals[i][0];
 		if (jointType[i] == BALL_JOINT_3D || jointType[i] == BALL_JOINT_4D)
 		{
-			uGlobals[i][0] = R_global[i] * uLocals[i][0];
 			pos[i] = preAnchor - uGlobals[i][0];
-			m_linkBodys[i]->m_State.position = Math::sVector((float)pos[i](0), (float)pos[i](1), (float)pos[i](2));
 		}
 		//TODO: add free joint
 		else if (jointType[i] == FREE_JOINT)
 		{
-			uGlobals[i][0] = R_global[i] * uLocals[i][0];
 			pos[i] = i_q.segment(posStartIndex[i], 3);
-			m_linkBodys[i]->m_State.position = Math::sVector((float)pos[i](0), (float)pos[i](1), (float)pos[i](2));
+		}
+		else if (jointType[i] == HINGE_JOINT_CONSTRAINT || jointType[i] == HINGE_JOINT)
+		{
+			pos[i] = preAnchor + hingeMagnitude[i] * hingeDirGlobals[i] - uGlobals[i][0];
 		}
 		
 		//get ready for the next iteration
@@ -659,6 +765,9 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 		preAnchor = pos[i] + uGlobals[i][1];
 		if (i + 1 < numOfLinks) jointPos[i + 1] = preAnchor;
 
+		//update render position
+		m_linkBodys[i]->m_State.position = Math::sVector((float)pos[i](0), (float)pos[i](1), (float)pos[i](2));
+		
 		//update inertia tensor
 		if (geometry != BOX && geometry != BALL)
 		{
