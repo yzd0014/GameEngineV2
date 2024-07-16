@@ -34,12 +34,8 @@
 #define FREE_JOINT 2
 #endif
 
-#ifndef HINGE_JOINT_CONSTRAINT
-#define HINGE_JOINT_CONSTRAINT 3
-#endif
-
 #ifndef HINGE_JOINT
-#define HINGE_JOINT 4
+#define HINGE_JOINT 3
 #endif
 /*************************************/
 #ifndef TWIST_WITHOUT_SWING

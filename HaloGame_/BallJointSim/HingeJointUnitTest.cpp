@@ -12,7 +12,7 @@ void eae6320::MultiBody::HingeJointUnitTest0()
 {
 	numOfLinks = 1;
 	constraintSolverMode = -1;
-	gravity = true;
+	//gravity = true;
 
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
@@ -22,7 +22,6 @@ void eae6320::MultiBody::HingeJointUnitTest0()
 	int jointTypeArray[] = { HINGE_JOINT };
 	hingeDirLocals[0] = _Vector3(0, 0, 1);
 	hingeDirGlobals[0] = hingeDirLocals[0];
-	hingeRange[0] = 0.15 * M_PI;
 	hingeMagnitude[0] = 0;
 	InitializeJoints(jointTypeArray);
 

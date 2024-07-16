@@ -16,11 +16,11 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest3();//twist invariance for two bodies
 	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
 	//UnitTest5();//test induced twist for single body
-	//UnitTest6();//twist invariance for single body
+	UnitTest6();//twist invariance for single body
 	//UnitTest7();//test swing twist decomp with quat
 	//UnitTest8(); //mujoco ball joint constraint test for single body
 	//UnitTest9();//swing for 3d ball joint
-	HingeJointUnitTest0();//hinge joint with auto constraint
+	//HingeJointUnitTest0();//hinge joint with auto constraint
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -66,7 +66,7 @@ void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 			totalVelDOF += 6;
 			totalPosDOF += 7;
 		}
-		else if (jointType[i] == HINGE_JOINT_CONSTRAINT || jointType[i] == HINGE_JOINT)
+		else if (jointType[i] == HINGE_JOINT)
 		{
 			velDOF[i] = 1;
 			posDOF[i] = 1;
@@ -121,7 +121,6 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, _Matrix3
 	jointRange.resize(numOfLinks);
 	hingeDirLocals.resize(numOfLinks);
 	hingeDirGlobals.resize(numOfLinks);
-	hingeRange.resize(numOfLinks);
 	hingeMagnitude.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -239,7 +238,7 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _
 			w_rel_local[i] = i_qdot.segment(velStartIndex[i] + 3, 3);
 			Math::QuatIntegrate(o_quat[i], i_quat[i], w_rel_local[i], h);
 		}
-		else if (jointType[i] == HINGE_JOINT_CONSTRAINT || jointType[i] == HINGE_JOINT)
+		else if (jointType[i] == HINGE_JOINT)
 		{
 			o_q(posStartIndex[i]) = i_q(posStartIndex[i]) + i_qdot(velStartIndex[i]) * h;
 		}
@@ -390,13 +389,6 @@ void eae6320::MultiBody::ComputeH(_Vector& i_q)
 			H[i].resize(6, 6);
 			H[i].setIdentity();
 		}
-		else if (jointType[i] == HINGE_JOINT_CONSTRAINT)
-		{
-			H[i].resize(6, 1);
-			_Scalar mq = i_q(posStartIndex[i]);
-			H[i].block<3, 1>(0, 0) = hingeRange[i] * cos(mq) * Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * hingeDirGlobals[i];
-			H[i].block<3, 1>(3, 0) = hingeRange[i] * cos(mq) * hingeDirGlobals[i];
-		}
 		else if (jointType[i] == HINGE_JOINT)
 		{
 			H[i].resize(6, 1);
@@ -424,7 +416,7 @@ void eae6320::MultiBody::ComputeD()
 			D[i].resize(6, 6);
 			D[i].setZero();
 		}
-		else if (jointType[i] == HINGE_JOINT_CONSTRAINT || jointType[i] == HINGE_JOINT)
+		else if (jointType[i] == HINGE_JOINT)
 		{
 			D[i].resize(6, 6);
 			D[i].setIdentity();
@@ -583,27 +575,6 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			gamma[i].resize(6);
 			gamma[i].setZero();
 		}
-		else if (jointType[i] == HINGE_JOINT_CONSTRAINT)
-		{
-			_Vector3 gamma_theta;
-			_Scalar mqdot = i_qdot(velStartIndex[i]);
-			_Scalar mq = q(posStartIndex[i]);
-			gamma_theta = -hingeRange[i] * mqdot * mqdot * sin(mq) * hingeDirGlobals[i];
-			if (i > 0)
-			{
-				gamma_theta += hingeRange[i] * mqdot * cos(mq) * Math::ToSkewSymmetricMatrix(w_abs_world[i - 1]) * hingeDirGlobals[i];
-			}
-			_Vector3 gamma_r;
-			gamma_r = -w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0]));
-			_Vector3 hingeVec = hingeMagnitude[i] * hingeDirGlobals[i];
-			if (i > 0)
-			{
-				gamma_r += w_abs_world[i - 1].cross(w_abs_world[i - 1].cross(uGlobals[i - 1][1] + hingeVec));
-			}
-			gamma[i].resize(6);
-			gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta + gamma_r;
-			gamma[i].block<3, 1>(3, 0) = gamma_theta;
-		}
 		else if (jointType[i] == HINGE_JOINT)
 		{
 			_Vector3 gamma_theta;
@@ -708,7 +679,7 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 			R_global[i] = obs_ori[i].toRotationMatrix();
 			m_linkBodys[i]->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(obs_ori[i]);
 		}
-		else if (jointType[i] == HINGE_JOINT_CONSTRAINT || jointType[i] == HINGE_JOINT)
+		else if (jointType[i] == HINGE_JOINT)
 		{
 			if (i > 0) hingeDirGlobals[i] = R_global[i - 1] * hingeDirLocals[i];
 			_Scalar angle = i_q(posStartIndex[i]);
@@ -755,7 +726,7 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 		{
 			pos[i] = i_q.segment(posStartIndex[i], 3);
 		}
-		else if (jointType[i] == HINGE_JOINT_CONSTRAINT || jointType[i] == HINGE_JOINT)
+		else if (jointType[i] == HINGE_JOINT)
 		{
 			pos[i] = preAnchor + hingeMagnitude[i] * hingeDirGlobals[i] - uGlobals[i][0];
 		}

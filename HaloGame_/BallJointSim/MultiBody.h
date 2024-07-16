@@ -104,7 +104,6 @@ namespace eae6320
 		std::vector<_Vector3> hingeDirLocals;
 		std::vector<_Vector3> hingeDirGlobals;
 		std::vector<_Scalar> hingeMagnitude;
-		std::vector<_Scalar> hingeRange;
 		
 		std::vector<_Matrix3> R_global;//rigidbody rotation
 		std::vector<_Matrix3> R_local;
