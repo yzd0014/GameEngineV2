@@ -12,11 +12,11 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
 	//UnitTest1(); //test swing twist decomposition with rotaion matrix
-	//UnitTest2(); //test extreme case for twist with single body
+	UnitTest2(); //test extreme case for twist with single body
 	//UnitTest3();//twist invariance for two bodies
 	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
 	//UnitTest5();//test induced twist for single body
-	UnitTest6();//twist invariance for single body
+	//UnitTest6();//twist invariance for single body
 	//UnitTest7();//test swing twist decomp with quat
 	//UnitTest8(); //mujoco ball joint constraint test for single body
 	//UnitTest9();//swing for 3d ball joint
@@ -87,11 +87,12 @@ void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 	Mr.resize(totalVelDOF, totalVelDOF);
 }
 
-void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition)
+void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(defaultEffect, i_mesh, Physics::sRigidBodyState());
+		pGameObject->scale = i_meshScale;
 		m_linkBodys.push_back(pGameObject);
 	}
 
@@ -166,6 +167,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//RK3Integration(dt);
 	RK4Integration(dt);
 	//std::cout << qdot.transpose() << std::endl;
+	//std::cout << rel_ori[0] << std::endl;
 	
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();

@@ -20,7 +20,7 @@ namespace eae6320
 		int constraintType = SWING_C;
 		bool gravity = FALSE ;
 	private:
-		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
+		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void InitializeJoints(int* i_jointType);
 		void SetZeroInitialCondition();
 
