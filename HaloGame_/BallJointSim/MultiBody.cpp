@@ -961,6 +961,7 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 						pRotated = -pRotated;
 					}
 					K.block<1, 3>(k, velStartIndex[i]) = pRotated;
+					//K.block<1, 3>(k, velStartIndex[i]) = J.block<1, 3>(k, velStartIndex[i]);
 				}
 				else if (limitType[k] == SWING)
 				{
