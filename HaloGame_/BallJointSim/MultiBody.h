@@ -80,6 +80,7 @@ namespace eae6320
 		void UnitTest7();
 		void UnitTest8();
 		void UnitTest9();
+		void UnitTest10();
 		void HingeJointUnitTest0();
 
 		_Vector q;
