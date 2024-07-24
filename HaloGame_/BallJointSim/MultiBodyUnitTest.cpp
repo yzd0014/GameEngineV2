@@ -90,7 +90,8 @@ void eae6320::MultiBody::UnitTest2()
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8; 
-	InitializeBodies(masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
+	int scale = 1;
+	InitializeBodies(masterMeshArray[3], Vector3d(scale, scale, scale), localInertiaTensor, _Vector3(0.0f, scale, 0.0f), _Vector3(0.0f, -scale, 0.0f));//4 is capsule, 3 is cube
 
 	int jointTypeArray[] = { BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);

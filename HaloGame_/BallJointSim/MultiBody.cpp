@@ -992,12 +992,12 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 			}
 
 			//compute bias
-		/*	_Vector3 v = qdot.segment(velStartIndex[i], 3);
+			_Vector3 v = qdot.segment(velStartIndex[i], 3);
 			_Matrix C_dot = J.block<1, 3>(k, velStartIndex[i]) * v;
-			_Scalar beta = 0.1f;
-			_Scalar CR = 0.4f;
+			_Scalar beta = 0.001f;
+			_Scalar CR = 0.0f;
 			_Scalar SlopP = 0.001f;
-			bias(k) = -beta / h * std::max<_Scalar>(-constraintValue[i] - SlopP, 0.0) - CR * std::max<_Scalar>(-C_dot(0, 0), 0.0);*/
+			bias(k) = -beta / h * std::max<_Scalar>(-constraintValue[i] - SlopP, 0.0) - CR * std::max<_Scalar>(-C_dot(0, 0), 0.0);
 		}
 		_Matrix lambda;
 		lambda = (J * MrInverse * K.transpose()).inverse() * (-J * qdot - bias);
