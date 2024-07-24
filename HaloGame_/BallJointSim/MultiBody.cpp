@@ -20,7 +20,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest7();//test swing twist decomp with quat
 	//UnitTest8(); //mujoco ball joint constraint test for single body
 	//UnitTest9();//swing for 3d ball joint
-	UnitTest10();//twist invarience two bodies.
+	//UnitTest10();//twist invarience two bodies.
+	UnitTest11();//5 body
 	//HingeJointUnitTest0();//hinge joint with auto constraint
 	
 	kineticEnergy0 = ComputeKineticEnergy();

@@ -100,7 +100,7 @@ eae6320::cResult eae6320::BallJointSim::Initialize()
 
 	//Ground
 	{
-		Physics::sRigidBodyState objState(Math::sVector(0.0f, -8.0f, 0.0f));
+		Physics::sRigidBodyState objState(Math::sVector(0.0f, -10.0f, 0.0f));
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(defaultEffect, mesh_plane, objState);
 	}
 
