@@ -352,3 +352,23 @@ void eae6320::MultiBody::UnitTest11()
 		jointRange[i].second = 0.25 * M_PI;//twist
 	}
 }
+
+void eae6320::MultiBody::UnitTest12()
+{
+	numOfLinks = 2;
+	constraintSolverMode = -1;
+	gravity = true;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+	InitializeBodies(masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(-1, 1, 1), _Vector3(1, -1, 1));//4 is capsule, 3 is cube
+	uLocals[1][0] = _Vector3(-1, 1, -1);
+	uGlobals[1][0] = _Vector3(-1, 1, -1);
+
+	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D };
+	InitializeJoints(jointTypeArray);
+
+	SetZeroInitialCondition();
+	Forward();
+}
