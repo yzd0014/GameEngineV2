@@ -335,23 +335,20 @@ void eae6320::MultiBody::UnitTest11()
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
-
+	InitializeBodies(masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor, _Vector3(-1, 0, 0), _Vector3(1, 0, 0));//4 is capsule, 3 is cube
+	for (int i = 0; i < numOfLinks; i++) twistAxis[i] = _Vector3(1, 0, 0);//update the all links with a different twist axis
+	
 	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 	
 	SetZeroInitialCondition();
-	/*_Vector3 rotVec(0, 0, 0.5 * M_PI);
-	_Quat rotQuat = Math::RotationConversion_VecToQuat(rotVec);
-	rel_ori[0] = rotQuat;
-	rotVec = _Vector3(M_PI/8, 0, 0);
-	rotQuat = Math::RotationConversion_VecToQuat(rotVec);
-	rel_ori[1] = rotQuat;*/
+	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
+
 
 	Forward();
-	//for (int i = 0; i < numOfLinks; i++)
-	//{
-	//	jointRange[i].first = 0.25 * M_PI;//swing
-	//	jointRange[i].second = 0.25 * M_PI;//twist
-	//}
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		jointRange[i].first = 0.25 * M_PI;//swing
+		jointRange[i].second = 0.25 * M_PI;//twist
+	}
 }

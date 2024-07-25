@@ -49,7 +49,7 @@ namespace eae6320
 		_Vector3 ComputeTranslationalMomentum();
 		_Vector3 ComputeAngularMomentum();
 
-		_Scalar ComputeAngularVelocityConstraint(_Vector3 w, _Matrix3& Rot, int i_limitType, _Scalar phi);
+		_Scalar ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi);
 		void SwingLimitCheck();
 		void ResolveSwingLimit(const _Scalar h);
 		void ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h);
@@ -128,6 +128,7 @@ namespace eae6320
 		
 		std::vector<_Scalar> jointLimit;
 		std::vector<std::pair<_Scalar, _Scalar>> jointRange;
+		std::vector<_Vector3> twistAxis;
 		_Scalar swingEpsilon = 0.005;
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;

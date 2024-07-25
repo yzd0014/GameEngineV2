@@ -35,5 +35,32 @@ namespace eae6320
 
 			return angle;
 		}
+
+		inline Vector3d GetOrthogonalVector(Vector3d& n)
+		{
+			Vector3d t;
+			if (abs(n.x()) >= 0.57735f)
+			{
+				t = Vector3d(n.y(), n.x(), 0.0);
+			}
+			else
+			{
+				t = Vector3d(0.0, n.z(), n.y());
+			}
+			return t;
+		}
+		inline Vector3f GetOrthogonalVector(Vector3f& n)
+		{
+			Vector3f t;
+			if (abs(n.x()) >= 0.57735f)
+			{
+				t = Vector3f(n.y(), n.x(), 0.0f);
+			}
+			else
+			{
+				t = Vector3f(0.0f, n.z(), n.y());
+			}
+			return t;
+		}
 	}
 }

@@ -125,6 +125,7 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	hingeDirLocals.resize(numOfLinks);
 	hingeDirGlobals.resize(numOfLinks);
 	hingeMagnitude.resize(numOfLinks);
+	twistAxis.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
@@ -157,6 +158,8 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 		uPairs[1] = i_childJointPosition;
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
+
+		twistAxis[i] = _Vector3(0, -1, 0);
 	}
 }
 
@@ -833,11 +836,9 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 	return energy;
 }
 
-_Scalar eae6320::MultiBody::ComputeAngularVelocityConstraint(_Vector3 w, _Matrix3& Rot, int i_limitType, _Scalar phi)
+_Scalar eae6320::MultiBody::ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi)
 {
 	_Scalar C = 0;
-	_Vector3 p = _Vector3(0, -1, 0);
-	_Vector3 s = _Vector3(1, 0, 0);
 	if (i_limitType == TWIST_WITH_SWING)
 	{
 		_Scalar t0, t1, t2, d0, d1;
@@ -854,6 +855,7 @@ _Scalar eae6320::MultiBody::ComputeAngularVelocityConstraint(_Vector3 w, _Matrix
 	}
 	else if (i_limitType == TWIST_WITHOUT_SWING)
 	{
+		_Vector s = Math::GetOrthogonalVector(p);
 		C = s.dot(Math::ToSkewSymmetricMatrix(w) * Rot * s);
 	}
 	else if (i_limitType == SWING)
@@ -868,8 +870,6 @@ void eae6320::MultiBody::BallJointLimitCheck()
 	jointsID.clear();
 	constraintValue.clear();
 	limitType.clear();
-	_Vector3 p = _Vector3(0, -1, 0);
-	_Vector3 local_x = _Vector3(1, 0, 0);
 	
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -880,6 +880,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			_Scalar twistAngle, swingAngle;
 			if (jointRange[i].first > 0 || jointRange[i].second > 0)
 			{
+				_Vector3 p = twistAxis[i];
 				Math::SwingTwistDecomposition(quat, p, swingComponent, twistComponent);
 				_Vector3 twistVec = Math::RotationConversion_QuatToVec(twistComponent);
 				twistAngle = twistVec.norm();
@@ -929,8 +930,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 {
 	size_t constraintNum = jointsID.size();
-	_Vector3 p = _Vector3(0, -1, 0);
-	_Vector3 local_x = _Vector3(1, 0, 0);
+
 	if (constraintNum > 0)
 	{
 		_Matrix J;
@@ -949,15 +949,16 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 			{
 				if (limitType[k] == TWIST_WITH_SWING || limitType[k] == TWIST_WITHOUT_SWING)
 				{
+					_Vector3 p = twistAxis[i];
 					//compute J
-					_Scalar j0 = ComputeAngularVelocityConstraint(_Vector3(1, 0, 0), R_local[i], limitType[k], jointRange[i].second);
-					_Scalar j1 = ComputeAngularVelocityConstraint(_Vector3(0, 1, 0), R_local[i], limitType[k], jointRange[i].second);
-					_Scalar j2 = ComputeAngularVelocityConstraint(_Vector3(0, 0, 1), R_local[i], limitType[k], jointRange[i].second);
+					_Scalar j0 = ComputeAngularVelocityConstraint(_Vector3(1, 0, 0), p, R_local[i], limitType[k], jointRange[i].second);
+					_Scalar j1 = ComputeAngularVelocityConstraint(_Vector3(0, 1, 0), p, R_local[i], limitType[k], jointRange[i].second);
+					_Scalar j2 = ComputeAngularVelocityConstraint(_Vector3(0, 0, 1), p, R_local[i], limitType[k], jointRange[i].second);
 					J.block<1, 3>(k, velStartIndex[i]) = _Vector3(j0, j1, j2);
 
 					//compute K
  					_Vector3 pRotated = R_local[i] * p;
-					_Scalar cTest = ComputeAngularVelocityConstraint(pRotated, R_local[i], limitType[k], jointRange[i].second);
+					_Scalar cTest = ComputeAngularVelocityConstraint(pRotated, p, R_local[i], limitType[k], jointRange[i].second);
 					if (cTest < 0)
 					{
 						pRotated = -pRotated;
@@ -967,10 +968,11 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 				}
 				else if (limitType[k] == SWING)
 				{
+					_Vector3 p = twistAxis[i];
 					//compute J
-					_Scalar j0 = ComputeAngularVelocityConstraint(_Vector3(1, 0, 0), R_local[i], limitType[k], jointRange[i].first);
-					_Scalar j1 = ComputeAngularVelocityConstraint(_Vector3(0, 1, 0), R_local[i], limitType[k], jointRange[i].first);
-					_Scalar j2 = ComputeAngularVelocityConstraint(_Vector3(0, 0, 1), R_local[i], limitType[k], jointRange[i].first);
+					_Scalar j0 = ComputeAngularVelocityConstraint(_Vector3(1, 0, 0), p, R_local[i], limitType[k], jointRange[i].first);
+					_Scalar j1 = ComputeAngularVelocityConstraint(_Vector3(0, 1, 0), p, R_local[i], limitType[k], jointRange[i].first);
+					_Scalar j2 = ComputeAngularVelocityConstraint(_Vector3(0, 0, 1), p, R_local[i], limitType[k], jointRange[i].first);
 					J.block<1, 3>(k, velStartIndex[i]) = _Vector3(j0, j1, j2);
 
 					//compute K
