@@ -106,7 +106,7 @@ namespace eae6320
 		std::vector<std::vector<_Vector3>> uGlobals;//world
 		std::vector<_Vector3> hingeDirLocals;
 		std::vector<_Vector3> hingeDirGlobals;
-		std::vector<_Scalar> hingeMagnitude;
+		std::vector<_Scalar> hingeMagnitude;//distance between the point from each body that defines the position of the hinge joint
 		
 		std::vector<_Matrix3> R_global;//rigidbody rotation
 		std::vector<_Matrix3> R_local;

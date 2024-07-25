@@ -71,6 +71,7 @@ namespace eae6320
 
 			// Data
 			//=====
+			//implementation details: https://stackoverflow.com/questions/1031005/is-there-an-algorithm-for-converting-quaternion-rotations-to-euler-angle-rotatio
 			Math::sVector Quaternion2Euler();//rotSeq is yxz
 			Math::sVector Quaternion2AxisAngle();
 			
