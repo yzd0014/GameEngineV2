@@ -349,7 +349,7 @@ void eae6320::MultiBody::UnitTest11()
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		jointRange[i].first = 0.25 * M_PI;//swing
-		jointRange[i].second = 0.25 * M_PI;//twist
+		jointRange[i].second = 0.01;//twist
 	}
 }
 
