@@ -28,19 +28,6 @@ eae6320::MyActor::MyActor(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Phys
 		double rightAngle = 0;
 		double currLength = 0;
 		Vector3d twistAxisWorld;
-		/*for (; currLength < totalLength; currLength += pointsInterval)
-		{
-			rightAngle = currLength / sRadius;
-			yRotation = Math::RotationConversion_VecToMatrix(Vector3d(0, rightAngle, 0));
-			Vector3d rotVec = Vector3d(-0.5 * M_PI, 0, 0);
-			rotVec = yRotation * rotVec;
-			Matrix3d R = Math::RotationConversion_VecToMatrix(rotVec);
-			twistAxisWorld = R * twistAxis;
-
-			Vector3d zWorld = R * z;
-			GameplayUtility::DrawArrowScaled(twistAxisWorld * rigidBodyScale, zWorld, Math::sVector(1, 0, 0), Vector3d(0.05, 0.05, 0.05));
-		}*/
-	
 		double upAngleInterval = M_PI * 0.04;
 		for (double upAngle = upAngleInterval; upAngle <= 0.98 * M_PI; upAngle += upAngleInterval)
 		{
