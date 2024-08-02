@@ -4,6 +4,7 @@
 #include "Engine/Math/EigenHelper.h"
 #include "Engine/UserInput/UserInput.h"
 #include "Engine/GameCommon/GameplayUtility.h"
+#include "Engine/GameCommon/Camera.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <iomanip>

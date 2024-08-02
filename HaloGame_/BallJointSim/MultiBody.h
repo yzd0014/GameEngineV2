@@ -131,6 +131,7 @@ namespace eae6320
 		std::vector<std::pair<_Scalar, _Scalar>> jointRange;
 		std::vector<_Vector3> twistAxis;
 		_Scalar swingEpsilon = 0.005;
+		
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;
 		_Vector3 angularMomentum0;

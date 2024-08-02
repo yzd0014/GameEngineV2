@@ -392,6 +392,7 @@
     <ClCompile Include="BallJointSim.cpp" />
     <ClCompile Include="EntryPoint.cpp" />
     <ClCompile Include="HingeJointUnitTest.cpp" />
+    <ClCompile Include="JointLimit.cpp" />
     <ClCompile Include="MultiBody.cpp" />
     <ClCompile Include="MultiBodyExperimental.cpp" />
     <ClCompile Include="MultiBodyUnitTest.cpp" />

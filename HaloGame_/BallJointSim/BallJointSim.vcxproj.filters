@@ -59,6 +59,9 @@
     <ClCompile Include="HingeJointUnitTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="JointLimit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource Files\Halo.rc">
