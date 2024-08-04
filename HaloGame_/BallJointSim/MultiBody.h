@@ -18,6 +18,7 @@ namespace eae6320
 
 		int constraintSolverMode = IMPULSE;
 		int constraintType = SWING_C;
+		int swingMode = DIRECT_SWING;
 		bool gravity = FALSE ;
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
@@ -130,7 +131,12 @@ namespace eae6320
 		std::vector<_Scalar> jointLimit;
 		std::vector<std::pair<_Scalar, _Scalar>> jointRange;
 		std::vector<_Vector3> twistAxis;
-		_Scalar swingEpsilon = 0.005;
+		_Vector3 eulerX = _Vector3(1, 0, 0);
+		_Vector3 eulerY = _Vector3(0, 1, 0);
+		_Vector3 eulerZ = _Vector3(0, 0, 1);
+		_Vector3 oldEulerZ = _Vector3(0, 0, 1);
+		_Scalar swingEpsilon = 0.001;
+		uint8_t vectorFieldNum = 0;
 		
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;

@@ -53,6 +53,10 @@
 #ifndef ROTATION_MAGNITUDE_LIMIT
 #define ROTATION_MAGNITUDE_LIMIT 3
 #endif
+
+#ifndef TWIST_EULER
+#define TWIST_EULER 4
+#endif
 /*************************************/
 #ifndef SWING_C
 #define SWING_C 0
@@ -60,4 +64,12 @@
 
 #ifndef TWIST_C
 #define TWIST_C 1
+#endif
+/*************************************/
+#ifndef DIRECT_SWING
+#define DIRECT_SWING 0
+#endif
+
+#ifndef EULER_SWING
+#define EULER_SWING 1
 #endif

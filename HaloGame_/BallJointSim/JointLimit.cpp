@@ -60,7 +60,6 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				swingAngle = swingVec.norm();
 				//std::cout << "twist: " << twistAngle << ", swing: " << swingAngle << std::endl;
 			}
-
 			if (jointRange[i].first > 0 && jointRange[i].first - swingAngle < 0)//check swing constraint
 			{
 				jointsID.push_back(i);
@@ -68,23 +67,54 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				limitType.push_back(SWING);
 			}
 
-			if (jointRange[i].second > 0 && jointRange[i].second - twistAngle < 0) //check twist constraint
+			if (swingMode == DIRECT_SWING)
 			{
-				if (swingAngle < swingEpsilon || abs(swingAngle - M_PI) < swingEpsilon)
+				if (jointRange[i].second > 0 && jointRange[i].second - twistAngle < 0) //check twist constraint
 				{
-					jointsID.push_back(i);
-					constraintValue.push_back(jointRange[i].second - twistAngle);
-					limitType.push_back(TWIST_WITHOUT_SWING);
+					if (swingAngle < swingEpsilon || abs(swingAngle - M_PI) < swingEpsilon)
+					{
+						jointsID.push_back(i);
+						constraintValue.push_back(jointRange[i].second - twistAngle);
+						limitType.push_back(TWIST_WITHOUT_SWING);
+					}
+					else
+					{
+						jointsID.push_back(i);
+						constraintValue.push_back(jointRange[i].second - twistAngle);
+						limitType.push_back(TWIST_WITH_SWING);
+					}
+				}
+			}
+			else if (swingMode == EULER_SWING)
+			{
+				_Matrix3 R = Math::RotationConversion_QuatToMat(rel_ori[i]);
+				_Vector3 rotatedX = R * eulerX;
+				_Vector3 rotatedZ = rotatedX.cross(eulerY);
+				if (vectorFieldNum == 1) rotatedZ = -rotatedZ;
+				if (rotatedZ.norm() > swingEpsilon)
+				{
+					rotatedZ.normalize();
+					_Scalar twistConstraint = rotatedZ.dot(R * eulerZ) - cos(jointRange[i].second);
+					if (twistConstraint < 0)
+					{
+						jointsID.push_back(i);
+						constraintValue.push_back(twistConstraint);
+						limitType.push_back(TWIST_EULER);
+					}
+
+					if (rotatedZ.dot(oldEulerZ) < 0)//vector field switch
+					{
+						vectorFieldNum = !vectorFieldNum;
+					}
+					oldEulerZ = rotatedZ;
 				}
 				else
 				{
-					jointsID.push_back(i);
-					constraintValue.push_back(jointRange[i].second - twistAngle);
-					limitType.push_back(TWIST_WITH_SWING);
+					std::cout << "Euler swing singluarity points are reached." << std::endl;
 				}
-			}
 
-			if (jointLimit[i] > 0)
+			}
+			else if (jointLimit[i] > 0)
 			{
 				_Vector3 rotVec = Math::RotationConversion_QuatToVec(rel_ori[i]);
 				_Scalar rotAngle = rotVec.norm();
@@ -163,6 +193,10 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 
 					J.block<1, 3>(k, velStartIndex[i]) = -rNormalized.transpose() * G;
 					K.block<1, 3>(k, velStartIndex[i]) = J.block<1, 3>(k, velStartIndex[i]);
+				}
+				else if (limitType[k] == TWIST_EULER)
+				{
+					//TODO
 				}
 			}
 

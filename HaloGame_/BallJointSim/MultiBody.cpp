@@ -837,8 +837,6 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 	return energy;
 }
 
-
-
 void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
 {
 }
