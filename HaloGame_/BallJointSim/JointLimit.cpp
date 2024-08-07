@@ -105,6 +105,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 					if (rotatedZ.dot(oldEulerZ) < 0)//vector field switch
 					{
 						vectorFieldNum = !vectorFieldNum;
+						std::cout << "Vector field switched." << std::endl;
 					}
 					oldEulerZ = rotatedZ;
 				}
@@ -197,6 +198,30 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 				else if (limitType[k] == TWIST_EULER)
 				{
 					//TODO
+					_Matrix3 R = R_local[i];
+					_Matrix A0;
+					_Vector3 mVec;
+					mVec = Math::ToSkewSymmetricMatrix(eulerY) * R * eulerZ;
+					A0 = eulerX.transpose() * R.transpose() * Math::ToSkewSymmetricMatrix(mVec);
+					_Matrix A1;
+					mVec = R * eulerZ;
+					A1 = -eulerX.transpose() * R.transpose() * Math::ToSkewSymmetricMatrix(eulerY) * Math::ToSkewSymmetricMatrix(mVec);
+					_Matrix A2;
+					_Vector3 s = -eulerY.cross(R * eulerX);
+					mVec = R * eulerX;
+					A2 = -cos(jointRange[i].second) / s.norm() * s.transpose() * Math::ToSkewSymmetricMatrix(eulerY) * Math::ToSkewSymmetricMatrix(mVec);
+					_Matrix mJ;
+					mJ.resize(1, 3);
+					if (vectorFieldNum == 0)
+					{
+						mJ = A0 + A1 + A2;
+					}
+					else
+					{
+						mJ = -A0 - A1 + A2;
+					}
+					J.block<1, 3>(k, velStartIndex[i]) = mJ;
+					K.block<1, 3>(k, velStartIndex[i]) = mJ;
 				}
 			}
 
@@ -210,6 +235,7 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 		}
 		_Matrix lambda;
 		lambda = (J * MrInverse * K.transpose()).inverse() * (-J * qdot - bias);
+		//std::cout << lambda.transpose() << std::endl;
 		for (size_t k = 0; k < constraintNum; k++)
 		{
 			if (lambda(k, 0) < 0)
