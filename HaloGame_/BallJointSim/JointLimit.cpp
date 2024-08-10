@@ -91,6 +91,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				_Vector3 rotatedX = R * eulerX;
 				_Vector3 rotatedZ = rotatedX.cross(eulerY);
 				if (vectorFieldNum == 1) rotatedZ = -rotatedZ;
+				std::cout << rotatedZ.norm() << std::endl;
 				if (rotatedZ.norm() > swingEpsilon)
 				{
 					rotatedZ.normalize();
@@ -101,12 +102,12 @@ void eae6320::MultiBody::BallJointLimitCheck()
 						constraintValue.push_back(twistConstraint);
 						limitType.push_back(TWIST_EULER);
 					}
-
-					if (rotatedZ.dot(oldEulerZ) < 0)//vector field switch
-					{
-						vectorFieldNum = !vectorFieldNum;
-						std::cout << "Vector field switched." << std::endl;
-					}
+					std::cout << rotatedZ.dot(oldEulerZ) << std::endl << std::endl;
+					//if (rotatedZ.dot(oldEulerZ) < 0)//vector field switch
+					//{
+					//	vectorFieldNum = !vectorFieldNum;
+					//	std::cout << "Vector field switched." << std::endl;
+					//}
 					oldEulerZ = rotatedZ;
 				}
 				else
