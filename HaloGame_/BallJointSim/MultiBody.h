@@ -136,7 +136,7 @@ namespace eae6320
 		_Vector3 eulerY = _Vector3(0, 0, 1);
 		_Vector3 eulerZ = _Vector3(-1, 0, 0);
 		_Vector3 oldEulerZ = _Vector3(-1, 0, 0);
-		_Scalar swingEpsilon = 0.001;
+		_Scalar swingEpsilon = 0.01;
 		uint8_t vectorFieldNum = 0;
 		
 		_Scalar kineticEnergy0 = 0;
