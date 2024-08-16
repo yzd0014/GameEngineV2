@@ -12,7 +12,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
 	//UnitTest1(); //test swing twist decomposition with rotaion matrix
-	UnitTest2(); //test extreme case for twist with single body
+	//UnitTest2(); //test extreme case for twist with single body
 	//UnitTest3();//chain mimic with two bodies
 	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
 	//UnitTest5();//test induced twist for single body
@@ -25,6 +25,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest12();//2 cube
 	//HingeJointUnitTest0();//hinge joint with auto constraint
 	//UnitTest13();//vector vield switch test
+	UnitTest14();//5 body for Euler twist
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -128,6 +129,10 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	hingeDirGlobals.resize(numOfLinks);
 	hingeMagnitude.resize(numOfLinks);
 	twistAxis.resize(numOfLinks);
+	eulerX.resize(numOfLinks);
+	eulerY.resize(numOfLinks);
+	eulerZ.resize(numOfLinks);
+	oldEulerZ.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
@@ -162,6 +167,10 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 		uGlobals.push_back(uPairs);
 
 		twistAxis[i] = _Vector3(0, -1, 0);
+		eulerX[i] = _Vector3(0, -1, 0);
+		eulerY[i] = _Vector3(0, 0, 1);
+		eulerZ[i] = _Vector3(-1, 0, 0);
+		oldEulerZ[i] = _Vector3(-1, 0, 0);
 	}
 }
 

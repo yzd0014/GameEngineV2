@@ -85,6 +85,7 @@ namespace eae6320
 		void UnitTest11();
 		void UnitTest12();
 		void UnitTest13();
+		void UnitTest14();
 		void HingeJointUnitTest0();
 
 		_Vector q;
@@ -132,11 +133,11 @@ namespace eae6320
 		std::vector<_Scalar> jointLimit;
 		std::vector<std::pair<_Scalar, _Scalar>> jointRange;
 		std::vector<_Vector3> twistAxis;
-		_Vector3 eulerX = _Vector3(0, -1, 0);
-		_Vector3 eulerY = _Vector3(0, 0, 1);
-		_Vector3 eulerZ = _Vector3(-1, 0, 0);
-		_Vector3 oldEulerZ = _Vector3(-1, 0, 0);
-		_Scalar swingEpsilon = 0.01;
+		std::vector<_Vector3> eulerX;
+		std::vector<_Vector3> eulerY;
+		std::vector<_Vector3> eulerZ;
+		std::vector<_Vector3> oldEulerZ;
+		_Scalar swingEpsilon = 0.001;
 		uint8_t vectorFieldNum = 0;
 		
 		_Scalar kineticEnergy0 = 0;

@@ -88,27 +88,29 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			else if (swingMode == EULER_SWING)
 			{
 				_Matrix3 R = Math::RotationConversion_QuatToMat(rel_ori[i]);
-				_Vector3 rotatedX = R * eulerX;
+				_Vector3 rotatedX = R * eulerX[i];
 				_Vector3 rotatedZ;
 				if (vectorFieldNum == 0)
 				{
-					rotatedZ = rotatedX.cross(eulerY);
+					rotatedZ = rotatedX.cross(eulerY[i]);
 				}
 				else
 				{
-					rotatedZ = eulerY.cross(rotatedX);
+					rotatedZ = eulerY[i].cross(rotatedX);
 				}
-				if (rotatedZ.norm() > swingEpsilon)
+				_Scalar zNorm = rotatedZ.norm();
+				if (zNorm > swingEpsilon)
 				{
 					rotatedZ.normalize();
-					if (rotatedZ.dot(oldEulerZ) < 0)//vector field switch
+					if (rotatedZ.dot(oldEulerZ[i]) < 0)//vector field switch
 					{
 						vectorFieldNum = !vectorFieldNum;
 						rotatedZ = -rotatedZ;
-						std::cout << "Vector field switched." << std::endl;
+						std::cout << "Vector field switched with zNorm: " << zNorm << std::endl;
 					}
 					
-					_Scalar twistConstraint = rotatedZ.dot(R * eulerZ) - cos(jointRange[i].second);
+					_Scalar twistConstraint = rotatedZ.dot(R * eulerZ[i]) - cos(jointRange[i].second);
+					
 					if (twistConstraint < 0)
 					{
 						jointsID.push_back(i);
@@ -116,11 +118,11 @@ void eae6320::MultiBody::BallJointLimitCheck()
 						limitType.push_back(TWIST_EULER);
 					}
 					//std::cout << rotatedZ.dot(oldEulerZ) << std::endl << std::endl;
-					oldEulerZ = rotatedZ;
+					oldEulerZ[i] = rotatedZ;
 				}
 				else
 				{
-					std::cout << "Euler swing singluarity points are reached." << std::endl;
+					std::cout << "Euler swing singluarity points are reached with zNorm: " << zNorm << std::endl;
 				}
 
 			}
@@ -210,15 +212,15 @@ void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
 					_Matrix3 R = R_local[i];
 					_Matrix A0;
 					_Vector3 mVec;
-					mVec = Math::ToSkewSymmetricMatrix(eulerY) * R * eulerZ;
-					A0 = eulerX.transpose() * R.transpose() * Math::ToSkewSymmetricMatrix(mVec);
+					mVec = Math::ToSkewSymmetricMatrix(eulerY[i]) * R * eulerZ[i];
+					A0 = eulerX[i].transpose() * R.transpose() * Math::ToSkewSymmetricMatrix(mVec);
 					_Matrix A1;
-					mVec = R * eulerZ;
-					A1 = -eulerX.transpose() * R.transpose() * Math::ToSkewSymmetricMatrix(eulerY) * Math::ToSkewSymmetricMatrix(mVec);
+					mVec = R * eulerZ[i];
+					A1 = -eulerX[i].transpose() * R.transpose() * Math::ToSkewSymmetricMatrix(eulerY[i]) * Math::ToSkewSymmetricMatrix(mVec);
 					_Matrix A2;
-					_Vector3 s = -eulerY.cross(R * eulerX);
-					mVec = R * eulerX;
-					A2 = -cos(jointRange[i].second) / s.norm() * s.transpose() * Math::ToSkewSymmetricMatrix(eulerY) * Math::ToSkewSymmetricMatrix(mVec);
+					_Vector3 s = -eulerY[i].cross(R * eulerX[i]);
+					mVec = R * eulerX[i];
+					A2 = -cos(jointRange[i].second) / s.norm() * s.transpose() * Math::ToSkewSymmetricMatrix(eulerY[i]) * Math::ToSkewSymmetricMatrix(mVec);
 					_Matrix mJ;
 					mJ.resize(1, 3);
 					if (vectorFieldNum == 0)
