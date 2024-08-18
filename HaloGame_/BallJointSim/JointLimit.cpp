@@ -141,7 +141,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 	}
 }
 
-void eae6320::MultiBody::ResolveJointLimit(const _Scalar h)
+void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 {
 	size_t constraintNum = jointsID.size();
 

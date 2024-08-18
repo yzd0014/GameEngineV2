@@ -65,7 +65,7 @@ namespace eae6320
 		void _ResolveJointLimitPBD(_Vector& i_q, const _Scalar h);
 		
 		void BallJointLimitCheck();
-		void ResolveJointLimit(const _Scalar h);
+		void SolveVelocityJointLimit(const _Scalar h);
 
 		void KineticEnergyProjection();
 		void EnergyMomentumProjection();

@@ -194,11 +194,9 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Scalar dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 
-	//EulerIntegration(dt);
+	EulerIntegration(dt);
 	//RK3Integration(dt);
-	RK4Integration(dt);
-	//std::cout << qdot.transpose() << std::endl;
-	//std::cout << rel_ori[0] << std::endl;
+	//RK4Integration(dt);
 	
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
@@ -287,6 +285,12 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	_Vector qddot = MrInverse * Qr;
 
 	qdot = qdot + qddot * h;
+	if (constraintSolverMode == IMPULSE)
+	{
+		BallJointLimitCheck();
+		SolveVelocityJointLimit(h);
+	}
+
 	//KineticEnergyProjection();
 	//MomentumProjection();
 	//EnergyMomentumProjection();
@@ -312,7 +316,7 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	if (constraintSolverMode == IMPULSE)
 	{
 		BallJointLimitCheck();
-		ResolveJointLimit(h);
+		SolveVelocityJointLimit(h);
 		/*_BallJointLimitCheck();
 		_ResolveJointLimit(h);*/
 	}
@@ -327,43 +331,9 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 		_ResolveJointLimitPBD(q_new, h);
 	}
 	q = q_new;
-	//std::cout << q.transpose() << std::endl;
 
 	ClampRotationVector();
 	Forward();
-	//{
-	//	_Vector3 p = _Vector3(0, -1, 0);
-	//	_Vector3 local_x = _Vector3(1, 0, 0);
-
-	//	_Matrix3 R_swing;
-	//	_Matrix3 R_twist;
-	//	_Vector3 twistAxis(0, -1, 0);
-	//	Math::TwistSwingDecomposition(R_local[0], twistAxis, R_twist, R_swing);
-	//	_Vector3 vec_twist = Math::RotationConversion_MatrixToVec(R_twist);
-	//	_Vector3 vec_swing = Math::RotationConversion_MatrixToVec(R_swing);
-
-	//	_Vector s = p.cross(R_local[0] * p);
-	//	//std::cout << "twist: " << vec_twist.norm() << " swing: " << vec_swing.norm() << " s norm: " << s.norm() << std::endl;
-	//	std::cout << "twist: " << vec_twist.transpose().normalized() << " swing: " << vec_swing.transpose().normalized() << std::endl;
-	//	
-	//	if (s.norm() < 0.005 && Physics::totalSimulationTime > 0.2)
-	//	{
-	//		Physics::simPause = true;
-	//		if (twistArrow != nullptr)
-	//		{
-	//			twistArrow->DestroyGameObject();
-	//			twistArrow = nullptr;
-	//		}
-	//		twistArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_twist.normalized(), Math::sVector(0, 1, 0), 0.5);
-
-	//		if (swingArrow != nullptr)
-	//		{
-	//			swingArrow->DestroyGameObject();
-	//			swingArrow = nullptr;
-	//		}
-	//		swingArrow = GameplayUtility::DrawArrow(Vector3d(0, 0, 0), vec_swing.normalized(), Math::sVector(1, 0, 0), 0.5);
-	//	}
-	//}
 }
 
 void eae6320::MultiBody::RK3Integration(const _Scalar h)
