@@ -92,6 +92,21 @@ void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 	Mr.resize(totalVelDOF, totalVelDOF);
 }
 
+void eae6320::MultiBody::ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle)
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		eulerX[i] = xAxis;
+		eulerY[i] = yAxis;
+		eulerZ[i] = zAxis;
+		oldEulerZ[i] = zAxis;
+		twistAxis[i] = xAxis;
+
+		jointRange[i].first = swingAngle;//swing
+		jointRange[i].second = twistAngle;//twist
+	}
+}
+
 void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition)
 {
 	for (int i = 0; i < numOfLinks; i++)

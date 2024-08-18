@@ -17,13 +17,14 @@ namespace eae6320
 		void UpdateGameObjectBasedOnInput() override;
 
 		int constraintSolverMode = IMPULSE;
-		int constraintType = SWING_C;
+		int constraintType = SWING_C;//only used for testing
 		int swingMode = EULER_SWING;
 		bool gravity = FALSE ;
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void InitializeJoints(int* i_jointType);
 		void SetZeroInitialCondition();
+		void ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
 
 		void ComputeMr();
 		void ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat);

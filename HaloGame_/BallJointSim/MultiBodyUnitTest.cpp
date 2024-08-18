@@ -406,26 +406,13 @@ void eae6320::MultiBody::UnitTest14()
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 	InitializeBodies(masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor, _Vector3(-1, 0, 0), _Vector3(1, 0, 0));//4 is capsule, 3 is cube
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		eulerX[i] = _Vector3(1, 0, 0);
-		eulerY[i] = _Vector3(0, 1, 0);
-		eulerZ[i] = _Vector3(0, 0, 1);
-		oldEulerZ[i] = _Vector3(0, 0, 1);
-		twistAxis[i] = _Vector3(1, 0, 0);
-	}
 
 	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
+	ConfigurateBallJoint(_Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.25 * M_PI, 0.01);
 
 	SetZeroInitialCondition();
 	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
 
-
 	Forward();
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		jointRange[i].first = 0.25 * M_PI;//swing
-		jointRange[i].second = 0.01;//twist
-	}
 }
