@@ -246,7 +246,8 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 		}
 		_Matrix lambda;
 		lambda = (J * MrInverse * K.transpose()).inverse() * (-J * qdot - bias);
-		//std::cout << lambda.transpose() << std::endl;
+		Jc_jointLimit = J;//backup J for position solve
+
 		for (size_t k = 0; k < constraintNum; k++)
 		{
 			if (lambda(k, 0) < 0)
@@ -257,4 +258,108 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 		_Vector qdotCorrection = MrInverse * K.transpose() * lambda;
 		qdot = qdot + qdotCorrection;
 	}
+}
+
+void eae6320::MultiBody::PrePositionSolveProccessing()
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (jointType[i] == BALL_JOINT_4D)
+		{
+			x.segment(xStartIndex[i], 3) = Math::RotationConversion_QuatToVec(rel_ori[i]);
+
+			//update H for 4D ball joint
+			_Vector3 r = x.segment(xStartIndex[i], 3);
+			_Scalar theta = r.norm();
+			_Scalar b = Compute_b(theta);
+			_Scalar a = Compute_a(theta);
+			_Scalar c = Compute_c(theta, a);
+			J_rotation[i] = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
+			_Matrix3 A;
+			if (i == 0) A = J_rotation[i];
+			else A = R_global[i - 1] * J_rotation[i];
+			H[i].resize(6, 3);
+			H[i].setZero();
+			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * A;
+			H[i].block<3, 3>(3, 0) = A;
+		}
+		else if (jointType[i] == FREE_JOINT)
+		{
+			x.segment(xStartIndex[i], 3) = q.segment(posStartIndex[i], 3);
+			x.segment(xStartIndex[i] + 3, 3) = Math::RotationConversion_QuatToVec(rel_ori[i]);
+		}
+		else
+		{
+			x.segment(xStartIndex[i], xDOF[i]) = q.segment(posStartIndex[i], xDOF[i]);
+		}
+		//update Ht
+		for (int k = 0; k <= i; k++)//TODO
+		{
+			_Matrix H_temp;
+			H_temp.resize(6, 3);
+			H_temp = H[k];
+			for (int j = k + 1; j <= i; j++)
+			{
+				H_temp = D[j] * H_temp;
+			}
+			Ht[i].block(0, velStartIndex[k], 6, velDOF[k]) = H_temp;
+		}
+	}
+}
+
+void eae6320::MultiBody::PostPositionSolveProccessing()
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (jointType[i] == BALL_JOINT_4D)
+		{
+			_Vector3 rotVec = x.segment(xStartIndex[i], 3);
+			rel_ori[i] = Math::RotationConversion_VecToQuat(rotVec);
+		}
+		else if (jointType[i] == FREE_JOINT)
+		{
+			q.segment(posStartIndex[i], 3) = x.segment(xStartIndex[i], 3);
+			_Vector3 rotVec = x.segment(xStartIndex[i] + 3, 3);
+			rel_ori[i] = Math::RotationConversion_VecToQuat(rotVec);
+		}
+		else
+		{
+			q.segment(posStartIndex[i], xDOF[i]) = x.segment(xStartIndex[i], xDOF[i]);
+		}
+	}
+}
+
+void eae6320::MultiBody::ComputeJ_rotation(_Vector& i_x)
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (jointType[i] == BALL_JOINT_4D || jointType[i] == BALL_JOINT_3D)
+		{
+			_Vector3 r = i_x.segment(xStartIndex[i], 3);
+			_Scalar theta = r.norm();
+			_Scalar b = Compute_b(theta);
+			_Scalar a = Compute_a(theta);
+			_Scalar c = Compute_c(theta, a);
+			J_rotation[i] = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
+		}
+	}
+}
+
+void eae6320::MultiBody::SolvePositionJointLimit()//TODO
+{
+	_Matrix J;
+	size_t constraintNum = jointsID.size();
+	J.resize(constraintNum, totalXDOF);
+	J.setZero();
+
+	_Matrix C;
+	C.resize(constraintNum, 1);
+
+	for (size_t k = 0; k < constraintNum; k++)
+	{
+		int i = jointsID[k];
+		J.block<1, 3>(k, xStartIndex[i]) = Jc_jointLimit.block<1, 3>(k, velStartIndex[i]) * J_rotation[i];
+	}
+	_Matrix A = J * MrInverse * J.transpose();
+	_Matrix lambda = A.inverse() * -C;
 }

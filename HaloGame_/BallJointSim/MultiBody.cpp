@@ -42,6 +42,7 @@ void eae6320::MultiBody::SetZeroInitialCondition()
 	q.setZero();
 	qdot.resize(totalVelDOF);
 	qdot.setZero();
+	x.resize(totalXDOF);
 }
 
 void eae6320::MultiBody::InitializeJoints(int* i_jointType)
@@ -56,6 +57,9 @@ void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 			posDOF[i] = 3;
 			totalVelDOF += 3;
 			totalPosDOF += 3;
+
+			xDOF[i] = 3;
+			totalXDOF += 3;
 		}
 		else if (jointType[i] == BALL_JOINT_4D)
 		{
@@ -63,6 +67,9 @@ void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 			posDOF[i] = 4;
 			totalVelDOF += 3;
 			totalPosDOF += 4;
+	
+			xDOF[i] = 3;
+			totalXDOF += 3;
 		}
 		else if (jointType[i] == FREE_JOINT)
 		{
@@ -70,6 +77,9 @@ void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 			posDOF[i] = 7;
 			totalVelDOF += 6;
 			totalPosDOF += 7;
+
+			xDOF[i] = 6;
+			totalXDOF += 6;
 		}
 		else if (jointType[i] == HINGE_JOINT)
 		{
@@ -77,6 +87,9 @@ void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 			posDOF[i] = 1;
 			totalVelDOF += 1;
 			totalPosDOF += 1;
+
+			xDOF[i] = 1;
+			totalXDOF += 1;
 		}
 		if (i == 0)
 		{
@@ -87,6 +100,7 @@ void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 		{
 			velStartIndex[i] = velStartIndex[i - 1] + velDOF[i - 1];
 			posStartIndex[i] = posStartIndex[i - 1] + posDOF[i - 1];
+			xStartIndex[i] = xStartIndex[i - 1] + xDOF[i - 1];
 		}
 	}
 	Mr.resize(totalVelDOF, totalVelDOF);
@@ -138,6 +152,8 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	posStartIndex.resize(numOfLinks);
 	velDOF.resize(numOfLinks);
 	velStartIndex.resize(numOfLinks);
+	xDOF.resize(numOfLinks);
+	xStartIndex.resize(numOfLinks);
 	jointLimit.resize(numOfLinks);
 	jointRange.resize(numOfLinks);
 	hingeDirLocals.resize(numOfLinks);

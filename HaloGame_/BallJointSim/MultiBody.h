@@ -20,6 +20,7 @@ namespace eae6320
 		int constraintType = SWING_C;//only used for testing
 		int swingMode = EULER_SWING;
 		bool gravity = FALSE ;
+		bool enablePositionSolve = FALSE;//position solve currently doesn't support free joint
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void InitializeJoints(int* i_jointType);
@@ -33,6 +34,7 @@ namespace eae6320
 		_Vector ComputeQr(_Vector i_qdot);
 		_Vector ComputeQr_SikpVelocityUpdate(_Vector& i_qdot);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot);
+		void ComputeJ_rotation(_Vector& i_q);
 		
 		void ForwardAngularAndTranslationalVelocity(_Vector& i_qdot);
 		
@@ -66,6 +68,10 @@ namespace eae6320
 		
 		void BallJointLimitCheck();
 		void SolveVelocityJointLimit(const _Scalar h);
+		void SolvePositionJointLimit();
+
+		void PrePositionSolveProccessing();
+		void PostPositionSolveProccessing();
 
 		void KineticEnergyProjection();
 		void EnergyMomentumProjection();
@@ -91,11 +97,14 @@ namespace eae6320
 
 		_Vector q;
 		_Vector qdot;
+		_Vector x;//used for position solve
 		std::vector<int> jointType;
 		std::vector<int> posDOF;
+		std::vector<int> xDOF;//used for position solve
 		std::vector<int> velDOF;
 		std::vector<int> posStartIndex;
 		std::vector<int> velStartIndex;
+		std::vector<int> xStartIndex;//used for position solve
 		_Matrix Mr;
 		_Matrix MrInverse;
 		std::vector<_Matrix> Mbody;
@@ -140,6 +149,7 @@ namespace eae6320
 		std::vector<_Vector3> oldEulerZ;
 		_Scalar swingEpsilon = 0.001;
 		uint8_t vectorFieldNum = 0;
+		_Matrix Jc_jointLimit;
 		
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;
@@ -151,6 +161,7 @@ namespace eae6320
 		int numOfLinks = 0;
 		int totalPosDOF = 0;
 		int totalVelDOF = 0;
+		int totalXDOF = 0;//used for position solve
 		int geometry = BOX;
 
 		//debug related parameters
