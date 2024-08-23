@@ -293,6 +293,8 @@ void eae6320::MultiBody::PrePositionSolveProccessing()
 			x.segment(xStartIndex[i], xDOF[i]) = q.segment(posStartIndex[i], xDOF[i]);
 		}
 		//update Ht
+		Ht[i].resize(6, totalXDOF);
+		Ht[i].setZero();
 		for (int k = 0; k <= i; k++)//TODO
 		{
 			_Matrix H_temp;

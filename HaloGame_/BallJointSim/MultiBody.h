@@ -29,8 +29,6 @@ namespace eae6320
 
 		void ComputeMr();
 		void ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat);
-		void ComputeH(_Vector& i_q);
-		void ComputeD();
 		_Vector ComputeQr(_Vector i_qdot);
 		_Vector ComputeQr_SikpVelocityUpdate(_Vector& i_qdot);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot);

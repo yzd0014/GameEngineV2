@@ -16,7 +16,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest3();//chain mimic with two bodies
 	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
 	//UnitTest5();//test induced twist for single body
-	//UnitTest6();//twist invariance for single body
+	UnitTest6();//twist invariance for single body
 	//UnitTest7();//test swing twist decomp with quat
 	//UnitTest8(); //mujoco ball joint constraint test for single body
 	//UnitTest9();//swing for 3d ball joint
@@ -25,7 +25,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest12();//2 cube
 	//HingeJointUnitTest0();//hinge joint with auto constraint
 	//UnitTest13();//vector vield switch test
-	UnitTest14();//5 body for Euler twist
+	//UnitTest14();//5 body for Euler twist
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -366,13 +366,14 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 	Forward();
 }
 
-void eae6320::MultiBody::ComputeH(_Vector& i_q)
+void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 {
+	ForwardKinematics(i_q, i_quat);
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		//compute H
 		if (jointType[i] == BALL_JOINT_4D)
 		{
+			//compute H
 			H[i].resize(6, 3);
 			H[i].setZero();
 			if (i == 0)
@@ -385,9 +386,17 @@ void eae6320::MultiBody::ComputeH(_Vector& i_q)
 				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * R_global[i - 1];
 				H[i].block<3, 3>(3, 0) = R_global[i - 1];
 			}
+			//compute D
+			if (i > 0)
+			{
+				D[i].resize(6, 6);
+				D[i].setIdentity();
+				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) - Math::ToSkewSymmetricMatrix(uGlobals[i - 1][1]);
+			}
 		}
 		else if (jointType[i] == BALL_JOINT_3D)
 		{
+			//compute H
 			_Vector3 r = i_q.segment(posStartIndex[i], 3);
 			_Scalar theta = r.norm();
 			_Scalar b = Compute_b(theta);
@@ -401,28 +410,7 @@ void eae6320::MultiBody::ComputeH(_Vector& i_q)
 			H[i].setZero();
 			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * A;
 			H[i].block<3, 3>(3, 0) = A;
-		}
-		//TODO: add free joint
-		else if (jointType[i] == FREE_JOINT)
-		{
-			H[i].resize(6, 6);
-			H[i].setIdentity();
-		}
-		else if (jointType[i] == HINGE_JOINT)
-		{
-			H[i].resize(6, 1);
-			H[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * hingeDirGlobals[i];
-			H[i].block<3, 1>(3, 0) = hingeDirGlobals[i];
-		}
-	}
-}
-
-void eae6320::MultiBody::ComputeD()
-{
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		if (jointType[i] == BALL_JOINT_3D || jointType[i] == BALL_JOINT_4D)
-		{
+			//compute D
 			if (i > 0)
 			{
 				D[i].resize(6, 6);
@@ -432,11 +420,20 @@ void eae6320::MultiBody::ComputeD()
 		}
 		else if (jointType[i] == FREE_JOINT)
 		{
+			//compute H
+			H[i].resize(6, 6);
+			H[i].setIdentity();
+			//compute D
 			D[i].resize(6, 6);
 			D[i].setZero();
 		}
 		else if (jointType[i] == HINGE_JOINT)
 		{
+			//compute H
+			H[i].resize(6, 1);
+			H[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * hingeDirGlobals[i];
+			H[i].block<3, 1>(3, 0) = hingeDirGlobals[i];
+			//compute D
 			D[i].resize(6, 6);
 			D[i].setIdentity();
 			if (i > 0)
@@ -446,17 +443,6 @@ void eae6320::MultiBody::ComputeD()
 				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(iVec);
 			}
 		}
-	}
-}
-
-void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
-{
-	ForwardKinematics(i_q, i_quat);
-	ComputeH(i_q);
-	ComputeD();
-	
-	for (int i = 0; i < numOfLinks; i++)
-	{
 		//compose Ht
 		Ht[i].resize(6, totalVelDOF);
 		Ht[i].setZero();
@@ -588,7 +574,6 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			}
 			gamma[i].block<3, 1>(3, 0) = gamma_theta;
 		}
-		//TODO: add free joint
 		else if (jointType[i] == FREE_JOINT)
 		{
 			gamma[i].resize(6);
