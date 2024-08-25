@@ -32,7 +32,6 @@ namespace eae6320
 		_Vector ComputeQr(_Vector i_qdot);
 		_Vector ComputeQr_SikpVelocityUpdate(_Vector& i_qdot);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot);
-		void ComputeJ_rotation(_Vector& i_q);
 		
 		void ForwardAngularAndTranslationalVelocity(_Vector& i_qdot);
 		
@@ -137,6 +136,7 @@ namespace eae6320
 		std::vector<_Scalar> constraintValue;
 		std::vector<int> jointsID;
 		std::vector<int> limitType;
+		size_t constraintNum = 0;
 		
 		std::vector<_Scalar> jointLimit;
 		std::vector<std::pair<_Scalar, _Scalar>> jointRange;
@@ -146,7 +146,7 @@ namespace eae6320
 		std::vector<_Vector3> eulerZ;
 		std::vector<_Vector3> oldEulerZ;
 		_Scalar swingEpsilon = 0.001;
-		uint8_t vectorFieldNum = 0;
+		std::vector <uint8_t> vectorFieldNum;
 		_Matrix Jc_jointLimit;
 		
 		_Scalar kineticEnergy0 = 0;
@@ -165,6 +165,9 @@ namespace eae6320
 		//debug related parameters
 		GameObject* swingArrow = nullptr;
 		GameObject* twistArrow = nullptr;
+		GameObject* xArrow = nullptr;
+		GameObject* yArrow = nullptr;
+		GameObject* zArrow = nullptr;
 /*******************************************************************************************/
 		inline _Scalar Compute_a(_Scalar theta)
 		{

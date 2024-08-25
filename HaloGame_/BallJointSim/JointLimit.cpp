@@ -59,12 +59,14 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				_Vector3 swingVec = Math::RotationConversion_QuatToVec(swingComponent);
 				swingAngle = swingVec.norm();
 				//std::cout << "twist: " << twistAngle << ", swing: " << swingAngle << std::endl;
+				std::cout << "SWING " << jointRange[i].first - swingAngle << std::endl;
 			}
 			if (jointRange[i].first > 0 && jointRange[i].first - swingAngle < 0)//check swing constraint
 			{
 				jointsID.push_back(i);
 				constraintValue.push_back(jointRange[i].first - swingAngle);
 				limitType.push_back(SWING);
+				//std::cout << "SWING " << constraintValue.back() << std::endl;
 			}
 
 			if (swingMode == DIRECT_SWING)
@@ -85,12 +87,12 @@ void eae6320::MultiBody::BallJointLimitCheck()
 					}
 				}
 			}
-			else if (swingMode == EULER_SWING)
+			else if (swingMode == EULER_SWING && jointRange[i].second > 0)
 			{
 				_Matrix3 R = Math::RotationConversion_QuatToMat(rel_ori[i]);
 				_Vector3 rotatedX = R * eulerX[i];
 				_Vector3 rotatedZ;
-				if (vectorFieldNum == 0)
+				if (vectorFieldNum[i] == 0)
 				{
 					rotatedZ = rotatedX.cross(eulerY[i]);
 				}
@@ -102,22 +104,22 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				if (zNorm > swingEpsilon)
 				{
 					rotatedZ.normalize();
-					if (rotatedZ.dot(oldEulerZ[i]) < 0)//vector field switch
+					_Scalar dotProduct = rotatedZ.dot(oldEulerZ[i]);
+					if (dotProduct < 0)//vector field switch
 					{
-						vectorFieldNum = !vectorFieldNum;
+						vectorFieldNum[i] = !vectorFieldNum[i];
 						rotatedZ = -rotatedZ;
-						std::cout << "Vector field switched with zNorm: " << zNorm << std::endl;
+						std::cout << "Vector field switched " << std::endl;
 					}
 					
 					_Scalar twistConstraint = rotatedZ.dot(R * eulerZ[i]) - cos(jointRange[i].second);
-					
+					std::cout << "TWIST_EULER " << twistConstraint << std::endl;
 					if (twistConstraint < 0)
 					{
 						jointsID.push_back(i);
 						constraintValue.push_back(twistConstraint);
 						limitType.push_back(TWIST_EULER);
 					}
-					//std::cout << rotatedZ.dot(oldEulerZ) << std::endl << std::endl;
 					oldEulerZ[i] = rotatedZ;
 				}
 				else
@@ -139,12 +141,13 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			}
 		}
 	}
+	
+	constraintNum = jointsID.size();
+	//if (constraintNum > 0) std::cout << std::endl;
 }
 
 void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 {
-	size_t constraintNum = jointsID.size();
-
 	if (constraintNum > 0)
 	{
 		_Matrix J;
@@ -223,7 +226,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 					A2 = -cos(jointRange[i].second) / s.norm() * s.transpose() * Math::ToSkewSymmetricMatrix(eulerY[i]) * Math::ToSkewSymmetricMatrix(mVec);
 					_Matrix mJ;
 					mJ.resize(1, 3);
-					if (vectorFieldNum == 0)
+					if (vectorFieldNum[i] == 0)
 					{
 						mJ = A0 + A1 + A2;
 					}
@@ -239,10 +242,8 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 			//compute bias
 			_Vector3 v = qdot.segment(velStartIndex[i], 3);
 			_Matrix C_dot = J.block<1, 3>(k, velStartIndex[i]) * v;
-			_Scalar beta = 0.001f;
 			_Scalar CR = 0.0f;
-			_Scalar SlopP = 0.001f;
-			bias(k) = -beta / h * std::max<_Scalar>(-constraintValue[i] - SlopP, 0.0) - CR * std::max<_Scalar>(-C_dot(0, 0), 0.0);
+			bias(k) = -CR * std::max<_Scalar>(-C_dot(0, 0), 0.0);
 		}
 		_Matrix lambda;
 		lambda = (J * MrInverse * K.transpose()).inverse() * (-J * qdot - bias);
@@ -262,6 +263,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 
 void eae6320::MultiBody::PrePositionSolveProccessing()
 {
+	Mr.setZero();
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		if (jointType[i] == BALL_JOINT_4D)
@@ -304,8 +306,20 @@ void eae6320::MultiBody::PrePositionSolveProccessing()
 			{
 				H_temp = D[j] * H_temp;
 			}
-			Ht[i].block(0, velStartIndex[k], 6, velDOF[k]) = H_temp;
+			Ht[i].block(0, xStartIndex[k], 6, xDOF[k]) = H_temp;
 		}
+		
+		//update Mr
+		_Matrix M_temp = Ht[i].transpose() * Mbody[i] * Ht[i];
+		Mr = Mr + M_temp;
+	}
+	if (Mr.determinant() < 0.0000001)
+	{
+		EAE6320_ASSERTF(false, "mass matrix singluarity reached!");
+	}
+	else
+	{
+		MrInverse = Mr.inverse();
 	}
 }
 
@@ -326,42 +340,34 @@ void eae6320::MultiBody::PostPositionSolveProccessing()
 		}
 		else
 		{
-			q.segment(posStartIndex[i], xDOF[i]) = x.segment(xStartIndex[i], xDOF[i]);
+			q.segment(posStartIndex[i], posDOF[i]) = x.segment(xStartIndex[i], xDOF[i]);
 		}
 	}
 }
 
-void eae6320::MultiBody::ComputeJ_rotation(_Vector& i_x)
-{
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		if (jointType[i] == BALL_JOINT_4D || jointType[i] == BALL_JOINT_3D)
-		{
-			_Vector3 r = i_x.segment(xStartIndex[i], 3);
-			_Scalar theta = r.norm();
-			_Scalar b = Compute_b(theta);
-			_Scalar a = Compute_a(theta);
-			_Scalar c = Compute_c(theta, a);
-			J_rotation[i] = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
-		}
-	}
-}
-
-void eae6320::MultiBody::SolvePositionJointLimit()//TODO
+void eae6320::MultiBody::SolvePositionJointLimit()
 {
 	_Matrix J;
-	size_t constraintNum = jointsID.size();
 	J.resize(constraintNum, totalXDOF);
 	J.setZero();
 
 	_Matrix C;
 	C.resize(constraintNum, 1);
-
 	for (size_t k = 0; k < constraintNum; k++)
 	{
 		int i = jointsID[k];
-		J.block<1, 3>(k, xStartIndex[i]) = Jc_jointLimit.block<1, 3>(k, velStartIndex[i]) * J_rotation[i];
+		if (jointType[i] == BALL_JOINT_4D)
+		{
+			J.block<1, 3>(k, xStartIndex[i]) = Jc_jointLimit.block<1, 3>(k, velStartIndex[i]) * J_rotation[i];
+		}
+		else
+		{
+			J.block<1, 3>(k, xStartIndex[i]) = Jc_jointLimit.block<1, 3>(k, velStartIndex[i]);
+		}
+		C(k, 0) = constraintValue[k];
 	}
 	_Matrix A = J * MrInverse * J.transpose();
 	_Matrix lambda = A.inverse() * -C;
+	_Vector xCorrection = MrInverse * J.transpose() * lambda;
+	x = x + xCorrection;
 }

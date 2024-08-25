@@ -164,6 +164,7 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	eulerY.resize(numOfLinks);
 	eulerZ.resize(numOfLinks);
 	oldEulerZ.resize(numOfLinks);
+	vectorFieldNum.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
@@ -197,6 +198,7 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 
+		vectorFieldNum[i] = 0;
 		twistAxis[i] = _Vector3(0, -1, 0);
 		eulerX[i] = _Vector3(0, -1, 0);
 		eulerY[i] = _Vector3(0, 0, 1);
@@ -311,7 +313,12 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//MomentumProjection();
 	//EnergyMomentumProjection();
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
-	
+	if (enablePositionSolve && constraintNum)
+	{
+		PrePositionSolveProccessing();
+		SolvePositionJointLimit();
+		PostPositionSolveProccessing();
+	}
 	ClampRotationVector();
 	Forward();
 	//EnergyMomentumProjection();

@@ -103,8 +103,8 @@ void eae6320::MultiBody::UnitTest2()
 	
 	Forward();
 
-	//jointRange[0].first = 0.5 * M_PI;//swing
-	jointRange[0].second = 0.5 * M_PI;//twist
+	jointRange[0].first = 0.25 * M_PI;//swing
+	//jointRange[0].second = 0.5 * M_PI;//twist
 	//jointLimit[0] = 0.5 * M_PI;
 }
 
@@ -217,6 +217,7 @@ void eae6320::MultiBody::UnitTest6()
 	qdot.segment(0, 3) = world_w;
 	Forward();
 
+	jointRange[0].first = 0.75 * M_PI;//swing
 	jointRange[0].second = 0.5 * M_PI;//twist
 }
 
