@@ -66,6 +66,10 @@ namespace eae6320
 		void BallJointLimitCheck();
 		void SolveVelocityJointLimit(const _Scalar h);
 		void SolvePositionJointLimit();
+		_Scalar ComputeSwingError(int jointNum);
+		_Scalar ComputeTwistEulerError(int jointNum, bool checkVectorField);
+		void ComputeTwistEulerJacobian(int jointNum, _Matrix3& i_R, _Matrix& o_J);
+		void ComputeSwingJacobian(int jointNum, _Matrix3& i_R, _Matrix& o_J);
 
 		void PrePositionSolveProccessing();
 		void PostPositionSolveProccessing();
