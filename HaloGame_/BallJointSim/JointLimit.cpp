@@ -37,17 +37,17 @@ _Scalar eae6320::MultiBody::ComputeAngularVelocityConstraint(_Vector3& w, _Vecto
 	return C;
 }
 
-_Scalar eae6320::MultiBody::ComputeSwingError(int jointNum, _Matrix3& i_R)
+_Scalar eae6320::MultiBody::ComputeSwingError(int jointNum)
 {
 	_Scalar out;
-	out = twistAxis[jointNum].dot(i_R * twistAxis[jointNum]) - cos(jointRange[jointNum].first);
+	out = twistAxis[jointNum].dot(R_local[jointNum] * twistAxis[jointNum]) - cos(jointRange[jointNum].first);
 	return out;
 }
 
-_Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, _Matrix3& i_R, bool checkVectorField)
+_Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVectorField)
 {
 	_Scalar out = 0;
-	_Vector3 rotatedX = i_R * eulerX[jointNum];
+	_Vector3 rotatedX = R_local[jointNum] * eulerX[jointNum];
 	_Vector3 rotatedZ;
 	if (vectorFieldNum[jointNum] == 0)
 	{
@@ -72,7 +72,7 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, _Matrix3& i_R, 
 			}
 			oldEulerZ[jointNum] = rotatedZ;
 		}
-		out = rotatedZ.dot(i_R * eulerZ[jointNum]) - cos(jointRange[jointNum].second);
+		out = rotatedZ.dot(R_local[jointNum] * eulerZ[jointNum]) - cos(jointRange[jointNum].second);
 	}
 	else
 	{
@@ -105,13 +105,13 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			}
 			if (jointRange[i].first > 0)//check swing constraint
 			{
-				_Scalar swingConstraint = ComputeSwingError(i, R_local[i]);
+				_Scalar swingConstraint = ComputeSwingError(i);
 				if (swingConstraint < 0)
 				{
 					jointsID.push_back(i);
 					constraintValue.push_back(swingConstraint);
 					limitType.push_back(SWING);
-					std::cout << "SWING " << swingConstraint << std::endl;
+					//std::cout << "SWING " << swingConstraint << std::endl;
 				}
 			}
 
@@ -135,7 +135,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			}
 			else if (swingMode == EULER_SWING && jointRange[i].second > 0)
 			{
-				_Scalar twistConstraint = ComputeTwistEulerError(i, R_local[i], TRUE);
+				_Scalar twistConstraint = ComputeTwistEulerError(i, TRUE);
 				if (twistConstraint < 0)
 				{
 					jointsID.push_back(i);
@@ -316,7 +316,7 @@ void eae6320::MultiBody::PostPositionSolveProccessing()
 	}
 }
 
-void eae6320::MultiBody::SolvePositionJointLimit()
+void eae6320::MultiBody::SolvePositionJointLimit(const _Scalar h)
 {
 	std::vector<int> jointTypeCopy(jointType);
 	jointType = xJointType;
@@ -327,6 +327,8 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 	_Matrix C;
 	C.resize(constraintNum, 1);
 
+	_Matrix lambda;
+	_Vector xCorrection;
 	for (int solverIter = 0; solverIter < 1; solverIter++)
 	{
 		J.setZero();
@@ -344,22 +346,44 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 					_Matrix J_swing;
 					ComputeSwingJacobian(i, J_swing);
 					J.block<1, 3>(k, xStartIndex[i]) = J_swing * J_rotation[i];
-					C(k, 0) = ComputeSwingError(i, mR);
+					C(k, 0) = ComputeSwingError(i);
 				}
 				else if (limitType[k] == TWIST_EULER)
 				{
 					_Matrix J_twist;
 					ComputeTwistEulerJacobian(i, J_twist);
 					J.block<1, 3>(k, xStartIndex[i]) = J_twist * J_rotation[i];
-					C(k, 0) = ComputeTwistEulerError(i, mR, FALSE);
+					C(k, 0) = ComputeTwistEulerError(i, FALSE);
 				}
 			}
 		}
 		_Matrix A = J * Mr.inverse() * J.transpose();
-		_Matrix lambda = A.inverse() * -C;
-		_Vector xCorrection = MrInverse * J.transpose() * lambda;
+		lambda = A.inverse() * -C;
+		xCorrection = MrInverse * J.transpose() * lambda;
 		x = x + xCorrection;
 	}
+	_Vector xDot;
+	xDot = (x - xOld) / h;
+
 	jointType = jointTypeCopy;
 	posStartIndex = posStartIndexCopy;
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (jointType[i] == BALL_JOINT_4D)
+		{
+			qdot.segment(velStartIndex[i], velDOF[i]) = J_rotation[i] * xDot.segment(xStartIndex[i], xDOF[i]);
+		}
+		else
+		{
+			qdot.segment(velStartIndex[i], velDOF[i]) = xDot.segment(xStartIndex[i], xDOF[i]);
+		}
+	}
+	/*if (qdot.norm() > 100)
+	{
+		std::cout << C.norm() << std::endl;
+	}
+	std::cout << C.norm() << std::endl;
+	std::cout << lambda << std::endl;
+	std::cout << xDot.norm() << std::endl;
+	std::cout << xCorrection.norm() << std::endl << std::endl;*/
 }

@@ -65,9 +65,9 @@ namespace eae6320
 		
 		void BallJointLimitCheck();
 		void SolveVelocityJointLimit(const _Scalar h);
-		void SolvePositionJointLimit();
-		_Scalar ComputeSwingError(int jointNum, _Matrix3& i_R);
-		_Scalar ComputeTwistEulerError(int jointNum, _Matrix3& i_R, bool checkVectorField);
+		void SolvePositionJointLimit(const _Scalar h);
+		_Scalar ComputeSwingError(int jointNum);
+		_Scalar ComputeTwistEulerError(int jointNum, bool checkVectorField);
 		void ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J);
 		void ComputeSwingJacobian(int jointNum, _Matrix& o_J);
 
@@ -99,6 +99,7 @@ namespace eae6320
 		_Vector q;
 		_Vector qdot;
 		_Vector x;//used for position solve
+		_Vector xOld;
 		std::vector<int> jointType;
 		std::vector<int> posDOF;
 		std::vector<int> xDOF;//used for position solve

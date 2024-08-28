@@ -99,7 +99,8 @@ void eae6320::MultiBody::UnitTest2()
 
 	SetZeroInitialCondition();
 	int jointID = 0;
-	qdot.segment(velStartIndex[jointID], 3) = _Vector3(-2.0, 2.0, 0.0);
+	//qdot.segment(velStartIndex[jointID], 3) = _Vector3(-2.0, 2.0, 0.0);
+	qdot.segment(velStartIndex[jointID], 3) = _Vector3(2.0, 2.0, 0.0);
 	
 	Forward();
 
@@ -196,7 +197,7 @@ void eae6320::MultiBody::UnitTest4()
 void eae6320::MultiBody::UnitTest6()
 {
 	numOfLinks = 1;
-	constraintSolverMode = IMPULSE;
+	constraintSolverMode = -1;
 
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
@@ -208,8 +209,8 @@ void eae6320::MultiBody::UnitTest6()
 
 	SetZeroInitialCondition();
 
-	//_Vector3 rot_vec(0, 0.0, -0.25 * M_PI);
-	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
+	_Vector3 rot_vec(0, 0.0, -0.25 * M_PI);
+	//_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
 	Forward();
 	_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
@@ -217,8 +218,8 @@ void eae6320::MultiBody::UnitTest6()
 	qdot.segment(0, 3) = world_w;
 	Forward();
 
-	jointRange[0].first = 0.75 * M_PI;//swing
-	jointRange[0].second = 0.5 * M_PI;//twist
+	//jointRange[0].first = 0.75 * M_PI;//swing
+	jointRange[0].second = 0.25 * M_PI;//twist
 }
 
 void eae6320::MultiBody::UnitTest7()
