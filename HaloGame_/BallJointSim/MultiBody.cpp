@@ -51,6 +51,7 @@ void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		jointType[i] = i_jointType[i];
+		xJointType[i] = i_jointType[i];
 		if (jointType[i] == BALL_JOINT_3D)
 		{
 			velDOF[i] = 3;
@@ -70,6 +71,8 @@ void eae6320::MultiBody::InitializeJoints(int* i_jointType)
 	
 			xDOF[i] = 3;
 			totalXDOF += 3;
+
+			xJointType[i] = BALL_JOINT_3D;
 		}
 		else if (jointType[i] == FREE_JOINT)
 		{
@@ -154,6 +157,7 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	velStartIndex.resize(numOfLinks);
 	xDOF.resize(numOfLinks);
 	xStartIndex.resize(numOfLinks);
+	xJointType.resize(numOfLinks);
 	jointLimit.resize(numOfLinks);
 	jointRange.resize(numOfLinks);
 	hingeDirLocals.resize(numOfLinks);

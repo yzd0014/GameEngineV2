@@ -20,7 +20,7 @@ namespace eae6320
 		int constraintType = SWING_C;//only used for testing
 		int swingMode = EULER_SWING;
 		bool gravity = FALSE ;
-		bool enablePositionSolve = FALSE;//position solve currently doesn't support free joint
+		bool enablePositionSolve = TRUE;//position solve currently doesn't support free joint
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void InitializeJoints(int* i_jointType);
@@ -66,8 +66,8 @@ namespace eae6320
 		void BallJointLimitCheck();
 		void SolveVelocityJointLimit(const _Scalar h);
 		void SolvePositionJointLimit();
-		_Scalar ComputeSwingError(int jointNum);
-		_Scalar ComputeTwistEulerError(int jointNum, bool checkVectorField);
+		_Scalar ComputeSwingError(int jointNum, _Matrix3& i_R);
+		_Scalar ComputeTwistEulerError(int jointNum, _Matrix3& i_R, bool checkVectorField);
 		void ComputeTwistEulerJacobian(int jointNum, _Matrix3& i_R, _Matrix& o_J);
 		void ComputeSwingJacobian(int jointNum, _Matrix3& i_R, _Matrix& o_J);
 
@@ -106,6 +106,7 @@ namespace eae6320
 		std::vector<int> posStartIndex;
 		std::vector<int> velStartIndex;
 		std::vector<int> xStartIndex;//used for position solve
+		std::vector<int> xJointType;
 		_Matrix Mr;
 		_Matrix MrInverse;
 		std::vector<_Matrix> Mbody;
@@ -151,7 +152,7 @@ namespace eae6320
 		std::vector<_Vector3> oldEulerZ;
 		_Scalar swingEpsilon = 0.001;
 		std::vector <uint8_t> vectorFieldNum;
-		_Matrix Jc_jointLimit;
+		//_Matrix Jc_jointLimit;
 		
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;
