@@ -160,23 +160,23 @@ void eae6320::MultiBody::BallJointLimitCheck()
 	constraintNum = jointsID.size();
 }
 
-void eae6320::MultiBody::ComputeSwingJacobian(int jointNum, _Matrix3& i_R, _Matrix& o_J)
+void eae6320::MultiBody::ComputeSwingJacobian(int jointNum, _Matrix& o_J)
 {
-	o_J = ((i_R * twistAxis[jointNum]).cross(twistAxis[jointNum])).transpose();
+	o_J = ((R_local[jointNum] * twistAxis[jointNum]).cross(twistAxis[jointNum])).transpose();
 }
 
-void eae6320::MultiBody::ComputeTwistEulerJacobian(int jointNum, _Matrix3& i_R, _Matrix& o_J)
+void eae6320::MultiBody::ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J)
 {
 	_Matrix A0;
 	_Vector3 mVec;
-	mVec = Math::ToSkewSymmetricMatrix(eulerY[jointNum]) * i_R * eulerZ[jointNum];
-	A0 = eulerX[jointNum].transpose() * i_R.transpose() * Math::ToSkewSymmetricMatrix(mVec);
+	mVec = Math::ToSkewSymmetricMatrix(eulerY[jointNum]) * R_local[jointNum] * eulerZ[jointNum];
+	A0 = eulerX[jointNum].transpose() * R_local[jointNum].transpose() * Math::ToSkewSymmetricMatrix(mVec);
 	_Matrix A1;
-	mVec = i_R * eulerZ[jointNum];
-	A1 = -eulerX[jointNum].transpose() * i_R.transpose() * Math::ToSkewSymmetricMatrix(eulerY[jointNum]) * Math::ToSkewSymmetricMatrix(mVec);
+	mVec = R_local[jointNum] * eulerZ[jointNum];
+	A1 = -eulerX[jointNum].transpose() * R_local[jointNum].transpose() * Math::ToSkewSymmetricMatrix(eulerY[jointNum]) * Math::ToSkewSymmetricMatrix(mVec);
 	_Matrix A2;
-	_Vector3 s = -eulerY[jointNum].cross(i_R * eulerX[jointNum]);
-	mVec = i_R * eulerX[jointNum];
+	_Vector3 s = -eulerY[jointNum].cross(R_local[jointNum] * eulerX[jointNum]);
+	mVec = R_local[jointNum] * eulerX[jointNum];
 	A2 = -cos(jointRange[jointNum].second) / s.norm() * s.transpose() * Math::ToSkewSymmetricMatrix(eulerY[jointNum]) * Math::ToSkewSymmetricMatrix(mVec);
 	o_J.resize(1, 3);
 	if (vectorFieldNum[jointNum] == 0)
@@ -229,7 +229,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 				else if (limitType[k] == SWING)
 				{
 					_Matrix mJ;
-					ComputeSwingJacobian(i, R_local[i], mJ);
+					ComputeSwingJacobian(i, mJ);
 					J.block<1, 3>(k, velStartIndex[i]) = mJ;
 					K.block<1, 3>(k, velStartIndex[i]) = mJ;
 				}
@@ -250,7 +250,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 				else if (limitType[k] == TWIST_EULER)
 				{
 					_Matrix mJ;
-					ComputeTwistEulerJacobian(i, R_local[i], mJ);
+					ComputeTwistEulerJacobian(i, mJ);
 					J.block<1, 3>(k, velStartIndex[i]) = mJ;
 					K.block<1, 3>(k, velStartIndex[i]) = mJ;
 				}
@@ -342,14 +342,14 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 				if (limitType[k] == SWING)
 				{
 					_Matrix J_swing;
-					ComputeSwingJacobian(i, mR, J_swing);
+					ComputeSwingJacobian(i, J_swing);
 					J.block<1, 3>(k, xStartIndex[i]) = J_swing * J_rotation[i];
 					C(k, 0) = ComputeSwingError(i, mR);
 				}
 				else if (limitType[k] == TWIST_EULER)
 				{
 					_Matrix J_twist;
-					ComputeTwistEulerJacobian(i, mR, J_twist);
+					ComputeTwistEulerJacobian(i, J_twist);
 					J.block<1, 3>(k, xStartIndex[i]) = J_twist * J_rotation[i];
 					C(k, 0) = ComputeTwistEulerError(i, mR, FALSE);
 				}

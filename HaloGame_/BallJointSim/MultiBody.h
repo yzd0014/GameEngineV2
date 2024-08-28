@@ -68,8 +68,8 @@ namespace eae6320
 		void SolvePositionJointLimit();
 		_Scalar ComputeSwingError(int jointNum, _Matrix3& i_R);
 		_Scalar ComputeTwistEulerError(int jointNum, _Matrix3& i_R, bool checkVectorField);
-		void ComputeTwistEulerJacobian(int jointNum, _Matrix3& i_R, _Matrix& o_J);
-		void ComputeSwingJacobian(int jointNum, _Matrix3& i_R, _Matrix& o_J);
+		void ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J);
+		void ComputeSwingJacobian(int jointNum, _Matrix& o_J);
 
 		void PrePositionSolveProccessing();
 		void PostPositionSolveProccessing();
