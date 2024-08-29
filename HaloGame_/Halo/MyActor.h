@@ -18,6 +18,8 @@ namespace eae6320
 		void UnitTest1();//display two different vector fields
 		void UnitTest2();//vector field interpolation
 		void UnitTest3();
+
+		Matrix3d ComputeEulerSwing(Matrix3d i_Mat, Vector3d i_referencVec);
 		
 		VectorXd lambda;
 		VectorXd targetAngle;
