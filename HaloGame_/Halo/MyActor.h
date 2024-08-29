@@ -34,6 +34,5 @@ namespace eae6320
 		GameObject* zArrow = nullptr;
 
 		int n = 2;
-		int mode = 0;//0: default, 1: user custom vector field
 	};
 }
