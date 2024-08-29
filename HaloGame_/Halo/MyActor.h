@@ -15,6 +15,10 @@ namespace eae6320
 		void Tick(const double i_secondCountToIntegrate) override;
 
 	private:
+		void UnitTest1();//display two different vector fields
+		void UnitTest2();//vector field interpolation
+		void UnitTest3();
+		
 		VectorXd lambda;
 		VectorXd targetAngle;
 		std::vector<Vector3d> normals;
