@@ -197,7 +197,7 @@ void eae6320::MultiBody::UnitTest4()
 void eae6320::MultiBody::UnitTest6()
 {
 	numOfLinks = 1;
-	constraintSolverMode = -1;
+	constraintSolverMode = IMPULSE;
 
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
@@ -219,7 +219,7 @@ void eae6320::MultiBody::UnitTest6()
 	Forward();
 
 	//jointRange[0].first = 0.75 * M_PI;//swing
-	jointRange[0].second = 0.25 * M_PI;//twist
+	jointRange[0].second = 0.5 * M_PI;//twist
 }
 
 void eae6320::MultiBody::UnitTest7()

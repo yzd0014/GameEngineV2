@@ -66,6 +66,7 @@ namespace eae6320
 		void BallJointLimitCheck();
 		void SolveVelocityJointLimit(const _Scalar h);
 		void SolvePositionJointLimit(const _Scalar h);
+		void SolvePositionJointLimit();
 		_Scalar ComputeSwingError(int jointNum);
 		_Scalar ComputeTwistEulerError(int jointNum, bool checkVectorField);
 		void ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J);
@@ -153,7 +154,8 @@ namespace eae6320
 		std::vector<_Vector3> oldEulerZ;
 		_Scalar swingEpsilon = 0.001;
 		std::vector <uint8_t> vectorFieldNum;
-		//_Matrix Jc_jointLimit;
+		_Matrix J_constraint;
+		_Matrix effectiveMass;
 		
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;
