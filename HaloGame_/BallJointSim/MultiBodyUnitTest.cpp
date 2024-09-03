@@ -237,6 +237,7 @@ void eae6320::MultiBody::UnitTest7()
 	quat.x() = 1;
 	quat.y() = 0;
 	quat.z() = 0;*/
+	std::cout << quat << std::endl;
 
 	_Quat quatSwing_;
 	_Quat quatTwist_;
@@ -391,11 +392,11 @@ void eae6320::MultiBody::UnitTest13()
 
 	SetZeroInitialCondition();
 
-	_Vector3 local_w = _Vector3(-2.0, 0.0, 0.0);
+	_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
 	qdot.segment(0, 3) = local_w;
 	Forward();
 
-	jointRange[0].second = 0.001;//twist
+	jointRange[0].second = 0.25 * M_PI;//twist
 }
 
 void eae6320::MultiBody::UnitTest14()

@@ -63,11 +63,25 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 		rotatedZ.normalize();
 		if (checkVectorField)
 		{
+			//std::cout << rotatedX.transpose() << std::endl;
 			_Scalar dotProduct = rotatedZ.dot(oldEulerZ[jointNum]);
+			if (twistArrow != nullptr)
+			{
+				twistArrow->DestroyGameObject();
+				twistArrow = nullptr;
+			}
+			twistArrow = GameplayUtility::DrawArrowScaled(jointPos[0], rotatedZ, Math::sVector(1, 0, 0), Vector3d(0.5, 1, 0.5));
+			if (swingArrow != nullptr)
+			{
+				swingArrow->DestroyGameObject();
+				swingArrow = nullptr;
+			}
+			swingArrow = GameplayUtility::DrawArrowScaled(jointPos[0], oldEulerZ[jointNum], Math::sVector(0, 0, 1), Vector3d(0.5, 1, 0.5));
 			if (dotProduct < 0)//vector field switch
 			{
 				vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
 				rotatedZ = -rotatedZ;
+				//vectorFieldSwitched = TRUE;
 				std::cout << "Vector field switched " << std::endl;
 			}
 			oldEulerZ[jointNum] = rotatedZ;
@@ -111,7 +125,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 					jointsID.push_back(i);
 					constraintValue.push_back(swingConstraint);
 					limitType.push_back(SWING);
-					std::cout << "SWING " << swingConstraint << std::endl;
+					//std::cout << "SWING " << swingConstraint << std::endl;
 				}
 			}
 
@@ -136,6 +150,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			else if (swingMode == EULER_SWING && jointRange[i].second > 0)
 			{
 				_Scalar twistConstraint = ComputeTwistEulerError(i, TRUE);
+				//std::cout << "TWIST_EULER " << twistConstraint << std::endl;
 				if (twistConstraint < 0)
 				{
 					jointsID.push_back(i);
@@ -279,7 +294,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 
 void eae6320::MultiBody::SolvePositionJointLimit()
 {
-	if (constraintNum > 0)
+	if (constraintNum > 0 && !vectorFieldSwitched)
 	{
 		_Vector error;
 		error.resize(constraintNum);
@@ -287,7 +302,7 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		for (size_t k = 0; k < constraintNum; k++)
 		{
 			int i = jointsID[k];
-			_Scalar beta = 0.5f;
+			_Scalar beta = 0.1f;
 			_Scalar SlopP = 0.00001f;
 			error(k) = beta * std::max<_Scalar>(-constraintValue[k] - SlopP, 0.0);
 		}
@@ -295,4 +310,5 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		_Vector qCorrection = Mr.inverse() * J_constraint.transpose() * lambda;
 		Integrate_q(q, rel_ori, q, rel_ori, qCorrection, 1.0);
 	}
+	if (vectorFieldSwitched) vectorFieldSwitched = FALSE;
 }

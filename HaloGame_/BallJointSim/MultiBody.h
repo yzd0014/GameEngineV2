@@ -152,10 +152,11 @@ namespace eae6320
 		std::vector<_Vector3> eulerY;
 		std::vector<_Vector3> eulerZ;
 		std::vector<_Vector3> oldEulerZ;
-		_Scalar swingEpsilon = 0.001;
 		std::vector <uint8_t> vectorFieldNum;
 		_Matrix J_constraint;
 		_Matrix effectiveMass;
+		_Scalar swingEpsilon = 0.05;
+		bool vectorFieldSwitched = false;
 		
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;
