@@ -20,7 +20,7 @@ namespace eae6320
 		int constraintType = SWING_C;//only used for testing
 		int swingMode = EULER_SWING;
 		bool gravity = FALSE ;
-		bool enablePositionSolve = TRUE;//position solve currently doesn't support free joint
+		bool enablePositionSolve = FALSE;//position solve currently doesn't support free joint
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void InitializeJoints(int* i_jointType);
@@ -155,7 +155,7 @@ namespace eae6320
 		std::vector <uint8_t> vectorFieldNum;
 		_Matrix J_constraint;
 		_Matrix effectiveMass;
-		_Scalar swingEpsilon = 0.05;
+		_Scalar swingEpsilon = 0.01;
 		bool vectorFieldSwitched = false;
 		
 		_Scalar kineticEnergy0 = 0;

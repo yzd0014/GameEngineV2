@@ -352,5 +352,37 @@ namespace eae6320
 				o_swing = i_Rot * o_twist.inverse();
 			}
 		}
+
+		void threeaxisrot(double r11, double r12, double r21, double r31, double r32, double res[])
+		{
+			res[0] = atan2(r31, r32);
+			res[1] = asin(r21);
+			res[2] = atan2(r11, r12);
+		}
+		void quaternion2Euler(const Quaterniond& q, double res[], RotSeq rotSeq)
+		{
+			switch (rotSeq)
+			{
+				case yzx:
+					threeaxisrot(-2 * (q.x() * q.z() - q.w() * q.y()),
+						q.w() * q.w() + q.x() * q.x() - q.y() * q.y() - q.z() * q.z(),
+						2 * (q.x() * q.y() + q.w() * q.z()),
+						-2 * (q.y() * q.z() - q.w() * q.x()),
+						q.w() * q.w() - q.x() * q.x() + q.y() * q.y() - q.z() * q.z(),
+						res);
+					break;
+				case xzy:
+					threeaxisrot(2 * (q.y() * q.z() + q.w() * q.x()),
+						q.w() * q.w() - q.x() * q.x() + q.y() * q.y() - q.z() * q.z(),
+						-2 * (q.x() * q.y() - q.w() * q.z() ),
+						2 * (q.x() * q.z() + q.w() * q.y()),
+						q.w() * q.w() + q.x() * q.x() - q.y() * q.y() - q.z() * q.z(),
+						res);
+					break;
+				default:
+					std::cout << "Unknown rotation sequence" << std::endl;
+					break;
+			}
+		}
 	}
 }

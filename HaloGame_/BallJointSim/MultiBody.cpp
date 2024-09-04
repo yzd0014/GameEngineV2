@@ -316,11 +316,11 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//KineticEnergyProjection();
 	//MomentumProjection();
 	//EnergyMomentumProjection();
-	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 	if (enablePositionSolve)
 	{
 		SolvePositionJointLimit();
 	}
+	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 	ClampRotationVector();
 	Forward();
 	//EnergyMomentumProjection();

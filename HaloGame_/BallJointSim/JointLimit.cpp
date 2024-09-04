@@ -92,6 +92,16 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 	{
 		if (checkVectorField) std::cout << "Euler swing singluarity points are reached with zNorm: " << zNorm << std::endl;
 	}
+
+	_Scalar eulerAngles[3];
+	_Vector3 rotVec0(-0.5 * M_PI, 0, 0);
+	_Quat quat0 = Math::RotationConversion_VecToQuat(rotVec0);
+	_Vector3 rotVec1(0, 0.5 * M_PI, 0);
+	_Quat quat1 = Math::RotationConversion_VecToQuat(rotVec1);
+	_Quat quatOffset = quat1 * quat0;
+	_Quat inputQuat = quatOffset * rel_ori[jointNum] * quatOffset.inverse();
+	Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
+	std::cout << "Twsit angle: " << eulerAngles[0] << " " << eulerAngles[1] << " " << eulerAngles[2] << " rotatedX: " << rotatedX(1) << std::endl;
 	return out;
 }
 
@@ -156,7 +166,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 					jointsID.push_back(i);
 					constraintValue.push_back(twistConstraint);
 					limitType.push_back(TWIST_EULER);
-					std::cout << "TWIST_EULER " << twistConstraint << std::endl;
+					//std::cout << "TWIST_EULER " << twistConstraint << std::endl;
 				}
 			}
 			else if (jointLimit[i] > 0)

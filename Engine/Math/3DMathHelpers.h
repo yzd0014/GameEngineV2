@@ -9,6 +9,8 @@ namespace eae6320
 {
 	namespace Math
 	{
+		enum RotSeq { zyx, zyz, zxy, zxz, yxz, yxy, yzx, yzy, xyz, xyx, xzy, xzx };
+		
 		// i_contact is a point on the plane where the point will be projected
 		Vector3d ProjectPointToPlane(Vector3d i_point, Vector3d i_planeNormal, Vector3d i_contact);
 		double GetTriangleArea(Vector3d p0, Vector3d p1, Vector3d p2);
@@ -25,6 +27,8 @@ namespace eae6320
 		void TwistSwingDecomposition(Matrix3d& i_Rot, Vector3d& i_twistAxis, Matrix3d& o_twist, Matrix3d& o_swing);
 		void SwingTwistDecomposition(Quaterniond& i_Rot, Vector3d& i_twistAxis, Quaterniond& o_swing, Quaterniond& o_twist);
 
+		void threeaxisrot(double r11, double r12, double r21, double r31, double r32, double res[]);
+		void quaternion2Euler(const Quaterniond& q, double res[], RotSeq rotSeq);
 		/**************************************inline functions************************************************************************/
 		inline double GetAngleBetweenTwoVectors(Vector3d& vec0, Vector3d& vec1)
 		{
