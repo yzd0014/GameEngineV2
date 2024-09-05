@@ -23,6 +23,7 @@ namespace eae6320
 		Math::sVector GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c, bool guaranteeOutwards = false);
 		void Barycentric(Math::sVector& p, Math::sVector& a, Math::sVector& b, Math::sVector& c, float &u, float &v, float &w);
 		float SqDistPointTriangle(Math::sVector& vPoint, Math::sVector& vA, Math::sVector& vB, Math::sVector& vC);
+		void ComputeDeformationGradient(Vector3d& i_material0, Vector3d& i_material1, Vector3d& i_material2, Vector3d& i_world0, Vector3d& i_world1, Vector3d& i_world2, Matrix3d& o_F);
 
 		void TwistSwingDecomposition(Matrix3d& i_Rot, Vector3d& i_twistAxis, Matrix3d& o_twist, Matrix3d& o_swing);
 		void SwingTwistDecomposition(Quaterniond& i_Rot, Vector3d& i_twistAxis, Quaterniond& o_swing, Quaterniond& o_twist);

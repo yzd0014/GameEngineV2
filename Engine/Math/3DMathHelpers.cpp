@@ -384,5 +384,18 @@ namespace eae6320
 					break;
 			}
 		}
+
+		void ComputeDeformationGradient(Vector3d& i_material0, Vector3d& i_material1, Vector3d& i_material2, Vector3d& i_world0, Vector3d& i_world1, Vector3d& i_world2, Matrix3d& o_F)
+		{
+			Matrix3d materialState;
+			materialState.block<3, 1>(0, 0) = i_material0;
+			materialState.block<3, 1>(0, 1) = i_material1;
+			materialState.block<3, 1>(0, 2) = i_material2;
+			Matrix3d worldState;
+			worldState.block<3, 1>(0, 0) = i_world0;
+			worldState.block<3, 1>(0, 1) = i_world1;
+			worldState.block<3, 1>(0, 2) = i_world2;
+			o_F = worldState * materialState.inverse();
+		}
 	}
 }

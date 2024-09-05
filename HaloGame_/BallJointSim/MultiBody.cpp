@@ -168,7 +168,9 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	eulerY.resize(numOfLinks);
 	eulerZ.resize(numOfLinks);
 	oldEulerZ.resize(numOfLinks);
+	lastTwistAngle.resize(numOfLinks);
 	vectorFieldNum.resize(numOfLinks);
+	eulerDecompositionOffset.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
@@ -208,6 +210,24 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 		eulerY[i] = _Vector3(0, 0, 1);
 		eulerZ[i] = _Vector3(-1, 0, 0);
 		oldEulerZ[i] = _Vector3(-1, 0, 0);
+
+		_Matrix3 deformationGradient;
+		Math::ComputeDeformationGradient(eulerY[i], eulerZ[i], eulerX[i], _Vector3(0, 1, 0), _Vector3(0, 0, 1), _Vector3(1, 0, 0), deformationGradient);
+		eulerDecompositionOffset[i] = Math::RotationConversion_MatToQuat(deformationGradient);
+
+		_Vector3 rotVec0(-0.5 * M_PI, 0, 0);
+		_Quat quat0 = Math::RotationConversion_VecToQuat(rotVec0);
+		_Vector3 rotVec1(0, 0.5 * M_PI, 0);
+		_Quat quat1 = Math::RotationConversion_VecToQuat(rotVec1);
+		_Quat quatOffset = quat1 * quat0;
+		std::cout << quatOffset << std::endl;
+		std::cout << eulerDecompositionOffset[i] << std::endl;
+
+		_Scalar eulerAngles[3];
+		_Quat inputQuat = eulerDecompositionOffset[i] * rel_ori[i] * eulerDecompositionOffset[i].inverse();
+		Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
+		lastTwistAngle[i] = eulerAngles[0];
+		//std::cout << "Twsit angle: " << eulerAngles[0] << " " << eulerAngles[1] << " " << eulerAngles[2] << " rotatedX: " << rotatedX(0) << " " << rotatedX(1) << std::endl;
 	}
 }
 

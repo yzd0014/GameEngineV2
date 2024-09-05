@@ -77,14 +77,19 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 				swingArrow = nullptr;
 			}
 			swingArrow = GameplayUtility::DrawArrowScaled(jointPos[0], oldEulerZ[jointNum], Math::sVector(0, 0, 1), Vector3d(0.5, 1, 0.5));
+
+			_Scalar eulerAngles[3];
+			_Quat inputQuat = eulerDecompositionOffset[jointNum] * rel_ori[jointNum] * eulerDecompositionOffset[jointNum].inverse();
+			Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
+			std::cout << "Twsit angle: " << eulerAngles[0] << " " << eulerAngles[1] << " " << eulerAngles[2] << " twistDiff: " << abs(eulerAngles[0] - lastTwistAngle[jointNum]) << " " << rotatedX(0) << std::endl;
 			if (dotProduct < 0)//vector field switch
 			{
 				vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
 				rotatedZ = -rotatedZ;
-				//vectorFieldSwitched = TRUE;
 				std::cout << "Vector field switched " << std::endl;
 			}
 			oldEulerZ[jointNum] = rotatedZ;
+			lastTwistAngle[jointNum] = eulerAngles[0];
 		}
 		out = rotatedZ.dot(R_local[jointNum] * eulerZ[jointNum]) - cos(jointRange[jointNum].second);
 	}
@@ -92,16 +97,7 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 	{
 		if (checkVectorField) std::cout << "Euler swing singluarity points are reached with zNorm: " << zNorm << std::endl;
 	}
-
-	_Scalar eulerAngles[3];
-	_Vector3 rotVec0(-0.5 * M_PI, 0, 0);
-	_Quat quat0 = Math::RotationConversion_VecToQuat(rotVec0);
-	_Vector3 rotVec1(0, 0.5 * M_PI, 0);
-	_Quat quat1 = Math::RotationConversion_VecToQuat(rotVec1);
-	_Quat quatOffset = quat1 * quat0;
-	_Quat inputQuat = quatOffset * rel_ori[jointNum] * quatOffset.inverse();
-	Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
-	std::cout << "Twsit angle: " << eulerAngles[0] << " " << eulerAngles[1] << " " << eulerAngles[2] << " rotatedX: " << rotatedX(1) << std::endl;
+	
 	return out;
 }
 
@@ -304,7 +300,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 
 void eae6320::MultiBody::SolvePositionJointLimit()
 {
-	if (constraintNum > 0 && !vectorFieldSwitched)
+	if (constraintNum > 0)
 	{
 		_Vector error;
 		error.resize(constraintNum);
@@ -320,5 +316,4 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		_Vector qCorrection = Mr.inverse() * J_constraint.transpose() * lambda;
 		Integrate_q(q, rel_ori, q, rel_ori, qCorrection, 1.0);
 	}
-	if (vectorFieldSwitched) vectorFieldSwitched = FALSE;
 }
