@@ -152,13 +152,15 @@ namespace eae6320
 		std::vector<_Vector3> eulerY;
 		std::vector<_Vector3> eulerZ;
 		std::vector<_Vector3> oldEulerZ;
+		std::vector<_Vector3> lastTwistAxis;
 		std::vector<_Scalar> lastTwistAngle;
+		std::vector<_Scalar> lastEulerY;
 		std::vector<uint8_t> vectorFieldNum;
 		std::vector<_Quat> eulerDecompositionOffset;
+		std::vector<_Matrix3> userToLocalTransform;
 		_Matrix J_constraint;
 		_Matrix effectiveMass;
-		_Scalar swingEpsilon = 0.005;
-		
+		_Scalar swingEpsilon = 0.0001;
 		
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;

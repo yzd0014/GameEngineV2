@@ -63,7 +63,6 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 		rotatedZ.normalize();
 		if (checkVectorField)
 		{
-			//std::cout << rotatedX.transpose() << std::endl;
 			_Scalar dotProduct = rotatedZ.dot(oldEulerZ[jointNum]);
 			if (twistArrow != nullptr)
 			{
@@ -81,8 +80,33 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 			_Scalar eulerAngles[3];
 			_Quat inputQuat = eulerDecompositionOffset[jointNum] * rel_ori[jointNum] * eulerDecompositionOffset[jointNum].inverse();
 			Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
-			std::cout << "Twsit angle: " << eulerAngles[0] << " " << eulerAngles[1] << " " << eulerAngles[2] << " twistDiff: " << abs(eulerAngles[0] - lastTwistAngle[jointNum]) << " " << rotatedX(0) << std::endl;
-			if (dotProduct < 0)//vector field switch
+			std::cout << "Twsit angle: " << eulerAngles[0] << " " << eulerAngles[1] << " " << eulerAngles[2] << " x: " << rotatedX(0) << " " << rotatedX(1) << std::endl;
+			//std::cout << rotatedX.transpose() << std::endl;
+
+			bool closeToSingularity = FALSE;
+			_Vector3 localX = userToLocalTransform[jointNum] * rotatedX;
+			_Scalar testAngle = Math::GetAngleBetweenTwoVectors(localX, lastTwistAxis[jointNum]);
+			_Scalar singularityEpsilon = 0.02;
+			if (testAngle > singularityEpsilon)
+			{
+				_Vector3 pointPojection = Math::PointToTriangleDis(_Vector3(0, 0, 1), localX, lastTwistAxis[jointNum], _Vector3(0, 0, 0));
+				_Scalar dist = (_Vector3(0, 0, 1) - pointPojection).norm();
+				if (dist < singularityEpsilon)
+				{
+					closeToSingularity = TRUE;
+				}
+			}
+			else
+			{
+				_Scalar testDist0 = (localX - _Vector3(0, 0, 1)).norm();
+				_Scalar testDist1 = (localX - _Vector3(0, 0, -1)).norm();
+				if (testDist0 < singularityEpsilon || testDist1 < singularityEpsilon)
+				{
+					closeToSingularity = TRUE;
+				}
+			}
+			//if (dotProduct < 0)//vector field switch
+			if (eulerAngles[0] * lastTwistAngle[jointNum] < 0 && eulerAngles[2] * lastEulerY[jointNum] < 0)
 			{
 				vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
 				rotatedZ = -rotatedZ;
@@ -90,6 +114,8 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 			}
 			oldEulerZ[jointNum] = rotatedZ;
 			lastTwistAngle[jointNum] = eulerAngles[0];
+			lastEulerY[jointNum] = eulerAngles[2];
+			lastTwistAxis[jointNum] = localX;
 		}
 		out = rotatedZ.dot(R_local[jointNum] * eulerZ[jointNum]) - cos(jointRange[jointNum].second);
 	}
