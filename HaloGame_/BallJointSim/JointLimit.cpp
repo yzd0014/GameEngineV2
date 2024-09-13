@@ -57,66 +57,55 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 	{
 		rotatedZ = eulerY[jointNum].cross(rotatedX);
 	}
+	
+	//integrate beta
+	if (checkVectorField)
+	{
+		_Scalar eulerAngles[3];
+		_Quat inputQuat = eulerDecompositionOffset[jointNum] * rel_ori[jointNum] * eulerDecompositionOffset[jointNum].inverse();
+		Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
+		std::cout << "Twsit angle: " << eulerAngles[2] << " " << eulerAngles[1] << " " << eulerAngles[0] << std::endl;
+		_Scalar alpha = eulerAngles[2];
+		_Scalar beta = eulerAngles[1];
+		if (abs(abs(beta) - 0.5 * M_PI) > 0.000001)
+		{
+			_Matrix3 A;
+			A.setZero();
+			A(0, 0) = 1;
+			A(0, 1) = sin(alpha) * sin(beta) / cos(beta);
+			A(0, 2) = cos(alpha) * sin(beta) / cos(beta);
+			A(1, 1) = cos(alpha);
+			A(1, 2) = -sin(alpha);
+			A(2, 1) = sin(alpha) / cos(beta);
+			A(2, 2) = cos(alpha) / cos(beta);
+
+			_Vector3 eulerAngleDot;
+			_Vector3 omega = qdot.segment(velStartIndex[jointNum], 3);
+			eulerAngleDot = A * omega;
+			_Scalar newBeta = beta + dt * eulerAngleDot(1);
+			if (newBeta > 0.5 * M_PI || newBeta < -0.5 * M_PI)
+			{
+				vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
+			}
+			//std::cout << "cos(beta): " << cos(beta) << " beta: " << beta << std::endl;
+		}
+	}
+	
 	_Scalar zNorm = rotatedZ.norm();
 	if (zNorm > swingEpsilon)
 	{
 		rotatedZ.normalize();
-		if (checkVectorField)
-		{
-			_Scalar dotProduct = rotatedZ.dot(oldEulerZ[jointNum]);
-			if (twistArrow != nullptr)
-			{
-				twistArrow->DestroyGameObject();
-				twistArrow = nullptr;
-			}
-			twistArrow = GameplayUtility::DrawArrowScaled(jointPos[0], rotatedZ, Math::sVector(1, 0, 0), Vector3d(0.5, 1, 0.5));
-			if (swingArrow != nullptr)
-			{
-				swingArrow->DestroyGameObject();
-				swingArrow = nullptr;
-			}
-			swingArrow = GameplayUtility::DrawArrowScaled(jointPos[0], oldEulerZ[jointNum], Math::sVector(0, 0, 1), Vector3d(0.5, 1, 0.5));
-
-			_Scalar eulerAngles[3];
-			_Quat inputQuat = eulerDecompositionOffset[jointNum] * rel_ori[jointNum] * eulerDecompositionOffset[jointNum].inverse();
-			Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
-			//std::cout << "Twsit angle: " << eulerAngles[0] << " " << eulerAngles[1] << " " << eulerAngles[2] << " x: " << rotatedX(0) << " " << rotatedX(1) << std::endl;
-			//std::cout << rotatedX.transpose() << std::endl;
-
-			bool closeToSingularity = FALSE;
-			_Vector3 localX = userToLocalTransform[jointNum] * rotatedX;
-			_Scalar testAngle = Math::GetAngleBetweenTwoVectors(localX, lastTwistAxis[jointNum]);
-			_Scalar singularityEpsilon = 0.02;
-			if (testAngle > singularityEpsilon)
-			{
-				_Vector3 pointPojection = Math::PointToTriangleDis(_Vector3(0, 0, 1), localX, lastTwistAxis[jointNum], _Vector3(0, 0, 0));
-				_Scalar dist = (_Vector3(0, 0, 1) - pointPojection).norm();
-				if (dist < singularityEpsilon)
-				{
-					closeToSingularity = TRUE;
-				}
-			}
-			else
-			{
-				_Scalar testDist0 = (localX - _Vector3(0, 0, 1)).norm();
-				_Scalar testDist1 = (localX - _Vector3(0, 0, -1)).norm();
-				if (testDist0 < singularityEpsilon || testDist1 < singularityEpsilon)
-				{
-					closeToSingularity = TRUE;
-				}
-			}
-			if (dotProduct < 0)//vector field switch
-			//if (eulerAngles[0] * lastTwistAngle[jointNum] < 0 && eulerAngles[2] * lastEulerY[jointNum] < 0)
-			{
-				vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
-				rotatedZ = -rotatedZ;
-				std::cout << "Vector field switched " << std::endl;
-			}
-			oldEulerZ[jointNum] = rotatedZ;
-			lastTwistAngle[jointNum] = eulerAngles[0];
-			lastEulerY[jointNum] = eulerAngles[2];
-			lastTwistAxis[jointNum] = localX;
-		}
+		//if (checkVectorField)
+		//{
+		//	_Scalar dotProduct = rotatedZ.dot(oldEulerZ[jointNum]);
+		//	if (dotProduct < 0)//vector field switch
+		//	{
+		//		vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
+		//		rotatedZ = -rotatedZ;
+		//		std::cout << "Vector field switched " << std::endl;
+		//	}
+		//	oldEulerZ[jointNum] = rotatedZ;
+		//}
 		out = rotatedZ.dot(R_local[jointNum] * eulerZ[jointNum]) - cos(jointRange[jointNum].second);
 	}
 	else
@@ -182,13 +171,11 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			else if (swingMode == EULER_SWING && jointRange[i].second > 0)
 			{
 				_Scalar twistConstraint = ComputeTwistEulerError(i, TRUE);
-				//std::cout << "TWIST_EULER " << twistConstraint << std::endl;
 				if (twistConstraint < 0)
 				{
 					jointsID.push_back(i);
 					constraintValue.push_back(twistConstraint);
 					limitType.push_back(TWIST_EULER);
-					//std::cout << "TWIST_EULER " << twistConstraint << std::endl;
 				}
 			}
 			else if (jointLimit[i] > 0)
@@ -311,7 +298,6 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 		_Matrix lambda;
 		effectiveMass = (J * MrInverse * J_constraint.transpose()).inverse();
 		lambda = effectiveMass * (-J * qdot - bias);
-		std::cout << lambda << std::endl;
 		for (size_t k = 0; k < constraintNum; k++)
 		{
 			if (lambda(k, 0) < 0)

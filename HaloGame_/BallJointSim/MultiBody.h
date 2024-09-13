@@ -174,6 +174,7 @@ namespace eae6320
 		int totalVelDOF = 0;
 		int totalXDOF = 0;//used for position solve
 		int geometry = BOX;
+		_Scalar dt;
 
 		//debug related parameters
 		GameObject* swingArrow = nullptr;

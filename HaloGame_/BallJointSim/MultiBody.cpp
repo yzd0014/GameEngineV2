@@ -241,7 +241,7 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 
 void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
-	_Scalar dt = (_Scalar)i_secondCountToIntegrate;
+	dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 
 	EulerIntegration(dt);
