@@ -80,7 +80,7 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 			_Scalar eulerAngles[3];
 			_Quat inputQuat = eulerDecompositionOffset[jointNum] * rel_ori[jointNum] * eulerDecompositionOffset[jointNum].inverse();
 			Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
-			std::cout << "Twsit angle: " << eulerAngles[0] << " " << eulerAngles[1] << " " << eulerAngles[2] << " x: " << rotatedX(0) << " " << rotatedX(1) << std::endl;
+			//std::cout << "Twsit angle: " << eulerAngles[0] << " " << eulerAngles[1] << " " << eulerAngles[2] << " x: " << rotatedX(0) << " " << rotatedX(1) << std::endl;
 			//std::cout << rotatedX.transpose() << std::endl;
 
 			bool closeToSingularity = FALSE;
@@ -105,8 +105,8 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 					closeToSingularity = TRUE;
 				}
 			}
-			//if (dotProduct < 0)//vector field switch
-			if (eulerAngles[0] * lastTwistAngle[jointNum] < 0 && eulerAngles[2] * lastEulerY[jointNum] < 0)
+			if (dotProduct < 0)//vector field switch
+			//if (eulerAngles[0] * lastTwistAngle[jointNum] < 0 && eulerAngles[2] * lastEulerY[jointNum] < 0)
 			{
 				vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
 				rotatedZ = -rotatedZ;
@@ -311,7 +311,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 		_Matrix lambda;
 		effectiveMass = (J * MrInverse * J_constraint.transpose()).inverse();
 		lambda = effectiveMass * (-J * qdot - bias);
-
+		std::cout << lambda << std::endl;
 		for (size_t k = 0; k < constraintNum; k++)
 		{
 			if (lambda(k, 0) < 0)

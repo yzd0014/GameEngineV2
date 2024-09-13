@@ -392,8 +392,10 @@ void eae6320::MultiBody::UnitTest13()
 
 	SetZeroInitialCondition();
 
-	_Vector3 local_w = _Vector3(-2.0, 0.0, 0.0);
+	_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
 	qdot.segment(0, 3) = local_w;
+	/*_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
+	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);*/
 	Forward();
 
 	jointRange[0].second = 0.25 * M_PI;//twist
