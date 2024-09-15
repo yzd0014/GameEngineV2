@@ -58,54 +58,26 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 		rotatedZ = eulerY[jointNum].cross(rotatedX);
 	}
 	
-	//integrate beta
-	if (checkVectorField)
-	{
-		_Scalar eulerAngles[3];
-		_Quat inputQuat = eulerDecompositionOffset[jointNum] * rel_ori[jointNum] * eulerDecompositionOffset[jointNum].inverse();
-		Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
-		std::cout << "Twsit angle: " << eulerAngles[2] << " " << eulerAngles[1] << " " << eulerAngles[0] << std::endl;
-		_Scalar alpha = eulerAngles[2];
-		_Scalar beta = eulerAngles[1];
-		if (abs(abs(beta) - 0.5 * M_PI) > 0.000001)
-		{
-			_Matrix3 A;
-			A.setZero();
-			A(0, 0) = 1;
-			A(0, 1) = sin(alpha) * sin(beta) / cos(beta);
-			A(0, 2) = cos(alpha) * sin(beta) / cos(beta);
-			A(1, 1) = cos(alpha);
-			A(1, 2) = -sin(alpha);
-			A(2, 1) = sin(alpha) / cos(beta);
-			A(2, 2) = cos(alpha) / cos(beta);
-
-			_Vector3 eulerAngleDot;
-			_Vector3 omega = qdot.segment(velStartIndex[jointNum], 3);
-			eulerAngleDot = A * omega;
-			_Scalar newBeta = beta + dt * eulerAngleDot(1);
-			if (newBeta > 0.5 * M_PI || newBeta < -0.5 * M_PI)
-			{
-				vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
-			}
-			//std::cout << "cos(beta): " << cos(beta) << " beta: " << beta << std::endl;
-		}
-	}
-	
 	_Scalar zNorm = rotatedZ.norm();
 	if (zNorm > swingEpsilon)
 	{
 		rotatedZ.normalize();
-		//if (checkVectorField)
-		//{
-		//	_Scalar dotProduct = rotatedZ.dot(oldEulerZ[jointNum]);
-		//	if (dotProduct < 0)//vector field switch
-		//	{
-		//		vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
-		//		rotatedZ = -rotatedZ;
-		//		std::cout << "Vector field switched " << std::endl;
-		//	}
-		//	oldEulerZ[jointNum] = rotatedZ;
-		//}
+		if (checkVectorField)
+		{
+			_Scalar eulerAngles[3];
+			_Quat inputQuat = eulerDecompositionOffset[jointNum] * rel_ori[jointNum] * eulerDecompositionOffset[jointNum].inverse();
+			Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
+			std::cout << "Euler: " << eulerAngles[2] << " " << eulerAngles[1] << " " << eulerAngles[0] << std::endl;
+
+			_Scalar dotProduct = rotatedZ.dot(oldEulerZ[jointNum]);
+			if (dotProduct < 0)//vector field switch
+			{
+				vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
+				rotatedZ = -rotatedZ;
+				std::cout << "Vector field switched " << std::endl;
+			}
+			oldEulerZ[jointNum] = rotatedZ;
+		}
 		out = rotatedZ.dot(R_local[jointNum] * eulerZ[jointNum]) - cos(jointRange[jointNum].second);
 	}
 	else
