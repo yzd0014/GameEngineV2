@@ -162,7 +162,7 @@ namespace eae6320
 		_Matrix J_constraint;
 		_Matrix effectiveMass0;
 		_Matrix effectiveMass1;
-		_Scalar swingEpsilon = 0.005;
+		_Scalar swingEpsilon = 0.000001;
 		
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;

@@ -399,6 +399,7 @@ void eae6320::MultiBody::UnitTest13()
 	Forward();
 
 	jointRange[0].second = 0.25 * M_PI;//twist
+	//jointRange[0].second = 0.000001;//twist
 }
 
 void eae6320::MultiBody::UnitTest14()

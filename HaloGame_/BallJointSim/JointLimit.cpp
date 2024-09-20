@@ -58,32 +58,42 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 		s = eulerY[jointNum].cross(rotatedX);
 	}
 	
+	//integrate beta
+	if (checkVectorField)
+	{
+		_Scalar eulerAngles[3];
+		_Quat inputQuat = eulerDecompositionOffset[jointNum] * rel_ori[jointNum] * eulerDecompositionOffset[jointNum].inverse();
+		Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
+		//std::cout << "Twsit angle: " << eulerAngles[2] << " " << eulerAngles[1] << " " << eulerAngles[0] << std::endl;
+		_Scalar alpha = eulerAngles[2];
+		_Scalar beta = eulerAngles[1];
+		if (abs(abs(beta) - 0.5 * M_PI) > 0.0000001)
+		{
+			_Scalar betaDot;
+			_Vector3 omega = qdot.segment(velStartIndex[jointNum], 3);
+			omega = Math::RotationConversion_QuatToMat(eulerDecompositionOffset[jointNum]) * omega;
+			_Matrix Rz = Math::RotationConversion_VecToMatrix(_Vector3(0, 0, -0.5 * M_PI));
+			_Matrix Rx = Math::RotationConversion_VecToMatrix(_Vector3(-0.5 * M_PI, 0, 0));
+			omega = Rx * Rz * omega;
+			betaDot = cos(alpha) * omega(1) - sin(alpha) * omega(2);
+			_Scalar newBeta = beta + dt * betaDot;
+			if (newBeta > 0.5 * M_PI || newBeta < -0.5 * M_PI)
+			{
+				vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
+				std::cout << "Switch (predicted beta): " << newBeta << std::endl;
+			}
+			//std::cout << "beta: " << beta << " beta dot: " << betaDot << " prediced beta: " << newBeta << std::endl << std::endl;
+		}
+		else
+		{
+			std::cout << "No unique Euler decomposition" << std::endl;
+		}
+	}
+
 	_Scalar sNorm = s.norm();
 	if (sNorm > swingEpsilon)
 	{
 		s.normalize();
-		if (checkVectorField)
-		{
-			_Scalar eulerAngles[3];
-			_Quat inputQuat = eulerDecompositionOffset[jointNum] * rel_ori[jointNum] * eulerDecompositionOffset[jointNum].inverse();
-			Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
-			//std::cout << "Euler: " << eulerAngles[2] << " " << eulerAngles[1] << " " << eulerAngles[0] << std::endl;
-			//_Scalar dotProduct = rotatedZ.dot(oldEulerZ[jointNum]);
-			//oldEulerZ[jointNum] = rotatedZ;
-			_Scalar euler2Diff = abs(eulerAngles[2] - oldEulerAngle2[jointNum]);
-			euler2Diff = std::min(euler2Diff, 2 * M_PI - euler2Diff);
-			_Scalar euler0Diff = abs(eulerAngles[0] - oldEulerAngle0[jointNum]);
-			euler0Diff = std::min(euler0Diff, 2 * M_PI - euler0Diff);
-			if (euler2Diff > 0.78 && euler0Diff > 0.78)//vector field switch
-			{
-				vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
-				s = -s;
-				vectorFieldSwitched[jointNum] = TRUE;
-				std::cout << "Vector field switched " << std::endl;
-			}
-			oldEulerAngle2[jointNum] = eulerAngles[2];
-			oldEulerAngle0[jointNum] = eulerAngles[0];
-		}
 		out = s.dot(R_local[jointNum] * eulerZ[jointNum]) - cos(jointRange[jointNum].second);
 	}
 	else
@@ -154,6 +164,11 @@ void eae6320::MultiBody::BallJointLimitCheck()
 					jointsID.push_back(i);
 					constraintValue.push_back(twistConstraint);
 					limitType.push_back(TWIST_EULER);
+					std::cout << "Twist " << twistConstraint << std::endl;
+				}
+				else
+				{
+					std::cout << "No twist violation " << twistConstraint << std::endl;
 				}
 			}
 			else if (jointLimit[i] > 0)
@@ -268,7 +283,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 			//compute bias
 			_Vector3 v = qdot.segment(velStartIndex[i], 3);
 			_Matrix C_dot = J.block<1, 3>(k, velStartIndex[i]) * v;
-			_Scalar CR = 0.0f;
+			_Scalar CR = 0.2f;
 			bias(k) = -CR * std::max<_Scalar>(-C_dot(0, 0), 0.0);
 		}
 		_Matrix lambda;
@@ -284,8 +299,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 				lambda(k, 0) = 0;
 			}
 		}
-		_Vector qdotCorrection = MrInverse * J.transpose() * lambda;
-		std::cout << qdotCorrection.norm() << std::endl;
+		_Vector qdotCorrection = MrInverse * J.transpose() * lambda;//requires modification for making direct swing-twist model work
 		qdot = qdot + qdotCorrection;
 	}
 }
@@ -308,5 +322,6 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		lambda = effectiveMass1 * error;
 		_Vector qCorrection = MrInverse * J_constraint.transpose() * lambda;
 		Integrate_q(q, rel_ori, q, rel_ori, qCorrection, 1.0);
+		std::cout << "Position correction" << std::endl;
 	}
 }
