@@ -168,11 +168,12 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	eulerY.resize(numOfLinks);
 	eulerZ.resize(numOfLinks);
 	oldEulerZ.resize(numOfLinks);
-	lastTwistAngle.resize(numOfLinks);
+	oldEulerAngle2.resize(numOfLinks);
+	oldEulerAngle0.resize(numOfLinks);
 	vectorFieldNum.resize(numOfLinks);
+	vectorFieldSwitched.resize(numOfLinks);
 	eulerDecompositionOffset.resize(numOfLinks);
 	lastTwistAxis.resize(numOfLinks);
-	lastEulerY.resize(numOfLinks);
 	userToLocalTransform.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -208,6 +209,7 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 		uGlobals.push_back(uPairs);
 
 		vectorFieldNum[i] = 0;
+		vectorFieldSwitched[i] = FALSE;
 		twistAxis[i] = _Vector3(0, -1, 0);
 		eulerX[i] = _Vector3(0, -1, 0);
 		eulerY[i] = _Vector3(0, 0, 1);
@@ -233,8 +235,8 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 		_Scalar eulerAngles[3];
 		_Quat inputQuat = eulerDecompositionOffset[i] * rel_ori[i] * eulerDecompositionOffset[i].inverse();
 		Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
-		lastTwistAngle[i] = eulerAngles[0];
-		lastEulerY[i] = eulerAngles[2];
+		oldEulerAngle0[i] = eulerAngles[0];
+		oldEulerAngle2[i] = eulerAngles[2];
 		//std::cout << "Twsit angle: " << eulerAngles[0] << " " << eulerAngles[1] << " " << eulerAngles[2] << " rotatedX: " << rotatedX(0) << " " << rotatedX(1) << std::endl;
 	}
 }
