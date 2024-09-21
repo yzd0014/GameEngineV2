@@ -184,12 +184,12 @@ inline Quaterniond operator+(const Quaterniond& lhs, const Quaterniond& rhs)
 
 inline std::ostream& operator<<(std::ostream& out, Quaterniond i_quat)
 {
-	out << i_quat.w() << ", " << i_quat.x() << ", " << i_quat.y() << ", " << i_quat.z();
+	out << i_quat.w() << " " << i_quat.x() << " " << i_quat.y() << " " << i_quat.z();
 	return out;
 }
 
 inline std::ostream& operator<<(std::ostream& out, Quaternionf i_quat)
 {
-	out << i_quat.w() << ", " << i_quat.x() << ", " << i_quat.y() << ", " << i_quat.z();
+	out << i_quat.w() << " " << i_quat.x() << " " << i_quat.y() << " " << i_quat.z();
 	return out;
 }

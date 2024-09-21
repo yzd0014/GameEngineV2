@@ -20,7 +20,7 @@ namespace eae6320
 		int constraintType = SWING_C;//only used for testing
 		int swingMode = EULER_SWING;
 		bool gravity = FALSE ;
-		bool enablePositionSolve = FALSE;//position solve currently doesn't support free joint
+		bool enablePositionSolve = TRUE;//position solve currently doesn't support free joint
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void InitializeJoints(int* i_jointType);
@@ -71,6 +71,7 @@ namespace eae6320
 		_Scalar ComputeTwistEulerError(int jointNum, bool checkVectorField);
 		void ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J);
 		void ComputeSwingJacobian(int jointNum, _Matrix& o_J);
+		
 
 		void PrePositionSolveProccessing();
 		void PostPositionSolveProccessing();
@@ -155,6 +156,9 @@ namespace eae6320
 		std::vector<_Vector3> lastTwistAxis;
 		std::vector<_Scalar> oldEulerAngle2;
 		std::vector<_Scalar> oldEulerAngle0;
+		std::vector<_Scalar> mAlpha;
+		std::vector<_Scalar> mBeta;
+		std::vector<_Scalar> mGamma;
 		std::vector<uint8_t> vectorFieldNum;
 		std::vector<bool> vectorFieldSwitched;
 		std::vector<_Quat> eulerDecompositionOffset;
@@ -185,6 +189,12 @@ namespace eae6320
 		GameObject* yArrow = nullptr;
 		GameObject* zArrow = nullptr;
 /*******************************************************************************************/
+		void GetEulerAngles(int jointNum, _Scalar o_eulerAngles[])
+		{
+			_Quat inputQuat = eulerDecompositionOffset[jointNum] * rel_ori[jointNum] * eulerDecompositionOffset[jointNum].inverse();
+			Math::quaternion2Euler(inputQuat, o_eulerAngles, Math::RotSeq::yzx);
+		}
+		
 		inline _Scalar Compute_a(_Scalar theta)
 		{
 			_Scalar alpha;

@@ -170,6 +170,9 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	oldEulerZ.resize(numOfLinks);
 	oldEulerAngle2.resize(numOfLinks);
 	oldEulerAngle0.resize(numOfLinks);
+	mAlpha.resize(numOfLinks);
+	mBeta.resize(numOfLinks);
+	mGamma.resize(numOfLinks);
 	vectorFieldNum.resize(numOfLinks);
 	vectorFieldSwitched.resize(numOfLinks);
 	eulerDecompositionOffset.resize(numOfLinks);
@@ -224,14 +227,6 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 		userToLocalTransform[i] = deformationGradient;
 		lastTwistAxis[i] = eulerX[i];
 
-		_Vector3 rotVec0(-0.5 * M_PI, 0, 0);
-		_Quat quat0 = Math::RotationConversion_VecToQuat(rotVec0);
-		_Vector3 rotVec1(0, 0.5 * M_PI, 0);
-		_Quat quat1 = Math::RotationConversion_VecToQuat(rotVec1);
-		_Quat quatOffset = quat1 * quat0;
-		std::cout << quatOffset << std::endl;
-		std::cout << eulerDecompositionOffset[i] << std::endl;
-
 		_Scalar eulerAngles[3];
 		_Quat inputQuat = eulerDecompositionOffset[i] * rel_ori[i] * eulerDecompositionOffset[i].inverse();
 		Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
@@ -245,7 +240,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
-
+	LOG_TO_FILE << t << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << std::endl;
+	
 	EulerIntegration(dt);
 	//RK3Integration(dt);
 	//RK4Integration(dt);
@@ -260,7 +256,6 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
 	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
-	//LOG_TO_FILE << t << ", " << ComputeTotalEnergy() << std::endl;
 	/*std::cout << t << std::endl;
 	if (t >= 3.0)
 	{
@@ -764,7 +759,6 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 		{
 			pos[i] = preAnchor - uGlobals[i][0];
 		}
-		//TODO: add free joint
 		else if (jointType[i] == FREE_JOINT)
 		{
 			pos[i] = i_q.segment(posStartIndex[i], 3);
@@ -773,6 +767,13 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 		{
 			pos[i] = preAnchor + hingeMagnitude[i] * hingeDirGlobals[i] - uGlobals[i][0];
 		}
+
+		//update Euler angles
+		_Scalar eulerAngles[3];
+		GetEulerAngles(i, eulerAngles);
+		mAlpha[i] = eulerAngles[2];
+		mBeta[i] = eulerAngles[1];
+		mGamma[i] = eulerAngles[0];
 		
 		//get ready for the next iteration
 		uGlobals[i][1] = R_global[i] * uLocals[i][1];

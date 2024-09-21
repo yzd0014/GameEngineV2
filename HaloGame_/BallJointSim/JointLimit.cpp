@@ -61,12 +61,9 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 	//integrate beta
 	if (checkVectorField)
 	{
-		_Scalar eulerAngles[3];
-		_Quat inputQuat = eulerDecompositionOffset[jointNum] * rel_ori[jointNum] * eulerDecompositionOffset[jointNum].inverse();
-		Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
-		//std::cout << "Twsit angle: " << eulerAngles[2] << " " << eulerAngles[1] << " " << eulerAngles[0] << std::endl;
-		_Scalar alpha = eulerAngles[2];
-		_Scalar beta = eulerAngles[1];
+		//std::cout << "----Twsit angle: " << mAlpha[jointNum] << " " << mBeta[jointNum] << " " << mGamma[jointNum] << std::endl;
+		_Scalar alpha = mAlpha[jointNum];
+		_Scalar beta = mBeta[jointNum];
 		if (abs(abs(beta) - 0.5 * M_PI) > 0.0000001)
 		{
 			_Scalar betaDot;
@@ -83,6 +80,7 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 				std::cout << "Switch (predicted beta): " << newBeta << std::endl;
 			}
 			//std::cout << "beta: " << beta << " beta dot: " << betaDot << " prediced beta: " << newBeta << std::endl << std::endl;
+			//std::cout << "---------Predicted beta " << newBeta << std::endl;
 		}
 		else
 		{
@@ -93,8 +91,10 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 	_Scalar sNorm = s.norm();
 	if (sNorm > swingEpsilon)
 	{
+		//std::cout << "sNorm " << s.norm() << std::endl;
 		s.normalize();
 		out = s.dot(R_local[jointNum] * eulerZ[jointNum]) - cos(jointRange[jointNum].second);
+		//std::cout << "Position error " << out << std::endl;
 	}
 	else
 	{
@@ -164,11 +164,11 @@ void eae6320::MultiBody::BallJointLimitCheck()
 					jointsID.push_back(i);
 					constraintValue.push_back(twistConstraint);
 					limitType.push_back(TWIST_EULER);
-					std::cout << "Twist " << twistConstraint << std::endl;
+					//std::cout << "Twist violation " << twistConstraint << std::endl;
 				}
 				else
 				{
-					std::cout << "No twist violation " << twistConstraint << std::endl;
+					//std::cout << "No twist violation " << twistConstraint << std::endl;
 				}
 			}
 			else if (jointLimit[i] > 0)
@@ -301,6 +301,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 		}
 		_Vector qdotCorrection = MrInverse * J.transpose() * lambda;//requires modification for making direct swing-twist model work
 		qdot = qdot + qdotCorrection;
+		//std::cout << "Qdot correction norm " << qdotCorrection.norm() << std::endl;
 	}
 }
 
@@ -322,6 +323,6 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		lambda = effectiveMass1 * error;
 		_Vector qCorrection = MrInverse * J_constraint.transpose() * lambda;
 		Integrate_q(q, rel_ori, q, rel_ori, qCorrection, 1.0);
-		std::cout << "Position correction" << std::endl;
+		//std::cout << "Position correction" << std::endl;
 	}
 }
