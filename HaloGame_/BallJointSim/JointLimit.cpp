@@ -283,7 +283,8 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 			//compute bias
 			_Vector3 v = qdot.segment(velStartIndex[i], 3);
 			_Matrix C_dot = J.block<1, 3>(k, velStartIndex[i]) * v;
-			_Scalar CR = 0.2f;
+			//_Scalar CR = 0.2f;
+			_Scalar CR = 0;
 			bias(k) = -CR * std::max<_Scalar>(-C_dot(0, 0), 0.0);
 		}
 		_Matrix lambda;
@@ -302,6 +303,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 		_Vector qdotCorrection = MrInverse * J.transpose() * lambda;//requires modification for making direct swing-twist model work
 		qdot = qdot + qdotCorrection;
 		//std::cout << "Qdot correction norm " << qdotCorrection.norm() << std::endl;
+		//std::cout << "Qdot correction " << qdotCorrection.transpose() << std::endl;
 	}
 }
 
@@ -323,6 +325,6 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		lambda = effectiveMass1 * error;
 		_Vector qCorrection = MrInverse * J_constraint.transpose() * lambda;
 		Integrate_q(q, rel_ori, q, rel_ori, qCorrection, 1.0);
-		//std::cout << "Position correction" << std::endl;
+		//std::cout << "Position correction " << qCorrection.transpose() << std::endl;
 	}
 }
