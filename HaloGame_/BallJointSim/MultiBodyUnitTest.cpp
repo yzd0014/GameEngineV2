@@ -209,8 +209,8 @@ void eae6320::MultiBody::UnitTest6()
 
 	SetZeroInitialCondition();
 
-	_Vector3 rot_vec(0, 0.0, -0.25 * M_PI);
-	//_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
+	//_Vector3 rot_vec(0, 0.0, -0.25 * M_PI);
+	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
 	Forward();
 	_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
@@ -392,14 +392,14 @@ void eae6320::MultiBody::UnitTest13()
 
 	SetZeroInitialCondition();
 
-	_Vector3 local_w = _Vector3(-2.0, 0.0, 0.0);
+	_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
 	qdot.segment(0, 3) = local_w;
 	/*_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);*/
 	Forward();
 
-	//jointRange[0].second = 0.25 * M_PI;//twist
-	jointRange[0].second = 0.000001;//twist
+	jointRange[0].second = 0.25 * M_PI;//twist
+	//jointRange[0].second = 0.000001;//twist
 }
 
 void eae6320::MultiBody::UnitTest14()
@@ -421,4 +421,26 @@ void eae6320::MultiBody::UnitTest14()
 	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
 
 	Forward();
+}
+
+void eae6320::MultiBody::UnitTest15()
+{
+	numOfLinks = 1;
+	constraintSolverMode = IMPULSE;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
+
+	int jointTypeArray[] = { BALL_JOINT_4D };
+	InitializeJoints(jointTypeArray);
+
+	SetZeroInitialCondition();
+
+	_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
+	qdot.segment(0, 3) = local_w;
+	Forward();
+
+	jointRange[0].second = 0.5 * M_PI;//twist
 }

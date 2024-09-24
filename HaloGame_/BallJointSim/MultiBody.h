@@ -18,7 +18,7 @@ namespace eae6320
 
 		int constraintSolverMode = IMPULSE;
 		int constraintType = SWING_C;//only used for testing
-		int swingMode = EULER_SWING;
+		int twistMode = EULER;
 		bool gravity = FALSE ;
 		bool enablePositionSolve = TRUE;//position solve currently doesn't support free joint
 	private:
@@ -96,6 +96,7 @@ namespace eae6320
 		void UnitTest12();
 		void UnitTest13();
 		void UnitTest14();
+		void UnitTest15();
 		void HingeJointUnitTest0();
 
 		_Vector q;
@@ -168,6 +169,9 @@ namespace eae6320
 		_Matrix effectiveMass1;
 		_Scalar swingEpsilon = 0.000001;
 		
+		std::vector<_Scalar> totalTwist;
+		std::vector<_Matrix3> old_R_local;
+
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;
 		_Vector3 angularMomentum0;

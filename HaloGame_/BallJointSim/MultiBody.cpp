@@ -26,6 +26,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//HingeJointUnitTest0();//hinge joint with auto constraint
 	UnitTest13();//vector vield switch test
 	//UnitTest14();//5 body for Euler twist
+	//UnitTest15();//incremental model single body
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -178,6 +179,8 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	eulerDecompositionOffset.resize(numOfLinks);
 	lastTwistAxis.resize(numOfLinks);
 	userToLocalTransform.resize(numOfLinks);
+	totalTwist.resize(numOfLinks);
+	old_R_local.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
@@ -211,6 +214,9 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 		uLocals.push_back(uPairs);
 		uGlobals.push_back(uPairs);
 
+		totalTwist[i] = 0;
+		old_R_local[i].setIdentity();
+		
 		vectorFieldNum[i] = 0;
 		vectorFieldSwitched[i] = FALSE;
 		twistAxis[i] = _Vector3(0, -1, 0);
@@ -240,7 +246,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
-	LOG_TO_FILE << t << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << std::endl;
+	//LOG_TO_FILE << t << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << std::endl;
 	
 	EulerIntegration(dt);
 	//RK3Integration(dt);
@@ -668,6 +674,7 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
+		old_R_local[i] = R_local[i];
 		//update orientation
 		if (jointType[i] == BALL_JOINT_4D)
 		{

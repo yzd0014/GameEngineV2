@@ -94,7 +94,7 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 		//std::cout << "sNorm " << s.norm() << std::endl;
 		s.normalize();
 		out = s.dot(R_local[jointNum] * eulerZ[jointNum]) - cos(jointRange[jointNum].second);
-		//std::cout << "Position error " << out << std::endl;
+		std::cout << "Position error " << out << std::endl;
 	}
 	else
 	{
@@ -117,7 +117,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			_Quat quat = Math::RotationConversion_MatToQuat(R_local[i]);
 			_Quat twistComponent, swingComponent;
 			_Scalar twistAngle, swingAngle;
-			if ((jointRange[i].first > 0 || jointRange[i].second > 0) && swingMode == DIRECT_SWING)
+			if ((jointRange[i].first > 0 || jointRange[i].second > 0) && twistMode == DIRECT)
 			{
 				_Vector3 p = twistAxis[i];
 				Math::SwingTwistDecomposition(quat, p, swingComponent, twistComponent);
@@ -138,7 +138,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				}
 			}
 
-			if (swingMode == DIRECT_SWING)
+			if (twistMode == DIRECT)
 			{
 				if (jointRange[i].second > 0 && jointRange[i].second - twistAngle < 0) //check twist constraint
 				{
@@ -156,7 +156,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 					}
 				}
 			}
-			else if (swingMode == EULER_SWING && jointRange[i].second > 0)
+			else if (twistMode == EULER && jointRange[i].second > 0)
 			{
 				_Scalar twistConstraint = ComputeTwistEulerError(i, TRUE);
 				if (twistConstraint < 0)
@@ -180,6 +180,28 @@ void eae6320::MultiBody::BallJointLimitCheck()
 					jointsID.push_back(i);
 					constraintValue.push_back(jointLimit[i] - rotAngle);
 					limitType.push_back(ROTATION_MAGNITUDE_LIMIT);
+				}
+			}
+			else if (twistMode == INCREMENT && jointRange[i].second > 0)
+			//else if (twistMode == INCREMENT)
+			{
+				_Vector3 p = old_R_local[i] * twistAxis[i];
+				_Matrix3 rotDiff = R_local[i] * old_R_local[i].inverse();
+				_Quat quatDiff = Math::RotationConversion_MatToQuat(rotDiff);
+				Math::SwingTwistDecomposition(quatDiff, p, swingComponent, twistComponent);
+				AngleAxisd twistVec;
+				twistVec = twistComponent;
+				totalTwist[i] += twistVec.angle();
+				std::cout << "Total incremental twist " << totalTwist[i] << " twist increase " << twistVec.angle() << std::endl;
+				if (totalTwist[i] > jointRange[i].second || totalTwist[i] < -jointRange[i].second)
+				{
+					if (totalTwist[i] > 0) totalTwist[i] = jointRange[i].second - 0.000001;
+					else if (totalTwist[i] < 0) totalTwist[i] = jointRange[i].second + 0.000001;
+					
+					jointsID.push_back(i);
+					//constraintValue.push_back(abs(jointRange[i].second) - abs(totalTwist[i]));
+					constraintValue.push_back(0);
+					limitType.push_back(TWIST_INCREMENT);
 				}
 			}
 		}
@@ -272,6 +294,15 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 					J.block<1, 3>(k, velStartIndex[i]) = -rNormalized.transpose() * G;
 					J_constraint.block<1, 3>(k, velStartIndex[i]) = J.block<1, 3>(k, velStartIndex[i]);
 				}
+				else if (limitType[k] == TWIST_INCREMENT)
+				{
+					_Vector3 p = R_local[i] * twistAxis[i];
+					_Scalar dotProduct = p.dot(qdot.segment(velStartIndex[i], 3));
+					if (dotProduct > 0) p = -p;
+
+					J.block<1, 3>(k, velStartIndex[i]) = p;
+					J_constraint.block<1, 3>(k, velStartIndex[i]) = p;
+				}
 				else if (limitType[k] == TWIST_EULER)
 				{
 					_Matrix mJ;
@@ -283,8 +314,8 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 			//compute bias
 			_Vector3 v = qdot.segment(velStartIndex[i], 3);
 			_Matrix C_dot = J.block<1, 3>(k, velStartIndex[i]) * v;
-			//_Scalar CR = 0.2f;
-			_Scalar CR = 0;
+			_Scalar CR = 0.2f;
+			//_Scalar CR = 0;
 			bias(k) = -CR * std::max<_Scalar>(-C_dot(0, 0), 0.0);
 		}
 		_Matrix lambda;
@@ -317,8 +348,9 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		for (size_t k = 0; k < constraintNum; k++)
 		{
 			int i = jointsID[k];
-			_Scalar beta = 0.1f;
+			_Scalar beta =0.5f;
 			_Scalar SlopP = 0.00001f;
+			//_Scalar SlopP = 0;
 			error(k) = beta * std::max<_Scalar>(-constraintValue[k] - SlopP, 0.0);
 		}
 		_Matrix lambda;
