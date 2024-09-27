@@ -24,9 +24,11 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest11();//5 body
 	//UnitTest12();//2 cube
 	//HingeJointUnitTest0();//hinge joint with auto constraint
-	UnitTest13();//vector vield switch test
+	//UnitTest13();//vector vield switch test
 	//UnitTest14();//5 body for Euler twist
 	//UnitTest15();//incremental model single body
+	//PersistentDataTest();
+	UnitTest16();//load initial condition from file
 	
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -882,4 +884,18 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 
 void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
 {
+	if (UserInput::IsKeyFromReleasedToPressed('R'))
+	{
+		//save binary data to file
+		FILE * pFile;
+		const char* filePath = "sim_state.txt";
+		pFile = fopen(filePath, "wb");
+		for (int i = 0; i < 3; i++)
+		{
+			fwrite(&qdot(i), sizeof(double), 1, pFile);
+		}
+		fwrite(&rel_ori[0], sizeof(double) * 4, 1, pFile);
+		fclose(pFile);
+		std::cout << "data saved to file" << std::endl;
+	}
 }

@@ -58,6 +58,7 @@ eae6320::cResult eae6320::BallJointSim::Initialize()
 		MultiBody * pMultiBody = new MultiBody(defaultEffect, mesh_anchor, Physics::sRigidBodyState());
 		//GameCommon::GameObject * pMultiBody = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		pMultiBody->m_color = Math::sVector(1, 0, 0);
+		pMultiBody->pballJointSim = this;
 	}
 
 	//{

@@ -444,3 +444,48 @@ void eae6320::MultiBody::UnitTest15()
 
 	jointRange[0].second = 0.5 * M_PI;//twist
 }
+
+void eae6320::MultiBody::PersistentDataTest()
+{
+	_Vector3 vec(1.1, 1.2, 1.3);
+	FILE * pFile;
+	const char* filePath = "sim_state.txt";
+	pFile = fopen(filePath, "wb");
+	fwrite(&vec, sizeof(double) * 3, 1, pFile);
+	fclose(pFile);
+
+	pFile = fopen(filePath, "rb");
+	_Vector3 out;
+	out.setZero();
+	fread(&out(0), sizeof(double) * 3, 1, pFile);
+	fclose(pFile);
+	std::cout << out.transpose() << std::endl;
+}
+
+void eae6320::MultiBody::UnitTest16()
+{
+	numOfLinks = 1;
+	constraintSolverMode = IMPULSE;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
+
+	int jointTypeArray[] = { BALL_JOINT_4D };
+	InitializeJoints(jointTypeArray);
+
+	SetZeroInitialCondition();
+
+	const char* filePath = "../../../../TestCases/sim_state1.txt";
+	FILE* pFile = fopen(filePath, "rb");
+	for (int i = 0; i < 3; i++)
+	{
+		fread(&qdot(i), sizeof(double) , 1, pFile);
+	}
+	fread(&rel_ori[0], sizeof(double) * 4, 1, pFile);
+	fclose(pFile);
+	Forward();
+
+	jointRange[0].second = 0.25 * M_PI;//twist
+}

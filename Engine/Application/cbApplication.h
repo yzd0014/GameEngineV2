@@ -132,6 +132,11 @@ namespace eae6320
 			// you may want to experiement with smaller values in your application
 			// and observe the change in responsiveness or simulation accuracy.
 			virtual double GetSimulationUpdatePeriod_inSeconds() const { return 1.0 / 100 ; }
+			void UpdateDeltaTime(double i_dt)
+			{
+				m_dt = i_dt;
+				updateDeltaTime = true;
+			}
 
 		private:
 
@@ -248,12 +253,14 @@ namespace eae6320
 			// Implementation
 			//===============
 			
+			bool updateDeltaTime = false;
 			int CPU_FPS = 0;
 			int avg_GPU_FPS = 0;
 			int GPU_FPS_accumlation = 0;
 			int samplingNum = 0;
 			double timeToSimulateOneSecond = 1.0;
 			uint64_t tickCount_fpsUpdateTime = 0;
+			double m_dt;
 
 		private:
 

@@ -158,7 +158,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			}
 			else if (twistMode == EULER && jointRange[i].second > 0)
 			{
-				_Scalar twistConstraint = ComputeTwistEulerError(i, TRUE);
+				_Scalar twistConstraint = ComputeTwistEulerError(i, true);
 				if (twistConstraint < 0)
 				{
 					jointsID.push_back(i);
@@ -348,9 +348,10 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		for (size_t k = 0; k < constraintNum; k++)
 		{
 			int i = jointsID[k];
-			_Scalar beta =0.5f;
-			_Scalar SlopP = 0.00001f;
-			//_Scalar SlopP = 0;
+			//_Scalar beta =0.5f;
+			_Scalar beta = 0;
+			//_Scalar SlopP = 0.00001f;
+			_Scalar SlopP = 0;
 			error(k) = beta * std::max<_Scalar>(-constraintValue[k] - SlopP, 0.0);
 		}
 		_Matrix lambda;

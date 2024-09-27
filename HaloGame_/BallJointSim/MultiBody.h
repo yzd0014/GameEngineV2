@@ -9,6 +9,7 @@
 
 namespace eae6320
 {
+	class BallJointSim;
 	class MultiBody : public eae6320::GameCommon::GameObject
 	{
 	public:
@@ -19,8 +20,9 @@ namespace eae6320
 		int constraintSolverMode = IMPULSE;
 		int constraintType = SWING_C;//only used for testing
 		int twistMode = EULER;
-		bool gravity = FALSE ;
-		bool enablePositionSolve = TRUE;//position solve currently doesn't support free joint
+		bool gravity = false ;
+		bool enablePositionSolve = true;//position solve currently doesn't support free joint
+		BallJointSim* pballJointSim = nullptr;
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void InitializeJoints(int* i_jointType);
@@ -97,7 +99,9 @@ namespace eae6320
 		void UnitTest13();
 		void UnitTest14();
 		void UnitTest15();
+		void UnitTest16();
 		void HingeJointUnitTest0();
+		void PersistentDataTest();
 
 		_Vector q;
 		_Vector qdot;

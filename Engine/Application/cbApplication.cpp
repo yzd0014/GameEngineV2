@@ -274,8 +274,8 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 	auto tickCount_systemTime_currentLoop = Time::GetCurrentSystemTimeTickCount();
 	m_tickCount_systemTime_current = tickCount_systemTime_currentLoop;
 	// Each update of the simulation is done with a fixed amount of time
-	const auto secondCount_perSimulationUpdate = GetSimulationUpdatePeriod_inSeconds();
-	const uint64_t tickCount_perSimulationUpdate = Time::ConvertSecondsToTicks( secondCount_perSimulationUpdate );
+	auto secondCount_perSimulationUpdate = GetSimulationUpdatePeriod_inSeconds();
+	uint64_t tickCount_perSimulationUpdate = Time::ConvertSecondsToTicks( secondCount_perSimulationUpdate );
 	// Since a single update of the simulation only uses a fixed amount of time
 	// there will be "leftover" time (time that has passed but has not been used)
 	uint64_t tickCount_simulationTime_elapsedButNotYetSimulated = 0;
@@ -363,6 +363,12 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 				tickCount_simulationTime_elapsedButNotYetSimulated -= tickCount_perSimulationUpdate;
 				Physics::nextSimStep = false;
 				play = !Physics::simPause || Physics::simPlay;
+				if (updateDeltaTime)
+				{
+					updateDeltaTime = false;
+					secondCount_perSimulationUpdate = m_dt;
+					tickCount_perSimulationUpdate = Time::ConvertSecondsToTicks(secondCount_perSimulationUpdate);
+				}
 			}
 			// If a time-based simulation update happened
 			// then update simulation state based on input.
