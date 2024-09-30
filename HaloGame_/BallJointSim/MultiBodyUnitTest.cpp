@@ -400,6 +400,7 @@ void eae6320::MultiBody::UnitTest13()
 
 	jointRange[0].second = 0.25 * M_PI;//twist
 	//jointRange[0].second = 0.000001;//twist
+	//jointRange[0].second = 0.9  * M_PI;//twist
 }
 
 void eae6320::MultiBody::UnitTest14()
@@ -477,7 +478,7 @@ void eae6320::MultiBody::UnitTest16()
 
 	SetZeroInitialCondition();
 
-	const char* filePath = "../../../../TestCases/sim_state1.txt";
+	const char* filePath = "../../../../TestCases/sim_state.txt";
 	FILE* pFile = fopen(filePath, "rb");
 	for (int i = 0; i < 3; i++)
 	{

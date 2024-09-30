@@ -69,18 +69,16 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 			_Scalar betaDot;
 			_Vector3 omega = qdot.segment(velStartIndex[jointNum], 3);
 			omega = Math::RotationConversion_QuatToMat(eulerDecompositionOffset[jointNum]) * omega;
-			_Matrix Rz = Math::RotationConversion_VecToMatrix(_Vector3(0, 0, -0.5 * M_PI));
-			_Matrix Rx = Math::RotationConversion_VecToMatrix(_Vector3(-0.5 * M_PI, 0, 0));
-			omega = Rx * Rz * omega;
-			betaDot = cos(alpha) * omega(1) - sin(alpha) * omega(2);
+			
+			_Vector3 K(sin(alpha), 0, cos(alpha));
+			betaDot = K.dot(omega);
 			_Scalar newBeta = beta + dt * betaDot;
+			//std::cout << "----beta: " << beta << " beta dot: " << betaDot << " prediced beta: " << newBeta << std::endl;	
 			if (newBeta > 0.5 * M_PI || newBeta < -0.5 * M_PI)
 			{
 				vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
 				std::cout << "Switch (predicted beta): " << newBeta << std::endl;
 			}
-			//std::cout << "beta: " << beta << " beta dot: " << betaDot << " prediced beta: " << newBeta << std::endl << std::endl;
-			//std::cout << "---------Predicted beta " << newBeta << std::endl;
 		}
 		else
 		{
@@ -348,8 +346,8 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		for (size_t k = 0; k < constraintNum; k++)
 		{
 			int i = jointsID[k];
-			//_Scalar beta =0.5f;
-			_Scalar beta = 0;
+			_Scalar beta =0.5f;
+			//_Scalar beta = 0;
 			//_Scalar SlopP = 0.00001f;
 			_Scalar SlopP = 0;
 			error(k) = beta * std::max<_Scalar>(-constraintValue[k] - SlopP, 0.0);
