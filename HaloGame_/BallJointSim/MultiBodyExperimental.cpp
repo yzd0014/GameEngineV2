@@ -759,7 +759,7 @@ void eae6320::MultiBody::SolvePositionJointLimit(const _Scalar h)
 					_Matrix J_twist;
 					ComputeTwistEulerJacobian(i, J_twist);
 					J.block<1, 3>(k, xStartIndex[i]) = J_twist * J_rotation[i];
-					C(k, 0) = ComputeTwistEulerError(i, FALSE);
+					C(k, 0) = ComputeTwistEulerError(i);
 				}
 			}
 		}

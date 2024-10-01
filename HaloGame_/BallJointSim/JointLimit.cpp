@@ -8,6 +8,19 @@
 #include <math.h>
 #include <iomanip>
 
+void eae6320::MultiBody::UpdateInitialPosition()
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		lastValidOri[i] = rel_ori[i];
+		_Scalar eulerAngles[3];
+		GetEulerAngles(i, rel_ori[i], eulerAngles);
+		mAlpha[i] = eulerAngles[2];
+		mBeta[i] = eulerAngles[1];
+		mGamma[i] = eulerAngles[0];
+	}
+}
+
 _Scalar eae6320::MultiBody::ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi)
 {
 	_Scalar C = 0;
@@ -44,7 +57,47 @@ _Scalar eae6320::MultiBody::ComputeSwingError(int jointNum)
 	return out;
 }
 
-_Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVectorField)
+void eae6320::MultiBody::SwitchConstraint(int i)
+{
+	//std::cout << "----Twsit angle: " << mAlpha[jointNum] << " " << mBeta[jointNum] << " " << mGamma[jointNum] << std::endl;
+	_Vector3 rotatedX = R_local[i] * eulerX[i];
+	_Vector3 s = rotatedX.cross(eulerY[i]);
+	_Scalar sNorm = s.norm();
+	_Scalar eulerEpsilon = 0.005;
+	if (sNorm > eulerEpsilon)
+	{
+		//check if switch is required
+		_Quat oriDiff = rel_ori[i] * lastValidOri[i].inverse();
+		_Vector3 deltaRot;
+		deltaRot = Math::RotationConversion_QuatToVec(oriDiff);
+		deltaRot = Math::RotationConversion_QuatToMat(eulerDecompositionOffset[i]) * deltaRot;
+		
+		_Scalar eulerAngles[3];
+		GetEulerAngles(i, lastValidOri[i], eulerAngles);
+		_Scalar oldAlpha = eulerAngles[2];
+		_Scalar oldBeta = eulerAngles[1];
+		_Scalar betaDiff;
+		_Vector3 K(sin(oldAlpha), 0, cos(oldAlpha));
+		betaDiff = K.dot(deltaRot);
+		_Scalar newBeta = oldBeta + betaDiff;
+		
+		//std::cout << "----Beta: " << mBeta[i] << " beta dot: " << betaDiff << " prediced beta: " << newBeta << std::endl;
+		std::cout << "----alpha " << mAlpha[i] << " oldAlpha " << oldAlpha << " sNorm " << sNorm << std::endl;
+		
+		if (newBeta > 0.5 * M_PI || newBeta < -0.5 * M_PI)
+		{
+			vectorFieldNum[i] = !vectorFieldNum[i];
+			std::cout << "Switch (predicted beta): " << newBeta << std::endl;
+		}
+		lastValidOri[i] = rel_ori[i];
+	}
+	else
+	{
+		std::cout << "-----Inside singularity region" << std::endl;
+	}
+}
+
+_Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum)
 {
 	_Scalar out = 0;
 	_Vector3 rotatedX = R_local[jointNum] * eulerX[jointNum];
@@ -57,35 +110,6 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 	{
 		s = eulerY[jointNum].cross(rotatedX);
 	}
-	
-	//integrate beta
-	if (checkVectorField)
-	{
-		//std::cout << "----Twsit angle: " << mAlpha[jointNum] << " " << mBeta[jointNum] << " " << mGamma[jointNum] << std::endl;
-		_Scalar alpha = mAlpha[jointNum];
-		_Scalar beta = mBeta[jointNum];
-		if (abs(abs(beta) - 0.5 * M_PI) > 0.0000001)
-		{
-			_Scalar betaDot;
-			_Vector3 omega = qdot.segment(velStartIndex[jointNum], 3);
-			omega = Math::RotationConversion_QuatToMat(eulerDecompositionOffset[jointNum]) * omega;
-			
-			_Vector3 K(sin(alpha), 0, cos(alpha));
-			betaDot = K.dot(omega);
-			_Scalar newBeta = beta + dt * betaDot;
-			//std::cout << "----beta: " << beta << " beta dot: " << betaDot << " prediced beta: " << newBeta << std::endl;	
-			if (newBeta > 0.5 * M_PI || newBeta < -0.5 * M_PI)
-			{
-				vectorFieldNum[jointNum] = !vectorFieldNum[jointNum];
-				std::cout << "Switch (predicted beta): " << newBeta << std::endl;
-			}
-		}
-		else
-		{
-			std::cout << "No unique Euler decomposition" << std::endl;
-		}
-	}
-
 	_Scalar sNorm = s.norm();
 	if (sNorm > swingEpsilon)
 	{
@@ -96,7 +120,17 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum, bool checkVecto
 	}
 	else
 	{
-		if (checkVectorField) std::cout << "Euler swing singluarity points are reached with zNorm: " << sNorm << std::endl;
+		std::cout << "Euler swing singluarity points are reached with zNorm: " << sNorm << std::endl;
+	}
+	if (adaptiveTimestep)
+	{
+		_Scalar dtEpsilon = 0.005;
+		if (sNorm < dtEpsilon)
+		{
+			_Scalar newDt = 0.0001;
+			pApp->UpdateDeltaTime(newDt);
+			std::cout << "Finner dt is used " << newDt << std::endl;
+		}
 	}
 	
 	return out;
@@ -156,7 +190,8 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			}
 			else if (twistMode == EULER && jointRange[i].second > 0)
 			{
-				_Scalar twistConstraint = ComputeTwistEulerError(i, true);
+				SwitchConstraint(i);
+				_Scalar twistConstraint = ComputeTwistEulerError(i);
 				if (twistConstraint < 0)
 				{
 					jointsID.push_back(i);
@@ -312,8 +347,8 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 			//compute bias
 			_Vector3 v = qdot.segment(velStartIndex[i], 3);
 			_Matrix C_dot = J.block<1, 3>(k, velStartIndex[i]) * v;
-			_Scalar CR = 0.2f;
-			//_Scalar CR = 0;
+			//_Scalar CR = 0.2f;
+			_Scalar CR = 0;
 			bias(k) = -CR * std::max<_Scalar>(-C_dot(0, 0), 0.0);
 		}
 		_Matrix lambda;
@@ -346,7 +381,7 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		for (size_t k = 0; k < constraintNum; k++)
 		{
 			int i = jointsID[k];
-			_Scalar beta =0.5f;
+			_Scalar beta =0.9f;
 			//_Scalar beta = 0;
 			//_Scalar SlopP = 0.00001f;
 			_Scalar SlopP = 0;

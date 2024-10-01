@@ -8,7 +8,7 @@
 #include <math.h>
 #include <iomanip>
 
-eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State):
+eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, Application::cbApplication* i_application):
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
 	//UnitTest1(); //test swing twist decomposition with rotaion matrix
@@ -24,12 +24,15 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest11();//5 body
 	//UnitTest12();//2 cube
 	//HingeJointUnitTest0();//hinge joint with auto constraint
-	//UnitTest13();//vector vield switch test
+	UnitTest13();//vector vield switch test
 	//UnitTest14();//5 body for Euler twist
 	//UnitTest15();//incremental model single body
 	//PersistentDataTest();
-	UnitTest16();//load initial condition from file
+	//UnitTest16();//load initial condition from file
 	
+	UpdateInitialPosition();
+	pApp = i_application;
+
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
 	angularMomentum0 = ComputeAngularMomentum();
@@ -119,7 +122,6 @@ void eae6320::MultiBody::ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, 
 		eulerX[i] = xAxis;
 		eulerY[i] = yAxis;
 		eulerZ[i] = zAxis;
-		oldEulerZ[i] = zAxis;
 		twistAxis[i] = xAxis;
 
 		jointRange[i].first = swingAngle;//swing
@@ -170,16 +172,12 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	eulerX.resize(numOfLinks);
 	eulerY.resize(numOfLinks);
 	eulerZ.resize(numOfLinks);
-	oldEulerZ.resize(numOfLinks);
-	oldEulerAngle2.resize(numOfLinks);
-	oldEulerAngle0.resize(numOfLinks);
 	mAlpha.resize(numOfLinks);
 	mBeta.resize(numOfLinks);
 	mGamma.resize(numOfLinks);
 	vectorFieldNum.resize(numOfLinks);
-	vectorFieldSwitched.resize(numOfLinks);
 	eulerDecompositionOffset.resize(numOfLinks);
-	lastTwistAxis.resize(numOfLinks);
+	lastValidOri.resize(numOfLinks);
 	userToLocalTransform.resize(numOfLinks);
 	totalTwist.resize(numOfLinks);
 	old_R_local.resize(numOfLinks);
@@ -218,37 +216,30 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 
 		totalTwist[i] = 0;
 		old_R_local[i].setIdentity();
-		
+		lastValidOri[i].setIdentity();
+
+		mAlpha[i] = 0;
+		mBeta[i] = 0;
+		mGamma[i] = 0;
+
 		vectorFieldNum[i] = 0;
-		vectorFieldSwitched[i] = FALSE;
 		twistAxis[i] = _Vector3(0, -1, 0);
 		eulerX[i] = _Vector3(0, -1, 0);
 		eulerY[i] = _Vector3(0, 0, 1);
 		eulerZ[i] = _Vector3(-1, 0, 0);
-		oldEulerZ[i] = _Vector3(-1, 0, 0);
 
 		_Matrix3 deformationGradient;
 		Math::ComputeDeformationGradient(eulerY[i], eulerZ[i], eulerX[i], _Vector3(0, 1, 0), _Vector3(0, 0, 1), _Vector3(1, 0, 0), deformationGradient);
 		eulerDecompositionOffset[i] = Math::RotationConversion_MatToQuat(deformationGradient);
-
-		Math::ComputeDeformationGradient(eulerX[i], eulerY[i], eulerZ[i], _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), deformationGradient);
-		userToLocalTransform[i] = deformationGradient;
-		lastTwistAxis[i] = eulerX[i];
-
-		_Scalar eulerAngles[3];
-		_Quat inputQuat = eulerDecompositionOffset[i] * rel_ori[i] * eulerDecompositionOffset[i].inverse();
-		Math::quaternion2Euler(inputQuat, eulerAngles, Math::RotSeq::yzx);
-		oldEulerAngle0[i] = eulerAngles[0];
-		oldEulerAngle2[i] = eulerAngles[2];
-		//std::cout << "Twsit angle: " << eulerAngles[0] << " " << eulerAngles[1] << " " << eulerAngles[2] << " rotatedX: " << rotatedX(0) << " " << rotatedX(1) << std::endl;
 	}
 }
 
 void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
+	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
-	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
-	//LOG_TO_FILE << t << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << std::endl;
+	_Scalar time = (_Scalar)eae6320::Physics::totalSimulationTime;
+	//LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << std::endl;
 	
 	EulerIntegration(dt);
 	//RK3Integration(dt);
@@ -779,7 +770,7 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 
 		//update Euler angles
 		_Scalar eulerAngles[3];
-		GetEulerAngles(i, eulerAngles);
+		GetEulerAngles(i, i_quat[i], eulerAngles);
 		mAlpha[i] = eulerAngles[2];
 		mBeta[i] = eulerAngles[1];
 		mGamma[i] = eulerAngles[0];

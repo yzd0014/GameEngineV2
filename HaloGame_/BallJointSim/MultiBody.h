@@ -1,6 +1,6 @@
 #pragma once
 #include "Engine/GameCommon/GameObject.h"
-
+#include "Engine/Application/cbApplication.h"
 #include "External/EigenLibrary/Eigen/Dense"
 #include "External/EigenLibrary/Eigen/Geometry"
 #include "MultiBodyTypeDefine.h"
@@ -9,11 +9,10 @@
 
 namespace eae6320
 {
-	class BallJointSim;
 	class MultiBody : public eae6320::GameCommon::GameObject
 	{
 	public:
-		MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State);
+		MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, Application::cbApplication* i_application);
 		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 
@@ -22,7 +21,8 @@ namespace eae6320
 		int twistMode = EULER;
 		bool gravity = false ;
 		bool enablePositionSolve = true;//position solve currently doesn't support free joint
-		BallJointSim* pballJointSim = nullptr;
+		bool adaptiveTimestep = true;
+		Application::cbApplication* pApp = nullptr;
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void InitializeJoints(int* i_jointType);
@@ -70,9 +70,11 @@ namespace eae6320
 		void SolvePositionJointLimit(const _Scalar h);
 		void SolvePositionJointLimit();
 		_Scalar ComputeSwingError(int jointNum);
-		_Scalar ComputeTwistEulerError(int jointNum, bool checkVectorField);
+		_Scalar ComputeTwistEulerError(int jointNum);
 		void ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J);
 		void ComputeSwingJacobian(int jointNum, _Matrix& o_J);
+		void SwitchConstraint(int i);
+		void UpdateInitialPosition();//call this function whenever poistion is updated
 		
 
 		void PrePositionSolveProccessing();
@@ -157,21 +159,20 @@ namespace eae6320
 		std::vector<_Vector3> eulerX;
 		std::vector<_Vector3> eulerY;
 		std::vector<_Vector3> eulerZ;
-		std::vector<_Vector3> oldEulerZ;
-		std::vector<_Vector3> lastTwistAxis;
-		std::vector<_Scalar> oldEulerAngle2;
-		std::vector<_Scalar> oldEulerAngle0;
+		std::vector<_Quat> lastValidOri;
+	/*	std::vector<_Scalar> oldAlpha;
+		std::vector<_Scalar> oldBeta;
+		std::vector<_Scalar> oldGamma;*/
 		std::vector<_Scalar> mAlpha;
 		std::vector<_Scalar> mBeta;
 		std::vector<_Scalar> mGamma;
-		std::vector<uint8_t> vectorFieldNum;
-		std::vector<bool> vectorFieldSwitched;
+		std::vector<uint16_t> vectorFieldNum;
 		std::vector<_Quat> eulerDecompositionOffset;
 		std::vector<_Matrix3> userToLocalTransform;
 		_Matrix J_constraint;
 		_Matrix effectiveMass0;
 		_Matrix effectiveMass1;
-		_Scalar swingEpsilon = 0.002;//0.000001;
+		_Scalar swingEpsilon = 0.001;//0.000001;
 		
 		std::vector<_Scalar> totalTwist;
 		std::vector<_Matrix3> old_R_local;
@@ -197,9 +198,9 @@ namespace eae6320
 		GameObject* yArrow = nullptr;
 		GameObject* zArrow = nullptr;
 /*******************************************************************************************/
-		void GetEulerAngles(int jointNum, _Scalar o_eulerAngles[])
+		void GetEulerAngles(int jointNum, _Quat i_quat, _Scalar o_eulerAngles[])
 		{
-			_Quat inputQuat = eulerDecompositionOffset[jointNum] * rel_ori[jointNum] * eulerDecompositionOffset[jointNum].inverse();
+			_Quat inputQuat = eulerDecompositionOffset[jointNum] * i_quat * eulerDecompositionOffset[jointNum].inverse();
 			Math::quaternion2Euler(inputQuat, o_eulerAngles, Math::RotSeq::yzx);
 		}
 		

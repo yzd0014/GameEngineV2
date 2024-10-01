@@ -55,10 +55,10 @@ eae6320::cResult eae6320::BallJointSim::Initialize()
 	LOAD_MESH("data/meshes/capsule.mesh", mesh_capsule)
 
 	{
-		MultiBody * pMultiBody = new MultiBody(defaultEffect, mesh_anchor, Physics::sRigidBodyState());
+		//cbApplication* pApp = this;
+		MultiBody * pMultiBody = new MultiBody(defaultEffect, mesh_anchor, Physics::sRigidBodyState(), this);
 		//GameCommon::GameObject * pMultiBody = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		pMultiBody->m_color = Math::sVector(1, 0, 0);
-		pMultiBody->pballJointSim = this;
 	}
 
 	//{
