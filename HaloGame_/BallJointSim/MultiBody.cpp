@@ -29,6 +29,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest15();//incremental model single body
 	//PersistentDataTest();
 	//UnitTest16();//load initial condition from file
+	//EulerDecompositionAccuracyTest();
 	
 	UpdateInitialPosition();
 	pApp = i_application;

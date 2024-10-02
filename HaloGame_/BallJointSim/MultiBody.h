@@ -21,7 +21,7 @@ namespace eae6320
 		int twistMode = EULER;
 		bool gravity = false ;
 		bool enablePositionSolve = true;//position solve currently doesn't support free joint
-		bool adaptiveTimestep = true;
+		bool adaptiveTimestep = false;
 		Application::cbApplication* pApp = nullptr;
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
@@ -104,6 +104,7 @@ namespace eae6320
 		void UnitTest16();
 		void HingeJointUnitTest0();
 		void PersistentDataTest();
+		void EulerDecompositionAccuracyTest();
 
 		_Vector q;
 		_Vector qdot;
@@ -172,7 +173,7 @@ namespace eae6320
 		_Matrix J_constraint;
 		_Matrix effectiveMass0;
 		_Matrix effectiveMass1;
-		_Scalar swingEpsilon = 0.001;//0.000001;
+		_Scalar swingEpsilon = 0.0001;//0.000001;
 		
 		std::vector<_Scalar> totalTwist;
 		std::vector<_Matrix3> old_R_local;

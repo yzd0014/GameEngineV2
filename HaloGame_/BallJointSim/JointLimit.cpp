@@ -63,7 +63,7 @@ void eae6320::MultiBody::SwitchConstraint(int i)
 	_Vector3 rotatedX = R_local[i] * eulerX[i];
 	_Vector3 s = rotatedX.cross(eulerY[i]);
 	_Scalar sNorm = s.norm();
-	_Scalar eulerEpsilon = 0.005;
+	_Scalar eulerEpsilon = 0.0001;
 	if (sNorm > eulerEpsilon)
 	{
 		//check if switch is required
@@ -82,12 +82,12 @@ void eae6320::MultiBody::SwitchConstraint(int i)
 		_Scalar newBeta = oldBeta + betaDiff;
 		
 		//std::cout << "----Beta: " << mBeta[i] << " beta dot: " << betaDiff << " prediced beta: " << newBeta << std::endl;
-		std::cout << "----alpha " << mAlpha[i] << " oldAlpha " << oldAlpha << " sNorm " << sNorm << std::endl;
+		std::cout << "----alpha " << mAlpha[i] << " beta " << mBeta[i] << " sNorm " << sNorm << std::endl;
 		
 		if (newBeta > 0.5 * M_PI || newBeta < -0.5 * M_PI)
 		{
 			vectorFieldNum[i] = !vectorFieldNum[i];
-			std::cout << "Switch (predicted beta): " << newBeta << std::endl;
+			std::cout << "============Switch (predicted beta): " << newBeta << std::endl;
 		}
 		lastValidOri[i] = rel_ori[i];
 	}
@@ -368,6 +368,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 		qdot = qdot + qdotCorrection;
 		//std::cout << "Qdot correction norm " << qdotCorrection.norm() << std::endl;
 		//std::cout << "Qdot correction " << qdotCorrection.transpose() << std::endl;
+		std::cout << "Velocity solve" << std::endl;
 	}
 }
 
@@ -392,5 +393,6 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		_Vector qCorrection = MrInverse * J_constraint.transpose() * lambda;
 		Integrate_q(q, rel_ori, q, rel_ori, qCorrection, 1.0);
 		//std::cout << "Position correction " << qCorrection.transpose() << std::endl;
+		std::cout << "Position solve" << std::endl;
 	}
 }
