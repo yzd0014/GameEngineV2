@@ -16,7 +16,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest3();//chain mimic with two bodies
 	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
 	//UnitTest5();//test induced twist for single body
-	//UnitTest6();//twist invariance for single body
+	//UnitTest6();//two basic intial conditions to verify Euler twist constraint
 	//UnitTest7();//test swing twist decomp with quat
 	//UnitTest8(); //mujoco ball joint constraint test for single body
 	//UnitTest9();//swing for 3d ball joint
@@ -24,12 +24,12 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest11();//5 body
 	//UnitTest12();//2 cube
 	//HingeJointUnitTest0();//hinge joint with auto constraint
-	UnitTest13();//vector vield switch test
+	//UnitTest13();//vector vield switch test
 	//UnitTest14();//5 body for Euler twist
 	//UnitTest15();//incremental model single body
 	//PersistentDataTest();
 	//UnitTest16();//load initial condition from file
-	//EulerDecompositionAccuracyTest();
+	EulerDecompositionAccuracyTest();
 	
 	UpdateInitialPosition();
 	pApp = i_application;
@@ -179,7 +179,7 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	vectorFieldNum.resize(numOfLinks);
 	eulerDecompositionOffset.resize(numOfLinks);
 	lastValidOri.resize(numOfLinks);
-	userToLocalTransform.resize(numOfLinks);
+	eulerDecompositionOffsetMat.resize(numOfLinks);
 	totalTwist.resize(numOfLinks);
 	old_R_local.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
@@ -231,6 +231,7 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 
 		_Matrix3 deformationGradient;
 		Math::ComputeDeformationGradient(eulerY[i], eulerZ[i], eulerX[i], _Vector3(0, 1, 0), _Vector3(0, 0, 1), _Vector3(1, 0, 0), deformationGradient);
+		eulerDecompositionOffsetMat[i] = deformationGradient;
 		eulerDecompositionOffset[i] = Math::RotationConversion_MatToQuat(deformationGradient);
 	}
 }

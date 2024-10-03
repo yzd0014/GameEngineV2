@@ -61,6 +61,14 @@
 #ifndef TWIST_INCREMENT
 #define TWIST_INCREMENT 5
 #endif
+
+#ifndef TWIST_EULER_MAX
+#define TWIST_EULER_MAX 6
+#endif
+
+#ifndef TWIST_EULER_MIN
+#define TWIST_EULER_MIN 7
+#endif
 /*************************************/
 #ifndef SWING_C
 #define SWING_C 0
@@ -80,4 +88,8 @@
 
 #ifndef INCREMENT
 #define INCREMENT 2
+#endif
+
+#ifndef EULER_V2
+#define EULER_V2 3
 #endif

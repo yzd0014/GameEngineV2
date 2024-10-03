@@ -385,6 +385,20 @@ namespace eae6320
 			}
 		}
 
+		void rotationMatrix2Euler(const Matrix3d& M, double res[], RotSeq rotSeq)
+		{
+			switch (rotSeq)
+			{
+				case yzx:
+					res[2] = atan2(-M(2, 0), M(0, 0));//parent-alpha
+					res[1] = asin(M(1, 0));//middle
+					res[0] = atan2(-M(1, 2), M(1, 1));//child-gamma
+				default:
+					std::cout << "Unknown rotation sequence" << std::endl;
+					break;
+			}
+		}
+
 		void ComputeDeformationGradient(Vector3d& i_material0, Vector3d& i_material1, Vector3d& i_material2, Vector3d& i_world0, Vector3d& i_world1, Vector3d& i_world2, Matrix3d& o_F)
 		{
 			Matrix3d materialState;

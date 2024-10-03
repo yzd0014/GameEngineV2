@@ -59,12 +59,8 @@ _Scalar eae6320::MultiBody::ComputeSwingError(int jointNum)
 
 void eae6320::MultiBody::SwitchConstraint(int i)
 {
-	//std::cout << "----Twsit angle: " << mAlpha[jointNum] << " " << mBeta[jointNum] << " " << mGamma[jointNum] << std::endl;
-	_Vector3 rotatedX = R_local[i] * eulerX[i];
-	_Vector3 s = rotatedX.cross(eulerY[i]);
-	_Scalar sNorm = s.norm();
-	_Scalar eulerEpsilon = 0.0001;
-	if (sNorm > eulerEpsilon)
+	_Scalar eulerEpsilon = 0.00001;
+	if (M_PI * 0.5 - mBeta[i] > eulerEpsilon)
 	{
 		//check if switch is required
 		_Quat oriDiff = rel_ori[i] * lastValidOri[i].inverse();
@@ -82,7 +78,7 @@ void eae6320::MultiBody::SwitchConstraint(int i)
 		_Scalar newBeta = oldBeta + betaDiff;
 		
 		//std::cout << "----Beta: " << mBeta[i] << " beta dot: " << betaDiff << " prediced beta: " << newBeta << std::endl;
-		std::cout << "----alpha " << mAlpha[i] << " beta " << mBeta[i] << " sNorm " << sNorm << std::endl;
+		std::cout << "----alpha " << mAlpha[i] << " beta " << mBeta[i] << std::endl;
 		
 		if (newBeta > 0.5 * M_PI || newBeta < -0.5 * M_PI)
 		{
@@ -199,9 +195,35 @@ void eae6320::MultiBody::BallJointLimitCheck()
 					limitType.push_back(TWIST_EULER);
 					//std::cout << "Twist violation " << twistConstraint << std::endl;
 				}
-				else
+			}
+			else if (twistMode == EULER_V2 && jointRange[i].second > 0)
+			{
+				SwitchConstraint(i);
+				if (M_PI * 0.5 - mBeta[i] > swingEpsilon) //velocity constrain can only be solved when beta is not too close to the singularity region
 				{
-					//std::cout << "No twist violation " << twistConstraint << std::endl;
+					_Scalar correctedGamma = mGamma[i];
+					if (vectorFieldNum[i] == 1)
+					{
+						if (mGamma[i] >= 0) correctedGamma = mGamma[i] - M_PI;
+						else correctedGamma = mGamma[i] + M_PI;
+					}
+
+					_Scalar errForUpperBound = jointRange[i].second - correctedGamma;
+					if (errForUpperBound < 0)
+					{
+						jointsID.push_back(i);
+						constraintValue.push_back(errForUpperBound);
+						limitType.push_back(TWIST_EULER_MAX);
+						std::cout << "Twist violation(Upper bound) " << errForUpperBound << std::endl;
+					}
+					_Scalar errForLowerBound = correctedGamma - jointRange[i].second;
+					if (errForLowerBound < 0)
+					{
+						jointsID.push_back(i);
+						constraintValue.push_back(errForLowerBound);
+						limitType.push_back(TWIST_EULER_MIN);
+						std::cout << "Twist violation(Lower bound) " << errForLowerBound << std::endl;
+					}
 				}
 			}
 			else if (jointLimit[i] > 0)
@@ -219,7 +241,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			//else if (twistMode == INCREMENT)
 			{
 				_Vector3 p = old_R_local[i] * twistAxis[i];
-				_Matrix3 rotDiff = R_local[i] * old_R_local[i].inverse();
+				_Matrix3 rotDiff = R_local[i] * old_R_local[i].transpose();
 				_Quat quatDiff = Math::RotationConversion_MatToQuat(rotDiff);
 				Math::SwingTwistDecomposition(quatDiff, p, swingComponent, twistComponent);
 				AngleAxisd twistVec;
@@ -269,6 +291,21 @@ void eae6320::MultiBody::ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J)
 	}
 }
 
+void eae6320::MultiBody::ComputeTwistEulerJacobian(int i, bool isUpperBound, _Matrix& o_J)
+{
+	_Matrix3 R_yzx = eulerDecompositionOffsetMat[i] * R_local[i] * eulerDecompositionOffsetMat[i].transpose();
+	_Matrix J_yzx;
+	J_yzx.resize(1, 3);
+	J_yzx.setZero();
+	_Scalar squareTerm = R_yzx(1, 2) * R_yzx(1, 2) + R_yzx(1, 1) * R_yzx(1, 1);
+	J_yzx(0, 0) = (-R_yzx(2, 2) * R_yzx(1, 1) + R_yzx(2, 1) * R_yzx(1, 2)) / squareTerm;
+	J_yzx(0, 2) = (R_yzx(0, 2) * R_yzx(1, 1) - R_yzx(0, 1) * R_yzx(1, 2)) / squareTerm;
+	o_J = J_yzx * eulerDecompositionOffsetMat[i];
+	if (!isUpperBound)
+	{
+		o_J = -o_J;
+	}
+}
 void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 {
 	if (constraintNum > 0)
@@ -341,6 +378,18 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 					_Matrix mJ;
 					ComputeTwistEulerJacobian(i, mJ);
 					J.block<1, 3>(k, velStartIndex[i]) = mJ;
+					J_constraint.block<1, 3>(k, velStartIndex[i]) = R_local[i] * eulerX[i];
+				}
+				else if (limitType[k] == TWIST_EULER_MAX)
+				{
+					_Matrix mJ;
+					ComputeTwistEulerJacobian(i, true, mJ);
+					J_constraint.block<1, 3>(k, velStartIndex[i]) = R_local[i] * eulerX[i];
+				}
+				else if (limitType[k] == TWIST_EULER_MIN)
+				{
+					_Matrix mJ;
+					ComputeTwistEulerJacobian(i, false, mJ);
 					J_constraint.block<1, 3>(k, velStartIndex[i]) = R_local[i] * eulerX[i];
 				}
 			}

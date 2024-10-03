@@ -72,6 +72,7 @@ namespace eae6320
 		_Scalar ComputeSwingError(int jointNum);
 		_Scalar ComputeTwistEulerError(int jointNum);
 		void ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J);
+		void ComputeTwistEulerJacobian(int i, bool isUpperBound, _Matrix& o_J);
 		void ComputeSwingJacobian(int jointNum, _Matrix& o_J);
 		void SwitchConstraint(int i);
 		void UpdateInitialPosition();//call this function whenever poistion is updated
@@ -155,7 +156,7 @@ namespace eae6320
 		size_t constraintNum = 0;
 		
 		std::vector<_Scalar> jointLimit;
-		std::vector<std::pair<_Scalar, _Scalar>> jointRange;
+		std::vector<std::pair<_Scalar, _Scalar>> jointRange;//first is swing, second is twist
 		std::vector<_Vector3> twistAxis;
 		std::vector<_Vector3> eulerX;
 		std::vector<_Vector3> eulerY;
@@ -169,11 +170,11 @@ namespace eae6320
 		std::vector<_Scalar> mGamma;
 		std::vector<uint16_t> vectorFieldNum;
 		std::vector<_Quat> eulerDecompositionOffset;
-		std::vector<_Matrix3> userToLocalTransform;
+		std::vector<_Matrix3> eulerDecompositionOffsetMat;
 		_Matrix J_constraint;
 		_Matrix effectiveMass0;
 		_Matrix effectiveMass1;
-		_Scalar swingEpsilon = 0.0001;//0.000001;
+		_Scalar swingEpsilon = 0.00001;//0.000001;
 		
 		std::vector<_Scalar> totalTwist;
 		std::vector<_Matrix3> old_R_local;

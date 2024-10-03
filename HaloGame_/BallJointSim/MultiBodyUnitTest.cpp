@@ -209,8 +209,8 @@ void eae6320::MultiBody::UnitTest6()
 
 	SetZeroInitialCondition();
 
-	//_Vector3 rot_vec(0, 0.0, -0.25 * M_PI);
-	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
+	_Vector3 rot_vec(0, 0.0, -0.25 * M_PI);
+	//_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
 	Forward();
 	_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
@@ -493,45 +493,49 @@ void eae6320::MultiBody::UnitTest16()
 
 void eae6320::MultiBody::EulerDecompositionAccuracyTest()
 {
-	for (double beta = 1.57; beta < 0.5 * M_PI + 0.00001 * 20; beta += 0.00001)
-	{
-		_Vector3 gammaVec(0.25, 0, 0);
-		_Quat quatGamma = Math::RotationConversion_VecToQuat(gammaVec);
-		_Matrix3 gammaMat = Math::RotationConversion_VecToMatrix(gammaVec);
+	//for (double beta = 1.57; beta < 0.5 * M_PI + 0.00001 * 20; beta += 0.00001)
+	//{
+	//	_Vector3 gammaVec(0.25, 0, 0);
+	//	_Quat quatGamma = Math::RotationConversion_VecToQuat(gammaVec);
+	//	_Matrix3 gammaMat = Math::RotationConversion_VecToMatrix(gammaVec);
 
-		_Vector3 betaVec(0, 0, beta);
-		_Quat quatBeta = Math::RotationConversion_VecToQuat(betaVec);
-		_Matrix3 betaMat = Math::RotationConversion_VecToMatrix(betaVec);
+	//	_Vector3 betaVec(0, 0, beta);
+	//	_Quat quatBeta = Math::RotationConversion_VecToQuat(betaVec);
+	//	_Matrix3 betaMat = Math::RotationConversion_VecToMatrix(betaVec);
 
-		_Vector3 alphaVec(0, 0.2 * M_PI, 0);
-		_Quat quatAlpha = Math::RotationConversion_VecToQuat(alphaVec);
-		_Matrix3 alphaMat = Math::RotationConversion_VecToMatrix(alphaVec);
+	//	_Vector3 alphaVec(0, 0.2 * M_PI, 0);
+	//	_Quat quatAlpha = Math::RotationConversion_VecToQuat(alphaVec);
+	//	_Matrix3 alphaMat = Math::RotationConversion_VecToMatrix(alphaVec);
 
-		_Quat totalQuat =  quatAlpha * quatBeta * quatGamma;
-		_Matrix3 totalMat = alphaMat * betaMat * gammaMat;
-		/*totalQuat.x() += 0.000001;
-		totalQuat.normalize();*/
-		
-		_Scalar eulerAngles[3];
-		Math::quaternion2Euler(totalQuat, eulerAngles, Math::RotSeq::yzx);
-		std::cout << "----true beta " << beta << std::endl;
-		std::cout << "alpha " << eulerAngles[2] << " beta " << eulerAngles[1] << " gamma " << eulerAngles[0] << std::endl;
-		
-		_Scalar mAlpha, mBeta, mGamma;
-		mAlpha = atan2(-totalMat(2, 0), totalMat(0, 0));
-		mBeta = asin(totalMat(1, 0));
-		mGamma = atan2(-totalMat(1, 2), totalMat(1, 1));
-		std::cout << "alpha " << mAlpha << " beta " << mBeta << " gamma " << mGamma << std::endl;
-	}
-	_Vector3 gammaVec(0.25, 0, 0);
-	/*_Matrix3 gamma = Math::RotationConversion_VecToMatrix(gammaVec);
+	//	_Quat totalQuat =  quatAlpha * quatBeta * quatGamma;
+	//	_Matrix3 totalMat = alphaMat * betaMat * gammaMat;
+	//	/*totalQuat.x() += 0.000001;
+	//	totalQuat.normalize();*/
+	//	
+	//	_Scalar eulerAngles[3];
+	//	Math::quaternion2Euler(totalQuat, eulerAngles, Math::RotSeq::yzx);
+	//	std::cout << "----true beta " << beta << std::endl;
+	//	std::cout << "alpha " << eulerAngles[2] << " beta " << eulerAngles[1] << " gamma " << eulerAngles[0] << std::endl;
+	//	
+	//	_Scalar mAlpha, mBeta, mGamma;
+	//	mAlpha = atan2(-totalMat(2, 0), totalMat(0, 0));
+	//	mBeta = asin(totalMat(1, 0));
+	//	mGamma = atan2(-totalMat(1, 2), totalMat(1, 1));
+	//	std::cout << "alpha " << mAlpha << " beta " << mBeta << " gamma " << mGamma << std::endl;
+	//}
 	
-	_Vector3 betaVec(0, 0, 0.5 * M_PI);
+	_Vector3 gammaVec(M_PI * 0.6, 0, 0);
+	_Matrix3 gamma = Math::RotationConversion_VecToMatrix(gammaVec);
+	
+	_Vector3 betaVec(0, 0, 1.570789);
 	_Matrix3 beta = Math::RotationConversion_VecToMatrix(betaVec);
 	
-	_Vector3 alphaVec(0, 0.2 * M_PI, 0);
+	_Vector3 alphaVec(0, 0.2, 0);
 	_Matrix3 alpha = Math::RotationConversion_VecToMatrix(alphaVec);
 
-	_Matrix3 totalQuat = alpha * beta * gamma;
-	std::cout << totaM << std::endl;*/
+	_Matrix3 totalM = alpha * beta * gamma;
+	_Scalar mGamma = atan2(-totalM(1, 2), totalM(1, 1));
+	_Scalar mAlpha = atan2(-totalM(2, 0), totalM(0, 0));
+	std::cout << totalM << std::endl;
+	std::cout << mAlpha << std::endl;
 }

@@ -30,6 +30,7 @@ namespace eae6320
 
 		void threeaxisrot(double r11, double r12, double r21, double r31, double r32, double res[]);
 		void quaternion2Euler(const Quaterniond& q, double res[], RotSeq rotSeq);
+		void rotationMatrix2Euler(const Matrix3d& M, double res[], RotSeq rotSeq);
 		/**************************************inline functions************************************************************************/
 		inline double GetAngleBetweenTwoVectors(Vector3d& vec0, Vector3d& vec1)
 		{
