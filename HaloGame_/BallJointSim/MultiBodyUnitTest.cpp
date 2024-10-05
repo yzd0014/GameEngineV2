@@ -209,8 +209,8 @@ void eae6320::MultiBody::UnitTest6()
 
 	SetZeroInitialCondition();
 
-	_Vector3 rot_vec(0, 0.0, -0.25 * M_PI);
-	//_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
+	//_Vector3 rot_vec(0, 0.0, -0.25 * M_PI);
+	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
 	Forward();
 	_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
@@ -393,9 +393,8 @@ void eae6320::MultiBody::UnitTest13()
 	SetZeroInitialCondition();
 
 	_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
+	//_Vector3 local_w = _Vector3(-2.0, 0.0, 0.0);
 	qdot.segment(0, 3) = local_w;
-	/*_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
-	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);*/
 	Forward();
 
 	jointRange[0].second = 0.5 * M_PI;//twist
@@ -524,10 +523,10 @@ void eae6320::MultiBody::EulerDecompositionAccuracyTest()
 	//	std::cout << "alpha " << mAlpha << " beta " << mBeta << " gamma " << mGamma << std::endl;
 	//}
 	
-	_Vector3 gammaVec(M_PI * 0.6, 0, 0);
+	_Vector3 gammaVec(0.2, 0, 0);
 	_Matrix3 gamma = Math::RotationConversion_VecToMatrix(gammaVec);
 	
-	_Vector3 betaVec(0, 0, 1.570789);
+	_Vector3 betaVec(0, 0, 1.5708);
 	_Matrix3 beta = Math::RotationConversion_VecToMatrix(betaVec);
 	
 	_Vector3 alphaVec(0, 0.2, 0);
@@ -536,6 +535,8 @@ void eae6320::MultiBody::EulerDecompositionAccuracyTest()
 	_Matrix3 totalM = alpha * beta * gamma;
 	_Scalar mGamma = atan2(-totalM(1, 2), totalM(1, 1));
 	_Scalar mAlpha = atan2(-totalM(2, 0), totalM(0, 0));
+	_Scalar test = totalM(0, 2) * totalM(1, 1) - totalM(0, 1) * totalM(1, 2);
 	std::cout << totalM << std::endl;
 	std::cout << mAlpha << std::endl;
+	std::cout << test << std::endl;
 }

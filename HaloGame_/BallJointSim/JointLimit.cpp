@@ -59,7 +59,7 @@ _Scalar eae6320::MultiBody::ComputeSwingError(int jointNum)
 
 void eae6320::MultiBody::SwitchConstraint(int i)
 {
-	_Scalar eulerEpsilon = 0.00001;
+	_Scalar eulerEpsilon = 1e-6;
 	if (M_PI * 0.5 - mBeta[i] > eulerEpsilon)
 	{
 		//check if switch is required
@@ -209,6 +209,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 					}
 
 					_Scalar errForUpperBound = jointRange[i].second - correctedGamma;
+					_Scalar errForLowerBound = correctedGamma + jointRange[i].second;
 					if (errForUpperBound < 0)
 					{
 						jointsID.push_back(i);
@@ -216,7 +217,10 @@ void eae6320::MultiBody::BallJointLimitCheck()
 						limitType.push_back(TWIST_EULER_MAX);
 						std::cout << "Twist violation(Upper bound) " << errForUpperBound << std::endl;
 					}
-					_Scalar errForLowerBound = correctedGamma - jointRange[i].second;
+					else if (errForUpperBound < errForLowerBound)
+					{
+						std::cout << "Twist violation(Upper bound) " << errForUpperBound << std::endl;
+					}
 					if (errForLowerBound < 0)
 					{
 						jointsID.push_back(i);
@@ -224,6 +228,14 @@ void eae6320::MultiBody::BallJointLimitCheck()
 						limitType.push_back(TWIST_EULER_MIN);
 						std::cout << "Twist violation(Lower bound) " << errForLowerBound << std::endl;
 					}
+					else if (errForUpperBound > errForLowerBound)
+					{
+						std::cout << "Twist violation(Lower bound) " << errForLowerBound << std::endl;
+					}
+				}
+				else
+				{
+					std::cout << "Euler swing singluarity points are reached with zNorm" << std::endl;
 				}
 			}
 			else if (jointLimit[i] > 0)
@@ -384,12 +396,14 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 				{
 					_Matrix mJ;
 					ComputeTwistEulerJacobian(i, true, mJ);
+					J.block<1, 3>(k, velStartIndex[i]) = mJ;
 					J_constraint.block<1, 3>(k, velStartIndex[i]) = R_local[i] * eulerX[i];
 				}
 				else if (limitType[k] == TWIST_EULER_MIN)
 				{
 					_Matrix mJ;
 					ComputeTwistEulerJacobian(i, false, mJ);
+					J.block<1, 3>(k, velStartIndex[i]) = mJ;
 					J_constraint.block<1, 3>(k, velStartIndex[i]) = R_local[i] * eulerX[i];
 				}
 			}
