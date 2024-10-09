@@ -18,7 +18,7 @@ namespace eae6320
 
 		int constraintSolverMode = IMPULSE;
 		int constraintType = SWING_C;//only used for testing
-		int twistMode = EULER;
+		int twistMode = EULER_V2;
 		bool gravity = false ;
 		bool enablePositionSolve = true;//position solve currently doesn't support free joint
 		bool adaptiveTimestep = false;
@@ -174,7 +174,7 @@ namespace eae6320
 		_Matrix J_constraint;
 		_Matrix effectiveMass0;
 		_Matrix effectiveMass1;
-		_Scalar swingEpsilon = 0.002;//0.000001;
+		_Scalar swingEpsilon = 1e-6;//0.000001;
 		
 		std::vector<_Scalar> totalTwist;
 		std::vector<_Matrix3> old_R_local;

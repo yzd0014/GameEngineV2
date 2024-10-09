@@ -76,9 +76,7 @@ void eae6320::MultiBody::SwitchConstraint(int i)
 		_Vector3 K(sin(oldAlpha), 0, cos(oldAlpha));
 		betaDiff = K.dot(deltaRot);
 		_Scalar newBeta = oldBeta + betaDiff;
-		
-		//std::cout << "----Beta: " << mBeta[i] << " beta dot: " << betaDiff << " prediced beta: " << newBeta << std::endl;
-		std::cout << "----alpha " << mAlpha[i] << " beta " << mBeta[i] << std::endl;
+		std::cout << "----alpha " << mAlpha[i] << " beta " << mBeta[i] << " prediced beta: " << newBeta << std::endl;
 		
 		if (newBeta > 0.5 * M_PI || newBeta < -0.5 * M_PI)
 		{
@@ -390,21 +388,22 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 					_Matrix mJ;
 					ComputeTwistEulerJacobian(i, mJ);
 					J.block<1, 3>(k, velStartIndex[i]) = mJ;
-					J_constraint.block<1, 3>(k, velStartIndex[i]) = R_local[i] * eulerX[i];
+					J_constraint.block<1, 3>(k, velStartIndex[i]) = mJ;
 				}
 				else if (limitType[k] == TWIST_EULER_MAX)
 				{
 					_Matrix mJ;
 					ComputeTwistEulerJacobian(i, true, mJ);
 					J.block<1, 3>(k, velStartIndex[i]) = mJ;
-					J_constraint.block<1, 3>(k, velStartIndex[i]) = R_local[i] * eulerX[i];
+					J_constraint.block<1, 3>(k, velStartIndex[i]) = mJ;
 				}
 				else if (limitType[k] == TWIST_EULER_MIN)
 				{
 					_Matrix mJ;
 					ComputeTwistEulerJacobian(i, false, mJ);
 					J.block<1, 3>(k, velStartIndex[i]) = mJ;
-					J_constraint.block<1, 3>(k, velStartIndex[i]) = R_local[i] * eulerX[i];
+					J_constraint.block<1, 3>(k, velStartIndex[i]) = mJ;
+					//J_constraint.block<1, 3>(k, velStartIndex[i]) = R_local[i] * eulerX[i];
 				}
 			}
 			//compute bias
