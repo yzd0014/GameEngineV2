@@ -477,7 +477,7 @@ void eae6320::MultiBody::UnitTest16()
 
 	SetZeroInitialCondition();
 
-	const char* filePath = "../../../../TestCases/sim_state.txt";
+	const char* filePath = "../../../../TestCases/sim_state2.txt";
 	FILE* pFile = fopen(filePath, "rb");
 	for (int i = 0; i < 3; i++)
 	{
@@ -487,7 +487,7 @@ void eae6320::MultiBody::UnitTest16()
 	fclose(pFile);
 	Forward();
 
-	jointRange[0].second = 0.25 * M_PI;//twist
+	jointRange[0].second = 0.5 * M_PI;//twist
 }
 
 void eae6320::MultiBody::EulerDecompositionAccuracyTest()
