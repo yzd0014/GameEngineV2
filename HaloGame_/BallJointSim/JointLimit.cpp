@@ -76,7 +76,7 @@ void eae6320::MultiBody::SwitchConstraint(int i)
 		_Vector3 K(sin(oldAlpha), 0, cos(oldAlpha));
 		betaDiff = K.dot(deltaRot);
 		_Scalar newBeta = oldBeta + betaDiff;
-		std::cout << "----alpha " << mAlpha[i] << " beta " << mBeta[i] << " prediced beta: " << newBeta << std::endl;
+		//std::cout << "----alpha " << mAlpha[i] << " beta " << mBeta[i] << " prediced beta: " << newBeta << std::endl;
 		
 		if (newBeta > 0.5 * M_PI || newBeta < -0.5 * M_PI)
 		{
@@ -213,22 +213,22 @@ void eae6320::MultiBody::BallJointLimitCheck()
 						jointsID.push_back(i);
 						constraintValue.push_back(errForUpperBound);
 						limitType.push_back(TWIST_EULER_MAX);
-						std::cout << "Twist violation(Upper bound) " << errForUpperBound << std::endl;
+						//std::cout << "Twist violation(Upper bound) " << errForUpperBound << std::endl;
 					}
 					else if (errForUpperBound < errForLowerBound)
 					{
-						std::cout << "Twist violation(Upper bound) " << errForUpperBound << std::endl;
+						//std::cout << "Twist violation(Upper bound) " << errForUpperBound << std::endl;
 					}
 					if (errForLowerBound < 0)
 					{
 						jointsID.push_back(i);
 						constraintValue.push_back(errForLowerBound);
 						limitType.push_back(TWIST_EULER_MIN);
-						std::cout << "Twist violation(Lower bound) " << errForLowerBound << std::endl;
+						//std::cout << "Twist violation(Lower bound) " << errForLowerBound << std::endl;
 					}
 					else if (errForUpperBound > errForLowerBound)
 					{
-						std::cout << "Twist violation(Lower bound) " << errForLowerBound << std::endl;
+						//std::cout << "Twist violation(Lower bound) " << errForLowerBound << std::endl;
 					}
 				}
 				else
@@ -430,7 +430,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 		qdot = qdot + qdotCorrection;
 		//std::cout << "Qdot correction norm " << qdotCorrection.norm() << std::endl;
 		//std::cout << "Qdot correction " << qdotCorrection.transpose() << std::endl;
-		std::cout << "Velocity solve" << std::endl;
+		//std::cout << "Velocity solve" << std::endl;
 	}
 }
 
@@ -455,6 +455,6 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		_Vector qCorrection = MrInverse * J_constraint.transpose() * lambda;
 		Integrate_q(q, rel_ori, q, rel_ori, qCorrection, 1.0);
 		//std::cout << "Position correction " << qCorrection.transpose() << std::endl;
-		std::cout << "Position solve" << std::endl;
+		//std::cout << "Position solve" << std::endl;
 	}
 }

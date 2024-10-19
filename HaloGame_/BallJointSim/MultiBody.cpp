@@ -24,11 +24,11 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest11();//5 body
 	//UnitTest12();//2 cube
 	//HingeJointUnitTest0();//hinge joint with auto constraint
-	//UnitTest13();//vector vield switch test
+	UnitTest13();//vector vield switch test
 	//UnitTest14();//5 body for Euler twist
 	//UnitTest15();//incremental model single body
 	//PersistentDataTest();
-	UnitTest16();//load initial condition from file
+	//UnitTest16();//load initial condition from file
 	//EulerDecompositionAccuracyTest();
 	
 	UpdateInitialPosition();
@@ -241,7 +241,14 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar time = (_Scalar)eae6320::Physics::totalSimulationTime;
-	//LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << std::endl;
+	if (time <= 10)
+	{
+		LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << std::endl;
+	}
+	else 
+	{ 
+		eae6320::Physics::simPause = true;
+	}
 	
 	EulerIntegration(dt);
 	//RK3Integration(dt);

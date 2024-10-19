@@ -233,6 +233,7 @@ void eae6320::MultiBody::UnitTest7()
 	_Quat quatTwist = Math::RotationConversion_VecToQuat(t);
 	
 	_Quat quat = quatSwing * quatTwist;
+	_Vector3 totalR = Math::RotationConversion_QuatToVec(quat);
 	/*quat.w() = 0;
 	quat.x() = 1;
 	quat.y() = 0;
@@ -245,11 +246,13 @@ void eae6320::MultiBody::UnitTest7()
 	
 	_Vector3 vecSwing = Math::RotationConversion_QuatToVec(quatSwing_);
 	_Vector3 vecTwist = Math::RotationConversion_QuatToVec(quatTwist_);
+	_Vector3 vecTwist2 = totalR.dot(t) * t.normalized();
 
 	std::cout << s.transpose() << std::endl;
 	std::cout << vecSwing.transpose() << std::endl << std::endl;
 	std::cout << t.transpose() << std::endl;
-	std::cout << vecTwist.transpose() << std::endl << std::endl;
+	std::cout << vecTwist.transpose() << std::endl;
+	std::cout << vecTwist2.transpose() << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::UnitTest8()
@@ -392,13 +395,13 @@ void eae6320::MultiBody::UnitTest13()
 
 	SetZeroInitialCondition();
 
-	_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
-	//_Vector3 local_w = _Vector3(-2.0, 0.0, 0.0);
+	//_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
+	_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);
 	qdot.segment(0, 3) = local_w;
 	Forward();
 
-	jointRange[0].second = 0.5 * M_PI;//twist
-	//jointRange[0].second = 0.000001;//twist
+	//jointRange[0].second = 0.5 * M_PI;//twist
+	jointRange[0].second = 0.000001;//twist
 	//jointRange[0].second = 0.9  * M_PI;//twist
 }
 
