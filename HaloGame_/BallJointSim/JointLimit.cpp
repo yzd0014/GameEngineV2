@@ -110,7 +110,7 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum)
 		//std::cout << "sNorm " << s.norm() << std::endl;
 		s.normalize();
 		out = s.dot(R_local[jointNum] * eulerZ[jointNum]) - cos(jointRange[jointNum].second);
-		std::cout << "Position error " << out << std::endl;
+		//std::cout << "Position error " << out << std::endl;
 	}
 	else
 	{

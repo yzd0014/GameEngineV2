@@ -24,8 +24,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest11();//5 body
 	//UnitTest12();//2 cube
 	//HingeJointUnitTest0();//hinge joint with auto constraint
-	UnitTest13();//vector vield switch test
-	//UnitTest14();//5 body for Euler twist
+	//UnitTest13();//vector vield switch test
+	UnitTest14();//5 body for Euler twist
 	//UnitTest15();//incremental model single body
 	//PersistentDataTest();
 	//UnitTest16();//load initial condition from file
@@ -127,6 +127,11 @@ void eae6320::MultiBody::ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, 
 
 		jointRange[i].first = swingAngle;//swing
 		jointRange[i].second = twistAngle;//twist
+
+		_Matrix3 deformationGradient;
+		Math::ComputeDeformationGradient(eulerY[i], eulerZ[i], eulerX[i], _Vector3(0, 1, 0), _Vector3(0, 0, 1), _Vector3(1, 0, 0), deformationGradient);
+		eulerDecompositionOffsetMat[i] = deformationGradient;
+		eulerDecompositionOffset[i] = Math::RotationConversion_MatToQuat(deformationGradient);
 	}
 }
 
@@ -228,11 +233,6 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 		eulerX[i] = _Vector3(0, -1, 0);
 		eulerY[i] = _Vector3(0, 0, 1);
 		eulerZ[i] = _Vector3(-1, 0, 0);
-
-		_Matrix3 deformationGradient;
-		Math::ComputeDeformationGradient(eulerY[i], eulerZ[i], eulerX[i], _Vector3(0, 1, 0), _Vector3(0, 0, 1), _Vector3(1, 0, 0), deformationGradient);
-		eulerDecompositionOffsetMat[i] = deformationGradient;
-		eulerDecompositionOffset[i] = Math::RotationConversion_MatToQuat(deformationGradient);
 	}
 }
 
@@ -241,14 +241,14 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar time = (_Scalar)eae6320::Physics::totalSimulationTime;
-	if (time <= 10)
+	/*if (time <= 5)
 	{
 		LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << std::endl;
 	}
 	else 
 	{ 
 		eae6320::Physics::simPause = true;
-	}
+	}*/
 	
 	EulerIntegration(dt);
 	//RK3Integration(dt);

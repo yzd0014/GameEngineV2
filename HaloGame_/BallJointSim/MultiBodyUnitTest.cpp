@@ -356,7 +356,7 @@ void eae6320::MultiBody::UnitTest11()
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		jointRange[i].first = 0.25 * M_PI;//swing
-		//jointRange[i].second = 0.01;//twist
+		jointRange[i].second = 0.000001;//twist
 	}
 }
 
@@ -395,13 +395,13 @@ void eae6320::MultiBody::UnitTest13()
 
 	SetZeroInitialCondition();
 
-	//_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
-	_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);
+	_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
+	//_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);
 	qdot.segment(0, 3) = local_w;
 	Forward();
 
-	//jointRange[0].second = 0.5 * M_PI;//twist
-	jointRange[0].second = 0.000001;//twist
+	jointRange[0].second = 0.25 * M_PI;//twist
+	//jointRange[0].second = 0.000001;//twist
 	//jointRange[0].second = 0.9  * M_PI;//twist
 }
 
@@ -418,7 +418,7 @@ void eae6320::MultiBody::UnitTest14()
 
 	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
-	ConfigurateBallJoint(_Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.25 * M_PI, 0.01);
+	ConfigurateBallJoint(_Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.25 * M_PI, 0.000001);
 
 	SetZeroInitialCondition();
 	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
