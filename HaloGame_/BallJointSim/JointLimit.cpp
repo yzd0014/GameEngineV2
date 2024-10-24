@@ -76,12 +76,13 @@ void eae6320::MultiBody::SwitchConstraint(int i)
 		_Vector3 K(sin(oldAlpha), 0, cos(oldAlpha));
 		betaDiff = K.dot(deltaRot);
 		_Scalar newBeta = oldBeta + betaDiff;
+		//std::cout << "---quat " << rel_ori[i] << std::endl;
 		//std::cout << "----alpha " << mAlpha[i] << " beta " << mBeta[i] << " prediced beta: " << newBeta << std::endl;
 		
 		if (newBeta > 0.5 * M_PI || newBeta < -0.5 * M_PI)
 		{
 			vectorFieldNum[i] = !vectorFieldNum[i];
-			std::cout << "============Switch (predicted beta): " << newBeta << std::endl;
+			std::cout << "============Switch (predicted beta)========================================================================: " << newBeta << std::endl;
 		}
 		lastValidOri[i] = rel_ori[i];
 	}
@@ -107,10 +108,8 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum)
 	_Scalar sNorm = s.norm();
 	if (sNorm > swingEpsilon)
 	{
-		//std::cout << "sNorm " << s.norm() << std::endl;
 		s.normalize();
 		out = s.dot(R_local[jointNum] * eulerZ[jointNum]) - cos(jointRange[jointNum].second);
-		//std::cout << "Position error " << out << std::endl;
 	}
 	else
 	{
@@ -155,12 +154,12 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			if (jointRange[i].first > 0)//check swing constraint
 			{
 				_Scalar swingConstraint = ComputeSwingError(i);
+				//std::cout << "Swing error " << swingConstraint << std::endl;
 				if (swingConstraint < 0)
 				{
 					jointsID.push_back(i);
 					constraintValue.push_back(swingConstraint);
 					limitType.push_back(SWING);
-					//std::cout << "SWING " << swingConstraint << std::endl;
 				}
 			}
 
@@ -250,18 +249,25 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			else if (twistMode == INCREMENT && jointRange[i].second > 0)
 			//else if (twistMode == INCREMENT)
 			{
-				_Vector3 p = old_R_local[i] * twistAxis[i];
+				/*_Vector3 p = old_R_local[i] * twistAxis[i];
 				_Matrix3 rotDiff = R_local[i] * old_R_local[i].transpose();
 				_Quat quatDiff = Math::RotationConversion_MatToQuat(rotDiff);
 				Math::SwingTwistDecomposition(quatDiff, p, swingComponent, twistComponent);
 				AngleAxisd twistVec;
 				twistVec = twistComponent;
 				totalTwist[i] += twistVec.angle();
-				std::cout << "Total incremental twist " << totalTwist[i] << " twist increase " << twistVec.angle() << std::endl;
+				std::cout << "Total incremental twist " << totalTwist[i] << " twist increase " << twistVec.angle() << std::endl;*/
+
+				_Vector3 p = R_local[i] * twistAxis[i];
+				_Vector3 omega = qdot.segment(velStartIndex[i], 3);
+				_Scalar projectedOmega = twistAxis[i].dot(omega);
+				_Scalar deltaTwist = projectedOmega * dt;
+				totalTwist[i] += deltaTwist;
+				//std::cout << "Total incremental twist " << totalTwist[i] << " twist increase " << deltaTwist << std::endl;
 				if (totalTwist[i] > jointRange[i].second || totalTwist[i] < -jointRange[i].second)
 				{
 					if (totalTwist[i] > 0) totalTwist[i] = jointRange[i].second - 0.000001;
-					else if (totalTwist[i] < 0) totalTwist[i] = jointRange[i].second + 0.000001;
+					else if (totalTwist[i] < 0) totalTwist[i] = -jointRange[i].second + 0.000001;
 					
 					jointsID.push_back(i);
 					//constraintValue.push_back(abs(jointRange[i].second) - abs(totalTwist[i]));
@@ -415,9 +421,15 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 		}
 		_Matrix lambda;
 		_Matrix T;
-		T = J * MrInverse;
-		effectiveMass0 = (T * J.transpose()).inverse();
-		effectiveMass1 = (T * J_constraint.transpose()).inverse();
+		_Matrix mIdentity;
+		mIdentity = _Matrix::Identity(constraintNum, constraintNum);
+		
+		T = J * MrInverse * J.transpose();
+		_Scalar deltaSquared = abs(T.maxCoeff()) * 1e-6;
+		effectiveMass0 = (T + deltaSquared * mIdentity).inverse();
+		std::cout << J << std::endl;
+		//std::cout << (J * MrInverse * J.transpose()).determinant() << std::endl;
+		//effectiveMass1 = (T * J_constraint.transpose()).inverse();
 		lambda = effectiveMass0 * (-J * qdot - bias);
 		for (size_t k = 0; k < constraintNum; k++)
 		{
@@ -430,7 +442,6 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 		qdot = qdot + qdotCorrection;
 		//std::cout << "Qdot correction norm " << qdotCorrection.norm() << std::endl;
 		//std::cout << "Qdot correction " << qdotCorrection.transpose() << std::endl;
-		//std::cout << "Velocity solve" << std::endl;
 	}
 }
 
@@ -445,13 +456,13 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		{
 			int i = jointsID[k];
 			_Scalar beta =0.9f;
-			//_Scalar beta = 0;
+			//_Scalar beta = 0.1;
 			//_Scalar SlopP = 0.00001f;
 			_Scalar SlopP = 0;
 			error(k) = beta * std::max<_Scalar>(-constraintValue[k] - SlopP, 0.0);
 		}
 		_Matrix lambda;
-		lambda = effectiveMass1 * error;
+		lambda = effectiveMass0 * error;
 		_Vector qCorrection = MrInverse * J_constraint.transpose() * lambda;
 		Integrate_q(q, rel_ori, q, rel_ori, qCorrection, 1.0);
 		//std::cout << "Position correction " << qCorrection.transpose() << std::endl;

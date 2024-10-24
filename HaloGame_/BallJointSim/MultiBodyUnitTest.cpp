@@ -133,7 +133,7 @@ void eae6320::MultiBody::UnitTest5()
 	Forward();
 	
 	jointRange[0].first = 0.5 * M_PI;//swing
-	jointRange[0].second = 0.5 * M_PI;//twist
+	jointRange[0].second = 1e-6;//twist
 }
 
 void eae6320::MultiBody::UnitTest3()
@@ -430,6 +430,7 @@ void eae6320::MultiBody::UnitTest15()
 {
 	numOfLinks = 1;
 	constraintSolverMode = IMPULSE;
+	twistMode = INCREMENT;
 
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
@@ -480,7 +481,7 @@ void eae6320::MultiBody::UnitTest16()
 
 	SetZeroInitialCondition();
 
-	const char* filePath = "../../../../TestCases/sim_state2.txt";
+	const char* filePath = "../../../../TestCases/sim_state3.txt";
 	FILE* pFile = fopen(filePath, "rb");
 	for (int i = 0; i < 3; i++)
 	{
@@ -490,7 +491,8 @@ void eae6320::MultiBody::UnitTest16()
 	fclose(pFile);
 	Forward();
 
-	jointRange[0].second = 0.5 * M_PI;//twist
+	//jointRange[0].second = 0.5 * M_PI;//twist
+	jointRange[0].second = 1e-6;//twist
 }
 
 void eae6320::MultiBody::EulerDecompositionAccuracyTest()
