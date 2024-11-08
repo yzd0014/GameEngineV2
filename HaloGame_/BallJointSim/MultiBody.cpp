@@ -15,7 +15,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest2(); //test extreme case for twist with single body
 	//UnitTest3();//chain mimic with two bodies
 	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
-	UnitTest5();//test induced twist for single body; use swing limit to enforce singularity point pass through
+	//UnitTest5();//test induced twist for single body; use swing limit to enforce singularity point pass through
 	//UnitTest6();//two basic intial conditions to verify Euler twist constraint
 	//UnitTest7();//test swing twist decomp with quat
 	//UnitTest8(); //mujoco ball joint constraint test for single body
@@ -24,7 +24,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest11();//5 body
 	//UnitTest12();//2 cube
 	//HingeJointUnitTest0();//hinge joint with auto constraint
-	//UnitTest13();//vector vield switch test
+	UnitTest13();//vector vield switch test
 	//UnitTest14();//5 body for Euler twist
 	//UnitTest15();//incremental model single body
 	//PersistentDataTest();
@@ -246,15 +246,19 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar time = (_Scalar)eae6320::Physics::totalSimulationTime;
-	/*if (time <= 5)
+	if (time <= 10)
 	{
-		LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << std::endl;
+		if (time - oldTime >= 0.001 - 0.0000000001 || time == 0)
+		{
+			//LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << " " << vectorFieldNum[0] << std::endl;
+			LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << totalTwist[0] << std::endl;
+			oldTime = time;
+		}
 	}
 	else 
 	{ 
 		eae6320::Physics::simPause = true;
-	}*/
-	
+	}
 	EulerIntegration(dt);
 	//RK3Integration(dt);
 	//RK4Integration(dt);

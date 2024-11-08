@@ -14,7 +14,7 @@ eae6320::MyActor::MyActor(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Phys
 	x = Vector3d(1, 0, 0);
 	z = Vector3d(0, 0, 1);
 	twistAxis = Vector3d(0, -1, 0);
-	UnitTest3();
+	UnitTest4();
 }
 
 void eae6320::MyActor::UnitTest1()
@@ -179,6 +179,33 @@ void eae6320::MyActor::UnitTest3()
 		}
 	}
 	std::cout << totalTwist << std::endl;
+}
+
+void eae6320::MyActor::UnitTest4()
+{
+	_Vector3 twistAxis0 = Vector3d(0, -1, 0);
+	_Vector3 twistAxis1 = Vector3d(0, 1, 0);
+	_Vector3 x0 = Vector3d(1, 0, 0);
+	_Vector3 z0 = Vector3d(0, 0, 1);
+	Vector3d twistAxisWorld;
+	Matrix3d Ry;
+	for (_Scalar angleLeftRight = 0; angleLeftRight <= M_PI; angleLeftRight += M_PI * 0.05)
+	{
+		Ry = Math::RotationConversion_VecToMatrix(Vector3d(0, angleLeftRight, 0));
+		for (_Scalar angleUpDown = 0; angleUpDown <= 2 * M_PI; angleUpDown += M_PI * 0.05)
+		{
+			Vector3d r0;
+			r0 = Vector3d(-angleUpDown, 0, 0);
+			r0 = Ry * r0;
+			Matrix3d R = Math::RotationConversion_VecToMatrix(r0);
+			twistAxisWorld = R * twistAxis0;
+			Vector3d x0World = R * x0;
+			Vector3d z0World = R * z0;
+			//GameplayUtility::DrawArrow(twistAxisWorld * rigidBodyScale, x0World, Math::sVector(1, 0, 0), 0.05);
+			//GameplayUtility::DrawArrow(twistAxisWorld * rigidBodyScale, z0World, Math::sVector(0, 0, 1), 0.05);
+			GameplayUtility::DrawArrowScaled(twistAxisWorld * rigidBodyScale, z0World, Math::sVector(0, 0, 1), Vector3d(0.08, 0.08, 0.08));
+		}
+	}
 }
 
 Matrix3d eae6320::MyActor::ComputeEulerSwing(Matrix3d i_Mat, Vector3d i_referencVec)

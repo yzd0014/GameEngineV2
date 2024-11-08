@@ -154,7 +154,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			if (jointRange[i].first > 0)//check swing constraint
 			{
 				_Scalar swingConstraint = ComputeSwingError(i);
-				//std::cout << "Swing error " << swingConstraint << std::endl;
+				//std::cout << "---Swing error " << swingConstraint << std::endl;
 				if (swingConstraint < 0)
 				{
 					jointsID.push_back(i);
@@ -185,12 +185,12 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			{
 				SwitchConstraint(i);
 				_Scalar twistConstraint = ComputeTwistEulerError(i);
+				//std::cout << "Twist violation " << twistConstraint << std::endl;
 				if (twistConstraint < 0)
 				{
 					jointsID.push_back(i);
 					constraintValue.push_back(twistConstraint);
 					limitType.push_back(TWIST_EULER);
-					//std::cout << "Twist violation " << twistConstraint << std::endl;
 				}
 			}
 			else if (twistMode == EULER_V2 && jointRange[i].second > 0)
@@ -260,10 +260,10 @@ void eae6320::MultiBody::BallJointLimitCheck()
 
 				_Vector3 p = R_local[i] * twistAxis[i];
 				_Vector3 omega = qdot.segment(velStartIndex[i], 3);
-				_Scalar projectedOmega = twistAxis[i].dot(omega);
+				_Scalar projectedOmega = p.dot(omega);
 				_Scalar deltaTwist = projectedOmega * dt;
 				totalTwist[i] += deltaTwist;
-				//std::cout << "Total incremental twist " << totalTwist[i] << " twist increase " << deltaTwist << std::endl;
+				//std::cout << "Total incremental twist " << totalTwist[i] << " twist increase " << omega.transpose() << std::endl;
 				if (totalTwist[i] > jointRange[i].second || totalTwist[i] < -jointRange[i].second)
 				{
 					if (totalTwist[i] > 0) totalTwist[i] = jointRange[i].second - 0.000001;
@@ -427,7 +427,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 		T = J * MrInverse * J.transpose();
 		_Scalar deltaSquared = abs(T.maxCoeff()) * 1e-6;
 		effectiveMass0 = (T + deltaSquared * mIdentity).inverse();
-		std::cout << J << std::endl;
+		//effectiveMass0 = T.inverse();
 		//std::cout << (J * MrInverse * J.transpose()).determinant() << std::endl;
 		//effectiveMass1 = (T * J_constraint.transpose()).inverse();
 		lambda = effectiveMass0 * (-J * qdot - bias);

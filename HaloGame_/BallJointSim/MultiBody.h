@@ -18,9 +18,9 @@ namespace eae6320
 
 		int constraintSolverMode = IMPULSE;
 		int constraintType = SWING_C;//only used for testing
-		int twistMode = EULER_V2;
+		int twistMode = INCREMENT;
 		bool gravity = false ;
-		bool enablePositionSolve = false;//position solve currently doesn't support free joint
+		bool enablePositionSolve = true;//position solve currently doesn't support free joint
 		bool adaptiveTimestep = false;
 		Application::cbApplication* pApp = nullptr;
 	private:
@@ -192,6 +192,7 @@ namespace eae6320
 		int totalXDOF = 0;//used for position solve
 		int geometry = BOX;
 		_Scalar dt;
+		_Scalar oldTime = 0;
 
 		//debug related parameters
 		GameObject* swingArrow = nullptr;

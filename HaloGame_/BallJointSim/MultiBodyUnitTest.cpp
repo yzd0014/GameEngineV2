@@ -134,6 +134,7 @@ void eae6320::MultiBody::UnitTest5()
 	
 	jointRange[0].first = 0.5 * M_PI;//swing
 	jointRange[0].second = 1e-6;//twist
+	//jointRange[0].second = 0.5 * M_PI;//twist
 }
 
 void eae6320::MultiBody::UnitTest3()
@@ -395,13 +396,13 @@ void eae6320::MultiBody::UnitTest13()
 
 	SetZeroInitialCondition();
 
-	_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
-	//_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);
+	//_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
+	_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);
 	qdot.segment(0, 3) = local_w;
 	Forward();
 
-	jointRange[0].second = 0.25 * M_PI;//twist
-	//jointRange[0].second = 0.000001;//twist
+	//jointRange[0].second = 0.25 * M_PI;//twist
+	jointRange[0].second = 0.000001;//twist
 	//jointRange[0].second = 0.9  * M_PI;//twist
 }
 
