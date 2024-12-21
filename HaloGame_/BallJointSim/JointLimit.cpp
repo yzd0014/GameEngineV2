@@ -60,7 +60,7 @@ _Scalar eae6320::MultiBody::ComputeSwingError(int jointNum)
 void eae6320::MultiBody::SwitchConstraint(int i)
 {
 	_Scalar eulerEpsilon = 1e-6;
-	if (M_PI * 0.5 - mBeta[i] > eulerEpsilon)
+	if (M_PI * 0.5 - abs(mBeta[i]) > eulerEpsilon)
 	{
 		//check if switch is required
 		_Quat oriDiff = rel_ori[i] * lastValidOri[i].inverse();
@@ -172,12 +172,14 @@ void eae6320::MultiBody::BallJointLimitCheck()
 						jointsID.push_back(i);
 						constraintValue.push_back(jointRange[i].second - twistAngle);
 						limitType.push_back(TWIST_WITHOUT_SWING);
+						std::cout << "TWIST_WITHOUT_SWING " << jointRange[i].second - twistAngle << std::endl;
 					}
 					else
 					{
 						jointsID.push_back(i);
 						constraintValue.push_back(jointRange[i].second - twistAngle);
 						limitType.push_back(TWIST_WITH_SWING);
+						std::cout << "TWIST_WITH_SWING " << jointRange[i].second - twistAngle << std::endl;
 					}
 				}
 			}
@@ -348,16 +350,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 					_Scalar j1 = ComputeAngularVelocityConstraint(_Vector3(0, 1, 0), p, R_local[i], limitType[k], jointRange[i].second);
 					_Scalar j2 = ComputeAngularVelocityConstraint(_Vector3(0, 0, 1), p, R_local[i], limitType[k], jointRange[i].second);
 					J.block<1, 3>(k, velStartIndex[i]) = _Vector3(j0, j1, j2);
-
-					//compute K
-					_Vector3 pRotated = R_local[i] * p;
-					_Scalar cTest = ComputeAngularVelocityConstraint(pRotated, p, R_local[i], limitType[k], jointRange[i].second);
-					if (cTest < 0)
-					{
-						pRotated = -pRotated;
-					}
-					K.block<1, 3>(k, velStartIndex[i]) = pRotated;
-					J_constraint.block<1, 3>(k, velStartIndex[i]) = K.block<1, 3>(k, velStartIndex[i]);
+					J_constraint.block<1, 3>(k, velStartIndex[i]) = _Vector3(j0, j1, j2);
 				}
 				else if (limitType[k] == SWING)
 				{

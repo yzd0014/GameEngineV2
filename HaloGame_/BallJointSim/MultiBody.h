@@ -18,7 +18,7 @@ namespace eae6320
 
 		int constraintSolverMode = IMPULSE;
 		int constraintType = SWING_C;//only used for testing
-		int twistMode = INCREMENT;
+		int twistMode = EULER_V2;
 		bool gravity = false ;
 		bool enablePositionSolve = true;//position solve currently doesn't support free joint
 		bool adaptiveTimestep = false;

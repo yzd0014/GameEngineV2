@@ -246,23 +246,24 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
 	_Scalar time = (_Scalar)eae6320::Physics::totalSimulationTime;
-	if (time <= 10)
-	{
-		if (time - oldTime >= 0.001 - 0.0000000001 || time == 0)
-		{
-			//LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << " " << vectorFieldNum[0] << std::endl;
-			LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << totalTwist[0] << std::endl;
-			oldTime = time;
-		}
-	}
-	else 
-	{ 
-		eae6320::Physics::simPause = true;
-	}
+	//if (time <= 10)
+	//{
+	//	if (time - oldTime >= 0.001 - 0.0000000001 || time == 0)
+	//	{
+	//		//LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << " " << vectorFieldNum[0] << std::endl;
+	//		LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << totalTwist[0] << std::endl;
+	//		oldTime = time;
+	//	}
+	//}
+	//else 
+	//{ 
+	//	eae6320::Physics::simPause = true;
+	//}
 	EulerIntegration(dt);
 	//RK3Integration(dt);
 	//RK4Integration(dt);
-	
+
+	//std::cout << mGamma[0] << std::endl;
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
 	//std::cout << "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
