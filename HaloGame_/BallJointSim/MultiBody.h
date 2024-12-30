@@ -107,6 +107,9 @@ namespace eae6320
 		void PersistentDataTest();
 		void EulerDecompositionAccuracyTest();
 
+		void SaveDataToMatlab(_Scalar totalDuration);
+		void SaveDataToHoudini(_Scalar totalDuration, int numOfFrames);
+
 		_Vector q;
 		_Vector qdot;
 		_Vector x;//used for position solve
@@ -192,7 +195,6 @@ namespace eae6320
 		int totalXDOF = 0;//used for position solve
 		int geometry = BOX;
 		_Scalar dt;
-		_Scalar oldTime = 0;
 
 		//debug related parameters
 		GameObject* swingArrow = nullptr;

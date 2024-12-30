@@ -24,8 +24,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	//UnitTest11();//5 body
 	//UnitTest12();//2 cube
 	//HingeJointUnitTest0();//hinge joint with auto constraint
-	UnitTest13();//vector vield switch test
-	//UnitTest14();//5 body for Euler twist
+	//UnitTest13();//vector vield switch test
+	UnitTest14();//5 body for Euler twist
 	//UnitTest15();//incremental model single body
 	//PersistentDataTest();
 	//UnitTest16();//load initial condition from file
@@ -245,20 +245,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
-	_Scalar time = (_Scalar)eae6320::Physics::totalSimulationTime;
-	//if (time <= 10)
-	//{
-	//	if (time - oldTime >= 0.001 - 0.0000000001 || time == 0)
-	//	{
-	//		//LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << " " << vectorFieldNum[0] << std::endl;
-	//		LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << totalTwist[0] << std::endl;
-	//		oldTime = time;
-	//	}
-	//}
-	//else 
-	//{ 
-	//	eae6320::Physics::simPause = true;
-	//}
+	//SaveDataToMatlab(10);
 	EulerIntegration(dt);
 	//RK3Integration(dt);
 	//RK4Integration(dt);
@@ -907,5 +894,93 @@ void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
 		fwrite(&rel_ori[0], sizeof(double) * 4, 1, pFile);
 		fclose(pFile);
 		std::cout << "data saved to file" << std::endl;
+	}
+	if (UserInput::IsKeyFromReleasedToPressed('K'))
+	{
+		//Save data to Houdini
+		static int frames_saved = 1;
+		LOG_TO_FILE << frames_saved << ",";
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			_Vector3 vecRot = Math::RotationConversion_QuatToVec(obs_ori[i]);
+			_Scalar rotAngle = vecRot.norm();
+			if (abs(rotAngle) < 1e-8)
+			{
+				vecRot = _Vector3(1, 0, 0);
+			}
+			else
+			{
+				vecRot = vecRot / rotAngle;
+			}
+			LOG_TO_FILE << pos[i](0) << "," << pos[i](1) << "," << pos[i](2) << "," << vecRot(0) << "," << vecRot(1) << "," << vecRot(2) << "," << rotAngle;
+			if (i != numOfLinks - 1)
+			{
+				LOG_TO_FILE << ",";
+			}
+			else
+			{
+				LOG_TO_FILE << std::endl;
+			}
+		}
+		frames_saved++;
+		std::cout << "a frame saved!" << std::endl;
+	}
+}
+
+void eae6320::MultiBody::SaveDataToMatlab(_Scalar totalDuration)
+{
+	static _Scalar oldTime = 0;
+	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+	if (t <= totalDuration)
+	{	
+		if (t - oldTime >= 0.001 - 1e-8 || t == 0)
+		{
+			//LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << " " << vectorFieldNum[0] << std::endl;
+			LOG_TO_FILE << t << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << totalTwist[0] << std::endl;
+			oldTime = t;
+		}
+	}
+	else
+	{
+		eae6320::Physics::simPause = true;
+	}
+}
+
+void eae6320::MultiBody::SaveDataToHoudini(_Scalar totalDuration, int numOfFrames)
+{
+	_Scalar interval = totalDuration / numOfFrames;
+	static _Scalar oldTime = 0;
+	static int frames_saved = 1;
+	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+	if (t < totalDuration)
+	{
+		if (t == 0 || t - oldTime >= interval - 1e-8)
+		{
+			LOG_TO_FILE << frames_saved << ",";
+			for (int i = 0; i < numOfLinks; i++)
+			{
+				_Vector3 vecRot = Math::RotationConversion_QuatToVec(obs_ori[i]);
+				_Scalar rotAngle = vecRot.norm();
+				if (abs(rotAngle) < 1e-8)
+				{
+					vecRot = _Vector3(1, 0, 0);
+				}
+				else
+				{
+					vecRot = vecRot / rotAngle;
+				}
+				LOG_TO_FILE << pos[i](0) << "," << pos[i](1) << "," << pos[i](2) << "," << vecRot(0) << "," << vecRot(1) << "," << vecRot(2) << "," << rotAngle;
+				if (i != numOfLinks - 1)
+				{
+					LOG_TO_FILE << ",";
+				}
+				else
+				{
+					LOG_TO_FILE << std::endl;
+				}
+			}
+			frames_saved++;
+		}
+		oldTime = t;
 	}
 }

@@ -408,6 +408,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 			//compute bias
 			_Vector3 v = qdot.segment(velStartIndex[i], 3);
 			_Matrix C_dot = J.block<1, 3>(k, velStartIndex[i]) * v;
+			//std::cout << "constraint dot " << C_dot << std::endl;
 			//_Scalar CR = 0.2f;
 			_Scalar CR = 0;
 			bias(k) = -CR * std::max<_Scalar>(-C_dot(0, 0), 0.0);

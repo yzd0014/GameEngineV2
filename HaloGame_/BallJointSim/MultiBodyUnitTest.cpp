@@ -396,9 +396,9 @@ void eae6320::MultiBody::UnitTest13()
 
 	SetZeroInitialCondition();
 
-	//_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
+	_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
 	//_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);
-	_Vector3 local_w = _Vector3(-2.0, 0.0, 0.0);
+	//_Vector3 local_w = _Vector3(-2.0, 0.0, 0.0);
 	qdot.segment(0, 3) = local_w;
 	Forward();
 
