@@ -22,6 +22,8 @@
 #if defined( EAE6320_PLATFORM_WINDOWS )
 	#include <Engine/Windows/Includes.h>
 #endif
+#include "windows.h"
+#include <shellapi.h>
 
 // Forward Declarations
 //=====================
@@ -47,7 +49,12 @@ namespace eae6320
 	namespace Application
 	{
 		extern bool enableConsole;
-		
+		extern int argc;
+		extern LPWSTR* argv;
+		enum ApplicationParameterType { integer, float_point };
+
+		void AddApplicationParameter(void* outputPtr, enum ApplicationParameterType type, const std::wstring& prefix);
+
 		// The only thing that a specific application project's main() entry point should do
 		// is to call the following function with the derived application class
 		// as the template argument:

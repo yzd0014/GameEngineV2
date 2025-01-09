@@ -210,8 +210,34 @@ void eae6320::MultiBody::UnitTest6()
 
 	SetZeroInitialCondition();
 
-	//_Vector3 rot_vec(0, 0.0, -0.25 * M_PI);
 	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
+	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	Forward();
+	_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
+	_Vector3 world_w = R_global[0] * local_w;
+	qdot.segment(0, 3) = world_w;
+	Forward();
+
+	//jointRange[0].first = 0.75 * M_PI;//swing
+	jointRange[0].second = 0.5 * M_PI;//twist
+}
+
+void eae6320::MultiBody::UnitTest17()
+{
+	numOfLinks = 1;
+	constraintSolverMode = IMPULSE;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
+
+	int jointTypeArray[] = { BALL_JOINT_4D };
+	InitializeJoints(jointTypeArray);
+
+	SetZeroInitialCondition();
+
+	_Vector3 rot_vec(0, 0.0, -0.25 * M_PI);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
 	Forward();
 	_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
@@ -546,4 +572,66 @@ void eae6320::MultiBody::EulerDecompositionAccuracyTest()
 	std::cout << totalM << std::endl;
 	std::cout << mAlpha << std::endl;
 	std::cout << test << std::endl;
+}
+
+void eae6320::MultiBody::RunUnitTest()
+{
+	//UnitTest1(); //test swing twist decomposition with rotaion matrix
+	//UnitTest2(); //test extreme case for twist with single body
+	//UnitTest3();//chain mimic with two bodies
+	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
+	//UnitTest5();//test induced twist for single body; use swing limit to enforce singularity point pass through
+	//UnitTest6();//two basic intial conditions to verify Euler twist constraint
+	//UnitTest7();//test swing twist decomp with quat
+	//UnitTest8(); //mujoco ball joint constraint test for single body
+	//UnitTest9();//swing for 3d ball joint
+	//UnitTest10();//twist invarience two bodies.
+	//UnitTest11();//5 body
+	//UnitTest12();//2 cube
+	//HingeJointUnitTest0();//hinge joint with auto constraint
+	//UnitTest13();//vector vield switch test
+	//UnitTest14();//5 body for Euler twist
+	//UnitTest15();//incremental model single body
+	//PersistentDataTest();
+	//UnitTest16();//load initial condition from file
+	//EulerDecompositionAccuracyTest();
+	
+	int testCaseNum = 0;
+	Application::AddApplicationParameter(&testCaseNum, Application::ApplicationParameterType::integer, L"-example");
+	if (testCaseNum == 0)
+	{
+		UnitTest6();
+		std::cout << "basic intial conditions to verify Euler twist constraint (induced swing)" << std::endl;
+	}
+	else if (testCaseNum == 1)
+	{
+		UnitTest17();
+		std::cout << "basic intial conditions to verify Euler twist constraint (no induced swing)" << std::endl;
+	}
+	else if (testCaseNum == 2)
+	{
+		UnitTest13();
+		std::cout << "singularity pass through test" << std::endl;
+	}
+	else if (testCaseNum == 3)
+	{
+		UnitTest5();
+		std::cout << "regularization test" << std::endl;
+	}
+	else if (testCaseNum == 4)
+	{
+		UnitTest14();
+		std::cout << "5 body for Euler twist" << std::endl;
+	}
+
+	Application::AddApplicationParameter(&twistMode, Application::ApplicationParameterType::integer, L"-tm");
+	if (twistMode == EULER_V2)
+	{
+		std::cout << "Euler twist constraint is being used" << std::endl;
+	}
+	else if (twistMode == INCREMENT)
+	{
+		std::cout << "increment twist constraint is being used" << std::endl;
+	}
+	std::cout << std::endl;
 }

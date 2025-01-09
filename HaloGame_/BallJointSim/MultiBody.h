@@ -93,6 +93,7 @@ namespace eae6320
 		void UnitTest4();
 		void UnitTest5();
 		void UnitTest6();
+		void UnitTest17();
 		void UnitTest7();
 		void UnitTest8();
 		void UnitTest9();
@@ -106,6 +107,7 @@ namespace eae6320
 		void HingeJointUnitTest0();
 		void PersistentDataTest();
 		void EulerDecompositionAccuracyTest();
+		void RunUnitTest();
 
 		void SaveDataToMatlab(_Scalar totalDuration);
 		void SaveDataToHoudini(_Scalar totalDuration, int numOfFrames);

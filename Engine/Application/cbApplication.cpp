@@ -1,6 +1,5 @@
 // Includes
 //=========
-
 #include "cbApplication.h"
 
 #include <algorithm>
@@ -18,6 +17,8 @@
 // Interface
 //==========
 bool eae6320::Application::enableConsole = false;
+LPWSTR* eae6320::Application::argv = nullptr;
+int eae6320::Application::argc = 0;
 
 void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const double i_elapsedSecondCount_sinceLastUpdate)
 {
@@ -484,26 +485,6 @@ void eae6320::Application::cbApplication::EntryPoint_applicationLoopThread( void
 
 eae6320::cResult eae6320::Application::cbApplication::Initialize_all( const sEntryPointParameters& i_entryPointParameters )
 {
-	if (i_entryPointParameters.commandLineArguments[0] == '1')//enable console window
-	{
-		EnableConsolePrinting(true);
-	}
-	if (i_entryPointParameters.commandLineArguments[1] == '0')
-	{
-		Graphics::renderThreadNoWait = false;
-	}
-	else if (i_entryPointParameters.commandLineArguments[1] == '1')
-	{
-		//render thread won't wait for simulation thread to submit its data
-		Graphics::renderThreadNoWait = true;
-	}
-	else if (i_entryPointParameters.commandLineArguments[1] == '2')
-	{
-		EnableConsolePrinting(true);
-		Graphics::renderThreadNoWait = true;
-		render = false;
-	}
-
 	auto result = Results::Success;
 
 	// Initialize logging first so that it's always available
@@ -567,7 +548,6 @@ void eae6320::Application::cbApplication::EnableConsolePrinting(bool enabled)
 		AllocConsole();
 		AttachConsole(GetCurrentProcessId());
 		freopen("CON", "w", stdout);
-		std::cout << "Console Initialized..." << std::endl;
 	}
 }
 
@@ -768,4 +748,36 @@ eae6320::cResult eae6320::Application::cbApplication::CleanUp_engine()
 	}
 	
 	return result;
+}
+
+void eae6320::Application::AddApplicationParameter(void* outputPtr, enum ApplicationParameterType type, const std::wstring& prefix)
+{
+	if (type == integer)
+	{
+		int mInteger = 0;
+		for (int i = 1; i < argc; i++)
+		{
+			std::wstring arg = argv[i];
+			if (arg == prefix && i + 1 < argc)
+			{
+				mInteger = std::stoi(argv[i + 1]);
+				int* m_outputPtr = reinterpret_cast<int*>(outputPtr);
+				*m_outputPtr = mInteger;
+			}
+		}
+	}
+	else if (type == float_point)
+	{
+		double mFloat = 0;
+		for (int i = 1; i < argc; i++)
+		{
+			std::wstring arg = argv[i];
+			if (arg == prefix && i + 1 < argc)
+			{
+				mFloat = std::stod(argv[i + 1]);
+				double* m_outputPtr = reinterpret_cast<double*>(outputPtr);
+				*m_outputPtr = mFloat;
+			}
+		}
+	}
 }

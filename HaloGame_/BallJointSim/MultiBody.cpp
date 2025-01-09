@@ -11,25 +11,7 @@
 eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, Application::cbApplication* i_application):
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
-	//UnitTest1(); //test swing twist decomposition with rotaion matrix
-	//UnitTest2(); //test extreme case for twist with single body
-	//UnitTest3();//chain mimic with two bodies
-	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
-	//UnitTest5();//test induced twist for single body; use swing limit to enforce singularity point pass through
-	//UnitTest6();//two basic intial conditions to verify Euler twist constraint
-	//UnitTest7();//test swing twist decomp with quat
-	//UnitTest8(); //mujoco ball joint constraint test for single body
-	//UnitTest9();//swing for 3d ball joint
-	//UnitTest10();//twist invarience two bodies.
-	//UnitTest11();//5 body
-	//UnitTest12();//2 cube
-	//HingeJointUnitTest0();//hinge joint with auto constraint
-	//UnitTest13();//vector vield switch test
-	UnitTest14();//5 body for Euler twist
-	//UnitTest15();//incremental model single body
-	//PersistentDataTest();
-	//UnitTest16();//load initial condition from file
-	//EulerDecompositionAccuracyTest();
+	RunUnitTest();
 	
 	UpdateInitialPosition();
 	pApp = i_application;
@@ -38,9 +20,9 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	totalEnergy0 = ComputeTotalEnergy();
 	angularMomentum0 = ComputeAngularMomentum();
 	linearMomentum0 = ComputeTranslationalMomentum();
-	std::cout << "initial total energy: " << totalEnergy0 << std::endl;
-	std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
-	std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
+	//std::cout << "initial total energy: " << totalEnergy0 << std::endl;
+	//std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
+	//std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
 }
 
 void eae6320::MultiBody::SetZeroInitialCondition()
