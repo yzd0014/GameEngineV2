@@ -378,7 +378,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 					_Vector3 p = R_local[i] * twistAxis[i];
 					_Scalar dotProduct = p.dot(qdot.segment(velStartIndex[i], 3));
 					if (dotProduct > 0) p = -p;
-
+			
 					J.block<1, 3>(k, velStartIndex[i]) = p;
 					J_constraint.block<1, 3>(k, velStartIndex[i]) = p;
 				}

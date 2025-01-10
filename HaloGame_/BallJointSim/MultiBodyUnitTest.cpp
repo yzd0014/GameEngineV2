@@ -249,6 +249,27 @@ void eae6320::MultiBody::UnitTest17()
 	jointRange[0].second = 0.5 * M_PI;//twist
 }
 
+void eae6320::MultiBody::UnitTest18()
+{
+	numOfLinks = 1;
+	constraintSolverMode = IMPULSE;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
+
+	int jointTypeArray[] = { BALL_JOINT_4D };
+	InitializeJoints(jointTypeArray);
+
+	SetZeroInitialCondition();
+	_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);;
+	qdot.segment(0, 3) = local_w;
+	Forward();
+
+	jointRange[0].second = 1e-7;//twist
+}
+
 void eae6320::MultiBody::UnitTest7()
 {
 	_Vector3 p(0, -1, 0);
@@ -610,15 +631,20 @@ void eae6320::MultiBody::RunUnitTest()
 	}
 	else if (testCaseNum == 2)
 	{
+		UnitTest18();
+		std::cout << "0 twist constraint" << std::endl;
+	}
+	else if (testCaseNum == 3)
+	{
 		UnitTest13();
 		std::cout << "singularity pass through test" << std::endl;
 	}
-	else if (testCaseNum == 3)
+	else if (testCaseNum == 4)
 	{
 		UnitTest5();
 		std::cout << "regularization test" << std::endl;
 	}
-	else if (testCaseNum == 4)
+	else if (testCaseNum == 5)
 	{
 		UnitTest14();
 		std::cout << "5 body for Euler twist" << std::endl;
