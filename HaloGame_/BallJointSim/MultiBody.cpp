@@ -227,7 +227,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
-	//SaveDataToMatlab(10);
+	//SaveDataToMatlab(5);
+	SaveDataToHoudini(5, 12);
 	EulerIntegration(dt);
 	//RK3Integration(dt);
 	//RK4Integration(dt);
@@ -917,8 +918,8 @@ void eae6320::MultiBody::SaveDataToMatlab(_Scalar totalDuration)
 	{	
 		if (t - oldTime >= 0.001 - 1e-8 || t == 0)
 		{
-			//LOG_TO_FILE << time << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << " " << vectorFieldNum[0] << std::endl;
-			LOG_TO_FILE << t << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << totalTwist[0] << std::endl;
+			LOG_TO_FILE << t << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << " " << vectorFieldNum[0] << std::endl;
+			//LOG_TO_FILE << t << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << totalTwist[0] << std::endl;
 			oldTime = t;
 		}
 	}
@@ -930,14 +931,15 @@ void eae6320::MultiBody::SaveDataToMatlab(_Scalar totalDuration)
 
 void eae6320::MultiBody::SaveDataToHoudini(_Scalar totalDuration, int numOfFrames)
 {
-	_Scalar interval = totalDuration / numOfFrames;
+	_Scalar interval = totalDuration / (numOfFrames - 1);
 	static _Scalar oldTime = 0;
-	static int frames_saved = 1;
+	static int frames_saved = 0;
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
-	if (t < totalDuration)
+	if (frames_saved < numOfFrames)
 	{
 		if (t == 0 || t - oldTime >= interval - 1e-8)
 		{
+			frames_saved++;
 			LOG_TO_FILE << frames_saved << ",";
 			for (int i = 0; i < numOfLinks; i++)
 			{
@@ -961,8 +963,11 @@ void eae6320::MultiBody::SaveDataToHoudini(_Scalar totalDuration, int numOfFrame
 					LOG_TO_FILE << std::endl;
 				}
 			}
-			frames_saved++;
+			oldTime = t;
 		}
-		oldTime = t;
+	}
+	else
+	{
+		eae6320::Physics::simPause = true;
 	}
 }

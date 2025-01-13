@@ -172,14 +172,14 @@ void eae6320::MultiBody::BallJointLimitCheck()
 						jointsID.push_back(i);
 						constraintValue.push_back(jointRange[i].second - twistAngle);
 						limitType.push_back(TWIST_WITHOUT_SWING);
-						std::cout << "TWIST_WITHOUT_SWING " << jointRange[i].second - twistAngle << std::endl;
+						//std::cout << "TWIST_WITHOUT_SWING " << jointRange[i].second - twistAngle << std::endl;
 					}
 					else
 					{
 						jointsID.push_back(i);
 						constraintValue.push_back(jointRange[i].second - twistAngle);
 						limitType.push_back(TWIST_WITH_SWING);
-						std::cout << "TWIST_WITH_SWING " << jointRange[i].second - twistAngle << std::endl;
+						//std::cout << "TWIST_WITH_SWING " << jointRange[i].second - twistAngle << std::endl;
 					}
 				}
 			}

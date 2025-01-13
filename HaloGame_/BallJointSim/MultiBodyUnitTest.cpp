@@ -137,6 +137,60 @@ void eae6320::MultiBody::UnitTest5()
 	//jointRange[0].second = 0.5 * M_PI;//twist
 }
 
+void eae6320::MultiBody::UnitTest19()
+{
+	numOfLinks = 1;
+	constraintSolverMode = IMPULSE;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
+
+	int jointTypeArray[] = { BALL_JOINT_4D };
+	InitializeJoints(jointTypeArray);
+
+	SetZeroInitialCondition();
+
+	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
+	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	Forward();
+	_Vector3 local_w = _Vector3(0.0, 0.0, -2.0);
+	_Vector3 world_w = R_global[0] * local_w;
+	qdot.segment(0, 3) = world_w;
+	Forward();
+
+	jointRange[0].first = 0.48 * M_PI;//swing
+	jointRange[0].second = 1e-6;//twist
+}
+
+void eae6320::MultiBody::UnitTest20()
+{
+	numOfLinks = 1;
+	constraintSolverMode = IMPULSE;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
+
+	int jointTypeArray[] = { BALL_JOINT_4D };
+	InitializeJoints(jointTypeArray);
+
+	SetZeroInitialCondition();
+
+	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
+	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	Forward();
+	_Vector3 local_w = _Vector3(0.0, 0.0, -2.0);
+	_Vector3 world_w = R_global[0] * local_w;
+	qdot.segment(0, 3) = world_w;
+	Forward();
+
+	jointRange[0].first = 0.98 * M_PI;//swing
+	jointRange[0].second = 1e-6;//twist
+}
+
 void eae6320::MultiBody::UnitTest3()
 {
 	numOfLinks = 2;
@@ -649,6 +703,16 @@ void eae6320::MultiBody::RunUnitTest()
 		UnitTest14();
 		std::cout << "5 body for Euler twist" << std::endl;
 	}
+	else if (testCaseNum == 6)
+	{
+		UnitTest19();
+		std::cout << "singularity winding test 90" << std::endl;
+	}
+	else if (testCaseNum == 7)
+	{
+		UnitTest20();
+		std::cout << "singularity winding test 180" << std::endl;
+	}
 
 	Application::AddApplicationParameter(&twistMode, Application::ApplicationParameterType::integer, L"-tm");
 	if (twistMode == EULER_V2)
@@ -658,6 +722,20 @@ void eae6320::MultiBody::RunUnitTest()
 	else if (twistMode == INCREMENT)
 	{
 		std::cout << "increment twist constraint is being used" << std::endl;
+	}
+	else if (twistMode == DIRECT)
+	{
+		std::cout << "direct swing-twist constraint is being used" << std::endl;
+	}
+
+	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");
+	if (enablePositionSolve == 1)
+	{
+		std::cout << "position solve enabled" << std::endl;
+	}
+	else
+	{
+		std::cout << "position solve disabled" << std::endl;
 	}
 	std::cout << std::endl;
 }

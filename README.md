@@ -7,7 +7,24 @@
 4. Enter "$(GameInstallDir)$(TargetFileName)" in "Command", enter "$(GameInstallDir)" in "Working Directory"
 5. Now you can compile and run
 ![](Images/instruction.png)
-6. The executable can take two arguments, they are explained down below.
+6. Command arguments are explained down below.
+-console
+0: disable console terminal window
+1: enable console terminal window
+-rm (render mode)
+0: rendering thread waits for logic thread to submit new data
+1: rendering thread grabs whatever in the buffer submitted by logic thread
+2: no rendering
+-example
+0 to 7: See function RunUnitTest() from HaloGame_\BallJointSim\MultiBodyUnitTest.cpp for all test cases.
+-tm (twisting constraint mode)
+0: direct swing twist
+2: incremental
+3: Euler twisting version two
+-ps (position solve)
+0: disable position solve
+1: enable position solve
+
 ![](Images/arguments.png)
 
 ## Features

@@ -1,0 +1,192 @@
+clear;
+font_size=18;
+add_cross=false;
+add_xline=false;
+add_switch_point=true;
+
+eae_data = readmatrix('example4_euler.csv');
+mj_data = readmatrix('example4_mujoco.csv');
+i_data = readmatrix('example4_incremental.csv');
+
+sz = size(eae_data);
+last_point_mj=size(mj_data);
+last_point_mj=last_point_mj(1);
+x_line_point=0.362;%the moment that twist limit is reached
+
+%computed corrected gamma
+[corrected_gamma, switch_points] = correctTwistAngle(eae_data);
+
+t = tiledlayout(3,2); % Create a 3x2 grid layout
+t.TileSpacing = 'compact'; % Adjust the space between the tiles
+t.Padding = 'compact'; % Adjust the space around the edges
+%subplot(3,2,1);
+nexttile;
+plot(mj_data(:,1),mj_data(:,2),'-o','MarkerIndices',1:200:length(mj_data(:,2)),LineWidth=2);
+hold on;
+plot(i_data(:,1),i_data(:,2),'-^','MarkerIndices',1:240:length(i_data(:,2)),LineWidth=2);
+hold on;
+plot(eae_data(:,1),eae_data(:,2),LineWidth=2);
+if add_cross
+    hold on;
+    plot(mj_data(last_point_mj,1),mj_data(last_point_mj,2),'xr','MarkerSize',20, 'LineWidth', 2);
+end
+if add_xline
+    xline(x_line_point,'--','LineWidth', 2);
+end
+if add_switch_point
+    k=1;
+    while switch_points(k)~=0
+         xline(switch_points(k),'--r','LineWidth', 2);
+         k=k+1;
+    end
+end
+%ylim([-1 3]);
+xlabel('t','FontSize',font_size);
+ylabel('x','FontSize',font_size);
+
+nexttile;
+plot(mj_data(:,1),mj_data(:,5),'-o','MarkerIndices',1:200:length(mj_data(:,5)),LineWidth=2);
+hold on;
+plot(i_data(:,1),i_data(:,5),'-^','MarkerIndices',1:240:length(mj_data(:,5)),LineWidth=2);
+hold on;
+plot(eae_data(:,1),eae_data(:,5),LineWidth=2);
+if add_cross
+    hold on;
+    plot(mj_data(last_point_mj,1),mj_data(last_point_mj,5),'xr','MarkerSize',20,'LineWidth',2);
+end
+if add_xline
+    xline(x_line_point,'--','LineWidth', 2);
+end
+if add_switch_point
+    k=1;
+    while switch_points(k)~=0
+         xline(switch_points(k),'--r','LineWidth', 2);
+         k=k+1;
+    end
+end
+xlabel('t','FontSize',font_size);
+ylabel('alpha','FontSize',font_size);
+legend('MuJoCo','Incremental','Euler','FontSize',10);
+
+nexttile;
+plot(mj_data(:,1),mj_data(:,3),'-o','MarkerIndices',1:200:length(mj_data(:,3)),LineWidth=2);
+hold on;
+plot(i_data(:,1),i_data(:,3),'-^','MarkerIndices',1:240:length(i_data(:,3)),LineWidth=2);
+hold on;
+plot(eae_data(:,1),eae_data(:,3),LineWidth=2);
+if add_cross
+    hold on;
+    plot(mj_data(last_point_mj,1),mj_data(last_point_mj,3),'xr','MarkerSize',20,'LineWidth',2);
+end
+if add_xline
+    xline(x_line_point,'--','LineWidth', 2);
+end
+if add_switch_point
+    k=1;
+    while switch_points(k)~=0
+         xline(switch_points(k),'--r','LineWidth', 2);
+         k=k+1;
+    end
+end
+xlabel('t','FontSize',font_size);
+ylabel('y','FontSize',font_size);
+
+nexttile;
+plot(mj_data(:,1),mj_data(:,6),'-o','MarkerIndices',1:200:length(mj_data(:,6)),LineWidth=2);
+hold on;
+plot(i_data(:,1),i_data(:,6),'-^','MarkerIndices',1:240:length(i_data(:,6)),LineWidth=2);
+hold on;
+plot(eae_data(:,1),eae_data(:,6),LineWidth=2);
+if add_cross
+    hold on;
+    plot(mj_data(last_point_mj,1),mj_data(last_point_mj,6),'xr','MarkerSize',20,'LineWidth',2);
+end
+if add_xline
+    xline(x_line_point,'--','LineWidth', 2);
+end
+if add_switch_point
+    k=1;
+    while switch_points(k)~=0
+         xline(switch_points(k),'--r','LineWidth', 2);
+         k=k+1;
+    end
+end
+ylim([-pi pi]);
+xlabel('t','FontSize',font_size);
+ylabel('beta','FontSize',font_size);
+
+nexttile;
+plot(mj_data(:,1),mj_data(:,4),'-o','MarkerIndices',1:200:length(mj_data(:,4)),LineWidth=2);
+hold on;
+plot(i_data(:,1),i_data(:,4),'-^','MarkerIndices',1:240:length(i_data(:,4)),LineWidth=2);
+hold on;
+plot(eae_data(:,1),eae_data(:,4),LineWidth=2);
+if add_cross
+    hold on;
+    plot(mj_data(last_point_mj,1),mj_data(last_point_mj,4),'xr','MarkerSize',20,'LineWidth',2);
+end
+if add_xline
+    xline(x_line_point,'--','LineWidth', 2);
+end
+if add_switch_point
+    k=1;
+    while switch_points(k)~=0
+         xline(switch_points(k),'--r','LineWidth', 2);
+         k=k+1;
+    end
+end
+ylim([-1 1]);
+xlabel('t','FontSize',font_size);
+ylabel('z','FontSize',font_size);
+
+nexttile;
+plot(mj_data(:,1),mj_data(:,7),'-o','MarkerIndices',1:200:length(mj_data(:,5)),LineWidth=2);
+hold on;
+plot(i_data(:,1),i_data(:,7),'-^','MarkerIndices',1:240:length(i_data(:,7)),LineWidth=2);
+hold on;
+plot(eae_data(:,1),corrected_gamma,LineWidth=2);
+if add_cross
+    hold on;
+    plot(mj_data(last_point_mj,1),mj_data(last_point_mj,7),'xr','MarkerSize',20,'LineWidth',2);
+end
+if add_xline
+    xline(x_line_point,'--','LineWidth', 2);
+end
+if add_switch_point
+    k=1;
+    while switch_points(k)~=0
+         xline(switch_points(k),'--r','LineWidth', 2);
+         k=k+1;
+    end
+end
+ylim([-pi pi]);
+xlabel('t','FontSize',font_size);
+ylabel('gamma','FontSize',font_size);
+% legend('switched','no switch');
+
+function [corrected_result, switch_points] = correctTwistAngle(raw_data)
+    sz = size(raw_data);
+    corrected_result=zeros(1,sz(1));
+    switch_points=zeros(5,1);
+    k = 1;
+    for i=1:sz(1)
+        if raw_data(i,7) >= 3.14
+            raw_data(i,7)=raw_data(i,7)-2*pi;
+        end
+        if i~=1
+            if i+1<=sz(1) & raw_data(i,8)~=raw_data(i+1,8)
+                if raw_data(i,7)<0
+                    corrected_result(i)=raw_data(i,7)+pi-raw_data(i-1,7)+corrected_result(i-1);
+                else
+                    corrected_result(i)=raw_data(i,7)-pi-raw_data(i-1,7)+corrected_result(i-1);
+                end
+                switch_points(k)=raw_data(i,1);
+                k=k+1;
+            else
+                corrected_result(i)=raw_data(i,7)-raw_data(i-1,7)+corrected_result(i-1);
+            end
+        else
+           corrected_result(1)=raw_data(1,7);
+        end  
+    end
+end

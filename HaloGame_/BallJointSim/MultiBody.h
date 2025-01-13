@@ -89,6 +89,8 @@ namespace eae6320
 		void UnitTest0();
 		void UnitTest1();
 		void UnitTest2();
+		void UnitTest19();
+		void UnitTest20();
 		void UnitTest3();
 		void UnitTest4();
 		void UnitTest5();
