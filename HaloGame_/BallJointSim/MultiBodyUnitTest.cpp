@@ -671,6 +671,20 @@ void eae6320::MultiBody::RunUnitTest()
 	//UnitTest16();//load initial condition from file
 	//EulerDecompositionAccuracyTest();
 	
+	Application::AddApplicationParameter(&twistMode, Application::ApplicationParameterType::integer, L"-tm");
+	if (twistMode == EULER_V2)
+	{
+		std::cout << "Euler twist constraint is being used" << std::endl;
+	}
+	else if (twistMode == INCREMENT)
+	{
+		std::cout << "increment twist constraint is being used" << std::endl;
+	}
+	else if (twistMode == DIRECT)
+	{
+		std::cout << "direct swing-twist constraint is being used" << std::endl;
+	}
+
 	int testCaseNum = 0;
 	Application::AddApplicationParameter(&testCaseNum, Application::ApplicationParameterType::integer, L"-example");
 	if (testCaseNum == 0)
@@ -686,21 +700,37 @@ void eae6320::MultiBody::RunUnitTest()
 	else if (testCaseNum == 2)
 	{
 		UnitTest18();
+		/*animationDuration = 2;
+		frameNum = 30;*/
 		std::cout << "0 twist constraint" << std::endl;
 	}
 	else if (testCaseNum == 3)
 	{
 		UnitTest13();
+	/*	animationDuration = 2;
+		frameNum = 18;*/
 		std::cout << "singularity pass through test" << std::endl;
 	}
 	else if (testCaseNum == 4)
 	{
 		UnitTest5();
+	/*	animationDuration = 5;
+
+		if (twistMode == EULER_V2)
+		{
+			frameNum = 18;
+		}
+		else if (twistMode == INCREMENT)
+		{
+			frameNum = 30;
+		}*/
 		std::cout << "regularization test" << std::endl;
 	}
 	else if (testCaseNum == 5)
 	{
 		UnitTest14();
+		/*animationDuration = 5;
+		frameNum = 24 * 5;*/
 		std::cout << "5 body for Euler twist" << std::endl;
 	}
 	else if (testCaseNum == 6)
@@ -714,19 +744,7 @@ void eae6320::MultiBody::RunUnitTest()
 		std::cout << "singularity winding test 180" << std::endl;
 	}
 
-	Application::AddApplicationParameter(&twistMode, Application::ApplicationParameterType::integer, L"-tm");
-	if (twistMode == EULER_V2)
-	{
-		std::cout << "Euler twist constraint is being used" << std::endl;
-	}
-	else if (twistMode == INCREMENT)
-	{
-		std::cout << "increment twist constraint is being used" << std::endl;
-	}
-	else if (twistMode == DIRECT)
-	{
-		std::cout << "direct swing-twist constraint is being used" << std::endl;
-	}
+	
 
 	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");
 	if (enablePositionSolve == 1)

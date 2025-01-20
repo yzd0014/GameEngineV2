@@ -199,6 +199,10 @@ namespace eae6320
 		int totalVelDOF = 0;
 		int totalXDOF = 0;//used for position solve
 		int geometry = BOX;
+		/*int frameNum = 12;
+		_Scalar animationDuration = 5;*/
+		int frameNum = 120;
+		_Scalar animationDuration = 5;
 		_Scalar dt;
 
 		//debug related parameters
