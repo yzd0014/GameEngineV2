@@ -65,7 +65,7 @@ if add_switch_point
     end
 end
 xlabel('t','FontSize',font_size);
-ylabel('alpha','FontSize',font_size);
+ylabel('$\alpha$','Interpreter', 'latex','FontSize',font_size);
 legend('MuJoCo','Incremental','Euler','FontSize',10);
 
 nexttile;

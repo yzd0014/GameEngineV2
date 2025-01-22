@@ -521,11 +521,39 @@ void eae6320::MultiBody::UnitTest14()
 
 	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
-	ConfigurateBallJoint(_Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.25 * M_PI, 0.000001);
+	ConfigurateBallJoint(_Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), -0.25 * M_PI, -0.000001);
 
 	SetZeroInitialCondition();
 	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
 
+	Forward();
+}
+
+void eae6320::MultiBody::UnitTest21()
+{
+	numOfLinks = 5;
+	constraintSolverMode = IMPULSE;
+	gravity = true;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
+
+	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D };
+	InitializeJoints(jointTypeArray);
+	ConfigurateBallJoint(_Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 0.25 * M_PI, 0.1);
+
+	SetZeroInitialCondition();
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		rel_ori[i] = Math::RotationConversion_VecToQuat(_Vector3(0, 0, M_PI / 4));
+	}
+	Forward();
+	int bodyNum = 4;
+	_Vector3 local_w = _Vector3(0.0, 10.0, 0.0);
+	_Vector3 world_w = R_local[bodyNum] * local_w;
+	qdot.segment(velStartIndex[bodyNum], 3) = world_w;
 	Forward();
 }
 
@@ -728,7 +756,7 @@ void eae6320::MultiBody::RunUnitTest()
 	}
 	else if (testCaseNum == 5)
 	{
-		UnitTest14();
+		UnitTest21();
 		/*animationDuration = 5;
 		frameNum = 24 * 5;*/
 		std::cout << "5 body for Euler twist" << std::endl;

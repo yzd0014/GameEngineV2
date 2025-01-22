@@ -214,22 +214,22 @@ void eae6320::MultiBody::BallJointLimitCheck()
 						jointsID.push_back(i);
 						constraintValue.push_back(errForUpperBound);
 						limitType.push_back(TWIST_EULER_MAX);
-						//std::cout << "Twist violation(Upper bound) " << errForUpperBound << std::endl;
+						//if (i == 4) std::cout << "Twist violation(Upper bound) " << errForUpperBound << std::endl;
 					}
 					else if (errForUpperBound < errForLowerBound)
 					{
-						//std::cout << "Twist violation(Upper bound) " << errForUpperBound << std::endl;
+						//if (i == 4) std::cout << "Twist violation(Upper bound) " << errForUpperBound << std::endl;
 					}
 					if (errForLowerBound < 0)
 					{
 						jointsID.push_back(i);
 						constraintValue.push_back(errForLowerBound);
 						limitType.push_back(TWIST_EULER_MIN);
-						//std::cout << "Twist violation(Lower bound) " << errForLowerBound << std::endl;
+						//if (i == 4) std::cout << "Twist violation(Lower bound) " << errForLowerBound << std::endl;
 					}
 					else if (errForUpperBound > errForLowerBound)
 					{
-						//std::cout << "Twist violation(Lower bound) " << errForLowerBound << std::endl;
+						//if (i == 4) std::cout << "Twist violation(Lower bound) " << errForLowerBound << std::endl;
 					}
 				}
 				else
