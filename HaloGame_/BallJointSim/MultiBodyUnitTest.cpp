@@ -557,6 +557,26 @@ void eae6320::MultiBody::UnitTest21()
 	Forward();
 }
 
+void eae6320::MultiBody::UnitTest22()
+{
+	constraintSolverMode = IMPULSE;
+	gravity = true;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 1
+	AddRigidBody(0, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.5f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 2
+	//std::cout << parentArr[0] << parentArr[1] << parentArr[2] << std::endl;
+	//std::cout << numOfLinks << std::endl;
+	MultiBodyInitialization();
+	
+	SetZeroInitialCondition();
+	Forward();
+}
+
 void eae6320::MultiBody::UnitTest15()
 {
 	numOfLinks = 1;
@@ -771,8 +791,10 @@ void eae6320::MultiBody::RunUnitTest()
 		UnitTest20();
 		std::cout << "singularity winding test 180" << std::endl;
 	}
-
-	
+	else if (testCaseNum == 8)
+	{
+		UnitTest22();
+	}
 
 	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");
 	if (enablePositionSolve == 1)

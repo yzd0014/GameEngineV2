@@ -25,9 +25,12 @@ namespace eae6320
 		Application::cbApplication* pApp = nullptr;
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
+		void MultiBodyInitialization();
 		void InitializeJoints(int* i_jointType);
 		void SetZeroInitialCondition();
 		void ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
+		void ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
+		void AddRigidBody(int parent, int i_jointType, _Vector3 jointPositionParent, _Vector3 jointPositionChild, Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor);
 
 		void ComputeMr();
 		void ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat);
@@ -108,6 +111,7 @@ namespace eae6320
 		void UnitTest15();
 		void UnitTest16();
 		void UnitTest21();
+		void UnitTest22();
 		void HingeJointUnitTest0();
 		void PersistentDataTest();
 		void EulerDecompositionAccuracyTest();
@@ -128,6 +132,7 @@ namespace eae6320
 		std::vector<int> velStartIndex;
 		std::vector<int> xStartIndex;//used for position solve
 		std::vector<int> xJointType;
+		std::vector<int> parentArr;
 		_Matrix Mr;
 		_Matrix MrInverse;
 		std::vector<_Matrix> Mbody;
@@ -140,6 +145,10 @@ namespace eae6320
 		std::vector<_Vector3> jointPos;
 		std::vector<std::vector<_Vector3>> uLocals;//object
 		std::vector<std::vector<_Vector3>> uGlobals;//world
+		std::vector<_Vector3> uLocalsParent;
+		std::vector<_Vector3> uGlobalsParent;
+		std::vector<_Vector3> uLocalsChild;
+		std::vector<_Vector3> uGlobalsChild;
 		std::vector<_Vector3> hingeDirLocals;
 		std::vector<_Vector3> hingeDirGlobals;
 		std::vector<_Scalar> hingeMagnitude;//distance between the point from each body that defines the position of the hinge joint
@@ -171,9 +180,6 @@ namespace eae6320
 		std::vector<_Vector3> eulerY;
 		std::vector<_Vector3> eulerZ;
 		std::vector<_Quat> lastValidOri;
-	/*	std::vector<_Scalar> oldAlpha;
-		std::vector<_Scalar> oldBeta;
-		std::vector<_Scalar> oldGamma;*/
 		std::vector<_Scalar> mAlpha;
 		std::vector<_Scalar> mBeta;
 		std::vector<_Scalar> mGamma;
