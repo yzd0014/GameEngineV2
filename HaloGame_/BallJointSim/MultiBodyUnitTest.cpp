@@ -573,7 +573,54 @@ void eae6320::MultiBody::UnitTest22()
 	//std::cout << numOfLinks << std::endl;
 	MultiBodyInitialization();
 	
+	ConfigureSingleBallJoint(2, _Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.25 * M_PI, -1);
+
 	SetZeroInitialCondition();
+	Forward();
+}
+
+void eae6320::MultiBody::UnitTest23()
+{
+	constraintSolverMode = IMPULSE;
+	gravity = true;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 0.5f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(0.5, 0.5, 0.5), localInertiaTensor);//body 0
+	AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 0.5f, 0.0f), _Vector3(0.0f, -0.5f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 1
+	AddRigidBody(1, BALL_JOINT_4D, _Vector3(0.0f, 0.5f, 0.0f), _Vector3(0.0f, -0.5f, 0.0f), masterMeshArray[3], Vector3d(0.5, 0.5, 0.5), localInertiaTensor);//body 2
+	AddRigidBody(2, BALL_JOINT_4D, _Vector3(0.0f, 0.5f, 0.0f), _Vector3(0.0f, -0.5f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 3
+	AddRigidBody(3, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(-0.7f, -0.5f, 0.0f), masterMeshArray[3], Vector3d(0.5, 1, 0.5), localInertiaTensor);//body 4
+	AddRigidBody(4, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[3], Vector3d(0.5, 1, 0.5), localInertiaTensor);//body 5
+	AddRigidBody(3, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.7f, -0.5f, 0.0f), masterMeshArray[3], Vector3d(0.5, 1, 0.5), localInertiaTensor);//body 6
+	AddRigidBody(6, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[3], Vector3d(0.5, 1, 0.5), localInertiaTensor);//body 7
+	AddRigidBody(1, BALL_JOINT_4D, _Vector3(1.0f, 0.0f, 0.0f), _Vector3(-1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 8
+	AddRigidBody(8, BALL_JOINT_4D, _Vector3(1.0f, 0.0f, 0.0f), _Vector3(-1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 9
+	AddRigidBody(1, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 10
+	AddRigidBody(10, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 11
+	
+	MultiBodyInitialization();
+	
+	/*ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 0.25 * M_PI, -1);
+	ConfigureSingleBallJoint(1, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 0.1, 0.5 * M_PI);
+	ConfigureSingleBallJoint(2, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 0.1, 0.1);
+	ConfigureSingleBallJoint(3, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 0.1, 0.1);
+	ConfigureSingleBallJoint(4, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 0.25 * M_PI, 0.01);
+	ConfigureSingleBallJoint(5, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 0.01, 0.01);
+	ConfigureSingleBallJoint(6, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 0.25 * M_PI, 0.01);
+	ConfigureSingleBallJoint(7, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 0.01, 0.01);
+	ConfigureSingleBallJoint(8, _Vector3(-1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, -1), 0.3 * M_PI, 0.2);
+	ConfigureSingleBallJoint(9, _Vector3(-1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, -1), 0.01, 0.2);
+	ConfigureSingleBallJoint(10, _Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.3 * M_PI, 0.2);
+	ConfigureSingleBallJoint(11, _Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.01, 0.2);*/
+
+	SetZeroInitialCondition();
+	Forward();
+
+	_Vector3 world_w = _Vector3(-1.0, 0.0, -1.0);
+	qdot.segment(0, 3) = world_w;
 	Forward();
 }
 
@@ -794,6 +841,12 @@ void eae6320::MultiBody::RunUnitTest()
 	else if (testCaseNum == 8)
 	{
 		UnitTest22();
+		std::cout << "branch test" << std::endl;
+	}
+	else if (testCaseNum == 9)
+	{
+		UnitTest23();
+		std::cout << "human skeleton test" << std::endl;
 	}
 
 	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");

@@ -151,10 +151,10 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
 	//SaveDataToMatlab(5);
-	SaveDataToHoudini(animationDuration, frameNum);
-	EulerIntegration(dt);
+	//SaveDataToHoudini(animationDuration, frameNum);
+	//EulerIntegration(dt);
 	//RK3Integration(dt);
-	//RK4Integration(dt);
+	RK4Integration(dt);
 
 	//std::cout << mGamma[0] << std::endl;
 	_Vector3 momentum = ComputeTranslationalMomentum();
@@ -166,7 +166,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//std::cout << std::left 
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
-	//std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
 	/*std::cout << t << std::endl;
 	if (t >= 3.0)
 	{
@@ -272,27 +272,18 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 	_Vector qddot = (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
 	qdot = qdot + h * qddot;
-	//std::cout << qddot.transpose() << std::endl;
 
 	if (constraintSolverMode == IMPULSE)
 	{
 		BallJointLimitCheck();
 		SolveVelocityJointLimit(h);
-		/*_BallJointLimitCheck();
-		_ResolveJointLimit(h);*/
 	}
 
-	_Vector q_new(totalPosDOF);
-	Integrate_q(q_new, rel_ori, q, rel_ori, qdot, h);
-
-	if (constraintSolverMode == PBD)
+	if (enablePositionSolve)
 	{
-		ComputeHt(q_new, rel_ori);
-		_BallJointLimitCheck();
-		_ResolveJointLimitPBD(q_new, h);
+		SolvePositionJointLimit();
 	}
-	q = q_new;
-
+	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 	ClampRotationVector();
 	Forward();
 }
