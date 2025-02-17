@@ -531,29 +531,21 @@ void eae6320::MultiBody::UnitTest14()
 
 void eae6320::MultiBody::UnitTest21()
 {
-	numOfLinks = 5;
 	constraintSolverMode = IMPULSE;
 	gravity = true;
 
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
 
-	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D };
-	InitializeJoints(jointTypeArray);
-	ConfigurateBallJoint(_Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 0.25 * M_PI, 0.1);
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
+	AddRigidBody(0, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 1
+	AddRigidBody(1, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 2
+	AddRigidBody(2, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 3
+	AddRigidBody(3, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 4
 
-	SetZeroInitialCondition();
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		rel_ori[i] = Math::RotationConversion_VecToQuat(_Vector3(0, 0, M_PI / 4));
-	}
-	Forward();
-	int bodyNum = 4;
-	_Vector3 local_w = _Vector3(0.0, 10.0, 0.0);
-	_Vector3 world_w = R_local[bodyNum] * local_w;
-	qdot.segment(velStartIndex[bodyNum], 3) = world_w;
+	MultiBodyInitialization();
+	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
 	Forward();
 }
 
@@ -572,11 +564,8 @@ void eae6320::MultiBody::UnitTest22()
 	//std::cout << parentArr[0] << parentArr[1] << parentArr[2] << std::endl;
 	//std::cout << numOfLinks << std::endl;
 	MultiBodyInitialization();
-	
-	ConfigureSingleBallJoint(2, _Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.25 * M_PI, -1);
-
-	SetZeroInitialCondition();
 	Forward();
+	ConfigureSingleBallJoint(2, _Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.25 * M_PI, -1);
 }
 
 void eae6320::MultiBody::UnitTest23()
@@ -602,6 +591,9 @@ void eae6320::MultiBody::UnitTest23()
 	AddRigidBody(10, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 11
 	
 	MultiBodyInitialization();
+	_Vector3 world_w = _Vector3(-1.0, 0.0, -1.0);
+	qdot.segment(0, 3) = world_w;
+	Forward();
 	
 	/*ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 0.25 * M_PI, -1);
 	ConfigureSingleBallJoint(1, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 0.1, 0.5 * M_PI);
@@ -615,13 +607,6 @@ void eae6320::MultiBody::UnitTest23()
 	ConfigureSingleBallJoint(9, _Vector3(-1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, -1), 0.01, 0.2);
 	ConfigureSingleBallJoint(10, _Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.3 * M_PI, 0.2);
 	ConfigureSingleBallJoint(11, _Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.01, 0.2);*/
-
-	SetZeroInitialCondition();
-	Forward();
-
-	_Vector3 world_w = _Vector3(-1.0, 0.0, -1.0);
-	qdot.segment(0, 3) = world_w;
-	Forward();
 }
 
 void eae6320::MultiBody::UnitTest15()

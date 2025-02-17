@@ -110,6 +110,11 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	}
 	Math::NativeVector2EigenVector(m_State.position, jointPos[0]);
 	Mr.resize(totalVelDOF, totalVelDOF);
+	q.resize(totalPosDOF);
+	q.setZero();
+	qdot.resize(totalVelDOF);
+	qdot.setZero();
+	x.resize(totalXDOF);
 }
 
 void eae6320::MultiBody::SetZeroInitialCondition()
@@ -166,7 +171,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//std::cout << std::left 
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
-	std::cout << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 	/*std::cout << t << std::endl;
 	if (t >= 3.0)
 	{
