@@ -25,7 +25,7 @@ void eae6320::MultiBody::HingeJointUnitTest0()
 	hingeMagnitude[0] = 0;
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 	qdot.segment(velStartIndex[0], 1)(0) = 2;
 	Forward();
 }

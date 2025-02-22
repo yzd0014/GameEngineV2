@@ -27,7 +27,6 @@ namespace eae6320
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void MultiBodyInitialization();
 		void InitializeJoints(int* i_jointType);
-		void SetZeroInitialCondition();
 		void ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
 		void ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
 		void AddRigidBody(int parent, int i_jointType, _Vector3 jointPositionParent, _Vector3 jointPositionChild, Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor);
@@ -87,6 +86,7 @@ namespace eae6320
 		void KineticEnergyProjection();
 		void EnergyMomentumProjection();
 		void ManifoldProjection();
+		void EnergyConstraint();
 
 		//unit tests
 		void UnitTest0();

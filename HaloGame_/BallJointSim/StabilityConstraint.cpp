@@ -1,0 +1,105 @@
+#include "MultiBody.h"
+#include "Engine/Physics/PhysicsSimulation.h"
+#include "Engine/Math/sVector.h"
+#include "Engine/Math/EigenHelper.h"
+#include "Engine/UserInput/UserInput.h"
+#include "Engine/GameCommon/GameplayUtility.h"
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <iomanip>
+
+void eae6320::MultiBody::EnergyConstraint()
+{
+	int energeMomentumConstraintDim = 7;
+	int nq = totalVelDOF + 2;
+	int n = nq + energeMomentumConstraintDim;
+	_Matrix b(n, 1);
+	_Matrix grad_F(n, n);
+
+	_Vector x(n);
+	x.setZero();
+	x.segment(0, totalVelDOF) = qdot;
+
+	_Vector qt(nq);
+	qt.setZero();
+	qt.segment(0, totalVelDOF) = qdot;
+
+	_Matrix D(nq, nq);
+	D.setZero();
+	D.block(0, 0, totalVelDOF, totalVelDOF) = _Matrix::Identity(totalVelDOF, totalVelDOF);
+	_Scalar m_coeff = 0.001;
+	D(totalVelDOF, totalVelDOF) = m_coeff;
+	D(totalVelDOF + 1, totalVelDOF + 1) = m_coeff;
+
+	_Matrix Kp(3, totalVelDOF);
+	Kp.setZero();
+	_Matrix Kl(3, totalVelDOF);
+	Kl.setZero();
+	_Matrix Sv(3, 6);
+	Sv.setZero();
+	Sv.block<3, 3>(0, 0) = _Matrix::Identity(3, 3);
+	_Matrix Sw(3, 6);
+	Sw.setZero();
+	Sw.block<3, 3>(0, 3) = _Matrix::Identity(3, 3);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Sv * Ht[i];
+		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Sw * Ht[i] + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Sv * Ht[i];
+	}
+
+	_Scalar totalEnergyNew = ComputeTotalEnergy();
+	_Vector linearMomentumNew = ComputeTranslationalMomentum();
+	_Vector angularMomentumNew = ComputeAngularMomentum();
+	_Matrix grad_C(7, nq);
+	grad_C.setZero();
+	grad_C.block(1, 0, 3, totalVelDOF) = Kp;
+	grad_C.block(4, 0, 3, totalVelDOF) = Kl;
+	grad_C.block<3, 1>(1, totalVelDOF) = linearMomentumNew - linearMomentum0;
+	grad_C.block<3, 1>(4, totalVelDOF + 1) = angularMomentumNew - angularMomentum0;
+
+	_Scalar energyErr = 1.0;
+	_Matrix C(7, 1);
+	int iter = 0;
+	while (energyErr > 1e-1)
+	{
+		if (iter >= 5)
+		{
+			std::cout << "limit reached!" << std::endl;
+			break;
+		}
+			
+		C(0, 0) = 0.5 * (x.segment(0, totalVelDOF).transpose() * Mr * x.segment(0, totalVelDOF))(0, 0) - totalEnergy0;
+		C.block<3, 1>(1, 0) = Kp * x.segment(0, totalVelDOF) - (1 - x(totalVelDOF)) * linearMomentumNew - x(totalVelDOF) * linearMomentum0;
+		C.block<3, 1>(4, 0) = Kl * x.segment(0, totalVelDOF) - (1 - x(totalVelDOF + 1)) * angularMomentumNew - x(totalVelDOF + 1) * angularMomentum0;
+		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * x.segment(0, totalVelDOF)).transpose();
+
+		b.block(0, 0, nq, 1) = -D * (x.segment(0, nq) - qt);
+		b.block<7, 1>(nq, 0) = -C;
+
+		_Matrix HessianC_lambda(nq, nq);
+		HessianC_lambda.setZero();
+		HessianC_lambda.block(0, 0, totalVelDOF, totalVelDOF) = x(nq) * Mr;
+
+		grad_F.setZero();
+		grad_F.block(0, 0, nq, nq) = D - HessianC_lambda;
+		grad_F.block(0, nq, nq, 7) = -grad_C.transpose();
+		grad_F.block(nq, 0, 7, nq) = grad_C;
+		if (grad_F.determinant() < 1e-6)
+		{
+			EAE6320_ASSERTF(false, "grad_f is not invertable");
+		}
+		_Vector y(n);
+		y.setZero();
+		y = grad_F.inverse() * b;
+		x.segment(0, nq) = x.segment(0, nq) + y.segment(0, nq);
+		x.segment(nq, energeMomentumConstraintDim) = y.segment(nq, energeMomentumConstraintDim);
+		_Vector qdot_new = x.segment(0, totalVelDOF);
+		ForwardAngularAndTranslationalVelocity(qdot_new);
+		energyErr = fabs(ComputeTotalEnergy() - totalEnergy0);
+		//energyErr = ComputeTotalEnergy();
+		std::cout << ComputeTotalEnergy() << std::endl;
+		iter++;
+	}
+	qdot = x.segment(0, totalVelDOF);
+	std::cout << "Energy at end of solve" << ComputeTotalEnergy() << std::endl;
+}

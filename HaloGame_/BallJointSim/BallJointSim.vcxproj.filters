@@ -62,6 +62,9 @@
     <ClCompile Include="JointLimit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="StabilityConstraint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource Files\Halo.rc">

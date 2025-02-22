@@ -97,7 +97,7 @@ void eae6320::MultiBody::UnitTest2()
 	int jointTypeArray[] = { BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	////SetZeroInitialCondition();
 	int jointID = 0;
 	//qdot.segment(velStartIndex[jointID], 3) = _Vector3(-2.0, 2.0, 0.0);
 	qdot.segment(velStartIndex[jointID], 3) = _Vector3(2.0, 2.0, 0.0);
@@ -122,7 +122,7 @@ void eae6320::MultiBody::UnitTest5()
 	int jointTypeArray[] = { BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	////SetZeroInitialCondition();
 
 	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
@@ -150,7 +150,7 @@ void eae6320::MultiBody::UnitTest19()
 	int jointTypeArray[] = { BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 
 	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
@@ -177,7 +177,7 @@ void eae6320::MultiBody::UnitTest20()
 	int jointTypeArray[] = { BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 
 	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
@@ -193,35 +193,18 @@ void eae6320::MultiBody::UnitTest20()
 
 void eae6320::MultiBody::UnitTest3()
 {
-	numOfLinks = 2;
 	constraintSolverMode = IMPULSE;
-	
+	gravity = true;
+
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
-	
-	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D };
-	InitializeJoints(jointTypeArray);
-	
-	SetZeroInitialCondition();
 
-	int jointID = 1;
-	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
-	rel_ori[jointID] = Math::RotationConversion_VecToQuat(rot_vec);
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(-1.0f, 1.0f, 1.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	AddRigidBody(0, BALL_JOINT_4D, _Vector3(-1.0f, 1.0f, -1.0f), _Vector3(1.0f, -1.0f, 1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
+
+	MultiBodyInitialization();
 	Forward();
-	_Vector3 local_w = _Vector3(0.0, -2.0, 0.0);
-	_Vector3 global_w = R_global[jointID] * local_w;
-	qdot.segment(velStartIndex[jointID], 3) = global_w;
-	
-	/*local_w = _Vector3(0.1, 0.0, 0.0);
-	jointID = 0;
-	qdot.segment(velStartIndex[jointID], 3) = local_w;*/
-	
-	Forward();
-	
-	//jointRange[0].second = 0.5 * M_PI;//twist
-	jointRange[1].second = 0.5 * M_PI;//twist
 }
 
 void eae6320::MultiBody::UnitTest4()
@@ -237,7 +220,7 @@ void eae6320::MultiBody::UnitTest4()
 	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 	int jointID = 1;
 	qdot.segment(velStartIndex[jointID], 3) = _Vector3(-2.0, 2.0, 0.0);
 
@@ -262,7 +245,7 @@ void eae6320::MultiBody::UnitTest6()
 	int jointTypeArray[] = { BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 
 	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
@@ -289,7 +272,7 @@ void eae6320::MultiBody::UnitTest17()
 	int jointTypeArray[] = { BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 
 	_Vector3 rot_vec(0, 0.0, -0.25 * M_PI);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
@@ -316,7 +299,7 @@ void eae6320::MultiBody::UnitTest18()
 	int jointTypeArray[] = { BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 	_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);;
 	qdot.segment(0, 3) = local_w;
 	Forward();
@@ -370,7 +353,7 @@ void eae6320::MultiBody::UnitTest8()
 	int jointTypeArray[] = { BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 
 	//_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0.0);
 	_Vector3 rot_vec(0.0, 0.0, 0.0);
@@ -397,7 +380,7 @@ void eae6320::MultiBody::UnitTest9()
 	int jointTypeArray[] = { BALL_JOINT_3D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 	int jointID = 0;
 	qdot.segment(velStartIndex[jointID], 3) = _Vector3(-2.0, 0.0, 0.0);
 
@@ -420,7 +403,7 @@ void eae6320::MultiBody::UnitTest10()
 	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 	int jointID = 0;
 	_Vector3 rotVec(-0.25 * M_PI, 0, 0);
 	_Quat rotQuat = Math::RotationConversion_VecToQuat(rotVec);
@@ -450,7 +433,7 @@ void eae6320::MultiBody::UnitTest11()
 	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D, BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 	
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
 
 
@@ -478,7 +461,7 @@ void eae6320::MultiBody::UnitTest12()
 	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 	Forward();
 }
 
@@ -495,7 +478,7 @@ void eae6320::MultiBody::UnitTest13()
 	int jointTypeArray[] = { BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 
 	_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
 	//_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);
@@ -523,7 +506,7 @@ void eae6320::MultiBody::UnitTest14()
 	InitializeJoints(jointTypeArray);
 	ConfigurateBallJoint(_Vector3(1, 0, 0), _Vector3(0, 1, 0), _Vector3(0, 0, 1), -0.25 * M_PI, -0.000001);
 
-	SetZeroInitialCondition();
+	//SetZeroInitialCondition();
 	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
 
 	Forward();
@@ -623,7 +606,7 @@ void eae6320::MultiBody::UnitTest15()
 	int jointTypeArray[] = { BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	////SetZeroInitialCondition();
 
 	_Vector3 local_w = _Vector3(-2.0, 2.0, 0.0);
 	qdot.segment(0, 3) = local_w;
@@ -662,7 +645,7 @@ void eae6320::MultiBody::UnitTest16()
 	int jointTypeArray[] = { BALL_JOINT_4D };
 	InitializeJoints(jointTypeArray);
 
-	SetZeroInitialCondition();
+	////SetZeroInitialCondition();
 
 	const char* filePath = "../../../../TestCases/sim_state3.txt";
 	FILE* pFile = fopen(filePath, "rb");
@@ -832,6 +815,11 @@ void eae6320::MultiBody::RunUnitTest()
 	{
 		UnitTest23();
 		std::cout << "human skeleton test" << std::endl;
+	}
+	else if (testCaseNum == 10)
+	{
+		UnitTest3();
+		std::cout << "double cube" << std::endl;
 	}
 
 	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");

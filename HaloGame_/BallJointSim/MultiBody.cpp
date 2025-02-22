@@ -20,7 +20,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	totalEnergy0 = ComputeTotalEnergy();
 	angularMomentum0 = ComputeAngularMomentum();
 	linearMomentum0 = ComputeTranslationalMomentum();
-	//std::cout << "initial total energy: " << totalEnergy0 << std::endl;
+	std::cout << "initial total energy: " << totalEnergy0 << std::endl;
 	//std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
 	//std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
 }
@@ -117,15 +117,6 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	x.resize(totalXDOF);
 }
 
-void eae6320::MultiBody::SetZeroInitialCondition()
-{
-	q.resize(totalPosDOF);
-	q.setZero();
-	qdot.resize(totalVelDOF);
-	qdot.setZero();
-	x.resize(totalXDOF);
-}
-
 void eae6320::MultiBody::ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle)
 {
 	for (int i = 0; i < numOfLinks; i++)
@@ -157,9 +148,9 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	dt = (_Scalar)i_secondCountToIntegrate;
 	//SaveDataToMatlab(5);
 	//SaveDataToHoudini(animationDuration, frameNum);
-	//EulerIntegration(dt);
+	EulerIntegration(dt);
 	//RK3Integration(dt);
-	RK4Integration(dt);
+	//RK4Integration(dt);
 
 	//std::cout << mGamma[0] << std::endl;
 	_Vector3 momentum = ComputeTranslationalMomentum();
@@ -241,9 +232,6 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _
 
 void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 {
-	kineticEnergy0 = ComputeKineticEnergy();
-	linearMomentum0 = ComputeTranslationalMomentum();
-	angularMomentum0 = ComputeAngularMomentum();
 	_Vector Qr = ComputeQr_SikpVelocityUpdate(qdot);
 	_Vector qddot = MrInverse * Qr;
 
@@ -253,7 +241,6 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 		BallJointLimitCheck();
 		SolveVelocityJointLimit(h);
 	}
-
 	//KineticEnergyProjection();
 	//MomentumProjection();
 	//EnergyMomentumProjection();
@@ -266,6 +253,11 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	Forward();
 	//EnergyMomentumProjection();
 	//ManifoldProjection();
+	
+	EnergyConstraint();
+	totalEnergy0 = ComputeTotalEnergy();
+	linearMomentum0 = ComputeTranslationalMomentum();
+	angularMomentum0 = ComputeAngularMomentum();
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
