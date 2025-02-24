@@ -27,7 +27,7 @@ void eae6320::MultiBody::EnergyConstraint()
 	_Matrix D(nq, nq);
 	D.setZero();
 	D.block(0, 0, totalVelDOF, totalVelDOF) = _Matrix::Identity(totalVelDOF, totalVelDOF);
-	_Scalar m_coeff = 0.001;
+	_Scalar m_coeff = 10;
 	D(totalVelDOF, totalVelDOF) = m_coeff;
 	D(totalVelDOF + 1, totalVelDOF + 1) = m_coeff;
 
@@ -47,7 +47,7 @@ void eae6320::MultiBody::EnergyConstraint()
 		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Sw * Ht[i] + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Sv * Ht[i];
 	}
 
-	_Scalar totalEnergyNew = ComputeTotalEnergy();
+	_Scalar totalEnergyNew = ComputeKineticEnergy();
 	_Vector linearMomentumNew = ComputeTranslationalMomentum();
 	_Vector angularMomentumNew = ComputeAngularMomentum();
 	_Matrix grad_C(7, nq);
@@ -60,7 +60,7 @@ void eae6320::MultiBody::EnergyConstraint()
 	_Scalar energyErr = 1.0;
 	_Matrix C(7, 1);
 	int iter = 0;
-	while (energyErr > 1e-1)
+	while (energyErr > 1e-3)
 	{
 		if (iter >= 5)
 		{
@@ -68,7 +68,8 @@ void eae6320::MultiBody::EnergyConstraint()
 			break;
 		}
 			
-		C(0, 0) = 0.5 * (x.segment(0, totalVelDOF).transpose() * Mr * x.segment(0, totalVelDOF))(0, 0) - totalEnergy0;
+		C(0, 0) = 0.5 * (x.segment(0, totalVelDOF).transpose() * Mr * x.segment(0, totalVelDOF))(0, 0) - kineticEnergy0;
+		//std::cout << C(0, 0) << std::endl;
 		C.block<3, 1>(1, 0) = Kp * x.segment(0, totalVelDOF) - (1 - x(totalVelDOF)) * linearMomentumNew - x(totalVelDOF) * linearMomentum0;
 		C.block<3, 1>(4, 0) = Kl * x.segment(0, totalVelDOF) - (1 - x(totalVelDOF + 1)) * angularMomentumNew - x(totalVelDOF + 1) * angularMomentum0;
 		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * x.segment(0, totalVelDOF)).transpose();
@@ -92,14 +93,18 @@ void eae6320::MultiBody::EnergyConstraint()
 		y.setZero();
 		y = grad_F.inverse() * b;
 		x.segment(0, nq) = x.segment(0, nq) + y.segment(0, nq);
+		//std::cout << y.segment(0, nq).transpose() << std::endl;
 		x.segment(nq, energeMomentumConstraintDim) = y.segment(nq, energeMomentumConstraintDim);
 		_Vector qdot_new = x.segment(0, totalVelDOF);
 		ForwardAngularAndTranslationalVelocity(qdot_new);
-		energyErr = fabs(ComputeTotalEnergy() - totalEnergy0);
+		energyErr = fabs(ComputeKineticEnergy() - kineticEnergy0);
 		//energyErr = ComputeTotalEnergy();
-		std::cout << ComputeTotalEnergy() << std::endl;
+		//std::cout << "expected momentum " << linearMomentumNew.transpose() << " actual momentum " << ComputeTranslationalMomentum().transpose() << std::endl;
+		//std::cout << "expected momentum " << angularMomentum0.transpose() << " actual momentum " << ComputeAngularMomentum().transpose() << std::endl;
+		//std::cout << ComputeTotalEnergy() << std::endl;
 		iter++;
 	}
 	qdot = x.segment(0, totalVelDOF);
-	std::cout << "Energy at end of solve" << ComputeTotalEnergy() << std::endl;
+	std::cout << endl;
+	//std::cout << "Energy at end of solve " << ComputeTotalEnergy() << std::endl;
 }

@@ -209,27 +209,20 @@ void eae6320::MultiBody::UnitTest3()
 
 void eae6320::MultiBody::UnitTest4()
 {
-	numOfLinks = 2;
 	constraintSolverMode = IMPULSE;
+	gravity = false;
 
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
 
-	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D };
-	InitializeJoints(jointTypeArray);
+	AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 1
 
-	//SetZeroInitialCondition();
-	int jointID = 1;
-	qdot.segment(velStartIndex[jointID], 3) = _Vector3(-2.0, 2.0, 0.0);
-
+	MultiBodyInitialization();
+	qdot.segment(3, 3) = _Vector3(-2.0f, 5.0f, 0.0f);
+	qdot.segment(6, 3) = _Vector3(4.0f, -10.0f, 0.0f);
 	Forward();
-
-	jointRange[0].first = 0.5 * M_PI;//swing
-	jointRange[0].second = 0.5 * M_PI;//twist
-	jointRange[1].first = 0.5 * M_PI;//swing
-	jointRange[1].second = 0.5 * M_PI;//twist
 }
 
 void eae6320::MultiBody::UnitTest6()
@@ -819,7 +812,12 @@ void eae6320::MultiBody::RunUnitTest()
 	else if (testCaseNum == 10)
 	{
 		UnitTest3();
-		std::cout << "double cube" << std::endl;
+		std::cout << "double cube with fixed root" << std::endl;
+	}
+	else if (testCaseNum == 11)
+	{
+		UnitTest4();
+		std::cout << "double cube without fixed root" << std::endl;
 	}
 
 	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");
