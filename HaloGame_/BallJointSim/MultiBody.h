@@ -87,6 +87,7 @@ namespace eae6320
 		void EnergyMomentumProjection();
 		void ManifoldProjection();
 		void EnergyConstraint();
+		void EnergyConstraintV2();
 
 		//unit tests
 		void UnitTest0();

@@ -146,7 +146,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
-	//SaveDataToMatlab(5);
+	//SaveDataToMatlab(6);
 	//SaveDataToHoudini(animationDuration, frameNum);
 	EulerIntegration(dt);
 	//RK3Integration(dt);
@@ -162,7 +162,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//std::cout << std::left 
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
-	std::cout << Physics::totalSimulationTime << " " << ComputeKineticEnergy() << std::endl << std::endl;
+	//std::cout << Physics::totalSimulationTime << " " << ComputeKineticEnergy() << std::endl << std::endl;
+	std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 	/*std::cout << t << std::endl;
 	if (t >= 3.0)
 	{
@@ -253,8 +254,9 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//EnergyMomentumProjection();
 	//ManifoldProjection();
 	
-	EnergyConstraint();
-	totalEnergy0 = ComputeTotalEnergy();
+	//EnergyConstraint();
+	EnergyConstraintV2();
+	//totalEnergy0 = ComputeTotalEnergy();
 	kineticEnergy0 = ComputeKineticEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum();
 	angularMomentum0 = ComputeAngularMomentum();
@@ -922,10 +924,21 @@ void eae6320::MultiBody::SaveDataToMatlab(_Scalar totalDuration)
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 	if (t <= totalDuration)
 	{	
-		if (t - oldTime >= 0.001 - 1e-8 || t == 0)
+		if (t - oldTime >= 0.01 - 1e-8 || t == 0)
 		{
-			LOG_TO_FILE << t << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << mGamma[0] << " " << vectorFieldNum[0] << std::endl;
-			//LOG_TO_FILE << t << " " << pos[0].transpose() << " " << mAlpha[0] << " " << mBeta[0] << " " << totalTwist[0] << std::endl;
+			LOG_TO_FILE << t << " ";
+			for (int i = 0; i < numOfLinks; i++)
+			{
+				LOG_TO_FILE << pos[i].transpose() << " " << rel_ori[i];
+				if (i != numOfLinks - 1)
+				{
+					LOG_TO_FILE << " ";
+				}
+				else
+				{
+					LOG_TO_FILE << " " << ComputeTotalEnergy() << std::endl;
+				}
+			}
 			oldTime = t;
 		}
 	}
