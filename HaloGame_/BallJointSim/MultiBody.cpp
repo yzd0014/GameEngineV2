@@ -65,6 +65,7 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	eulerDecompositionOffsetMat.resize(numOfLinks);
 	totalTwist.resize(numOfLinks);
 	old_R_local.resize(numOfLinks);
+	externalForces.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
@@ -82,12 +83,8 @@ void eae6320::MultiBody::MultiBodyInitialization()
 		std::pair<_Scalar, _Scalar> defaultRange(-1, -1);
 		jointRange[i] = defaultRange;
 
-		/*std::vector<_Vector3> uPairs;
-		uPairs.resize(2);
-		uPairs[0] = i_partentJointPosition;
-		uPairs[1] = i_childJointPosition;
-		uLocals.push_back(uPairs);
-		uGlobals.push_back(uPairs);*/
+		externalForces[i].resize(6);
+		externalForces[i].setZero();
 
 		totalTwist[i] = 0;
 		old_R_local[i].setIdentity();
@@ -148,6 +145,8 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	dt = (_Scalar)i_secondCountToIntegrate;
 	//SaveDataToMatlab(6);
 	//SaveDataToHoudini(animationDuration, frameNum);
+	ResetExternalForces();
+	m_control();
 	EulerIntegration(dt);
 	//RK3Integration(dt);
 	//RK4Integration(dt);
@@ -163,7 +162,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
 	//std::cout << Physics::totalSimulationTime << " " << ComputeKineticEnergy() << std::endl << std::endl;
-	std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	//std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 	/*std::cout << t << std::endl;
 	if (t >= 3.0)
 	{
@@ -255,7 +254,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//ManifoldProjection();
 	
 	//EnergyConstraint();
-	EnergyConstraintV2();
+	//EnergyConstraintV2();
 	//totalEnergy0 = ComputeTotalEnergy();
 	kineticEnergy0 = ComputeKineticEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum();
@@ -439,12 +438,9 @@ _Vector eae6320::MultiBody::ComputeQr_SikpVelocityUpdate(_Vector& i_qdot)
 	Qr.setZero();
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		_Vector Fe;
-		Fe.resize(6);
-		Fe.setZero();
 		if (gravity)
 		{
-			Fe.block<3, 1>(0, 0) = _Vector3(0.0f, -9.81f, 0.0f);
+			externalForces[i].block<3, 1>(0, 0) = externalForces[i] + _Vector3(0.0f, -9.81f, 0.0f);
 		}
 		_Vector Fv;
 		Fv.resize(6);
@@ -453,7 +449,7 @@ _Vector eae6320::MultiBody::ComputeQr_SikpVelocityUpdate(_Vector& i_qdot)
 		_Vector Q_temp;
 		Q_temp.resize(totalVelDOF);
 		Q_temp.setZero();
-		Q_temp = Ht[i].transpose() * (Fe + Fv - Mbody[i] * gamma_t[i]);
+		Q_temp = Ht[i].transpose() * (externalForces[i] + Fv - Mbody[i] * gamma_t[i]);
 		Qr = Qr + Q_temp;
 	}
 
@@ -741,6 +737,14 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 			globalInertiaTensor = R_global[i] * localInertiaTensors[i] * R_global[i].transpose();
 			Mbody[i].block<3, 3>(3, 3) = globalInertiaTensor;
 		}	
+	}
+}
+
+void eae6320::MultiBody::ResetExternalForces()
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		externalForces[i].setZero();
 	}
 }
 

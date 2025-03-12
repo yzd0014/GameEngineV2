@@ -61,6 +61,12 @@ eae6320::cResult eae6320::BallJointSim::Initialize()
 		pMultiBody->m_color = Math::sVector(1, 0, 0);
 	}
 
+	{
+		Physics::sRigidBodyState objState(Math::sVector(0.0f, -0.6f, 1.9f));
+		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(defaultEffect, mesh_anchor, objState);
+		pGameObject->m_color = Math::sVector(1, 0, 0);
+	}
+
 	//{
 	//	std::vector<GameCommon::GameObject *> links;
 	//	int bodyNum = 2;

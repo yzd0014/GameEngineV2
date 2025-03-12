@@ -705,6 +705,57 @@ void eae6320::MultiBody::EulerDecompositionAccuracyTest()
 	std::cout << test << std::endl;
 }
 
+void eae6320::MultiBody::UnitTest24()
+{
+	constraintSolverMode = IMPULSE;
+	gravity = false;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+
+	MultiBodyInitialization();
+	_Vector3 rot_vec(-0.4 * M_PI, 0.0, 0.0);
+	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	_Vector3 world_w = _Vector3(0.0, 0.0, 2.0);
+	qdot.segment(0, 3) = world_w;
+	Forward();
+	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), -1, 1e-4);
+
+	m_control = [this]()
+	{
+		_Vector3 endFactor = R_local[0] * eulerX[0];
+		_Vector3 singularityPoint(0, 0, 1);
+		_Vector3 forceDir = (singularityPoint - endFactor).normalized();
+		_Scalar err = 0.4 * M_PI - mBeta[0];
+		_Scalar k = 20;
+		//std::cout << 0.39 * M_PI << " " << mBeta[0] << std::endl;
+		externalForces[0] = k * err * forceDir;
+	};
+}
+
+void eae6320::MultiBody::UnitTest25()
+{
+	constraintSolverMode = IMPULSE;
+	gravity = false;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+
+	MultiBodyInitialization();
+	_Vector3 rot_vec(-0.9 * M_PI, 0.0, 0.0);
+	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	_Vector3 world_w = _Vector3(0.0, 2.0, 0.0);
+	qdot.segment(0, 3) = world_w;
+	Forward();
+	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), -1, 1e-4);
+}
+
 void eae6320::MultiBody::RunUnitTest()
 {
 	//UnitTest1(); //test swing twist decomposition with rotaion matrix
@@ -818,6 +869,26 @@ void eae6320::MultiBody::RunUnitTest()
 	{
 		UnitTest4();
 		std::cout << "double cube without fixed root" << std::endl;
+	}
+	else if (testCaseNum == 12)
+	{
+		UnitTest24();
+		std::cout << "zero twist vector field pattern test (Euler/Incremental)" << std::endl;
+	}
+	else if (testCaseNum == 13)
+	{
+		UnitTest25();
+		m_control = [this]()
+		{
+			_Vector3 endFactor = R_local[0] * eulerX[0];
+			_Vector3 singularityPoint(0, 1, 0);
+			_Vector3 forceDir = (singularityPoint - endFactor).normalized();
+			_Scalar cuurentAngle = Math::GetAngleBetweenTwoVectors(endFactor, singularityPoint);
+			_Scalar err = cuurentAngle - 0.1 * M_PI;
+			_Scalar k = 20;
+			externalForces[0] = k * err * forceDir;
+		};
+		std::cout << "zero twist vector field pattern test (Direct) " << std::endl;
 	}
 
 	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");

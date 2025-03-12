@@ -38,6 +38,7 @@ namespace eae6320
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot);
 		
 		void ForwardAngularAndTranslationalVelocity(_Vector& i_qdot);
+		void ResetExternalForces();
 		
 		void EulerIntegration(const _Scalar h);
 		void RK4Integration(const _Scalar h);
@@ -114,6 +115,8 @@ namespace eae6320
 		void UnitTest21();
 		void UnitTest22();
 		void UnitTest23();
+		void UnitTest24();
+		void UnitTest25();
 		void HingeJointUnitTest0();
 		void PersistentDataTest();
 		void EulerDecompositionAccuracyTest();
@@ -154,6 +157,7 @@ namespace eae6320
 		std::vector<_Vector3> hingeDirLocals;
 		std::vector<_Vector3> hingeDirGlobals;
 		std::vector<_Scalar> hingeMagnitude;//distance between the point from each body that defines the position of the hinge joint
+		std::vector<_Vector> externalForces;//extern force in maximal coordinate
 		
 		std::vector<_Matrix3> R_global;//rigidbody rotation
 		std::vector<_Matrix3> R_local;
@@ -213,6 +217,8 @@ namespace eae6320
 		int frameNum = 120;
 		_Scalar animationDuration = 5;
 		_Scalar dt;
+
+		std::function<void()> m_control;
 
 		//debug related parameters
 		GameObject* swingArrow = nullptr;
