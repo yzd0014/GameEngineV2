@@ -719,20 +719,30 @@ void eae6320::MultiBody::UnitTest24()
 	MultiBodyInitialization();
 	_Vector3 rot_vec(-0.4 * M_PI, 0.0, 0.0);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
-	_Vector3 world_w = _Vector3(0.0, 0.0, 2.0);
-	qdot.segment(0, 3) = world_w;
 	Forward();
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), -1, 1e-4);
 
 	m_control = [this]()
 	{
-		_Vector3 endFactor = R_local[0] * eulerX[0];
-		_Vector3 singularityPoint(0, 0, 1);
-		_Vector3 forceDir = (singularityPoint - endFactor).normalized();
-		_Scalar err = 0.4 * M_PI - mBeta[0];
+		_Scalar r = 0.6;
+		_Vector3 target;
+		target(2) = 1.9;
+		target(0) = r * sin(Physics::totalSimulationTime * 0.1);
+		target(1) = -r * cos(Physics::totalSimulationTime * 0.1);
+		if (xArrow != nullptr)
+		{
+			xArrow->DestroyGameObject();
+			xArrow = nullptr;
+		}
+		_Vector3 endPoint(0, 0, 1.9);
+		xArrow = GameplayUtility::DrawArrowScaled(endPoint, target - endPoint, Math::sVector(0, 0, 1), Vector3d(0.5, 0.5, 0.5));
+
+		_Vector3 endFactor(0, -2, 0);
+		endFactor = R_local[0] * endFactor;
+		_Vector3 tau;
 		_Scalar k = 20;
-		//std::cout << 0.39 * M_PI << " " << mBeta[0] << std::endl;
-		externalForces[0] = k * err * forceDir;
+		tau = k * (target - endFactor);
+		externalForces[0] = tau;
 	};
 }
 
@@ -750,10 +760,31 @@ void eae6320::MultiBody::UnitTest25()
 	MultiBodyInitialization();
 	_Vector3 rot_vec(-0.9 * M_PI, 0.0, 0.0);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
-	_Vector3 world_w = _Vector3(0.0, 2.0, 0.0);
-	qdot.segment(0, 3) = world_w;
 	Forward();
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), -1, 1e-4);
+
+	m_control = [this]()
+	{
+		_Scalar r = 0.6;
+		_Vector3 target;
+		target(1) = 1.9;
+		target(0) = r * sin(Physics::totalSimulationTime * 0.1);
+		target(2) = r * cos(Physics::totalSimulationTime * 0.1);
+		if (xArrow != nullptr)
+		{
+			xArrow->DestroyGameObject();
+			xArrow = nullptr;
+		}
+		_Vector3 endPoint(0, 1.9, 0);
+		xArrow = GameplayUtility::DrawArrowScaled(endPoint, target - endPoint, Math::sVector(0, 0, 1), Vector3d(0.5, 0.5, 0.5));
+
+		_Vector3 endFactor(0, -2, 0);
+		endFactor = R_local[0] * endFactor;
+		_Vector3 tau;
+		_Scalar k = 20;
+		tau = k * (target - endFactor);
+		externalForces[0] = tau;
+	};
 }
 
 void eae6320::MultiBody::RunUnitTest()
@@ -878,16 +909,6 @@ void eae6320::MultiBody::RunUnitTest()
 	else if (testCaseNum == 13)
 	{
 		UnitTest25();
-		m_control = [this]()
-		{
-			_Vector3 endFactor = R_local[0] * eulerX[0];
-			_Vector3 singularityPoint(0, 1, 0);
-			_Vector3 forceDir = (singularityPoint - endFactor).normalized();
-			_Scalar cuurentAngle = Math::GetAngleBetweenTwoVectors(endFactor, singularityPoint);
-			_Scalar err = cuurentAngle - 0.1 * M_PI;
-			_Scalar k = 20;
-			externalForces[0] = k * err * forceDir;
-		};
 		std::cout << "zero twist vector field pattern test (Direct) " << std::endl;
 	}
 
