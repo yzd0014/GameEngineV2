@@ -740,9 +740,9 @@ void eae6320::MultiBody::UnitTest24()
 		_Vector3 endFactor(0, -2, 0);
 		endFactor = R_local[0] * endFactor;
 		_Vector3 tau;
-		_Scalar k = 20;
+		_Scalar k = 200;
 		tau = k * (target - endFactor);
-		externalForces[0] = tau;
+		externalForces[0].block<3, 1>(0, 0) = tau;
 	};
 }
 
@@ -781,9 +781,9 @@ void eae6320::MultiBody::UnitTest25()
 		_Vector3 endFactor(0, -2, 0);
 		endFactor = R_local[0] * endFactor;
 		_Vector3 tau;
-		_Scalar k = 20;
+		_Scalar k = 200;
 		tau = k * (target - endFactor);
-		externalForces[0] = tau;
+		externalForces[0].block<3, 1>(0, 0) = tau;
 	};
 }
 
@@ -809,6 +809,7 @@ void eae6320::MultiBody::RunUnitTest()
 	//UnitTest16();//load initial condition from file
 	//EulerDecompositionAccuracyTest();
 	
+	Application::AddApplicationParameter(&damping, Application::ApplicationParameterType::float_point, L"-damping");
 	Application::AddApplicationParameter(&twistMode, Application::ApplicationParameterType::integer, L"-tm");
 	if (twistMode == EULER_V2)
 	{
@@ -904,7 +905,7 @@ void eae6320::MultiBody::RunUnitTest()
 	else if (testCaseNum == 12)
 	{
 		UnitTest24();
-		std::cout << "zero twist vector field pattern test (Euler/Incremental)" << std::endl;
+		std::cout << "zero twist vector field pattern test (side)" << std::endl;
 	}
 	else if (testCaseNum == 13)
 	{

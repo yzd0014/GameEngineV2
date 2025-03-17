@@ -16,6 +16,7 @@ namespace eae6320
 		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 
+		_Scalar damping = 1.0;
 		int constraintSolverMode = IMPULSE;
 		int constraintType = SWING_C;//only used for testing
 		int twistMode = EULER_V2;

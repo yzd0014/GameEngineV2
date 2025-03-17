@@ -235,6 +235,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	_Vector qddot = MrInverse * Qr;
 
 	qdot = qdot + qddot * h;
+	qdot = damping * qdot;
 	if (constraintSolverMode == IMPULSE)
 	{
 		BallJointLimitCheck();
@@ -440,7 +441,7 @@ _Vector eae6320::MultiBody::ComputeQr_SikpVelocityUpdate(_Vector& i_qdot)
 	{
 		if (gravity)
 		{
-			externalForces[i].block<3, 1>(0, 0) = externalForces[i] + _Vector3(0.0f, -9.81f, 0.0f);
+			externalForces[i].block<3, 1>(0, 0) = externalForces[i].block<3, 1>(0, 0) + _Vector3(0.0f, -9.81f, 0.0f);
 		}
 		_Vector Fv;
 		Fv.resize(6);
