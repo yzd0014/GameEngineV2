@@ -787,6 +787,24 @@ void eae6320::MultiBody::UnitTest25()
 	};
 }
 
+void eae6320::MultiBody::UnitTest26()
+{
+	constraintSolverMode = IMPULSE;
+	gravity = false;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+
+	MultiBodyInitialization();
+	qdot.segment(0, 3) = _Vector3(-2, -2, 0);
+	Forward();
+	std::cout << qdot.transpose() << " " << vel[0].transpose() << endl;
+	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 3.089, 1.5708);
+}
+
 void eae6320::MultiBody::RunUnitTest()
 {
 	//UnitTest1(); //test swing twist decomposition with rotaion matrix
@@ -910,7 +928,12 @@ void eae6320::MultiBody::RunUnitTest()
 	else if (testCaseNum == 13)
 	{
 		UnitTest25();
-		std::cout << "zero twist vector field pattern test (Direct) " << std::endl;
+		std::cout << "zero twist vector field pattern test (Direct)" << std::endl;
+	}
+	else if (testCaseNum == 14)
+	{
+		UnitTest26();
+		std::cout << "compare with Unreal and Unity" << std::endl;
 	}
 
 	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");

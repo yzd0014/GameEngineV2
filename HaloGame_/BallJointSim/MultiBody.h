@@ -118,6 +118,7 @@ namespace eae6320
 		void UnitTest23();
 		void UnitTest24();
 		void UnitTest25();
+		void UnitTest26();
 		void HingeJointUnitTest0();
 		void PersistentDataTest();
 		void EulerDecompositionAccuracyTest();
