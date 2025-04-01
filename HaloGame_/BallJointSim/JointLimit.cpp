@@ -148,6 +148,10 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				Math::SwingTwistDecomposition(quat, p, swingComponent, twistComponent);
 				_Vector3 twistVec = Math::RotationConversion_QuatToVec(twistComponent);
 				twistAngle = twistVec.norm();
+			/*	if (p.dot(twistVec) < 0)
+				{
+					twistAngle = -twistAngle;
+				}*/
 				_Vector3 swingVec = Math::RotationConversion_QuatToVec(swingComponent);
 				swingAngle = swingVec.norm();
 			}
@@ -182,6 +186,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 						//std::cout << "TWIST_WITH_SWING " << jointRange[i].second - twistAngle << std::endl;
 					}
 				}
+				//totalTwist[i] = twistAngle;
 			}
 			else if (twistMode == EULER && jointRange[i].second > 0)
 			{
@@ -209,6 +214,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 
 					_Scalar errForUpperBound = jointRange[i].second - correctedGamma;
 					_Scalar errForLowerBound = correctedGamma + jointRange[i].second;
+					//totalTwist[i] = correctedGamma;
 					if (errForUpperBound < 0)
 					{
 						jointsID.push_back(i);
@@ -257,8 +263,22 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				Math::SwingTwistDecomposition(quatDiff, p, swingComponent, twistComponent);
 				AngleAxisd twistVec;
 				twistVec = twistComponent;
-				totalTwist[i] += twistVec.angle();
-				std::cout << "Total incremental twist " << totalTwist[i] << " twist increase " << twistVec.angle() << std::endl;*/
+				totalTwist[i] += twistVec.angle();*/
+				//std::cout << "Total incremental twist " << totalTwist[i] << " twist increase " << twistVec.angle() << std::endl;
+
+				/*_Matrix3 rotDiff = R_local[i] * old_R_local[i].transpose();
+				_Quat quatDiff = Math::RotationConversion_MatToQuat(rotDiff);
+				_Scalar dEulerAngles[3];
+				_Vector3 tX, tY, tZ;
+				tX = old_R_local[i] * eulerX[i];
+				tY = old_R_local[i] * eulerY[i];
+				tZ = old_R_local[i] * eulerZ[i];
+				_Matrix3 deformationGradient;
+				Math::ComputeDeformationGradient(tY, tZ, tX, _Vector3(0, 1, 0), _Vector3(0, 0, 1), _Vector3(1, 0, 0), deformationGradient);
+				eulerDecompositionOffsetMat[i] = deformationGradient;
+				eulerDecompositionOffset[i] = Math::RotationConversion_MatToQuat(deformationGradient);
+				GetEulerAngles(i, quatDiff, dEulerAngles);
+				totalTwist[i] += dEulerAngles[0];*/
 
 				_Vector3 p = R_local[i] * twistAxis[i];
 				_Vector3 omega = qdot.segment(velStartIndex[i], 3);

@@ -805,6 +805,35 @@ void eae6320::MultiBody::UnitTest26()
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), 3.089, 1.5708);
 }
 
+void eae6320::MultiBody::UnitTest27()
+{
+	constraintSolverMode = IMPULSE;
+	gravity = false;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+
+	MultiBodyInitialization();
+	qdot.segment(0, 3) = _Vector3(-2, -2, 0);
+	Forward();
+	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), -1, 1e+7);
+	
+	m_MatlabSave = [this]()
+	{
+		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+		LOG_TO_FILE << t << " " << totalTwist[0] << std::endl;
+	};
+	m_control = [this]()
+	{
+		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+		_Vector3 tau = sin(t) * old_R_local[0] * twistAxis[0];
+		externalForces[0].block<3, 1>(3, 0) = tau;
+	};
+}
+
 void eae6320::MultiBody::RunUnitTest()
 {
 	//UnitTest1(); //test swing twist decomposition with rotaion matrix
@@ -826,6 +855,24 @@ void eae6320::MultiBody::RunUnitTest()
 	//PersistentDataTest();
 	//UnitTest16();//load initial condition from file
 	//EulerDecompositionAccuracyTest();
+	
+	m_MatlabSave = [this]()
+	{
+		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+		LOG_TO_FILE << t << " ";
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			LOG_TO_FILE << pos[i].transpose() << " " << rel_ori[i];
+			if (i != numOfLinks - 1)
+			{
+				LOG_TO_FILE << " ";
+			}
+			else
+			{
+				LOG_TO_FILE << " " << ComputeTotalEnergy() << std::endl;
+			}
+		}
+	};
 	
 	Application::AddApplicationParameter(&damping, Application::ApplicationParameterType::float_point, L"-damping");
 	Application::AddApplicationParameter(&twistMode, Application::ApplicationParameterType::integer, L"-tm");
@@ -934,6 +981,11 @@ void eae6320::MultiBody::RunUnitTest()
 	{
 		UnitTest26();
 		std::cout << "compare with Unreal and Unity" << std::endl;
+	}
+	else if (testCaseNum == 15)
+	{
+		UnitTest27();
+		std::cout << "compare two different incremental methods" << std::endl;
 	}
 
 	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");

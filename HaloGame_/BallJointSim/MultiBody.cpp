@@ -143,10 +143,10 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
-	//SaveDataToMatlab(6);
-	frameNum = 140;
-	animationDuration = (frameNum - 1) * (1.0 / 30.0);
-	SaveDataToHoudini(animationDuration, frameNum);
+	SaveDataToMatlab(5);
+	//frameNum = 140;
+	//animationDuration = (frameNum - 1) * (1.0 / 30.0);
+	//SaveDataToHoudini(animationDuration, frameNum);
 	ResetExternalForces();
 	if(m_control) m_control();
 	EulerIntegration(dt);
@@ -933,18 +933,9 @@ void eae6320::MultiBody::SaveDataToMatlab(_Scalar totalDuration)
 	{	
 		if (t - oldTime >= 0.01 - 1e-8 || t == 0)
 		{
-			LOG_TO_FILE << t << " ";
-			for (int i = 0; i < numOfLinks; i++)
+			if (m_MatlabSave)
 			{
-				LOG_TO_FILE << pos[i].transpose() << " " << rel_ori[i];
-				if (i != numOfLinks - 1)
-				{
-					LOG_TO_FILE << " ";
-				}
-				else
-				{
-					LOG_TO_FILE << " " << ComputeTotalEnergy() << std::endl;
-				}
+				m_MatlabSave();
 			}
 			oldTime = t;
 		}

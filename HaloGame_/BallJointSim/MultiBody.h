@@ -119,6 +119,7 @@ namespace eae6320
 		void UnitTest24();
 		void UnitTest25();
 		void UnitTest26();
+		void UnitTest27();
 		void HingeJointUnitTest0();
 		void PersistentDataTest();
 		void EulerDecompositionAccuracyTest();
@@ -221,6 +222,7 @@ namespace eae6320
 		_Scalar dt;
 
 		std::function<void()> m_control;
+		std::function<void()> m_MatlabSave;
 
 		//debug related parameters
 		GameObject* swingArrow = nullptr;
