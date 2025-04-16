@@ -266,7 +266,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				totalTwist[i] += twistVec.angle();*/
 				//std::cout << "Total incremental twist " << totalTwist[i] << " twist increase " << twistVec.angle() << std::endl;
 
-				/*_Matrix3 rotDiff = R_local[i] * old_R_local[i].transpose();
+			/*	_Matrix3 rotDiff = R_local[i] * old_R_local[i].transpose();
 				_Quat quatDiff = Math::RotationConversion_MatToQuat(rotDiff);
 				_Scalar dEulerAngles[3];
 				_Vector3 tX, tY, tZ;
@@ -279,6 +279,8 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				eulerDecompositionOffset[i] = Math::RotationConversion_MatToQuat(deformationGradient);
 				GetEulerAngles(i, quatDiff, dEulerAngles);
 				totalTwist[i] += dEulerAngles[0];*/
+				//std::cout << rotDiff << std::endl;
+				
 
 				_Vector3 p = R_local[i] * twistAxis[i];
 				_Vector3 omega = qdot.segment(velStartIndex[i], 3);
@@ -296,6 +298,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 					constraintValue.push_back(0);
 					limitType.push_back(TWIST_INCREMENT);
 				}
+				//std::cout << totalTwist[i] << std::endl << std::endl;
 			}
 		}
 	}

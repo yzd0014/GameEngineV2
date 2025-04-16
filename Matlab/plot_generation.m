@@ -113,7 +113,7 @@ if add_switch_point
 end
 ylim([-pi pi]);
 xlabel('t','FontSize',font_size);
-ylabel('beta','FontSize',font_size);
+ylabel('$\beta$','Interpreter', 'latex','FontSize',font_size);
 
 nexttile;
 plot(mj_data(:,1),mj_data(:,4),'-o','MarkerIndices',1:200:length(mj_data(:,4)),LineWidth=2);
@@ -161,7 +161,7 @@ if add_switch_point
 end
 ylim([-pi pi]);
 xlabel('t','FontSize',font_size);
-ylabel('gamma','FontSize',font_size);
+ylabel('$\gamma$','Interpreter', 'latex','FontSize',font_size);
 % legend('switched','no switch');
 %% 
 clear;
@@ -195,10 +195,11 @@ plot(sim4(:,1), sim4(:,2), '-v', 'LineWidth', 2, 'MarkerIndices', markerIdx5, 'D
 plot(sim5(:,1), sim5(:,2), '-x', 'LineWidth', 2, 'MarkerIndices', markerIdx6, 'DisplayName', 'Direct dt=1e-4');
 
 xlabel('t');
-ylabel('Twisting angle');
+ylabel('Twist');
 legend;
 hold off;
-%% 
+%%
+%decomposition comparision without any twist constraint
 clear;
 sim0 = readmatrix('5_0.csv');
 sim1 = readmatrix('5_1.csv');
@@ -217,16 +218,49 @@ figure;
 hold on;
 
 correct0 = mapToPi(sim0(:,2));
-plot(sim0(:,1), correct0, '-o', 'LineWidth', 2, 'MarkerIndices', markerIdx1, 'DisplayName', 'omega dt');
+plot(sim0(:,1), correct0, '-o', 'LineWidth', 2, 'MarkerIndices', markerIdx1, 'DisplayName', 'Omega');
 correct1 = mapToPi(sim1(:,2));
-plot(sim1(:,1), correct1, '-s', 'LineWidth', 2, 'MarkerIndices', markerIdx2, 'DisplayName', 'incremental Euler');
+plot(sim1(:,1), correct1, '-s', 'LineWidth', 2, 'MarkerIndices', markerIdx2, 'DisplayName', 'Incremental Euler');
 correct2 = mapToPi(sim2(:,2));
-plot(sim2(:,1), correct2, '-d', 'LineWidth', 2, 'MarkerIndices', markerIdx3, 'DisplayName', 'incremental direct');
+plot(sim2(:,1), correct2, '-d', 'LineWidth', 2, 'MarkerIndices', markerIdx3, 'DisplayName', 'Incremental direct');
 plot(sim3(:,1), sim3(:,2), '-^', 'LineWidth', 2, 'MarkerIndices', markerIdx4, 'DisplayName', 'Euler');
-plot(sim4(:,1), sim4(:,2), '-v', 'LineWidth', 2, 'MarkerIndices', markerIdx5, 'DisplayName', 'direct');
+plot(sim4(:,1), sim4(:,2), '-v', 'LineWidth', 2, 'MarkerIndices', markerIdx5, 'DisplayName', 'Direct');
 
 xlabel('t');
 ylabel('Twist');
+legend;
+hold off;
+%% 
+%singularity pattern plot
+clear;
+clear;
+sim0 = readmatrix('s0_dir.csv');
+sim1 = readmatrix('s0_euler.csv');
+sim2 = readmatrix('s0_inc.csv');
+sim3 = readmatrix('s1_dir.csv');
+sim4 = readmatrix('s1_euler.csv');
+sim5 = readmatrix('s1_inc.csv');
+
+% Define different MarkerIndices for each curve
+markerIdx1 = 1:80:length(sim0); % Every 10th point for the first group
+markerIdx2 = 1:90:length(sim1); % Every 15th point
+markerIdx3 = 1:100:length(sim2); % Every 20th point
+markerIdx4 = 1:110:length(sim3); % Every 25th point
+markerIdx5 = 1:120:length(sim4); % Every 30th point
+markerIdx6 = 1:130:length(sim4); % Every 30th point
+
+figure;
+hold on;
+
+plot(sim0(:,1), sim0(:,2), '-o', 'LineWidth', 2, 'MarkerIndices', markerIdx1, 'DisplayName', 'Direct @ location one');
+plot(sim1(:,1), sim1(:,2), '-s', 'LineWidth', 2, 'MarkerIndices', markerIdx2, 'DisplayName', 'Euler @ location one');
+plot(sim2(:,1), sim2(:,2), '-d', 'LineWidth', 2, 'MarkerIndices', markerIdx3, 'DisplayName', 'Incremental @ location one');
+plot(sim3(:,1), sim3(:,2), '-^', 'LineWidth', 2, 'MarkerIndices', markerIdx4, 'DisplayName', 'Direct @ location two');
+plot(sim4(:,1), sim4(:,2), '-v', 'LineWidth', 2, 'MarkerIndices', markerIdx5, 'DisplayName', 'Euler @ location two');
+plot(sim5(:,1), sim5(:,2), '-x', 'LineWidth', 2, 'MarkerIndices', markerIdx6, 'DisplayName', 'Incremental @ location two');
+
+xlabel('t');
+ylabel('degree of twist');
 legend;
 hold off;
 

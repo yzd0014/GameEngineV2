@@ -143,7 +143,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
-	SaveDataToMatlab(5);
+	SaveDataToMatlab(65);
 	//frameNum = 140;
 	//animationDuration = (frameNum - 1) * (1.0 / 30.0);
 	//SaveDataToHoudini(animationDuration, frameNum);

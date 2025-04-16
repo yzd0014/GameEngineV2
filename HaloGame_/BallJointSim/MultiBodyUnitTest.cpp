@@ -744,6 +744,20 @@ void eae6320::MultiBody::UnitTest24()
 		tau = k * (target - endFactor);
 		externalForces[0].block<3, 1>(0, 0) = tau;
 	};
+
+	m_MatlabSave = [this]()
+	{
+		_Vector3 z(0, 0, -1);
+		static _Vector3 z0;
+		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+		if (t <= 1e-8)
+		{
+			z0 = R_local[0] * z;
+		}
+		_Vector3 zt = R_local[0] * z;
+		_Scalar out = z0.dot(zt);
+		LOG_TO_FILE << t << " " << out << std::endl;
+	};
 }
 
 void eae6320::MultiBody::UnitTest25()
@@ -785,6 +799,19 @@ void eae6320::MultiBody::UnitTest25()
 		tau = k * (target - endFactor);
 		externalForces[0].block<3, 1>(0, 0) = tau;
 	};
+	m_MatlabSave = [this]()
+	{
+		_Vector3 z(0, 0, -1);
+		static _Vector3 z0;
+		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+		if (t <= 1e-8)
+		{
+			z0 = R_local[0] * z;
+		}
+		_Vector3 zt = R_local[0] * z;
+		_Scalar out = z0.dot(zt);
+		LOG_TO_FILE << t << " " << out << std::endl;
+	};
 }
 
 void eae6320::MultiBody::UnitTest26()
@@ -817,7 +844,7 @@ void eae6320::MultiBody::UnitTest27()
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 
 	MultiBodyInitialization();
-	qdot.segment(0, 3) = _Vector3(-2, -2, 0);
+	qdot.segment(0, 3) = _Vector3(-3, -3, 0);
 	Forward();
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(0, 0, 1), _Vector3(-1, 0, 0), -1, 1e+7);
 	
@@ -831,6 +858,7 @@ void eae6320::MultiBody::UnitTest27()
 		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 		_Vector3 tau = sin(t) * old_R_local[0] * twistAxis[0];
 		externalForces[0].block<3, 1>(3, 0) = tau;
+		//std::cout << "my control " << totalTwist[0] << std::endl;
 	};
 }
 
