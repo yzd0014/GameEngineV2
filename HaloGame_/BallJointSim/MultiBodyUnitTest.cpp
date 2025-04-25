@@ -440,21 +440,18 @@ void eae6320::MultiBody::UnitTest11()
 
 void eae6320::MultiBody::UnitTest12()
 {
-	numOfLinks = 2;
-	constraintSolverMode = -1;
+	constraintSolverMode = IMPULSE;
 	gravity = true;
 
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-	InitializeBodies(masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(-1, 1, 1), _Vector3(1, -1, 1));//4 is capsule, 3 is cube
-	uLocals[1][0] = _Vector3(-1, 1, -1);
-	uGlobals[1][0] = _Vector3(-1, 1, -1);
 
-	int jointTypeArray[] = { BALL_JOINT_4D, BALL_JOINT_4D };
-	InitializeJoints(jointTypeArray);
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(-1.0f, 1.0f, 1.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	AddRigidBody(0, HINGE_JOINT, _Vector3(-1.0f, 1.0f, -1.0f), _Vector3(1.0f, -1.0f, 1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
+	SetHingeJoint(1, _Vector3(0, 0, 1), 0);
 
-	//SetZeroInitialCondition();
+	MultiBodyInitialization();
 	Forward();
 }
 
@@ -1014,6 +1011,11 @@ void eae6320::MultiBody::RunUnitTest()
 	{
 		UnitTest27();
 		std::cout << "compare two different incremental methods" << std::endl;
+	}
+	else if (testCaseNum == 16)
+	{
+		UnitTest12();
+		std::cout << "hinge joints" << std::endl;
 	}
 
 	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");

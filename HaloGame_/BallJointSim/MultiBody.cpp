@@ -143,7 +143,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
-	SaveDataToMatlab(65);
+	//SaveDataToMatlab(65);
 	//frameNum = 140;
 	//animationDuration = (frameNum - 1) * (1.0 / 30.0);
 	//SaveDataToHoudini(animationDuration, frameNum);
@@ -317,13 +317,13 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 			if (i == 0)
 			{
 				//H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]);
-				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsParent[i]);
+				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
 				H[i].block<3, 3>(3, 0) = _Matrix::Identity(3, 3);
 			}
 			else
 			{
 				//H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * R_global[i - 1];
-				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsParent[i]) * R_global[j];
+				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * R_global[j];
 				H[i].block<3, 3>(3, 0) = R_global[j];
 			}
 			//compute D
@@ -332,7 +332,7 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 				D[i].resize(6, 6);
 				D[i].setIdentity();
 				//D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) - Math::ToSkewSymmetricMatrix(uGlobals[i - 1][1]);
-				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobalsParent[i]) - Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
+				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) - Math::ToSkewSymmetricMatrix(uGlobalsParent[i]);
 			}
 		}
 		else if (jointType[i] == BALL_JOINT_3D)
@@ -349,7 +349,8 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 			else A = R_global[j] * J_rotation[i];
 			H[i].resize(6, 3);
 			H[i].setZero();
-			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * A;
+			//H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * A;
+			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * A;
 			H[i].block<3, 3>(3, 0) = A;
 			//compute D
 			if (i > 0)
@@ -357,7 +358,7 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 				D[i].resize(6, 6);
 				D[i].setIdentity();
 				//D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) - Math::ToSkewSymmetricMatrix(uGlobals[i - 1][1]);
-				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobalsParent[i]) - Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
+				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) - Math::ToSkewSymmetricMatrix(uGlobalsParent[i]);
 			}
 		}
 		else if (jointType[i] == FREE_JOINT)
@@ -373,7 +374,8 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 		{
 			//compute H
 			H[i].resize(6, 1);
-			H[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * hingeDirGlobals[i];//TODO
+			//H[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * hingeDirGlobals[i];//TODO
+			H[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * hingeDirGlobals[i];
 			H[i].block<3, 1>(3, 0) = hingeDirGlobals[i];
 			//compute D
 			D[i].resize(6, 6);
@@ -381,7 +383,8 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 			if (i > 0)
 			{
 				_Vector3 hingeVec = hingeMagnitude[i] * hingeDirGlobals[i];
-				_Vector3 iVec = uGlobals[i][0] - uGlobals[j][1] - hingeVec;//TODO
+				//_Vector3 iVec = uGlobals[i][0] - uGlobals[j][1] - hingeVec;//TODO
+				_Vector3 iVec = uGlobalsChild[i] - uGlobalsParent[i] - hingeVec;
 				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(iVec);
 			}
 		}
@@ -487,12 +490,12 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			if (i == 0)
 			{
 				//gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0]));
-				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsParent[i]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobalsParent[i]));
+				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobalsChild[i]));
 			}
 			else
 			{
 				//gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0])) + w_abs_world[i - 1].cross(w_abs_world[i - 1].cross(uGlobals[i - 1][1]));
-				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsParent[i]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobalsParent[i])) + w_abs_world[j].cross(w_abs_world[j].cross(uGlobalsChild[i]));
+				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobalsChild[i])) + w_abs_world[j].cross(w_abs_world[j].cross(uGlobalsParent[i]));
 			}
 			gamma[i].block<3, 1>(3, 0) = gamma_theta;
 		}
@@ -523,11 +526,13 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			gamma[i].setZero();
 			if (i == 0)
 			{
-				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0]));
+				//gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0]));
+				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobalsChild[i]));
 			}
 			else
 			{
-				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0])) + w_abs_world[j].cross(w_abs_world[j].cross(uGlobals[j][1]));
+				//gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0])) + w_abs_world[j].cross(w_abs_world[j].cross(uGlobals[j][1]));
+				gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * gamma_theta - w_abs_world[i].cross(w_abs_world[i].cross(uGlobalsChild[i])) + w_abs_world[j].cross(w_abs_world[j].cross(uGlobalsParent[i]));
 			}
 			gamma[i].block<3, 1>(3, 0) = gamma_theta;
 		}
@@ -545,14 +550,17 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 				gamma_theta += Math::ToSkewSymmetricMatrix(w_abs_world[j]) * hingeDirGlobals[i] * i_qdot(velStartIndex[i]);
 			}
 			_Vector3 gamma_r;
-			gamma_r = -w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0]));
+			//gamma_r = -w_abs_world[i].cross(w_abs_world[i].cross(uGlobals[i][0]));
+			gamma_r = -w_abs_world[i].cross(w_abs_world[i].cross(uGlobalsChild[i]));
 			_Vector3 hingeVec = hingeMagnitude[i] * hingeDirGlobals[i];
 			if (i > 0)
 			{
-				gamma_r += w_abs_world[j].cross(w_abs_world[j].cross(uGlobals[j][1] + hingeVec));
+				//gamma_r += w_abs_world[j].cross(w_abs_world[j].cross(uGlobals[j][1] + hingeVec));
+				gamma_r += w_abs_world[j].cross(w_abs_world[j].cross(uGlobalsParent[i] + hingeVec));
 			}
 			gamma[i].resize(6);
-			gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta + gamma_r;
+			//gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * gamma_theta + gamma_r;
+			gamma[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * gamma_theta + gamma_r;
 			gamma[i].block<3, 1>(3, 0) = gamma_theta;
 		}
 	}
@@ -661,10 +669,10 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 		else if (jointType[i] == HINGE_JOINT)
 		{
 			int j = parentArr[i];
-			if (i > 0) hingeDirGlobals[i] = R_global[j] * hingeDirLocals[i];
+			
 			_Scalar angle = i_q(posStartIndex[i]);
 #if defined (HIGH_PRECISION_MODE)
-			R_local[i] = AngleAxisd(angle, hingeDirGlobals[i]);
+			R_local[i] = AngleAxisd(angle, hingeDirLocals[i]);
 #else
 			R_local[i] = AngleAxisf(angle, axis);
 #endif
@@ -676,12 +684,14 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 			{
 				R_global[i] = R_global[j] * R_local[i];
 			}
+			
+			if (i > 0) hingeDirGlobals[i] = R_global[i] * hingeDirLocals[i];
+
 #if defined (HIGH_PRECISION_MODE)
 			AngleAxisd angleAxis_global(R_global[i]);
 #else
 			AngleAxisf angleAxis_global(R_global[i]);
 #endif
-
 			m_linkBodys[i]->m_State.orientation = Math::cQuaternion((float)angleAxis_global.angle(), Math::EigenVector2nativeVector(angleAxis_global.axis()));
 			m_linkBodys[i]->m_State.orientation.Normalize();
 		}
@@ -691,23 +701,21 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat)
 {
 	UpdateBodyRotation(i_q, i_quat);
-
-	_Vector3 preAnchor = jointPos[0];
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		int j = parentArr[i];
 		//update position
 		//uGlobals[i][0] = R_global[i] * uLocals[i][0];
-		uGlobalsParent[i] = R_global[i] * uLocalsParent[i];
+		uGlobalsChild[i] = R_global[i] * uLocalsChild[i];
 		if (i > 0)
 		{
-			uGlobalsChild[i] = R_global[j] * uLocalsChild[i];
-			jointPos[i] = pos[j] + uGlobalsChild[i];
+			uGlobalsParent[i] = R_global[j] * uLocalsParent[i];
+			jointPos[i] = pos[j] + uGlobalsParent[i];
 		}
 		if (jointType[i] == BALL_JOINT_3D || jointType[i] == BALL_JOINT_4D)
 		{
 			//pos[i] = preAnchor - uGlobals[i][0];
-			pos[i] = jointPos[i] - uGlobalsParent[i];
+			pos[i] = jointPos[i] - uGlobalsChild[i];
 		}
 		else if (jointType[i] == FREE_JOINT)
 		{
@@ -715,7 +723,8 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 		}
 		else if (jointType[i] == HINGE_JOINT)
 		{
-			pos[i] = preAnchor + hingeMagnitude[i] * hingeDirGlobals[i] - uGlobals[i][0];//TODO
+			//pos[i] = jointPos[i] + hingeMagnitude[i] * hingeDirGlobals[i] - uGlobals[i][0];
+			pos[i] = jointPos[i] + hingeMagnitude[i] * hingeDirGlobals[i] - uGlobalsChild[i];
 		}
 
 		//update Euler angles
@@ -820,6 +829,13 @@ _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 	return energy;
 }
 
+void eae6320::MultiBody::SetHingeJoint(int jointNum, _Vector3 hingeDirLocal, _Scalar hingeLength)
+{
+	hingeDirLocals[jointNum] = hingeDirLocal.normalized();
+	hingeDirGlobals[jointNum] = hingeDirLocals[jointNum];
+	hingeMagnitude[jointNum] = hingeLength;
+}
+
 void eae6320::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 jointPositionParent, _Vector3 jointPositionChild, Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor)
 {
 	//initialize body
@@ -855,6 +871,13 @@ void eae6320::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 join
 		totalVelDOF += 6;
 		totalPosDOF += 7;
 	}
+	else if (i_jointType == HINGE_JOINT)
+	{
+		velDOF.push_back(1);
+		posDOF.push_back(1);
+		totalVelDOF += 1;
+		totalPosDOF += 1;
+	}
 	else
 	{
 		std::cout << "TODO for other type of joints" << std::endl;//TODO
@@ -869,10 +892,15 @@ void eae6320::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 join
 		velStartIndex.push_back(velStartIndex[numOfLinks - 1] + velDOF[numOfLinks - 1]);
 		posStartIndex.push_back(posStartIndex[numOfLinks - 1] + posDOF[numOfLinks - 1]);
 	}
-	uLocalsParent.push_back(jointPositionParent);
-	uGlobalsParent.push_back(jointPositionParent);
-	uLocalsChild.push_back(jointPositionChild);
-	uGlobalsChild.push_back(jointPositionChild);
+	uLocalsChild.push_back(jointPositionParent);
+	uGlobalsChild.push_back(jointPositionParent);
+	uLocalsParent.push_back(jointPositionChild);
+	uGlobalsParent.push_back(jointPositionChild);
+
+	//hinge joint specific
+	hingeDirGlobals.push_back(_Vector3(0, 0, 0));
+	hingeDirLocals.push_back(_Vector3(0, 0, 0));
+	hingeMagnitude.push_back(0);
 	
 	numOfLinks++;
 }

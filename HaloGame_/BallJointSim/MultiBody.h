@@ -31,6 +31,7 @@ namespace eae6320
 		void ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
 		void ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
 		void AddRigidBody(int parent, int i_jointType, _Vector3 jointPositionParent, _Vector3 jointPositionChild, Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor);
+		void SetHingeJoint(int jointNum, _Vector3 hingeDirLocal, _Scalar hingeLength);
 
 		void ComputeMr();
 		void ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat);
@@ -151,12 +152,10 @@ namespace eae6320
 		std::vector<_Vector3> vel;
 		std::vector<_Vector3> pos;//rigid body center of mass
 		std::vector<_Vector3> jointPos;
-		std::vector<std::vector<_Vector3>> uLocals;//object
-		std::vector<std::vector<_Vector3>> uGlobals;//world
-		std::vector<_Vector3> uLocalsParent;
-		std::vector<_Vector3> uGlobalsParent;
 		std::vector<_Vector3> uLocalsChild;
 		std::vector<_Vector3> uGlobalsChild;
+		std::vector<_Vector3> uLocalsParent;
+		std::vector<_Vector3> uGlobalsParent;
 		std::vector<_Vector3> hingeDirLocals;
 		std::vector<_Vector3> hingeDirGlobals;
 		std::vector<_Scalar> hingeMagnitude;//distance between the point from each body that defines the position of the hinge joint
@@ -173,8 +172,6 @@ namespace eae6320
 		std::vector<_Quat> rel_ori;//relative rotation to parent for each body
 		std::vector<GameCommon::GameObject *> m_linkBodys;
 		_Scalar rigidBodyMass = 1.0f;
-		_Scalar kp = 1000000;
-		_Scalar kd = 2000;
 
 		std::vector<_Scalar> g;
 		std::vector<_Scalar> constraintValue;
