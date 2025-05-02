@@ -91,6 +91,7 @@ namespace eae6320
 		void ManifoldProjection();
 		void EnergyConstraint();
 		void EnergyConstraintV2();
+		void EnergyConstraintV3();
 
 		//unit tests
 		void UnitTest0();

@@ -118,6 +118,9 @@ void eae6320::MultiBody::EnergyConstraintV2()
 	int n = nq + energeMomentumConstraintDim;
 	_Matrix b(n, 1);
 	_Matrix grad_F(n, n);
+	_Matrix regularization(n, n);
+	regularization.setIdentity();
+	regularization = 1e-6 * regularization;
 
 	_Vector x(n);
 	x.setZero();
@@ -129,7 +132,7 @@ void eae6320::MultiBody::EnergyConstraintV2()
 
 	_Matrix D(nq, nq);
 	D.setZero();
-	D.block(0, 0, totalVelDOF, totalVelDOF) = _Matrix::Identity(totalVelDOF, totalVelDOF);
+	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
 	_Scalar m_coeff = 10;
 	D(totalVelDOF, totalVelDOF) = m_coeff;
 
@@ -163,9 +166,9 @@ void eae6320::MultiBody::EnergyConstraintV2()
 	int iter = 0;
 	while (energyErr > 1e-3)
 	{
-		if (iter >= 5)
+		if (iter >= 20)
 		{
-			std::cout << "limit reached!" << std::endl;
+			//std::cout << "limit reached!" << std::endl;
 			break;
 		}
 
@@ -190,20 +193,27 @@ void eae6320::MultiBody::EnergyConstraintV2()
 		grad_F.block(0, 0, nq, nq) = D - HessianC_lambda;
 		grad_F.block(0, nq, nq, 7) = -grad_C.transpose();
 		grad_F.block(nq, 0, 7, nq) = grad_C;
-		if (grad_F.determinant() < 1e-6)
+		grad_F = grad_F + regularization;
+		if (abs(grad_F.determinant()) < 1e-6)
 		{
-			EAE6320_ASSERTF(false, "grad_f is not invertable");
+			//std::cout << grad_F << std::endl;
+			//std::cout << "grad_F " << abs(grad_F.determinant()) << std::endl;
 		}
 		_Vector y(n);
 		y.setZero();
 		y = grad_F.inverse() * b;
+		//std::cout << grad_F << std::endl << std::endl;
+		//std::cout << b.transpose() << std::endl << std::endl;
+		//std::cout << y.transpose() << std::endl;
 		x.segment(0, nq) = x.segment(0, nq) + y.segment(0, nq);
 		//std::cout << y.segment(0, nq).transpose() << std::endl;
-		x.segment(nq, energeMomentumConstraintDim) = y.segment(nq, energeMomentumConstraintDim);
+		x.segment(nq, energeMomentumConstraintDim) = y.segment(nq, energeMomentumConstraintDim);//update lagrange multiplier
 		_Vector qdot_new = x.segment(0, totalVelDOF);
+		//std::cout << qdot_new.transpose() << std::endl;
 		ForwardAngularAndTranslationalVelocity(qdot_new);
 		//energyErr = fabs(ComputeKineticEnergy() - kineticEnergy0);
 		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
+		//std::cout << energyErr << std::endl;
 		//energyErr = ComputeTotalEnergy();
 		//std::cout << "expected momentum " << linearMomentumNew.transpose() << " actual momentum " << ComputeTranslationalMomentum().transpose() << std::endl;
 		//std::cout << "expected momentum " << angularMomentum0.transpose() << " actual momentum " << ComputeAngularMomentum().transpose() << std::endl;
@@ -213,4 +223,92 @@ void eae6320::MultiBody::EnergyConstraintV2()
 	qdot = x.segment(0, totalVelDOF);
 	//std::cout << endl;
 	//std::cout << "Energy at end of solve " << ComputeTotalEnergy() << std::endl;
+	//std::cout << iter << std::endl;
+}
+
+void eae6320::MultiBody::EnergyConstraintV3()
+{
+	int energeMomentumConstraintDim = 1;
+	int nq = totalVelDOF;
+	int n = nq + energeMomentumConstraintDim;
+	_Matrix b(n, 1);
+	_Matrix grad_F(n, n);
+	_Matrix regularization(n, n);
+	regularization.setIdentity();
+	regularization = 1e-6 * regularization;
+
+	_Vector x(n);
+	x.setZero();
+	x.segment(0, totalVelDOF) = qdot;
+
+	_Vector qt(nq);
+	qt.setZero();
+	qt.segment(0, totalVelDOF) = qdot;
+
+	_Matrix D(nq, nq);
+	D.setZero();
+	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
+
+	_Scalar kineticEnergyExpected = totalEnergy0 - ComputePotentialEnergy();
+	_Scalar kineticEnergyCurrent = ComputeKineticEnergy();
+	_Matrix grad_C(1, nq);
+	grad_C.setZero();
+
+	_Scalar energyErr = 1.0;
+	_Matrix C(1, 1);
+	int iter = 0;
+	while (energyErr > 1e-3)
+	{
+		if (iter >= 20)
+		{
+			//std::cout << "limit reached!" << std::endl;
+			break;
+		}
+
+		C(0, 0) = 0.5 * (x.segment(0, totalVelDOF).transpose() * Mr * x.segment(0, totalVelDOF))(0, 0) - kineticEnergyExpected;
+	
+		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * x.segment(0, totalVelDOF)).transpose();
+
+		b.block(0, 0, nq, 1) = -D * (x.segment(0, nq) - qt);
+		b.block<1, 1>(nq, 0) = -C;
+
+		_Matrix HessianC_lambda(nq, nq);
+		HessianC_lambda.setZero();
+		HessianC_lambda.block(0, 0, totalVelDOF, totalVelDOF) = x(nq) * Mr;
+
+		grad_F.setZero();
+		grad_F.block(0, 0, nq, nq) = D - HessianC_lambda;
+		grad_F.block(0, nq, nq, energeMomentumConstraintDim) = -grad_C.transpose();
+		grad_F.block(nq, 0, energeMomentumConstraintDim, nq) = grad_C;
+		grad_F = grad_F + regularization;
+		if (abs(grad_F.determinant()) < 1e-6)
+		{
+			//std::cout << grad_F << std::endl;
+			//std::cout << "grad_F " << abs(grad_F.determinant()) << std::endl;
+		}
+		_Vector y(n);
+		y.setZero();
+		y = grad_F.inverse() * b;
+		//std::cout << grad_F << std::endl << std::endl;
+		//std::cout << b.transpose() << std::endl << std::endl;
+		//std::cout << y.transpose() << std::endl;
+		x.segment(0, nq) = x.segment(0, nq) + y.segment(0, nq);
+		//std::cout << y.segment(0, nq).transpose() << std::endl;
+		x.segment(nq, energeMomentumConstraintDim) = y.segment(nq, energeMomentumConstraintDim);//update lagrange multiplier
+		_Vector qdot_new = x.segment(0, totalVelDOF);
+		//std::cout << qdot_new.transpose() << std::endl;
+		ForwardAngularAndTranslationalVelocity(qdot_new);
+		//energyErr = fabs(ComputeKineticEnergy() - kineticEnergy0);
+		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
+		//std::cout << "iteration " << iter << " energyErr " << energyErr << std::endl;
+		//energyErr = ComputeTotalEnergy();
+		//std::cout << "expected momentum " << linearMomentumNew.transpose() << " actual momentum " << ComputeTranslationalMomentum().transpose() << std::endl;
+		//std::cout << "expected momentum " << angularMomentum0.transpose() << " actual momentum " << ComputeAngularMomentum().transpose() << std::endl;
+		//std::cout << ComputeTotalEnergy() << std::endl;
+		iter++;
+	}
+	qdot = x.segment(0, totalVelDOF);
+	//std::cout << endl;
+	//std::cout << "Energy at end of solve " << ComputeTotalEnergy() << std::endl;
+	//std::cout << iter << std::endl;
 }

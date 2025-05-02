@@ -164,7 +164,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
 	//std::cout << Physics::totalSimulationTime << " " << ComputeKineticEnergy() << std::endl << std::endl;
-	//std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 	/*std::cout << t << std::endl;
 	if (t >= 3.0)
 	{
@@ -257,7 +257,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//ManifoldProjection();
 	
 	//EnergyConstraint();
-	//EnergyConstraintV2();
+	EnergyConstraintV3();
 	//totalEnergy0 = ComputeTotalEnergy();
 	kineticEnergy0 = ComputeKineticEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum();

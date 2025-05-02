@@ -447,11 +447,23 @@ void eae6320::MultiBody::UnitTest12()
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 
-	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(-1.0f, 1.0f, 1.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
-	AddRigidBody(0, HINGE_JOINT, _Vector3(-1.0f, 1.0f, -1.0f), _Vector3(1.0f, -1.0f, 1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
+	AddRigidBody(-1, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	SetHingeJoint(0, _Vector3(0, 0, 1), 0);
+	AddRigidBody(0, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 1
 	SetHingeJoint(1, _Vector3(0, 0, 1), 0);
+	//AddRigidBody(1, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 2
+	//SetHingeJoint(2, _Vector3(0, 0, 1), 0);
+	//AddRigidBody(2, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 3
+	//SetHingeJoint(3, _Vector3(0, 0, 1), 0);
+	//AddRigidBody(3, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 4
+	//SetHingeJoint(4, _Vector3(0, 0, 1), 0);
+	//AddRigidBody(1, HINGE_JOINT, _Vector3(1.0f, 0.0f, 0.0f), _Vector3(-0.5f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 5
+	//SetHingeJoint(5, _Vector3(0, 0, 1), 0);
+	//AddRigidBody(5, HINGE_JOINT, _Vector3(1.0f, 0.0f, 0.0f), _Vector3(-1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 6
+	//SetHingeJoint(6, _Vector3(0, 0, 1), 0);
 
 	MultiBodyInitialization();
+	q(0) = M_PI * 0.5;
 	Forward();
 }
 
