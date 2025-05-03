@@ -312,3 +312,40 @@ void eae6320::MultiBody::EnergyConstraintV3()
 	//std::cout << "Energy at end of solve " << ComputeTotalEnergy() << std::endl;
 	//std::cout << iter << std::endl;
 }
+
+void eae6320::MultiBody::AcceleratedEnergyConstraint()
+{
+	int energeMomentumConstraintDim = 1;
+	int nq = totalVelDOF;
+	int n = nq + energeMomentumConstraintDim;
+	
+	_Vector mq(nq);
+	mq.setZero();
+	mq.segment(0, totalVelDOF) = qdot;
+	
+	_Matrix grad_C(energeMomentumConstraintDim, nq);
+	grad_C.setZero();
+
+	_Matrix DInv;
+	DInv = Mr.inverse();
+
+	_Scalar kineticEnergyExpected = totalEnergy0 - ComputePotentialEnergy();
+
+	_Scalar energyErr = 1.0;
+	_Matrix C(energeMomentumConstraintDim, 1);
+	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+	int iter = 0;
+	while (energyErr > 1e-3)
+	{
+		C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0) - kineticEnergyExpected;
+		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * mq.segment(0, totalVelDOF)).transpose();
+		lambdaNew = (grad_C * DInv * grad_C.transpose()).inverse() * C;
+		mq = mq - DInv * grad_C.transpose() * lambdaNew;
+
+		ForwardAngularAndTranslationalVelocity(mq);
+		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
+		iter++;
+	}
+	qdot = mq;
+	//std::cout << iter << std::endl;
+}

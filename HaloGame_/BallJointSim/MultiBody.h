@@ -89,9 +89,11 @@ namespace eae6320
 		void KineticEnergyProjection();
 		void EnergyMomentumProjection();
 		void ManifoldProjection();
-		void EnergyConstraint();
-		void EnergyConstraintV2();
-		void EnergyConstraintV3();
+		void EnergyConstraint();//defualt FEPR
+		void EnergyConstraintV2();//using energy at E0
+		void EnergyConstraintV3();//energy constraint only
+		void AcceleratedEnergyConstraint();//quasi-newton
+		void AcceleratedEnergyConstraintV2();//add position
 
 		//unit tests
 		void UnitTest0();
