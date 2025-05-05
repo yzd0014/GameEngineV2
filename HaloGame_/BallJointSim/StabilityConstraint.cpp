@@ -349,3 +349,173 @@ void eae6320::MultiBody::AcceleratedEnergyConstraint()
 	qdot = mq;
 	//std::cout << iter << std::endl;
 }
+
+void eae6320::MultiBody::EnergyConstraintPosition()
+{
+	int energeMomentumConstraintDim = 1;
+	int nq = totalPosDOF;
+	int n = nq + energeMomentumConstraintDim;
+
+	_Vector mq(nq);
+	mq.setZero();
+	mq.segment(0, totalPosDOF) = q;
+
+	_Matrix grad_C(energeMomentumConstraintDim, nq);
+	grad_C.setZero();
+
+	_Matrix DInv;
+	DInv = Mr.inverse();
+
+	_Scalar kineticEnergyExpected = totalEnergy0 - ComputePotentialEnergy();
+
+	_Scalar energyErr = 1.0;
+	_Matrix C(energeMomentumConstraintDim, 1);
+	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+	int iter = 0;
+	while (energyErr > 1e-3)
+	{
+		C(0, 0) = 0.5 * (mq.segment(0, totalPosDOF).transpose() * Mr * mq.segment(0, totalPosDOF))(0, 0) - kineticEnergyExpected;
+		
+		_Matrix M0;
+		M0.resize(1, totalPosDOF);
+		M0.setZero();
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			int j = parentArr[i];
+			_Vector tran_rot_velocity;
+			tran_rot_velocity.resize(6);
+			tran_rot_velocity.segment(0, 3) = vel[j];
+			tran_rot_velocity.segment(3, 3) = w_abs_world[j];
+
+			//ComputeN
+			mN[i].setZero();
+			mN[i].block(0, 0, 3, totalPosDOF) = Ht[j].block(3, 0, 3, totalVelDOF);
+			mN[i].block(3, 0, 3, totalPosDOF) = Ht[i].block(3, 0, 3, totalVelDOF);
+			mN[i](6, i) = 1;
+			//ComputeB
+			mB[i].setZero();
+			_Vector3 A;
+			A = H[i].block<3, 1>(3, 0) * qdot.segment(velStartIndex[i], velDOF[i]);
+			mB[i].block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * Math::ToSkewSymmetricMatrix(A);
+			mB[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(A) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
+			mB[i].block<3, 3>(3, 0) = -Math::ToSkewSymmetricMatrix(A);
+			//ComputeA
+			_Vector3 b2 = tran_rot_velocity.segment(3, 3);
+			mA[i].setZero();
+			_Vector3 X;
+			X = hingeMagnitude[i] * hingeDirGlobals[i] + uGlobalsParent[i];
+			mA[i].block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(b2) * (Math::ToSkewSymmetricMatrix(uGlobalsParent[i]) + Math::ToSkewSymmetricMatrix(X));
+			mA[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(b2) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
+			//ComputeE
+			mE[i].setZero();
+			_Vector3 b1 = tran_rot_velocity.segment(0, 3);
+			_Vector3 b2 = tran_rot_velocity.segment(3, 3);
+			_Vector3 V0 = Mbody[i].block<3, 3>(0, 3) * b2;
+			mE[i].block<3, 3>(0, 3) = -Math::ToSkewSymmetricMatrix(V0) + Mbody[i].block<3, 3>(0, 3) * Math::ToSkewSymmetricMatrix(b2);
+			_Vector3 V1 = Mbody[i].block<3, 3>(3, 0) * b1;
+			_Vector3 V2 = Mbody[i].block<3, 3>(3, 3) * b2;
+			mE[i].block<3, 3>(3, 3) = -Math::ToSkewSymmetricMatrix(V1) + Mbody[i].block<3, 3>(3, 0) * Math::ToSkewSymmetricMatrix(b1)
+				+ Math::ToSkewSymmetricMatrix(V2) + Mbody[i].block<3, 3>(3, 3) * Math::ToSkewSymmetricMatrix(b2);
+			//ComputeHtDerivativeTimes_b
+			if (i == 0)
+			{
+				HtDerivativeTimes_b[0] = mB[0];
+			}
+			else
+			{
+				HtDerivativeTimes_b[i] = D[i] * HtDerivativeTimes_b[j] + mA[i] * mN[i] + mB[i] * mN[i];
+			}
+			//ComputeMassMatrixDerivativeTimes_b
+			MassMatrixDerivativeTimes_b[i] = mE[i] * mN[i];
+			
+			M0 = M0 + qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
+		}
+		
+		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * mq.segment(0, totalVelDOF)).transpose();
+		lambdaNew = (grad_C * DInv * grad_C.transpose()).inverse() * C;
+		mq = mq - DInv * grad_C.transpose() * lambdaNew;
+
+		ForwardKinematics(mq, rel_ori);
+		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
+		iter++;
+	}
+	qdot = mq;
+	//std::cout << iter << std::endl;
+}
+
+void eae6320::MultiBody::ComputeHtDerivativeTimes_b(_Vector& b)
+{
+	//base case
+	ComputeB(0, b.segment(velStartIndex[0], velDOF[0]));//b is qdot
+	HtDerivativeTimes_b[0] = mB[0];
+
+	for (int i = 1; i < numOfLinks; i++)
+	{
+		int j = parentArr[i];
+		_Vector tran_rot_velocity;
+		tran_rot_velocity.resize(6);
+		tran_rot_velocity.segment(0, 3) = vel[j];
+		tran_rot_velocity.segment(3, 3) = w_abs_world[j];
+		ComputeA(i, tran_rot_velocity);
+		ComputeB(i, b.segment(velStartIndex[i], velDOF[i]));
+		HtDerivativeTimes_b[i] = D[i] * HtDerivativeTimes_b[j] + mA[i] * mN[i] + mB[i] * mN[i];
+	}
+}
+
+void eae6320::MultiBody::ComputeMassMatrixDerivativeTimes_b(_Vector& b)
+{
+	for (int i = 1; i < numOfLinks; i++)
+	{
+		_Vector tran_rot_velocity;
+		tran_rot_velocity.resize(6);
+		tran_rot_velocity.segment(0, 3) = vel[i];
+		tran_rot_velocity.segment(3, 3) = w_abs_world[i];
+		ComputeE(i, tran_rot_velocity);
+		MassMatrixDerivativeTimes_b[i] = mE[i] * mN[i];
+	}
+}
+
+void eae6320::MultiBody::ComputeA(int i, _Vector& b)
+{
+	_Vector3 b2 = b.segment(3, 3);
+	mA[i].setZero();
+	_Vector3 X;
+	X = hingeMagnitude[i] * hingeDirGlobals[i] + uGlobalsParent[i];
+	mA[i].block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(b2) * (Math::ToSkewSymmetricMatrix(uGlobalsParent[i]) + Math::ToSkewSymmetricMatrix(X));
+	mA[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(b2) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
+}
+
+void eae6320::MultiBody::ComputeB(int i, _Vector b)
+{
+	mB[i].setZero();
+	_Vector3 A;
+	A = H[i].block<3, 1>(3, 0) * b;
+	mB[i].block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * Math::ToSkewSymmetricMatrix(A);
+	mB[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(A) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
+	mB[i].block<3, 3>(3, 0) = -Math::ToSkewSymmetricMatrix(A);
+}
+
+void eae6320::MultiBody::ComputeE(int i, _Vector& b)
+{
+	mE[i].setZero();
+	_Vector3 b1 = b.segment(0, 3);
+	_Vector3 b2 = b.segment(3, 3);
+	_Vector3 V0 = Mbody[i].block<3, 3>(0, 3) * b2;
+	mE[i].block<3, 3>(0, 3) = -Math::ToSkewSymmetricMatrix(V0) + Mbody[i].block<3, 3>(0, 3) * Math::ToSkewSymmetricMatrix(b2);
+	_Vector3 V1 = Mbody[i].block<3, 3>(3, 0) * b1;
+	_Vector3 V2 = Mbody[i].block<3, 3>(3, 3) * b2;
+	mE[i].block<3, 3>(3, 3) = -Math::ToSkewSymmetricMatrix(V1) + Mbody[i].block<3, 3>(3, 0) * Math::ToSkewSymmetricMatrix(b1)
+		+ Math::ToSkewSymmetricMatrix(V2) + Mbody[i].block<3, 3>(3, 3) * Math::ToSkewSymmetricMatrix(b2);
+}
+
+void eae6320::MultiBody::ComputeN()
+{
+	for (int i = 1; i < numOfLinks; i++)
+	{
+		mN[i].setZero();
+		int j = parentArr[i];
+		mN[i].block(0, 0, 3, totalPosDOF) = Ht[j].block(3, 0, 3, totalVelDOF);
+		mN[i].block(3, 0, 3, totalPosDOF) = Ht[i].block(3, 0, 3, totalVelDOF);
+		mN[i](6, i) = 1;
+	}
+}

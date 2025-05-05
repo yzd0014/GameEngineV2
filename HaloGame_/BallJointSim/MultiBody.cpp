@@ -66,6 +66,12 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	totalTwist.resize(numOfLinks);
 	old_R_local.resize(numOfLinks);
 	externalForces.resize(numOfLinks);
+	HtDerivativeTimes_b.resize(numOfLinks);
+	MassMatrixDerivativeTimes_b.resize(numOfLinks);
+	mA.resize(numOfLinks);
+	mB.resize(numOfLinks);
+	mE.resize(numOfLinks);
+	mN.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
@@ -78,6 +84,13 @@ void eae6320::MultiBody::MultiBodyInitialization()
 		rel_ori[i].setIdentity();
 		R_global[i].setIdentity();
 		R_local[i].setIdentity();
+
+		HtDerivativeTimes_b[i].resize(6, totalPosDOF);
+		MassMatrixDerivativeTimes_b[i].resize(6, totalPosDOF);
+		mA[i].resize(6, 7);
+		mB[i].resize(6, 7);//for hinge joint only 7 = 6 + 1 (1 for a hinge)
+		mE[i].resize(6, 7);
+		mN[i].resize(7, totalPosDOF);
 		
 		jointLimit[i] = -1;
 		std::pair<_Scalar, _Scalar> defaultRange(-1, -1);

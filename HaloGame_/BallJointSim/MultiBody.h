@@ -92,9 +92,16 @@ namespace eae6320
 		void EnergyConstraint();//defualt FEPR
 		void EnergyConstraintV2();//using energy at E0
 		void EnergyConstraintV3();//energy constraint only
+		void EnergyConstraintPosition();
 		void AcceleratedEnergyConstraint();//quasi-newton
-		void AcceleratedEnergyConstraintV2();//add position
-
+		//void AcceleratedEnergyConstraintV2();//add position
+		void ComputeHtDerivativeTimes_b(_Vector& b);//for hinge joint only
+		void ComputeMassMatrixDerivativeTimes_b(_Vector& b);
+		void ComputeB(int i, _Vector b);//for hinge joint only
+		void ComputeA(int i, _Vector& b);
+		void ComputeE(int i, _Vector& b);
+		void ComputeN();
+		
 		//unit tests
 		void UnitTest0();
 		void UnitTest1();
@@ -170,6 +177,13 @@ namespace eae6320
 		std::vector<_Matrix> D;
 		std::vector<_Matrix> Ht;
 		std::vector<_Matrix> H;
+		std::vector<_Matrix> HtDerivativeTimes_b;
+		std::vector<_Matrix> MassMatrixDerivativeTimes_b;
+		std::vector<_Matrix> mA;
+		std::vector<_Matrix> mB;
+		std::vector<_Matrix> mE;
+		std::vector<_Matrix> mN;
+		
 		
 		std::vector<_Quat> obs_ori;
 		std::vector<_Quat> rel_ori;//relative rotation to parent for each body
