@@ -95,12 +95,6 @@ namespace eae6320
 		void EnergyConstraintPosition();
 		void AcceleratedEnergyConstraint();//quasi-newton
 		//void AcceleratedEnergyConstraintV2();//add position
-		void ComputeHtDerivativeTimes_b(_Vector& b);//for hinge joint only
-		void ComputeMassMatrixDerivativeTimes_b(_Vector& b);
-		void ComputeB(int i, _Vector b);//for hinge joint only
-		void ComputeA(int i, _Vector& b);
-		void ComputeE(int i, _Vector& b);
-		void ComputeN();
 		
 		//unit tests
 		void UnitTest0();
