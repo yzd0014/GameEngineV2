@@ -924,13 +924,12 @@ void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
 	{
 		//save binary data to file
 		FILE * pFile;
-		const char* filePath = "sim_state.txt";
+		const char* filePath = "key_press_save.txt";
 		pFile = fopen(filePath, "wb");
-		for (int i = 0; i < 3; i++)
+		if (m_keyPressSave)
 		{
-			fwrite(&qdot(i), sizeof(double), 1, pFile);
-		}
-		fwrite(&rel_ori[0], sizeof(double) * 4, 1, pFile);
+			m_keyPressSave(pFile);
+		};
 		fclose(pFile);
 		std::cout << "data saved to file" << std::endl;
 	}

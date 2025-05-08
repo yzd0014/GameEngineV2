@@ -465,6 +465,121 @@ void eae6320::MultiBody::UnitTest12()
 	MultiBodyInitialization();
 	q(0) = M_PI * 0.5;
 	Forward();
+
+	m_keyPressSave = [this](FILE * i_pFile)
+	{
+		int dof = static_cast<int>(q.size());
+		for (int i = 0; i < dof; i++)
+		{
+			fwrite(&q(i), sizeof(double), 1, i_pFile);
+		}
+		for (int i = 0; i < dof; i++)
+		{
+			fwrite(&qdot(i), sizeof(double), 1, i_pFile);
+		}
+	};
+}
+
+void eae6320::MultiBody::FDTest()
+{
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+
+	AddRigidBody(-1, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	SetHingeJoint(0, _Vector3(0, 0, 1), 0);
+	AddRigidBody(0, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 1
+	SetHingeJoint(1, _Vector3(0, 0, 1), 0);
+
+	MultiBodyInitialization();
+	const char* filePath = "key_press_save.txt";
+	FILE* pFile = fopen(filePath, "rb");
+	int dof = static_cast<int>(q.size());
+	for (int i = 0; i < dof; i++)
+	{
+		fread(&(i), sizeof(double), 1, pFile);
+	}
+	for (int i = 0; i < dof; i++)
+	{
+		fread(&qdot(i), sizeof(double), 1, pFile);
+	}
+	fclose(pFile);
+	Forward();
+
+	_Scalar delta = 1e-7;
+	
+	_Matrix expectedDerivative0;
+	expectedDerivative0.resize(6, 2);
+	_Matrix d0, d1;
+	d0.resize(6, 1);
+	d1.resize(6, 1);
+	d0.setZero();
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		d0 = d0 + Ht[i] * qdot;
+	}
+
+	std::vector<_Vector> perturbed_q;
+	perturbed_q.resize(dof);
+	for (int i = 0; i < dof; i++)
+	{
+		perturbed_q[i].resize(dof);
+		perturbed_q[i] = q;
+		perturbed_q[i](i) = perturbed_q[i](i) + delta;
+	}
+
+	for (int i = 0; i < dof; i++)
+	{
+		d1.setZero();
+		q = perturbed_q[i];
+		Forward();
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			d1 = d1 + Ht[i] * qdot;
+		}
+		expectedDerivative0.block<6, 1>(0, i) = (d1 - d0) / delta;
+	}
+//****************************************************************************
+	pFile = fopen(filePath, "rb");
+	int dof = static_cast<int>(q.size());
+	for (int i = 0; i < dof; i++)
+	{
+		fread(&(i), sizeof(double), 1, pFile);
+	}
+	for (int i = 0; i < dof; i++)
+	{
+		fread(&qdot(i), sizeof(double), 1, pFile);
+	}
+	fclose(pFile);
+	Forward();
+	
+	_Matrix expectedDerivative1;
+	expectedDerivative1.resize(6, 2);
+	d0.setZero();
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		_Vector tran_rot_velocity;//TODO this one needs to be updated when it's used with velocity
+		tran_rot_velocity.resize(6);
+		tran_rot_velocity.segment(0, 3) = vel[i];
+		tran_rot_velocity.segment(3, 3) = w_abs_world[i];
+		d0 = d0 + Mbody[i] * tran_rot_velocity;
+	}
+
+	for (int i = 0; i < dof; i++)
+	{
+		d1.setZero();
+		q = perturbed_q[i];
+		ForwardKinematics(q, rel_ori);
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			_Vector tran_rot_velocity;//TODO this one needs to be updated when it's used with velocity
+			tran_rot_velocity.resize(6);
+			tran_rot_velocity.segment(0, 3) = vel[i];
+			tran_rot_velocity.segment(3, 3) = w_abs_world[i];
+			d1 = d1 + Mbody[i] * tran_rot_velocity;
+		}
+		expectedDerivative1.block<6, 1>(0, i) = (d1 - d0) / delta;
+	}
 }
 
 void eae6320::MultiBody::UnitTest13()

@@ -127,6 +127,7 @@ namespace eae6320
 		void UnitTest27();
 		void HingeJointUnitTest0();
 		void PersistentDataTest();
+		void FDTest();//finite differencing test
 		void EulerDecompositionAccuracyTest();
 		void RunUnitTest();
 
@@ -231,6 +232,7 @@ namespace eae6320
 
 		std::function<void()> m_control;
 		std::function<void()> m_MatlabSave;
+		std::function<void(FILE * i_pFile)> m_keyPressSave;
 
 		//debug related parameters
 		GameObject* swingArrow = nullptr;

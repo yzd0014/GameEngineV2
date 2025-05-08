@@ -374,7 +374,7 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 	int iter = 0;
 	while (energyErr > 1e-3)
 	{
-		C(0, 0) = 0.5 * (mq.segment(0, totalPosDOF).transpose() * Mr * mq.segment(0, totalPosDOF))(0, 0) - kineticEnergyExpected;
+		C(0, 0) = 0.5 * qdot.transpose() * Mr * qdot - kineticEnergyExpected;//TODO
 		
 		_Matrix M0;
 		M0.resize(1, totalPosDOF);
@@ -399,7 +399,7 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 			mB[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(Vec3) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
 			mB[i].block<3, 3>(3, 0) = -Math::ToSkewSymmetricMatrix(Vec3);
 			//ComputeE
-			_Vector tran_rot_velocity;//this one needs to be updated when it's used with velocity
+			_Vector tran_rot_velocity;//TODO this one needs to be updated when it's used with velocity
 			tran_rot_velocity.resize(6);
 			tran_rot_velocity.segment(0, 3) = vel[i];
 			tran_rot_velocity.segment(3, 3) = w_abs_world[i];
@@ -420,7 +420,7 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 			else
 			{
 				int j = parentArr[i];
-				_Vector tran_rot_velocity;//this one needs to be updated when it's used with velocity
+				_Vector tran_rot_velocity;//TODO this one needs to be updated when it's used with velocity
 				tran_rot_velocity.resize(6);
 				tran_rot_velocity.segment(0, 3) = vel[j];
 				tran_rot_velocity.segment(3, 3) = w_abs_world[j];
@@ -442,14 +442,27 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 		
 		grad_C.block(0, 0, 1, totalVelDOF) = M0;
 		//std::cout << M0 << std::endl;
-		lambdaNew = (grad_C * DInv * grad_C.transpose()).inverse() * C;
-		std::cout << (grad_C * DInv * grad_C.transpose()).determinant() << std::endl;
+		_Matrix K = grad_C * DInv * grad_C.transpose();
+		if (K.determinant() < 1e-7)
+		{
+			_Matrix mI;
+			mI.resize(energeMomentumConstraintDim, energeMomentumConstraintDim);
+			mI.setIdentity();
+			K = K + 1e-7 * mI;
+		}
+		//std::cout << K << std::endl;
+		//std::cout << C << std::endl;
+		lambdaNew = K.inverse() * C;
+		//std::cout << (grad_C * DInv * grad_C.transpose()).determinant() << std::endl;
 		std::cout << lambdaNew << std::endl;
-		mq = mq - DInv * grad_C.transpose() * lambdaNew;
+		_Vector delta_q = -DInv * grad_C.transpose() * lambdaNew;
+		std::cout << delta_q.transpose() << std::endl;
+		mq = mq + delta_q;
 
-		ForwardKinematics(mq, rel_ori);
+		ComputeHt(mq, rel_ori);
+		ComputeMr();
 		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
-		//std::cout << energyErr << std::endl;
+		std::cout << energyErr << std::endl;
 		iter++;
 	}
 	qdot = mq;
