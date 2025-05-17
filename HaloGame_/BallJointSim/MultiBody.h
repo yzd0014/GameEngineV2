@@ -57,6 +57,9 @@ namespace eae6320
 		_Vector3 ComputeTranslationalMomentum();
 		_Vector3 ComputeAngularMomentum();
 
+		_Matrix ComputeDuGlobalOverDp(int i, _Vector3& uGlobal);//currently only works for hinge joint
+		_Matrix ComputeDhGlobalOverDp(int i);//currently only works for hinge joint
+
 		_Scalar ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi);
 		void SwingLimitCheck();
 		void ResolveSwingLimit(const _Scalar h);
@@ -128,6 +131,7 @@ namespace eae6320
 		void HingeJointUnitTest0();
 		void PersistentDataTest();
 		void FDTest();//finite differencing test
+		void AnalyticalTest();
 		void EulerDecompositionAccuracyTest();
 		void RunUnitTest();
 

@@ -390,6 +390,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BallJointSim.cpp" />
+    <ClCompile Include="DerivativeUnitTest.cpp" />
     <ClCompile Include="EntryPoint.cpp" />
     <ClCompile Include="HingeJointUnitTest.cpp" />
     <ClCompile Include="JointLimit.cpp" />

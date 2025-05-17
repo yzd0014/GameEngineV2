@@ -366,21 +366,27 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 	_Matrix DInv;
 	DInv = Mr.inverse();
 
-	_Scalar kineticEnergyExpected = totalEnergy0 - ComputePotentialEnergy();
+	_Scalar potentialEnergyExpected = totalEnergy0 - ComputeKineticEnergy();
 
-	_Scalar energyErr = 1.0;
 	_Matrix C(energeMomentumConstraintDim, 1);
+	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
 	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
 	int iter = 0;
-	while (energyErr > 1e-3)
+	while (abs(C(0, 0)) > 1e-3)
 	{
-		C(0, 0) = 0.5 * qdot.transpose() * Mr * qdot - kineticEnergyExpected;//TODO
-		
+		//if (iter >= 1)
+		//{
+		//	//std::cout << "limit reached!" << std::endl;
+		//	break;
+		//}
 		_Matrix M0;
 		M0.resize(1, totalPosDOF);
 		M0.setZero();
+		_Matrix M1;
+		M1.resize(3, totalPosDOF);
 		for (int i = 0; i < numOfLinks; i++)
 		{
+			//***********************kinetic energy derivative*****************************
 			//ComputeN
 			mN[i].setZero();
 			if (i > 0)
@@ -438,10 +444,22 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 			//ComputeMassMatrixDerivativeTimes_b
 			MassMatrixDerivativeTimes_b[i] = mE[i] * mN[i];
 			M0 = M0 + qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
+			//***********************potential energy derivative*****************************
+			if (i == 0)
+			{
+				
+				M1 = -ComputeDuGlobalOverDp(i, uGlobalsChild[i]);
+			}
+			else
+			{
+				M1 = M1 - ComputeDuGlobalOverDp(i, uGlobalsChild[i]) + ComputeDuGlobalOverDp(i, uGlobalsParent[i]);
+			}
+			_Vector3 g(0.0f, 9.81f, 0.0f);
+			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * M1;
 		}
 		
-		grad_C.block(0, 0, 1, totalVelDOF) = M0;
-		//std::cout << M0 << std::endl;
+		grad_C.block(0, 0, 1, totalPosDOF) = M0;
+		//std::cout << "grad_c " << grad_C << std::endl;
 		_Matrix K = grad_C * DInv * grad_C.transpose();
 		if (K.determinant() < 1e-7)
 		{
@@ -454,17 +472,37 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 		//std::cout << C << std::endl;
 		lambdaNew = K.inverse() * C;
 		//std::cout << (grad_C * DInv * grad_C.transpose()).determinant() << std::endl;
-		std::cout << lambdaNew << std::endl;
+		//std::cout << lambdaNew << std::endl;
 		_Vector delta_q = -DInv * grad_C.transpose() * lambdaNew;
-		std::cout << delta_q.transpose() << std::endl;
+		//std::cout << delta_q.transpose() << std::endl;
 		mq = mq + delta_q;
 
 		ComputeHt(mq, rel_ori);
 		ComputeMr();
-		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
-		std::cout << energyErr << std::endl;
+		ForwardAngularAndTranslationalVelocity(qdot);
+		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
+		//std::cout << C(0, 0) << std::endl;
 		iter++;
 	}
-	qdot = mq;
+	q = mq;
 	//std::cout << iter << std::endl;
+}
+
+_Matrix eae6320::MultiBody::ComputeDuGlobalOverDp(int i, _Vector3& uGlobal)
+{
+	_Matrix output;
+	output.resize(3, totalPosDOF);
+	output = -Math::ToSkewSymmetricMatrix(uGlobal) * Ht[i].block(3, 0, 3, totalVelDOF);
+	return output;
+}
+
+_Matrix eae6320::MultiBody::ComputeDhGlobalOverDp(int i)
+{
+	_Matrix output;
+	output.resize(3, totalPosDOF);
+	_Vector3 h;
+	h = hingeMagnitude[i] * hingeDirGlobals[i];
+	int j = parentArr[i];
+	output = -Math::ToSkewSymmetricMatrix(h) * Ht[j].block(3, 0, 3, totalVelDOF);
+	return output;
 }
