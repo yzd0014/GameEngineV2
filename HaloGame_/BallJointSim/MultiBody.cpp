@@ -131,16 +131,19 @@ void eae6320::MultiBody::ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, 
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		ConfigureSingleBallJoint(i, xAxis, yAxis, zAxis, swingAngle, twistAngle);
+		ConfigureSingleBallJoint(i, xAxis, zAxis, swingAngle, twistAngle);
 	}
 }
 
-void eae6320::MultiBody::ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle)
+void eae6320::MultiBody::ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle)
 {
 	int i = bodyNum;
-	eulerX[i] = xAxis;
+	eulerX[i] = xAxis;//axis in parent frame
+	eulerZ[i] = zAxis;//axis in parent frame
+	_Vector3 yAxis;
+	yAxis = zAxis.cross(xAxis);
+	yAxis.normalize();
 	eulerY[i] = yAxis;
-	eulerZ[i] = zAxis;
 	twistAxis[i] = xAxis;
 
 	jointRange[i].first = swingAngle;//swing
@@ -156,15 +159,17 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
+	tickCountSimulated++;
+	//std::cout << tickCountSimulated << std::endl;
 	//SaveDataToMatlab(65);
 	//frameNum = 140;
 	//animationDuration = (frameNum - 1) * (1.0 / 30.0);
 	//SaveDataToHoudini(animationDuration, frameNum);
 	ResetExternalForces();
 	if(m_control) m_control();
-	EulerIntegration(dt);
+	//EulerIntegration(dt);
 	//RK3Integration(dt);
-	//RK4Integration(dt);
+	RK4Integration(dt);
 
 	//std::cout << mGamma[0] << std::endl;
 	_Vector3 momentum = ComputeTranslationalMomentum();
@@ -849,7 +854,7 @@ void eae6320::MultiBody::SetHingeJoint(int jointNum, _Vector3 hingeDirLocal, _Sc
 	hingeMagnitude[jointNum] = hingeLength;
 }
 
-void eae6320::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 jointPositionParent, _Vector3 jointPositionChild, Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor)
+void eae6320::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 jointPositionChild, _Vector3 jointPositionParent, Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor)
 {
 	//initialize body
 	GameCommon::GameObject *pGameObject = new GameCommon::GameObject(defaultEffect, i_mesh, Physics::sRigidBodyState());
@@ -905,10 +910,10 @@ void eae6320::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 join
 		velStartIndex.push_back(velStartIndex[numOfLinks - 1] + velDOF[numOfLinks - 1]);
 		posStartIndex.push_back(posStartIndex[numOfLinks - 1] + posDOF[numOfLinks - 1]);
 	}
-	uLocalsChild.push_back(jointPositionParent);
-	uGlobalsChild.push_back(jointPositionParent);
-	uLocalsParent.push_back(jointPositionChild);
-	uGlobalsParent.push_back(jointPositionChild);
+	uLocalsChild.push_back(jointPositionChild);
+	uGlobalsChild.push_back(jointPositionChild);
+	uLocalsParent.push_back(jointPositionParent);
+	uGlobalsParent.push_back(jointPositionParent);
 
 	//hinge joint specific
 	hingeDirGlobals.push_back(_Vector3(0, 0, 0));

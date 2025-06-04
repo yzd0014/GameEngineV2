@@ -240,7 +240,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				}
 				else
 				{
-					std::cout << "Euler swing singluarity points are reached with zNorm" << std::endl;
+					std::cout << "Euler swing singluarity points are reached with beta: " << mBeta[i] << std::endl;
 				}
 			}
 			else if (jointLimit[i] > 0)

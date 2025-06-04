@@ -29,7 +29,7 @@ namespace eae6320
 		void MultiBodyInitialization();
 		void InitializeJoints(int* i_jointType);
 		void ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
-		void ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
+		void ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
 		void AddRigidBody(int parent, int i_jointType, _Vector3 jointPositionParent, _Vector3 jointPositionChild, Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor);
 		void SetHingeJoint(int jointNum, _Vector3 hingeDirLocal, _Scalar hingeLength);
 
@@ -128,6 +128,7 @@ namespace eae6320
 		void UnitTest25();
 		void UnitTest26();
 		void UnitTest27();
+		void RagdollTest();
 		void HingeJointUnitTest0();
 		void PersistentDataTest();
 		void FDTest();//finite differencing test
