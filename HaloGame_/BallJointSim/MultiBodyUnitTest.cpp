@@ -652,6 +652,51 @@ void eae6320::MultiBody::RagdollTest()
 	ConfigureSingleBallJoint(12, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 0.25 * M_PI, 0.5 * M_PI); //right_arm0
 	ConfigureSingleBallJoint(13, _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.1, 0.1); //right_arm1
 	ConfigureSingleBallJoint(14, _Vector3(0, 0, 1), _Vector3(0, 1, 0), 0.1, 0.5 * M_PI); //right_hand
+
+	m_HoudiniSave = [this](int frames_number)
+	{
+		std::vector<std::string> bodyNames;
+		bodyNames.resize(15);
+		bodyNames[0] = "head";
+		bodyNames[1] = "chest0";
+		bodyNames[2] = "chest1";
+		bodyNames[3] = "left_leg0";
+		bodyNames[4] = "left_leg1";
+		bodyNames[5] = "left_foot";
+		bodyNames[6] = "right_leg0";
+		bodyNames[7] = "right_leg1";
+		bodyNames[8] = "right_foot";
+		bodyNames[9] = "left_arm0";
+		bodyNames[10] = "left_arm1";
+		bodyNames[11] = "left_hand";
+		bodyNames[12] = "right_arm0";
+		bodyNames[13] = "right_arm1";
+		bodyNames[14] = "right_hand";
+		
+		LOG_TO_FILE << frames_number << ",";
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			_Vector3 vecRot = Math::RotationConversion_QuatToVec(obs_ori[i]);
+			_Scalar rotAngle = vecRot.norm();
+			if (abs(rotAngle) < 1e-8)
+			{
+				vecRot = _Vector3(1, 0, 0);
+			}
+			else
+			{
+				vecRot = vecRot / rotAngle;
+			}
+			LOG_TO_FILE << bodyNames[i] << "," << pos[i](0) << "," << pos[i](1) << "," << pos[i](2) << "," << vecRot(0) << "," << vecRot(1) << "," << vecRot(2) << "," << rotAngle;
+			if (i != numOfLinks - 1)
+			{
+				LOG_TO_FILE << ",";
+			}
+			else
+			{
+				LOG_TO_FILE << std::endl;
+			}
+		}
+	};
 }
 
 void eae6320::MultiBody::UnitTest15()

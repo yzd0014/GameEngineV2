@@ -237,6 +237,7 @@ namespace eae6320
 
 		std::function<void()> m_control;
 		std::function<void()> m_MatlabSave;
+		std::function<void(int frames_number)> m_HoudiniSave;
 		std::function<void(FILE * i_pFile)> m_keyPressSave;
 
 		//debug related parameters

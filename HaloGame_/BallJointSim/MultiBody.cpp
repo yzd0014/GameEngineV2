@@ -160,18 +160,21 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
 	tickCountSimulated++;
-	//std::cout << tickCountSimulated << std::endl;
-	//SaveDataToMatlab(65);
-	//frameNum = 140;
-	//animationDuration = (frameNum - 1) * (1.0 / 30.0);
-	//SaveDataToHoudini(animationDuration, frameNum);
+	/*{
+		SaveDataToMatlab(65);
+	}*/
+	{
+		frameNum = 140;
+		animationDuration = (frameNum - 1) * (1.0 / 24.0);
+		SaveDataToHoudini(animationDuration, frameNum);
+	}
+	
 	ResetExternalForces();
 	if(m_control) m_control();
 	//EulerIntegration(dt);
 	//RK3Integration(dt);
 	RK4Integration(dt);
 
-	//std::cout << mGamma[0] << std::endl;
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
 	//std::cout << "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
@@ -1002,28 +1005,9 @@ void eae6320::MultiBody::SaveDataToHoudini(_Scalar totalDuration, int numOfFrame
 		if (t == 0 || t - oldTime >= interval - 1e-8)
 		{
 			frames_saved++;
-			LOG_TO_FILE << frames_saved << ",";
-			for (int i = 0; i < numOfLinks; i++)
+			if (m_HoudiniSave)
 			{
-				_Vector3 vecRot = Math::RotationConversion_QuatToVec(obs_ori[i]);
-				_Scalar rotAngle = vecRot.norm();
-				if (abs(rotAngle) < 1e-8)
-				{
-					vecRot = _Vector3(1, 0, 0);
-				}
-				else
-				{
-					vecRot = vecRot / rotAngle;
-				}
-				LOG_TO_FILE << pos[i](0) << "," << pos[i](1) << "," << pos[i](2) << "," << vecRot(0) << "," << vecRot(1) << "," << vecRot(2) << "," << rotAngle;
-				if (i != numOfLinks - 1)
-				{
-					LOG_TO_FILE << ",";
-				}
-				else
-				{
-					LOG_TO_FILE << std::endl;
-				}
+				m_HoudiniSave(frames_saved);
 			}
 			oldTime = t;
 		}
