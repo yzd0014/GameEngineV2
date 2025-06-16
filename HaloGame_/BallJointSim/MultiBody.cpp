@@ -161,12 +161,13 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	dt = (_Scalar)i_secondCountToIntegrate;
 	tickCountSimulated++;
 	/*{
-		SaveDataToMatlab(65);
+		SaveDataToMatlab(10);
 	}*/
 	{
-		frameNum = 140;
-		animationDuration = (frameNum - 1) * (1.0 / 24.0);
-		SaveDataToHoudini(animationDuration, frameNum);
+		frameNum = 250;
+		animationDuration = (frameNum - 1) * (1.0 / 24.0);;
+		//SaveDataToHoudini(0, 0.1, 690);
+		SaveDataToHoudini(animationDuration, -1, frameNum);
 	}
 	
 	ResetExternalForces();
@@ -467,7 +468,9 @@ _Vector eae6320::MultiBody::ComputeQr_SikpVelocityUpdate(_Vector& i_qdot)
 	{
 		if (gravity)
 		{
-			externalForces[i].block<3, 1>(0, 0) = externalForces[i].block<3, 1>(0, 0) + _Vector3(0.0f, -9.81f, 0.0f);
+			//_Scalar g = -0.8;
+			_Scalar g = -9.8;
+			externalForces[i].block<3, 1>(0, 0) = externalForces[i].block<3, 1>(0, 0) + _Vector3(0.0f, g, 0.0f);
 		}
 		_Vector Fv;
 		Fv.resize(6);
@@ -975,17 +978,20 @@ void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
 
 void eae6320::MultiBody::SaveDataToMatlab(_Scalar totalDuration)
 {
-	static _Scalar oldTime = 0;
+	static _Scalar targetTime = 1;
+	static int frames_saved = 0;
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+	_Scalar logInterval = 0.0001;
 	if (t <= totalDuration)
 	{	
-		if (t - oldTime >= 0.01 - 1e-8 || t == 0)
+		if (t >= targetTime || t == 0)
 		{
+			frames_saved++;
 			if (m_MatlabSave)
 			{
 				m_MatlabSave();
 			}
-			oldTime = t;
+			targetTime = logInterval * frames_saved;
 		}
 	}
 	else
@@ -994,22 +1000,30 @@ void eae6320::MultiBody::SaveDataToMatlab(_Scalar totalDuration)
 	}
 }
 
-void eae6320::MultiBody::SaveDataToHoudini(_Scalar totalDuration, int numOfFrames)
+void eae6320::MultiBody::SaveDataToHoudini(_Scalar totalDuration, _Scalar logInterval, int numOfFrames)
 {
-	_Scalar interval = totalDuration / (numOfFrames - 1);
-	static _Scalar oldTime = 0;
+	_Scalar interval;
+	if (logInterval < 0)
+	{
+		interval = totalDuration / (numOfFrames - 1);
+	}
+	else
+	{
+		interval = logInterval;
+	}
+	static _Scalar targetTime = 1;
 	static int frames_saved = 0;
 	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 	if (frames_saved < numOfFrames)
 	{
-		if (t == 0 || t - oldTime >= interval - 1e-8)
+		if (t == 0 || t >= targetTime)
 		{
 			frames_saved++;
 			if (m_HoudiniSave)
 			{
 				m_HoudiniSave(frames_saved);
 			}
-			oldTime = t;
+			targetTime = logInterval * frames_saved;
 		}
 	}
 	else

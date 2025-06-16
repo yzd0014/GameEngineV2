@@ -137,7 +137,7 @@ namespace eae6320
 		void RunUnitTest();
 
 		void SaveDataToMatlab(_Scalar totalDuration);
-		void SaveDataToHoudini(_Scalar totalDuration, int numOfFrames);
+		void SaveDataToHoudini(_Scalar totalDuration, _Scalar logInterval, int numOfFrames);
 
 		_Vector q;
 		_Vector qdot;
@@ -234,6 +234,7 @@ namespace eae6320
 		int frameNum = 120;
 		_Scalar animationDuration = 5;
 		_Scalar dt;
+		_Scalar totalJointError = 0;
 
 		std::function<void()> m_control;
 		std::function<void()> m_MatlabSave;

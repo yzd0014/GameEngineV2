@@ -134,6 +134,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 	jointsID.clear();
 	constraintValue.clear();
 	limitType.clear();
+	totalJointError = 0;
 
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -171,17 +172,18 @@ void eae6320::MultiBody::BallJointLimitCheck()
 			{
 				if (jointRange[i].second > 0 && jointRange[i].second - twistAngle < 0) //check twist constraint
 				{
+					_Scalar twistError = cos(twistAngle) - cos(jointRange[i].second);
 					if (swingAngle < swingEpsilon || abs(swingAngle - M_PI) < swingEpsilon)
 					{
 						jointsID.push_back(i);
-						constraintValue.push_back(jointRange[i].second - twistAngle);
+						constraintValue.push_back(twistError);
 						limitType.push_back(TWIST_WITHOUT_SWING);
 						//std::cout << "TWIST_WITHOUT_SWING " << jointRange[i].second - twistAngle << std::endl;
 					}
 					else
 					{
 						jointsID.push_back(i);
-						constraintValue.push_back(jointRange[i].second - twistAngle);
+						constraintValue.push_back(twistError);
 						limitType.push_back(TWIST_WITH_SWING);
 						//std::cout << "TWIST_WITH_SWING " << jointRange[i].second - twistAngle << std::endl;
 					}
@@ -472,8 +474,8 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		for (size_t k = 0; k < constraintNum; k++)
 		{
 			int i = jointsID[k];
-			//_Scalar beta =0.9f;
-			_Scalar beta = 0.2;
+			//_Scalar beta = 0.9f;
+			_Scalar beta = 0.1;
 			//_Scalar SlopP = 0.00001f;
 			_Scalar SlopP = 0;
 			error(k) = beta * std::max<_Scalar>(-constraintValue[k] - SlopP, 0.0);

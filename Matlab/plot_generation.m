@@ -216,7 +216,7 @@ markerIdx5 = 1:30:length(sim4); % Every 30th point
 
 figure;
 hold on;
-
+box on;
 correct0 = mapToPi(sim0(:,2));
 plot(sim0(:,1), correct0, '-o', 'LineWidth', 2, 'MarkerIndices', markerIdx1, 'DisplayName', 'Omega');
 correct1 = mapToPi(sim1(:,2));
@@ -225,14 +225,13 @@ correct2 = mapToPi(sim2(:,2));
 plot(sim2(:,1), correct2, '-d', 'LineWidth', 2, 'MarkerIndices', markerIdx3, 'DisplayName', 'Incremental direct');
 plot(sim3(:,1), sim3(:,2), '-^', 'LineWidth', 2, 'MarkerIndices', markerIdx4, 'DisplayName', 'Euler');
 plot(sim4(:,1), sim4(:,2), '-v', 'LineWidth', 2, 'MarkerIndices', markerIdx5, 'DisplayName', 'Direct');
-
+hold off;
 xlabel('t');
 ylabel('Twist');
-legend;
-hold off;
+legend('Location', 'southoutside', 'NumColumns', 5);
+
 %% 
 %singularity pattern plot
-clear;
 clear;
 sim0 = readmatrix('s0_dir.csv');
 sim1 = readmatrix('s0_euler.csv');
@@ -242,27 +241,30 @@ sim4 = readmatrix('s1_euler.csv');
 sim5 = readmatrix('s1_inc.csv');
 
 % Define different MarkerIndices for each curve
-markerIdx1 = 1:80:length(sim0); % Every 10th point for the first group
-markerIdx2 = 1:90:length(sim1); % Every 15th point
-markerIdx3 = 1:100:length(sim2); % Every 20th point
-markerIdx4 = 1:110:length(sim3); % Every 25th point
-markerIdx5 = 1:120:length(sim4); % Every 30th point
-markerIdx6 = 1:130:length(sim4); % Every 30th point
+base_interval=500;
+markerIdx1 = 1:base_interval:length(sim0); % Every 10th point for the first group
+markerIdx2 = 1:base_interval+300:length(sim1); % Every 15th point
+markerIdx3 = 1:base_interval+500:length(sim2); % Every 20th point
+markerIdx4 = 1:base_interval+800:length(sim3); % Every 25th point
+markerIdx5 = 1:base_interval+1000:length(sim4); % Every 30th point
+markerIdx6 = 1:base_interval+1300:length(sim4); % Every 30th point
 
 figure;
 hold on;
-
+box on;
 plot(sim0(:,1), sim0(:,2), '-o', 'LineWidth', 2, 'MarkerIndices', markerIdx1, 'DisplayName', 'Direct @ location one');
 plot(sim1(:,1), sim1(:,2), '-s', 'LineWidth', 2, 'MarkerIndices', markerIdx2, 'DisplayName', 'Euler @ location one');
 plot(sim2(:,1), sim2(:,2), '-d', 'LineWidth', 2, 'MarkerIndices', markerIdx3, 'DisplayName', 'Incremental @ location one');
 plot(sim3(:,1), sim3(:,2), '-^', 'LineWidth', 2, 'MarkerIndices', markerIdx4, 'DisplayName', 'Direct @ location two');
 plot(sim4(:,1), sim4(:,2), '-v', 'LineWidth', 2, 'MarkerIndices', markerIdx5, 'DisplayName', 'Euler @ location two');
 plot(sim5(:,1), sim5(:,2), '-x', 'LineWidth', 2, 'MarkerIndices', markerIdx6, 'DisplayName', 'Incremental @ location two');
-
-xlabel('t');
-ylabel('degree of twist');
-legend;
 hold off;
+xlim([0 65]);
+xlabel('t');
+ylabel('Degree of twist');
+legend('Location', 'southoutside', 'NumColumns', 2);
+
+
 
 function [corrected_result, switch_points] = correctTwistAngle(raw_data)
     sz = size(raw_data);

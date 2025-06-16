@@ -593,18 +593,18 @@ void eae6320::MultiBody::UnitTest23()
 	qdot.segment(0, 3) = world_w;
 	Forward();
 	
-	//ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.25 * M_PI, -1);
-	//ConfigureSingleBallJoint(1, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.1, 0.5 * M_PI);
+	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.25 * M_PI, -1);
+	ConfigureSingleBallJoint(1, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.1, 0.5 * M_PI);
 	ConfigureSingleBallJoint(2, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.1, 0.1);
 	ConfigureSingleBallJoint(3, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.1, 0.1);
-	/*ConfigureSingleBallJoint(4, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.25 * M_PI, 0.01);
-	ConfigureSingleBallJoint(5, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.01, 0.01);
-	ConfigureSingleBallJoint(6, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.25 * M_PI, 0.01);
-	ConfigureSingleBallJoint(7, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.01, 0.01);*/
-	/*ConfigureSingleBallJoint(8, _Vector3(-1, 0, 0), _Vector3(0, 0, -1), 0.3 * M_PI, 0.2);
+	ConfigureSingleBallJoint(4, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.25 * M_PI, 1e-6);
+	ConfigureSingleBallJoint(5, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.01, 1e-6);
+	ConfigureSingleBallJoint(6, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.25 * M_PI, 1e-6);
+	ConfigureSingleBallJoint(7, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.01, 1e-6);
+	ConfigureSingleBallJoint(8, _Vector3(-1, 0, 0), _Vector3(0, 0, -1), 0.3 * M_PI, 0.2);
 	ConfigureSingleBallJoint(9, _Vector3(-1, 0, 0), _Vector3(0, 0, -1), 0.01, 0.2);
 	ConfigureSingleBallJoint(10, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 0.3 * M_PI, 0.2);
-	ConfigureSingleBallJoint(11, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 0.01, 0.2);*/
+	ConfigureSingleBallJoint(11, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 0.01, 0.2);
 }
 
 void eae6320::MultiBody::RagdollTest()
@@ -625,33 +625,40 @@ void eae6320::MultiBody::RagdollTest()
 	AddRigidBody(2, BALL_JOINT_4D, _Vector3(0.0f, 1.15f, 0.0f), _Vector3(0.52f, -0.65f, 0.0f), masterMeshArray[3], Vector3d(0.3, 1, 0.3), localInertiaTensor);//body 6 right_leg0
 	AddRigidBody(6, BALL_JOINT_4D, _Vector3(0.0f, 1.15f, 0.0f), _Vector3(0, -1.15f, 0.0f), masterMeshArray[3], Vector3d(0.3, 1, 0.3), localInertiaTensor);//body 7 right_leg1
 	AddRigidBody(7, BALL_JOINT_4D, _Vector3(0.0f, 0.2f, -0.5f), _Vector3(0, -1.15f, 0.0f), masterMeshArray[3], Vector3d(0.3, 0.1, 0.5), localInertiaTensor);//body 8 right_foot
-	AddRigidBody(1, BALL_JOINT_4D, _Vector3(0.95f, 0, 0), _Vector3(-1.15f, 1, 0.0f), masterMeshArray[3], Vector3d(0.8, 0.2, 0.2), localInertiaTensor);//body 9 left_arm0
+	AddRigidBody(1, BALL_JOINT_4D, _Vector3(0.95f, 0, 0), _Vector3(-1.3f, 1, 0.0f), masterMeshArray[3], Vector3d(0.8, 0.2, 0.2), localInertiaTensor);//body 9 left_arm0
 	AddRigidBody(9, BALL_JOINT_4D, _Vector3(0.95f, 0, 0), _Vector3(-0.95f, 0, 0.0f), masterMeshArray[3], Vector3d(0.8, 0.2, 0.2), localInertiaTensor);//body 10 left_arm1
 	AddRigidBody(10, BALL_JOINT_4D, _Vector3(0.35f, 0, 0), _Vector3(-0.9f, 0, 0.0f), masterMeshArray[3], Vector3d(0.25, 0.15, 0.25), localInertiaTensor);//body 11 left_hand
-	AddRigidBody(1, BALL_JOINT_4D, _Vector3(-0.95f, 0, 0), _Vector3(1.15f, 1, 0.0f), masterMeshArray[3], Vector3d(0.8, 0.2, 0.2), localInertiaTensor);//body 12 right_arm0
+	AddRigidBody(1, BALL_JOINT_4D, _Vector3(-0.95f, 0, 0), _Vector3(1.3f, 1, 0.0f), masterMeshArray[3], Vector3d(0.8, 0.2, 0.2), localInertiaTensor);//body 12 right_arm0
 	AddRigidBody(12, BALL_JOINT_4D, _Vector3(-0.95f, 0, 0), _Vector3(0.95f, 0, 0.0f), masterMeshArray[3], Vector3d(0.8, 0.2, 0.2), localInertiaTensor);//body 13 right_arm1
 	AddRigidBody(13, BALL_JOINT_4D, _Vector3(-0.35f, 0, 0), _Vector3(0.9f, 0, 0.0f), masterMeshArray[3], Vector3d(0.25, 0.15, 0.25), localInertiaTensor);//body 14 right_hand
 
 	MultiBodyInitialization();
-	_Vector3 world_w = _Vector3(-1.0, 0.0, -1.0);
-	qdot.segment(0, 3) = world_w;
+	//head initial velocity
+	/*_Vector3 world_w = _Vector3(-1.0, 0.0, -1.0);
+	qdot.segment(0, 3) = world_w;*/
+	
+	//leg initial velocity
+	//qdot.segment(velStartIndex[3], 3) = _Vector3(-2, 0, 0);
+	//qdot.segment(velStartIndex[6], 3) = _Vector3(-2, 0, 0);
 	Forward();
 
-	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.25 * M_PI, 0.1);//head
-	ConfigureSingleBallJoint(1, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.1, 0.1);//chest0
-	ConfigureSingleBallJoint(2, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 0.1, 0.5);//chest1
-	ConfigureSingleBallJoint(3, _Vector3(0, -1, 0), _Vector3(0, 0, 1), 0.6 * M_PI, 0.01); //left_leg0
-	ConfigureSingleBallJoint(4, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 0.1, 0.1); //left_leg1
-	ConfigureSingleBallJoint(5, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 0.2, 0.1); //left_foot
-	ConfigureSingleBallJoint(6, _Vector3(0, -1, 0), _Vector3(0, 0, 1), 0.6 * M_PI, 0.01); //right_leg0
-	ConfigureSingleBallJoint(7, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 0.1, 0.1); //right_leg1
-	ConfigureSingleBallJoint(8, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 0.2, 0.1); //right_foot
-	ConfigureSingleBallJoint(9, _Vector3(-1, 0, 0), _Vector3(0, 0, 1), 0.25 * M_PI, 0.5 * M_PI); //left_arm0
-	ConfigureSingleBallJoint(10, _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.1, 0.1); //left_arm1
-	ConfigureSingleBallJoint(11, _Vector3(0, 0, 1), _Vector3(0, 1, 0), 0.1, 0.5 * M_PI); //left_hand
-	ConfigureSingleBallJoint(12, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 0.25 * M_PI, 0.5 * M_PI); //right_arm0
-	ConfigureSingleBallJoint(13, _Vector3(0, 1, 0), _Vector3(0, 0, 1), 0.1, 0.1); //right_arm1
-	ConfigureSingleBallJoint(14, _Vector3(0, 0, 1), _Vector3(0, 1, 0), 0.1, 0.5 * M_PI); //right_hand
+	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.25 * M_PI, 1e-3);//head
+	ConfigureSingleBallJoint(1, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 1e-3, 1e-3);//chest0
+	ConfigureSingleBallJoint(2, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 1e-3, 0.5);//chest1
+	ConfigureSingleBallJoint(3, _Vector3(0, -1, 0), _Vector3(0, 0, 1), 0.5 * M_PI, 1e-3); //left_leg0
+	//ConfigureSingleBallJoint(3, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.7 * M_PI, 0.1);
+	ConfigureSingleBallJoint(4, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 1e-3, 1e-3); //left_leg1
+	ConfigureSingleBallJoint(5, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 1e-3, 0.25 * M_PI); //left_foot
+	ConfigureSingleBallJoint(6, _Vector3(0, -1, 0), _Vector3(0, 0, 1), 0.5 * M_PI, 1e-3); //right_leg0
+	//ConfigureSingleBallJoint(6, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.7 * M_PI, 0.1);
+	ConfigureSingleBallJoint(7, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 1e-3, 1e-3); //right_leg1
+	ConfigureSingleBallJoint(8, _Vector3(1, 0, 0), _Vector3(0, 0, 1), 1e-3, 0.25 * M_PI); //right_foot
+	ConfigureSingleBallJoint(9, _Vector3(-1, 0, 0), _Vector3(0, 1, 0), 0.5 * M_PI, 0.1); //left_arm0
+	ConfigureSingleBallJoint(10, _Vector3(0, 1, 0), _Vector3(0, 0, 1), 1e-3, 1e-3); //left_arm1
+	ConfigureSingleBallJoint(11, _Vector3(0, 0, 1), _Vector3(0, 1, 0), 1e-3, 0.5 * M_PI); //left_hand
+	ConfigureSingleBallJoint(12, _Vector3(1, 0, 0), _Vector3(0, 1, 0), 0.5 * M_PI, 0.1); //right_arm0
+	ConfigureSingleBallJoint(13, _Vector3(0, 1, 0), _Vector3(0, 0, 1), 1e-3, 1e-3); //right_arm1
+	ConfigureSingleBallJoint(14, _Vector3(0, 0, 1), _Vector3(0, 1, 0), 1e-3, 0.5 * M_PI); //right_hand
 
 	m_HoudiniSave = [this](int frames_number)
 	{
@@ -696,6 +703,20 @@ void eae6320::MultiBody::RagdollTest()
 				LOG_TO_FILE << std::endl;
 			}
 		}
+	};
+	//std::cout << "head velocity " << vel[0].transpose() << std::endl;
+
+	/*m_MatlabSave = [this]()
+	{
+
+		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+		LOG_TO_FILE << t << " " << totalJointError << std::endl;
+	};*/
+	m_control = [this]()
+	{
+		//externalForces[0].block<3, 1>(3, 0) = _Vector3(-500, 0, 0);
+		//externalForces[3].block<3, 1>(0, 0) = _Vector3(-5, 0, 0);
+		//std::cout << "my control " << totalTwist[0] << std::endl;
 	};
 }
 
