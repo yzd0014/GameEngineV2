@@ -8,7 +8,7 @@
 #include <math.h>
 #include <iomanip>
 
-void eae6320::MultiBody::EnergyConstraint()
+void eae6320::MultiBody::EnergyConstraint()//energy conservation + momentum conservation and mmentum interpolation
 {
 	int energeMomentumConstraintDim = 7;
 	int nq = totalVelDOF + 2;
@@ -111,7 +111,7 @@ void eae6320::MultiBody::EnergyConstraint()
 	//std::cout << "Energy at end of solve " << ComputeTotalEnergy() << std::endl;
 }
 
-void eae6320::MultiBody::EnergyConstraintV2()
+void eae6320::MultiBody::EnergyConstraintV2()//energy conservation + momentum conservation and energy interpolation
 {
 	int energeMomentumConstraintDim = 7;
 	int nq = totalVelDOF + 1;
@@ -226,7 +226,7 @@ void eae6320::MultiBody::EnergyConstraintV2()
 	//std::cout << iter << std::endl;
 }
 
-void eae6320::MultiBody::EnergyConstraintV3()
+void eae6320::MultiBody::EnergyConstraintV3()//energy constraint
 {
 	int energeMomentumConstraintDim = 1;
 	int nq = totalVelDOF;
@@ -313,7 +313,7 @@ void eae6320::MultiBody::EnergyConstraintV3()
 	//std::cout << iter << std::endl;
 }
 
-void eae6320::MultiBody::AcceleratedEnergyConstraint()
+void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
 {
 	int energeMomentumConstraintDim = 1;
 	int nq = totalVelDOF;
@@ -366,19 +366,19 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 	_Matrix DInv;
 	DInv = Mr.inverse();
 
-	_Scalar potentialEnergyExpected = totalEnergy0 - ComputeKineticEnergy();
-
 	_Matrix C(energeMomentumConstraintDim, 1);
 	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
 	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
 	int iter = 0;
 	while (abs(C(0, 0)) > 1e-3)
 	{
-		//if (iter >= 1)
-		//{
-		//	//std::cout << "limit reached!" << std::endl;
-		//	break;
-		//}
+		if (iter >= 10)
+		{
+			//std::cout << "limit reached!" << std::endl;
+			break;
+		}
+		ComputeJacobianAndInertiaDerivative(HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		
 		_Matrix M0;
 		M0.resize(1, totalPosDOF);
 		M0.setZero();
@@ -387,62 +387,6 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 		for (int i = 0; i < numOfLinks; i++)
 		{
 			//***********************kinetic energy derivative*****************************
-			//ComputeN
-			mN[i].setZero();
-			if (i > 0)
-			{
-				int j = parentArr[i];
-				mN[i].block(0, 0, 3, totalPosDOF) = Ht[j].block(3, 0, 3, totalVelDOF);
-			}
-			mN[i].block(3, 0, 3, totalPosDOF) = Ht[i].block(3, 0, 3, totalVelDOF);
-			mN[i](6, i) = 1;
-		
-			//ComputeB
-			mB[i].setZero();
-			_Vector3 Vec3;
-			Vec3 = H[i].block<3, 1>(3, 0) * qdot.segment(velStartIndex[i], velDOF[i]); //qdot.segment(velStartIndex[i], velDOF[i]) is b
-			mB[i].block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * Math::ToSkewSymmetricMatrix(Vec3);
-			mB[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(Vec3) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
-			mB[i].block<3, 3>(3, 0) = -Math::ToSkewSymmetricMatrix(Vec3);
-			//ComputeE
-			_Vector tran_rot_velocity;//TODO this one needs to be updated when it's used with velocity
-			tran_rot_velocity.resize(6);
-			tran_rot_velocity.segment(0, 3) = vel[i];
-			tran_rot_velocity.segment(3, 3) = w_abs_world[i];
-			mE[i].setZero();
-			_Vector3 b1 = tran_rot_velocity.segment(0, 3);
-			_Vector3 b2 = tran_rot_velocity.segment(3, 3);//tran_rot_velocity is b
-			_Vector3 V0 = Mbody[i].block<3, 3>(0, 3) * b2;
-			mE[i].block<3, 3>(0, 3) = -Math::ToSkewSymmetricMatrix(V0) + Mbody[i].block<3, 3>(0, 3) * Math::ToSkewSymmetricMatrix(b2);
-			_Vector3 V1 = Mbody[i].block<3, 3>(3, 0) * b1;
-			_Vector3 V2 = Mbody[i].block<3, 3>(3, 3) * b2;
-			mE[i].block<3, 3>(3, 3) = -Math::ToSkewSymmetricMatrix(V1) + Mbody[i].block<3, 3>(3, 0) * Math::ToSkewSymmetricMatrix(b1)
-				- Math::ToSkewSymmetricMatrix(V2) + Mbody[i].block<3, 3>(3, 3) * Math::ToSkewSymmetricMatrix(b2);
-			//ComputeHtDerivativeTimes_b
-			if (i == 0)
-			{
-				HtDerivativeTimes_b[0] = mB[0] * mN[0];
-			}
-			else
-			{
-				int j = parentArr[i];
-				_Vector tran_rot_velocity;//TODO this one needs to be updated when it's used with velocity
-				tran_rot_velocity.resize(6);
-				tran_rot_velocity.segment(0, 3) = vel[j];
-				tran_rot_velocity.segment(3, 3) = w_abs_world[j];
-
-				//ComputeA
-				_Vector3 b2 = tran_rot_velocity.segment(3, 3);//tran_rot_velocity is b
-				mA[i].setZero();
-				_Vector3 Vec3;
-				Vec3 = hingeMagnitude[i] * hingeDirGlobals[i];
-				mA[i].block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(b2) * (Math::ToSkewSymmetricMatrix(uGlobalsParent[i]) + Math::ToSkewSymmetricMatrix(Vec3));
-				mA[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(b2) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
-
-				HtDerivativeTimes_b[i] = D[i] * HtDerivativeTimes_b[j] + mA[i] * mN[i] + mB[i] * mN[i];
-			}
-			//ComputeMassMatrixDerivativeTimes_b
-			MassMatrixDerivativeTimes_b[i] = mE[i] * mN[i];
 			M0 = M0 + qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
 			//***********************potential energy derivative*****************************
 			if (i == 0)
@@ -459,7 +403,6 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 		}
 		
 		grad_C.block(0, 0, 1, totalPosDOF) = M0;
-		//std::cout << "grad_c " << grad_C << std::endl;
 		_Matrix K = grad_C * DInv * grad_C.transpose();
 		if (K.determinant() < 1e-7)
 		{
@@ -468,24 +411,89 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 			mI.setIdentity();
 			K = K + 1e-7 * mI;
 		}
-		//std::cout << K << std::endl;
-		//std::cout << C << std::endl;
 		lambdaNew = K.inverse() * C;
-		//std::cout << (grad_C * DInv * grad_C.transpose()).determinant() << std::endl;
-		//std::cout << lambdaNew << std::endl;
 		_Vector delta_q = -DInv * grad_C.transpose() * lambdaNew;
-		//std::cout << delta_q.transpose() << std::endl;
 		mq = mq + delta_q;
 
 		ComputeHt(mq, rel_ori);
 		ComputeMr();
 		ForwardAngularAndTranslationalVelocity(qdot);
 		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
-		//std::cout << C(0, 0) << std::endl;
 		iter++;
 	}
 	q = mq;
 	//std::cout << iter << std::endl;
+}
+
+void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(std::vector<_Matrix>& io_Jacobian, std::vector<_Matrix>& io_intertia)
+{
+	_Matrix mN;
+	mN.resize(7, totalPosDOF);
+	_Matrix mB;
+	mB.resize(6, 7);//for hinge joint only 7 = 6 + 1 (1 for a hinge)
+	_Matrix mE;
+	mE.resize(6, 7);
+	_Matrix mA;
+	mA.resize(6, 7);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		int j = parentArr[i];
+		//***********************kinetic energy derivative*****************************
+		//ComputeN
+		mN.setZero();
+		if (i > 0)
+		{
+			mN.block(0, 0, 3, totalPosDOF) = Ht[j].block(3, 0, 3, totalVelDOF);
+		}
+		mN.block(3, 0, 3, totalPosDOF) = Ht[i].block(3, 0, 3, totalVelDOF);
+		mN(6, i) = 1;
+
+		//ComputeB
+		mB.setZero();
+		_Vector3 Vec3;
+		Vec3 = H[i].block<3, 1>(3, 0) * qdot.segment(velStartIndex[i], velDOF[i]); //qdot.segment(velStartIndex[i], velDOF[i]) is b
+		mB.block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * Math::ToSkewSymmetricMatrix(Vec3);
+		mB.block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(Vec3) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
+		mB.block<3, 3>(3, 0) = -Math::ToSkewSymmetricMatrix(Vec3);
+		//ComputeE
+		_Vector tran_rot_velocity;//TODO this one needs to be updated when it's used with velocity
+		tran_rot_velocity.resize(6);
+		tran_rot_velocity.segment(0, 3) = vel[i];
+		tran_rot_velocity.segment(3, 3) = w_abs_world[i];
+		mE.setZero();
+		_Vector3 b1 = tran_rot_velocity.segment(0, 3);
+		_Vector3 b2 = tran_rot_velocity.segment(3, 3);//tran_rot_velocity is b
+		_Vector3 V0 = Mbody[i].block<3, 3>(0, 3) * b2;
+		mE.block<3, 3>(0, 3) = -Math::ToSkewSymmetricMatrix(V0) + Mbody[i].block<3, 3>(0, 3) * Math::ToSkewSymmetricMatrix(b2);
+		_Vector3 V1 = Mbody[i].block<3, 3>(3, 0) * b1;
+		_Vector3 V2 = Mbody[i].block<3, 3>(3, 3) * b2;
+		mE.block<3, 3>(3, 3) = -Math::ToSkewSymmetricMatrix(V1) + Mbody[i].block<3, 3>(3, 0) * Math::ToSkewSymmetricMatrix(b1)
+			- Math::ToSkewSymmetricMatrix(V2) + Mbody[i].block<3, 3>(3, 3) * Math::ToSkewSymmetricMatrix(b2);
+		//ComputeHtDerivativeTimes_b
+		if (i == 0)
+		{
+			io_Jacobian[0] = mB * mN;
+		}
+		else
+		{
+			_Vector tran_rot_velocity;//TODO this one needs to be updated when it's used with velocity
+			tran_rot_velocity.resize(6);
+			tran_rot_velocity.segment(0, 3) = vel[j];
+			tran_rot_velocity.segment(3, 3) = w_abs_world[j];
+
+			//ComputeA
+			_Vector3 b2 = tran_rot_velocity.segment(3, 3);//tran_rot_velocity is b
+			mA.setZero();
+			_Vector3 Vec3;
+			Vec3 = hingeMagnitude[i] * hingeDirGlobals[i];
+			mA.block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(b2) * (Math::ToSkewSymmetricMatrix(uGlobalsParent[i]) + Math::ToSkewSymmetricMatrix(Vec3));
+			mA.block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(b2) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
+
+			io_Jacobian[i] = D[i] * io_Jacobian[j] + mA * mN + mB * mN;
+		}
+		//ComputeMassMatrixDerivativeTimes_b
+		io_intertia[i] = mE * mN;
+	}
 }
 
 _Matrix eae6320::MultiBody::ComputeDuGlobalOverDp(int i, _Vector3& uGlobal)

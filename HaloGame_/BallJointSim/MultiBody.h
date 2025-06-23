@@ -50,6 +50,8 @@ namespace eae6320
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void Forward();
 		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat);
+		void ComputeJacobianAndInertiaDerivative(std::vector<_Matrix>& io_Jacobian, std::vector<_Matrix>& io_intertia);
+
 		void ClampRotationVector();
 		_Scalar ComputeKineticEnergy();
 		_Scalar ComputePotentialEnergy();

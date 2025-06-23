@@ -167,14 +167,14 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		frameNum = 250;
 		animationDuration = (frameNum - 1) * (1.0 / 24.0);;
 		//SaveDataToHoudini(0, 0.1, 690);
-		SaveDataToHoudini(animationDuration, -1, frameNum);
+		//SaveDataToHoudini(animationDuration, -1, frameNum);
 	}
 	
 	ResetExternalForces();
 	if(m_control) m_control();
-	//EulerIntegration(dt);
+	EulerIntegration(dt);
 	//RK3Integration(dt);
-	RK4Integration(dt);
+	//RK4Integration(dt);
 
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
@@ -186,7 +186,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//	<< "tran:" << std::setw(15) << momentum.transpose()
 	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
 	//std::cout << Physics::totalSimulationTime << " " << ComputeKineticEnergy() << std::endl << std::endl;
-	//std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 	/*std::cout << t << std::endl;
 	if (t >= 3.0)
 	{
@@ -278,7 +278,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//EnergyMomentumProjection();
 	//ManifoldProjection();
 	
-	//EnergyConstraintPosition();
+	EnergyConstraintPosition();
 	//AcceleratedEnergyConstraint();
 	//totalEnergy0 = ComputeTotalEnergy();
 	kineticEnergy0 = ComputeKineticEnergy();
