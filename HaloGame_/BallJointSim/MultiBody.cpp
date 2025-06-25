@@ -278,6 +278,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//EnergyMomentumProjection();
 	//ManifoldProjection();
 	
+	//EnergyConstraintPositionVelocity();
 	EnergyConstraintPosition();
 	//AcceleratedEnergyConstraint();
 	//totalEnergy0 = ComputeTotalEnergy();

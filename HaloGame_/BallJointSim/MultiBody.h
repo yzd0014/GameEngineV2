@@ -98,6 +98,7 @@ namespace eae6320
 		void EnergyConstraintV2();//using energy at E0
 		void EnergyConstraintV3();//energy constraint only
 		void EnergyConstraintPosition();
+		void EnergyConstraintPositionVelocity();
 		void AcceleratedEnergyConstraint();//quasi-newton
 		//void AcceleratedEnergyConstraintV2();//add position
 		

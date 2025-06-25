@@ -966,3 +966,81 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 		eulerDecompositionOffset[i] = Math::RotationConversion_MatToQuat(deformationGradient);
 	}
 }
+
+//***************************************************************************************************
+void eae6320::MultiBody::EnergyConstraintPosition()
+{
+	int energeMomentumConstraintDim = 1;
+	int nq = totalPosDOF;
+	int n = nq + energeMomentumConstraintDim;
+
+	_Vector mq(nq);
+	mq.setZero();
+	mq.segment(0, totalPosDOF) = q;
+
+	_Matrix grad_C(energeMomentumConstraintDim, nq);
+	grad_C.setZero();
+
+	_Matrix DInv;
+	DInv = Mr.inverse();
+
+	_Matrix C(energeMomentumConstraintDim, 1);
+	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
+	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+	int iter = 0;
+	while (abs(C(0, 0)) > 1e-3)
+	{
+		//if (iter >= 10)
+		//{
+		//	//std::cout << "limit reached!" << std::endl;
+		//	break;
+		//}
+		ComputeJacobianAndInertiaDerivative(HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+
+		_Matrix M0;
+		M0.resize(1, totalPosDOF);
+		M0.setZero();
+		_Matrix M1;
+		M1.resize(3, totalPosDOF);
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			//***********************kinetic energy derivative*****************************
+			M0 = M0 + qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
+			//***********************potential energy derivative*****************************
+			if (i == 0)
+			{
+
+				M1 = -ComputeDuGlobalOverDp(i, uGlobalsChild[i]);
+			}
+			else
+			{
+				M1 = M1 - ComputeDuGlobalOverDp(i, uGlobalsChild[i]) + ComputeDuGlobalOverDp(i, uGlobalsParent[i]);
+			}
+			_Vector3 g(0.0f, 9.81f, 0.0f);
+			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * M1;
+		}
+
+		grad_C.block(0, 0, 1, totalPosDOF) = M0;
+		_Matrix K = grad_C * DInv * grad_C.transpose();
+		if (K.determinant() < 1e-7)
+		{
+			_Matrix mI;
+			mI.resize(energeMomentumConstraintDim, energeMomentumConstraintDim);
+			mI.setIdentity();
+			K = K + 1e-7 * mI;
+		}
+		lambdaNew = K.inverse() * C;
+		_Vector delta_q = -DInv * grad_C.transpose() * lambdaNew;
+		mq = mq + delta_q;
+
+		ComputeHt(mq, rel_ori);
+		ComputeMr();
+		MrInverse = Mr.inverse();
+		DInv = MrInverse;
+		ForwardAngularAndTranslationalVelocity(qdot);
+		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
+		iter++;
+	}
+	q = mq;
+	//std::cout << iter << std::endl;
+}

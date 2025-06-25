@@ -177,69 +177,9 @@ void eae6320::MultiBody::AnalyticalTest()
 	Forward();
 	//**********************************************************************
 	//LOG_TO_FILE << std::setprecision(std::numeric_limits<double>::max_digits10);
-	_Matrix M0;
-	M0.resize(1, totalPosDOF);
-	M0.setZero();
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		//ComputeN
-		mN[i].setZero();
-		if (i > 0)
-		{
-			int j = parentArr[i];
-			mN[i].block(0, 0, 3, totalPosDOF) = Ht[j].block(3, 0, 3, totalVelDOF);
-		}
-		mN[i].block(3, 0, 3, totalPosDOF) = Ht[i].block(3, 0, 3, totalVelDOF);
-		mN[i](6, i) = 1;
-
-		//ComputeB
-		mB[i].setZero();
-		_Vector3 Vec3;
-		Vec3 = H[i].block<3, 1>(3, 0) * qdot.segment(velStartIndex[i], velDOF[i]); //qdot.segment(velStartIndex[i], velDOF[i]) is b
-		mB[i].block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * Math::ToSkewSymmetricMatrix(Vec3);
-		mB[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(Vec3) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
-		mB[i].block<3, 3>(3, 0) = -Math::ToSkewSymmetricMatrix(Vec3);
-		//ComputeE
-		_Vector tran_rot_velocity;//TODO this one needs to be updated when it's used with velocity
-		tran_rot_velocity.resize(6);
-		tran_rot_velocity.segment(0, 3) = vel[i];
-		tran_rot_velocity.segment(3, 3) = w_abs_world[i];
-		mE[i].setZero();
-		_Vector3 b1 = tran_rot_velocity.segment(0, 3);
-		_Vector3 b2 = tran_rot_velocity.segment(3, 3);//tran_rot_velocity is b
-		_Vector3 V0 = Mbody[i].block<3, 3>(0, 3) * b2;
-		mE[i].block<3, 3>(0, 3) = -Math::ToSkewSymmetricMatrix(V0) + Mbody[i].block<3, 3>(0, 3) * Math::ToSkewSymmetricMatrix(b2);
-		_Vector3 V1 = Mbody[i].block<3, 3>(3, 0) * b1;
-		_Vector3 V2 = Mbody[i].block<3, 3>(3, 3) * b2;
-		mE[i].block<3, 3>(3, 3) = -Math::ToSkewSymmetricMatrix(V1) + Mbody[i].block<3, 3>(3, 0) * Math::ToSkewSymmetricMatrix(b1)
-			- Math::ToSkewSymmetricMatrix(V2) + Mbody[i].block<3, 3>(3, 3) * Math::ToSkewSymmetricMatrix(b2);
-		//ComputeHtDerivativeTimes_b
-		if (i == 0)
-		{
-			HtDerivativeTimes_b[0] = mB[0] * mN[0];
-		}
-		else
-		{
-			int j = parentArr[i];
-			_Vector tran_rot_velocity;//TODO this one needs to be updated when it's used with velocity
-			tran_rot_velocity.resize(6);
-			tran_rot_velocity.segment(0, 3) = vel[j];
-			tran_rot_velocity.segment(3, 3) = w_abs_world[j];
-
-			//ComputeA
-			_Vector3 b2 = tran_rot_velocity.segment(3, 3);//tran_rot_velocity is b
-			mA[i].setZero();
-			_Vector3 Vec3;
-			Vec3 = hingeMagnitude[i] * hingeDirGlobals[i];
-			mA[i].block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(b2) * (Math::ToSkewSymmetricMatrix(uGlobalsParent[i]) + Math::ToSkewSymmetricMatrix(Vec3));
-			mA[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(b2) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
-
-			HtDerivativeTimes_b[i] = D[i] * HtDerivativeTimes_b[j] + mA[i] * mN[i] + mB[i] * mN[i];
-		}
-		//ComputeMassMatrixDerivativeTimes_b
-		MassMatrixDerivativeTimes_b[i] = mE[i] * mN[i];
-		//std::cout << HtDerivativeTimes_b[i] << std::endl << std::endl;
-		//std::cout << MassMatrixDerivativeTimes_b[i] << std::endl << std::endl;
-	}
+	ComputeJacobianAndInertiaDerivative(HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
 	//LOG_TO_FILE << HtDerivativeTimes_b[0](0, 0) << std::endl;
+	//std::cout << HtDerivativeTimes_b[i] << std::endl << std::endl;
+	//std::cout << MassMatrixDerivativeTimes_b[i] << std::endl << std::endl;
+	std::cout << HtDerivativeTimes_b[0] << std::endl;
 }
