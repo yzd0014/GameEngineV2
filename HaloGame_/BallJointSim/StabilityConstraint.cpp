@@ -380,7 +380,17 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		//	//std::cout << "limit reached!" << std::endl;
 		//	break;
 		//}
-		ComputeJacobianAndInertiaDerivative(HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		std::vector<_Vector> bm;
+		bm.resize(numOfLinks);
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			_Vector vec;
+			vec.resize(6);
+			vec.segment(0, 3) = vel[i];
+			vec.segment(3, 3) = w_abs_world[i];
+			bm[i] = vec;
+		}
+		ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
 		
 		_Matrix M0;
 		M0.resize(1, totalPosDOF);
@@ -434,7 +444,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	//std::cout << iter << std::endl;
 }
 
-void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(std::vector<_Matrix>& io_Jacobian, std::vector<_Matrix>& io_intertia)
+void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& io_Jacobian, std::vector<_Matrix>& io_intertia)
 {
 	_Matrix mN;
 	mN.resize(7, totalPosDOF);
@@ -464,16 +474,7 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(std::vector<_Matrix
 		mB.block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * Math::ToSkewSymmetricMatrix(Vec3);
 		mB.block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(Vec3) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
 		mB.block<3, 3>(3, 0) = -Math::ToSkewSymmetricMatrix(Vec3);
-		//ComputeE
-		mE.setZero();
-		_Vector3 b1 = vel[i];
-		_Vector3 b2 = w_abs_world[i];//tran_rot_velocity is b
-		_Vector3 V0 = Mbody[i].block<3, 3>(0, 3) * b2;
-		mE.block<3, 3>(0, 3) = -Math::ToSkewSymmetricMatrix(V0) + Mbody[i].block<3, 3>(0, 3) * Math::ToSkewSymmetricMatrix(b2);
-		_Vector3 V1 = Mbody[i].block<3, 3>(3, 0) * b1;
-		_Vector3 V2 = Mbody[i].block<3, 3>(3, 3) * b2;
-		mE.block<3, 3>(3, 3) = -Math::ToSkewSymmetricMatrix(V1) + Mbody[i].block<3, 3>(3, 0) * Math::ToSkewSymmetricMatrix(b1)
-			- Math::ToSkewSymmetricMatrix(V2) + Mbody[i].block<3, 3>(3, 3) * Math::ToSkewSymmetricMatrix(b2);
+	
 		//ComputeHtDerivativeTimes_b
 		if (i == 0)
 		{
@@ -482,7 +483,8 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(std::vector<_Matrix
 		else
 		{
 			//ComputeA
-			_Vector3 b2 = w_abs_world[j];//tran_rot_velocity is b
+			_Vector3 b2;
+			b2 = (Ht[j] * i_bj).segment(3, 3);
 			mA.setZero();
 			_Vector3 Vec3;
 			Vec3 = hingeMagnitude[i] * hingeDirGlobals[i];
@@ -492,6 +494,16 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(std::vector<_Matrix
 			io_Jacobian[i] = D[i] * io_Jacobian[j] + mA * mN + mB * mN;
 		}
 		//ComputeMassMatrixDerivativeTimes_b
+		//ComputeE
+		mE.setZero();
+		_Vector3 b1 = i_bm[i].segment(0, 3);
+		_Vector3 b2 = i_bm[i].segment(3, 3);
+		_Vector3 V0 = Mbody[i].block<3, 3>(0, 3) * b2;
+		mE.block<3, 3>(0, 3) = -Math::ToSkewSymmetricMatrix(V0) + Mbody[i].block<3, 3>(0, 3) * Math::ToSkewSymmetricMatrix(b2);
+		_Vector3 V1 = Mbody[i].block<3, 3>(3, 0) * b1;
+		_Vector3 V2 = Mbody[i].block<3, 3>(3, 3) * b2;
+		mE.block<3, 3>(3, 3) = -Math::ToSkewSymmetricMatrix(V1) + Mbody[i].block<3, 3>(3, 0) * Math::ToSkewSymmetricMatrix(b1)
+			- Math::ToSkewSymmetricMatrix(V2) + Mbody[i].block<3, 3>(3, 3) * Math::ToSkewSymmetricMatrix(b2);
 		io_intertia[i] = mE * mN;
 	}
 }

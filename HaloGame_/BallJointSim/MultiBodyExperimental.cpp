@@ -995,7 +995,17 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 		//	//std::cout << "limit reached!" << std::endl;
 		//	break;
 		//}
-		ComputeJacobianAndInertiaDerivative(HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		std::vector<_Vector> bm;
+		bm.resize(numOfLinks);
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			_Vector vec;
+			vec.resize(6);
+			vec.segment(0, 3) = vel[i];
+			vec.segment(3, 3) = w_abs_world[i];
+			bm[i] = vec;
+		}
+		ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
 
 		_Matrix M0;
 		M0.resize(1, totalPosDOF);
@@ -1033,7 +1043,8 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 		_Vector delta_q = -DInv * grad_C.transpose() * lambdaNew;
 		mq = mq + delta_q;
 
-		ComputeHt(mq, rel_ori);
+		q = mq;
+		ComputeHt(q, rel_ori);
 		ComputeMr();
 		MrInverse = Mr.inverse();
 		DInv = MrInverse;
@@ -1041,6 +1052,5 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
 		iter++;
 	}
-	q = mq;
 	//std::cout << iter << std::endl;
 }

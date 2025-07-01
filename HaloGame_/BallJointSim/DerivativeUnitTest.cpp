@@ -177,7 +177,17 @@ void eae6320::MultiBody::AnalyticalTest()
 	Forward();
 	//**********************************************************************
 	//LOG_TO_FILE << std::setprecision(std::numeric_limits<double>::max_digits10);
-	ComputeJacobianAndInertiaDerivative(HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+	std::vector<_Vector> bm;
+	bm.resize(numOfLinks);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		_Vector vec;
+		vec.resize(6);
+		vec.segment(0, 3) = vel[i];
+		vec.segment(3, 3) = w_abs_world[i];
+		bm[i] = vec;
+	}
+	ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
 	//LOG_TO_FILE << HtDerivativeTimes_b[0](0, 0) << std::endl;
 	//std::cout << HtDerivativeTimes_b[i] << std::endl << std::endl;
 	//std::cout << MassMatrixDerivativeTimes_b[i] << std::endl << std::endl;
