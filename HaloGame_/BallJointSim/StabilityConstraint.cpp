@@ -391,6 +391,8 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 			bm[i] = vec;
 		}
 		ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		std::vector<_Matrix> positionDerivative;
+		ComputeDxOverDp(positionDerivative);
 		
 		_Matrix M0;
 		M0.resize(1, totalPosDOF);
@@ -402,17 +404,8 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 			//***********************kinetic energy derivative*****************************
 			M0 = M0 + qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
 			//***********************potential energy derivative*****************************
-			if (i == 0)
-			{
-				
-				M1 = -ComputeDuGlobalOverDp(i, uGlobalsChild[i]);
-			}
-			else
-			{
-				M1 = M1 - ComputeDuGlobalOverDp(i, uGlobalsChild[i]) + ComputeDuGlobalOverDp(i, uGlobalsParent[i]);
-			}
 			_Vector3 g(0.0f, 9.81f, 0.0f);
-			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * M1;
+			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * positionDerivative[i];
 		}
 		
 		grad_C.block(0, 0, 1, totalPosDOF) = M0;
@@ -444,7 +437,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	//std::cout << iter << std::endl;
 }
 
-void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& io_Jacobian, std::vector<_Matrix>& io_intertia)
+void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia)
 {
 	_Matrix mN;
 	mN.resize(7, totalPosDOF);
@@ -478,7 +471,7 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std:
 		//ComputeHtDerivativeTimes_b
 		if (i == 0)
 		{
-			io_Jacobian[0] = mB * mN;
+			o_Jacobian[0] = mB * mN;
 		}
 		else
 		{
@@ -491,7 +484,7 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std:
 			mA.block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(b2) * (Math::ToSkewSymmetricMatrix(uGlobalsParent[i]) + Math::ToSkewSymmetricMatrix(Vec3));
 			mA.block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(b2) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
 
-			io_Jacobian[i] = D[i] * io_Jacobian[j] + mA * mN + mB * mN;
+			o_Jacobian[i] = D[i] * o_Jacobian[j] + mA * mN + mB * mN;
 		}
 		//ComputeMassMatrixDerivativeTimes_b
 		//ComputeE
@@ -504,7 +497,24 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std:
 		_Vector3 V2 = Mbody[i].block<3, 3>(3, 3) * b2;
 		mE.block<3, 3>(3, 3) = -Math::ToSkewSymmetricMatrix(V1) + Mbody[i].block<3, 3>(3, 0) * Math::ToSkewSymmetricMatrix(b1)
 			- Math::ToSkewSymmetricMatrix(V2) + Mbody[i].block<3, 3>(3, 3) * Math::ToSkewSymmetricMatrix(b2);
-		io_intertia[i] = mE * mN;
+		o_intertia[i] = mE * mN;
+	}
+}
+
+void eae6320::MultiBody::ComputeDxOverDp(std::vector<_Matrix>& o_derivative)
+{
+	o_derivative.resize(numOfLinks);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		o_derivative[i].resize(3, totalPosDOF);
+		if (i == 0)
+		{
+			o_derivative[i] = -ComputeDuGlobalOverDp(i, uGlobalsChild[i]);
+		}
+		else
+		{
+			o_derivative[i] = o_derivative[i - 1] - ComputeDuGlobalOverDp(i, uGlobalsChild[i]) + ComputeDuGlobalOverDp(i, uGlobalsParent[i]);
+		}
 	}
 }
 

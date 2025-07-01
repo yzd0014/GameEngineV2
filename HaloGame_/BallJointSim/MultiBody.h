@@ -50,8 +50,9 @@ namespace eae6320
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void Forward();
 		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat);
-		void ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& io_Jacobian, std::vector<_Matrix>& io_intertia);
-
+		void ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
+		void ComputeDxOverDp(std::vector<_Matrix>& o_derivative);
+		
 		void ClampRotationVector();
 		_Scalar ComputeKineticEnergy();
 		_Scalar ComputePotentialEnergy();
@@ -61,7 +62,7 @@ namespace eae6320
 
 		_Matrix ComputeDuGlobalOverDp(int i, _Vector3& uGlobal);//currently only works for hinge joint
 		_Matrix ComputeDhGlobalOverDp(int i);//currently only works for hinge joint
-
+		
 		_Scalar ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi);
 		void SwingLimitCheck();
 		void ResolveSwingLimit(const _Scalar h);
