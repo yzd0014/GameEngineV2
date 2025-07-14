@@ -355,6 +355,8 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	int energeMomentumConstraintDim = 1;
 	int nq = totalPosDOF + totalVelDOF;
 
+	Populate_q(rel_ori, q);
+	
 	_Vector mq(nq);
 	mq.setZero();
 	mq.segment(0, totalPosDOF) = q;
@@ -365,7 +367,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 
 	_Matrix D(nq, nq);
 	D.setZero();
-	D.block(0, 0, totalPosDOF, totalPosDOF) = Mr;
+	D.block(0, 0, totalPosDOF, totalPosDOF) = _Matrix::Identity(totalPosDOF, totalPosDOF);
 	D.block(totalPosDOF, totalPosDOF, totalVelDOF, totalVelDOF) = Mr;
 	_Matrix DInv = D.inverse();
 
@@ -390,7 +392,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 			vec.segment(3, 3) = w_abs_world[i];
 			bm[i] = vec;
 		}
-		ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
 		std::vector<_Matrix> positionDerivative;
 		ComputeDxOverDp(positionDerivative);
 		
@@ -423,10 +425,11 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		mq = mq + delta_q;
 
 		q = mq.segment(0, totalPosDOF);
+		Populate_quat(q, rel_ori, true);
+		mq.segment(0, totalPosDOF) = q;
 		ComputeHt(q, rel_ori);
 		ComputeMr();
 		MrInverse = Mr.inverse();
-		D.block(0, 0, totalPosDOF, totalPosDOF) = Mr;
 		D.block(totalPosDOF, totalPosDOF, totalVelDOF, totalVelDOF) = Mr;
 		DInv = D.inverse();
 		qdot = mq.segment(totalPosDOF, totalVelDOF);
@@ -435,6 +438,67 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		iter++;
 	}
 	//std::cout << iter << std::endl;
+}
+
+void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia)
+{
+	_Scalar delta = 1e-6;
+	
+	_Matrix d0, d1;
+	d0.resize(6, 1);
+	d1.resize(6, 1);
+	
+	Populate_q(rel_ori, q);
+	_Vector old_q;
+	old_q = q;
+	
+	int dof = static_cast<int>(q.size());
+	std::vector<_Vector> perturbed_q;
+	perturbed_q.resize(dof);
+	for (int i = 0; i < dof; i++)
+	{
+		perturbed_q[i].resize(dof);
+		perturbed_q[i] = q;
+		perturbed_q[i](i) = perturbed_q[i](i) + delta;
+	}
+	
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		q = old_q;
+		Populate_quat(q, rel_ori, false);
+		ComputeHt(q, rel_ori);
+		o_Jacobian[i].resize(6, dof);
+		d0 = Ht[i] * i_bj;
+		for (int k = 0; k < dof; k++)
+		{
+			q = perturbed_q[k];
+			Populate_quat(q, rel_ori, false);
+			ComputeHt(q, rel_ori);
+			d1 = Ht[i] * i_bj;
+			o_Jacobian[i].block<6, 1>(0, k) = (d1 - d0) / delta;
+		}
+	}
+	
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		q = old_q;
+		Populate_quat(q, rel_ori, false);
+		ForwardKinematics(q, rel_ori);
+		o_intertia[i].resize(6, dof);
+		d0 = Mbody[i] * i_bm[i];
+		for (int k = 0; k < dof; k++)
+		{
+			q = perturbed_q[k];
+			Populate_quat(q, rel_ori, false);
+			ForwardKinematics(q, rel_ori);
+			d1 = Mbody[i] * i_bm[i];
+			o_intertia[i].block<6, 1>(0, k) = (d1 - d0) / delta;
+		}
+	}
+
+	q = old_q;
+	Populate_quat(q, rel_ori, false);
+	Forward();
 }
 
 void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia)
@@ -450,20 +514,19 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std:
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		int j = parentArr[i];
-		//***********************kinetic energy derivative*****************************
 		//ComputeN
 		mN.setZero();
 		if (i > 0)
 		{
-			mN.block(0, 0, 3, totalPosDOF) = Ht[j].block(3, 0, 3, totalVelDOF);
+			mN.block(0, 0, 3, totalPosDOF) = Gt[j].block(3, 0, 3, totalPosDOF);
 		}
-		mN.block(3, 0, 3, totalPosDOF) = Ht[i].block(3, 0, 3, totalVelDOF);
+		mN.block(3, 0, 3, totalPosDOF) = Gt[i].block(3, 0, 3, totalPosDOF);
 		mN(6, i) = 1;
 
 		//ComputeB
 		mB.setZero();
 		_Vector3 Vec3;
-		Vec3 = H[i].block<3, 1>(3, 0) * qdot.segment(velStartIndex[i], velDOF[i]); //qdot.segment(velStartIndex[i], velDOF[i]) is b
+		Vec3 = H[i].block(3, 0, 3, velDOF[i]) * i_bj.segment(velStartIndex[i], velDOF[i]); //qdot.segment(velStartIndex[i], velDOF[i]) is b
 		mB.block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * Math::ToSkewSymmetricMatrix(Vec3);
 		mB.block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(Vec3) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
 		mB.block<3, 3>(3, 0) = -Math::ToSkewSymmetricMatrix(Vec3);
@@ -522,7 +585,7 @@ _Matrix eae6320::MultiBody::ComputeDuGlobalOverDp(int i, _Vector3& uGlobal)
 {
 	_Matrix output;
 	output.resize(3, totalPosDOF);
-	output = -Math::ToSkewSymmetricMatrix(uGlobal) * Ht[i].block(3, 0, 3, totalVelDOF);
+	output = -Math::ToSkewSymmetricMatrix(uGlobal) * Gt[i].block(3, 0, 3, totalPosDOF);
 	return output;
 }
 
@@ -533,6 +596,50 @@ _Matrix eae6320::MultiBody::ComputeDhGlobalOverDp(int i)
 	_Vector3 h;
 	h = hingeMagnitude[i] * hingeDirGlobals[i];
 	int j = parentArr[i];
-	output = -Math::ToSkewSymmetricMatrix(h) * Ht[j].block(3, 0, 3, totalVelDOF);
+	output = -Math::ToSkewSymmetricMatrix(h) * Gt[j].block(3, 0, 3, totalPosDOF);
 	return output;
+}
+
+void eae6320::MultiBody::Populate_q(std::vector<_Quat>& i_quat, _Vector& o_q)
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (jointType[i] == BALL_JOINT_4D)
+		{
+			o_q(posStartIndex[i]) = i_quat[i].w();
+			o_q(posStartIndex[i] + 1) = i_quat[i].x();
+			o_q(posStartIndex[i] + 2) = i_quat[i].y();
+			o_q(posStartIndex[i] + 3) = i_quat[i].z();
+		}
+	}
+}
+
+void eae6320::MultiBody::Populate_quat(_Vector& i_q, std::vector<_Quat>& o_quat, bool normalization)
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (jointType[i] == BALL_JOINT_4D)
+		{
+			_Scalar w = i_q(posStartIndex[i]);
+			_Scalar x = i_q(posStartIndex[i] + 1);
+			_Scalar y = i_q(posStartIndex[i] + 2);
+			_Scalar z = i_q(posStartIndex[i] + 3);
+			if (!normalization)
+			{
+				o_quat[i].w() = w;
+				o_quat[i].x() = x;
+				o_quat[i].y() = y;
+				o_quat[i].z() = z;
+			}
+			else
+			{
+				_Scalar norm = sqrt(x * x + y * y + z * z + w * w);
+				o_quat[i].w() = w / norm;
+				o_quat[i].x() = x / norm;
+				o_quat[i].y() = y / norm;
+				o_quat[i].z() = z / norm;
+				i_q.segment(posStartIndex[i], 4) = i_q.segment(posStartIndex[i], 4) / norm;
+			}
+		}
+	}
 }

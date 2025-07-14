@@ -40,7 +40,9 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	J_rotation.resize(numOfLinks);
 	D.resize(numOfLinks);
 	Ht.resize(numOfLinks);
+	Gt.resize(numOfLinks);
 	H.resize(numOfLinks);
+	G.resize(numOfLinks);
 	Mbody.resize(numOfLinks);
 	localInertiaTensors.resize(numOfLinks);
 	g.resize(numOfLinks);
@@ -91,6 +93,8 @@ void eae6320::MultiBody::MultiBodyInitialization()
 		mB[i].resize(6, 7);//for hinge joint only 7 = 6 + 1 (1 for a hinge)
 		mE[i].resize(6, 7);
 		mN[i].resize(7, totalPosDOF);
+
+		D[i].resize(6, 6);
 		
 		jointLimit[i] = -1;
 		std::pair<_Scalar, _Scalar> defaultRange(-1, -1);
@@ -278,8 +282,8 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//EnergyMomentumProjection();
 	//ManifoldProjection();
 	
-	EnergyConstraintPositionVelocity();
-	//EnergyConstraintPosition();
+	//EnergyConstraintPositionVelocity();
+	EnergyConstraintPosition();
 	//AcceleratedEnergyConstraint();
 	//totalEnergy0 = ComputeTotalEnergy();
 	kineticEnergy0 = ComputeKineticEnergy();
@@ -337,24 +341,34 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 			//compute H
 			H[i].resize(6, 3);
 			H[i].setZero();
+			G[i].resize(6, 4);
+			G[i].setZero();
+			_Matrix J_quat;
+			J_quat.resize(3, 4);
+			J_quat(0, 0) = -rel_ori[i].x(); J_quat(0, 1) = rel_ori[i].w(); J_quat(0, 2) = -rel_ori[i].z(); J_quat(0, 3) = rel_ori[i].y();
+			J_quat(1, 0) = -rel_ori[i].y(); J_quat(1, 1) = rel_ori[i].z(); J_quat(1, 2) = rel_ori[i].w(); J_quat(1, 3) = -rel_ori[i].x();
+			J_quat(2, 0) = -rel_ori[i].z(); J_quat(2, 1) = -rel_ori[i].y(); J_quat(2, 2) = rel_ori[i].x(); J_quat(2, 3) = rel_ori[i].w();
+			J_quat = 2.0 / rel_ori[i].norm() * J_quat;
 			if (i == 0)
 			{
-				//H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]);
 				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
 				H[i].block<3, 3>(3, 0) = _Matrix::Identity(3, 3);
+
+				G[i].block<3, 4>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * J_quat;
+				G[i].block<3, 4>(3, 0) = J_quat;
 			}
 			else
 			{
-				//H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * R_global[i - 1];
 				H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * R_global[j];
 				H[i].block<3, 3>(3, 0) = R_global[j];
+
+				G[i].block<3, 4>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) *  R_global[j] * J_quat;
+				G[i].block<3, 4>(3, 0) = R_global[j] * J_quat;
 			}
 			//compute D
 			if (i > 0)
 			{
-				D[i].resize(6, 6);
 				D[i].setIdentity();
-				//D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) - Math::ToSkewSymmetricMatrix(uGlobals[i - 1][1]);
 				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) - Math::ToSkewSymmetricMatrix(uGlobalsParent[i]);
 			}
 		}
@@ -375,10 +389,10 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 			//H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * A;
 			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * A;
 			H[i].block<3, 3>(3, 0) = A;
+			G[i] = H[i];
 			//compute D
 			if (i > 0)
 			{
-				D[i].resize(6, 6);
 				D[i].setIdentity();
 				//D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) - Math::ToSkewSymmetricMatrix(uGlobals[i - 1][1]);
 				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) - Math::ToSkewSymmetricMatrix(uGlobalsParent[i]);
@@ -389,8 +403,8 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 			//compute H
 			H[i].resize(6, 6);
 			H[i].setIdentity();
+			G[i] = H[i];
 			//compute D
-			D[i].resize(6, 6);
 			D[i].setZero();
 		}
 		else if (jointType[i] == HINGE_JOINT)
@@ -400,8 +414,8 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 			//H[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * hingeDirGlobals[i];//TODO
 			H[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * hingeDirGlobals[i];
 			H[i].block<3, 1>(3, 0) = hingeDirGlobals[i];
+			G[i] = H[i];
 			//compute D
-			D[i].resize(6, 6);
 			D[i].setIdentity();
 			if (i > 0)
 			{
@@ -414,6 +428,8 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 		//compose Ht
 		Ht[i].resize(6, totalVelDOF);
 		Ht[i].setZero();
+		Gt[i].resize(6, totalPosDOF);
+		Gt[i].setZero();
 		int k = i;
 		while (k != -1)
 		{
@@ -427,6 +443,7 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 				j = parentArr[j];
 			}
 			Ht[i].block(0, velStartIndex[k], 6, velDOF[k]) = D_temp * H[k];
+			Gt[i].block(0, posStartIndex[k], 6, posDOF[k]) = D_temp * G[k];
 			k = parentArr[k];
 		}
 		/*for (int k = 0; k <= i; k++)

@@ -51,7 +51,10 @@ namespace eae6320
 		void Forward();
 		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
+		void ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
 		void ComputeDxOverDp(std::vector<_Matrix>& o_derivative);
+		void Populate_q(std::vector<_Quat>& i_quat, _Vector& o_q);
+		void Populate_quat(_Vector& i_q, std::vector<_Quat>& o_quat, bool normalization);
 		
 		void ClampRotationVector();
 		_Scalar ComputeKineticEnergy();
@@ -137,6 +140,7 @@ namespace eae6320
 		void PersistentDataTest();
 		void FDTest();//finite differencing test
 		void AnalyticalTest();
+		void AnalyticalVsFD();
 		void EulerDecompositionAccuracyTest();
 		void RunUnitTest();
 
@@ -181,6 +185,8 @@ namespace eae6320
 		std::vector<_Matrix> D;
 		std::vector<_Matrix> Ht;
 		std::vector<_Matrix> H;
+		std::vector<_Matrix> Gt;//Gt is the same as Ht when there is no ball joint.
+		std::vector<_Matrix> G;//G is the same as H when there is no ball joint.
 		std::vector<_Matrix> HtDerivativeTimes_b;
 		std::vector<_Matrix> MassMatrixDerivativeTimes_b;
 		std::vector<_Matrix> mA;

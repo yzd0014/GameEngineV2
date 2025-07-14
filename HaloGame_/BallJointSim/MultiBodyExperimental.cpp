@@ -974,6 +974,8 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 	int nq = totalPosDOF;
 	int n = nq + energeMomentumConstraintDim;
 
+	Populate_q(rel_ori, q);
+	
 	_Vector mq(nq);
 	mq.setZero();
 	mq.segment(0, totalPosDOF) = q;
@@ -981,8 +983,8 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 	_Matrix grad_C(energeMomentumConstraintDim, nq);
 	grad_C.setZero();
 
-	_Matrix DInv;
-	DInv = Mr.inverse();
+	//_Matrix DInv;
+	//DInv = Mr.inverse();
 
 	_Matrix C(energeMomentumConstraintDim, 1);
 	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
@@ -1031,7 +1033,8 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 		}
 
 		grad_C.block(0, 0, 1, totalPosDOF) = M0;
-		_Matrix K = grad_C * DInv * grad_C.transpose();
+		//_Matrix K = grad_C * DInv * grad_C.transpose();
+		_Matrix K = grad_C * grad_C.transpose();
 		if (K.determinant() < 1e-7)
 		{
 			_Matrix mI;
@@ -1040,14 +1043,17 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 			K = K + 1e-7 * mI;
 		}
 		lambdaNew = K.inverse() * C;
-		_Vector delta_q = -DInv * grad_C.transpose() * lambdaNew;
+		//_Vector delta_q = -DInv * grad_C.transpose() * lambdaNew;
+		_Vector delta_q = -grad_C.transpose() * lambdaNew;
 		mq = mq + delta_q;
 
 		q = mq;
+		Populate_quat(q, rel_ori, true);
+		mq.segment(0, totalPosDOF) = q;
 		ComputeHt(q, rel_ori);
 		ComputeMr();
-		MrInverse = Mr.inverse();
-		DInv = MrInverse;
+		//MrInverse = Mr.inverse();
+		//DInv = MrInverse;
 		ForwardAngularAndTranslationalVelocity(qdot);
 		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
 		iter++;

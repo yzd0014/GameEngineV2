@@ -281,23 +281,19 @@ void eae6320::MultiBody::UnitTest17()
 
 void eae6320::MultiBody::UnitTest18()
 {
-	numOfLinks = 1;
 	constraintSolverMode = IMPULSE;
 
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
 
-	int jointTypeArray[] = { BALL_JOINT_4D };
-	InitializeJoints(jointTypeArray);
-
-	//SetZeroInitialCondition();
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	MultiBodyInitialization();
 	_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);;
 	qdot.segment(0, 3) = local_w;
 	Forward();
 
-	jointRange[0].second = 1e-7;//twist
+	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), -1, 1e-6);//head
 }
 
 void eae6320::MultiBody::UnitTest7()
@@ -545,6 +541,21 @@ void eae6320::MultiBody::UnitTest21()
 	MultiBodyInitialization();
 	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
 	Forward();
+
+	m_keyPressSave = [this](FILE * i_pFile)
+	{
+		int qDof = static_cast<int>(q.size());
+		Populate_q(rel_ori, q);
+		for (int i = 0; i < qDof; i++)
+		{
+			fwrite(&q(i), sizeof(double), 1, i_pFile);
+		}
+		int vDof = static_cast<int>(qdot.size());
+		for (int i = 0; i < vDof; i++)
+		{
+			fwrite(&qdot(i), sizeof(double), 1, i_pFile);
+		}
+	};
 }
 
 void eae6320::MultiBody::UnitTest22()
@@ -1162,7 +1173,8 @@ void eae6320::MultiBody::RunUnitTest()
 	}
 	else if (testCaseNum == 18)
 	{
-		AnalyticalTest();
+		//AnalyticalTest();
+		AnalyticalVsFD();
 		std::cout << "Analytical derivative test" << std::endl;
 	}
 	else if (testCaseNum == 19)
