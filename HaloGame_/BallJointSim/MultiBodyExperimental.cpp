@@ -1007,7 +1007,9 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 			vec.segment(3, 3) = w_abs_world[i];
 			bm[i] = vec;
 		}
-		ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		std::vector<_Matrix> positionDerivative;
+		ComputeDxOverDp(positionDerivative);
 
 		_Matrix M0;
 		M0.resize(1, totalPosDOF);
@@ -1019,17 +1021,8 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 			//***********************kinetic energy derivative*****************************
 			M0 = M0 + qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
 			//***********************potential energy derivative*****************************
-			if (i == 0)
-			{
-
-				M1 = -ComputeDuGlobalOverDp(i, uGlobalsChild[i]);
-			}
-			else
-			{
-				M1 = M1 - ComputeDuGlobalOverDp(i, uGlobalsChild[i]) + ComputeDuGlobalOverDp(i, uGlobalsParent[i]);
-			}
 			_Vector3 g(0.0f, 9.81f, 0.0f);
-			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * M1;
+			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * positionDerivative[i];
 		}
 
 		grad_C.block(0, 0, 1, totalPosDOF) = M0;
@@ -1048,7 +1041,7 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 		mq = mq + delta_q;
 
 		q = mq;
-		Populate_quat(q, rel_ori, true);
+		Populate_quat(q, rel_ori, false);
 		mq.segment(0, totalPosDOF) = q;
 		ComputeHt(q, rel_ori);
 		ComputeMr();
@@ -1058,5 +1051,6 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
 		iter++;
 	}
+	Populate_quat(q, rel_ori, true);
 	//std::cout << iter << std::endl;
 }

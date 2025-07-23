@@ -368,13 +368,14 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	_Matrix D(nq, nq);
 	D.setZero();
 	D.block(0, 0, totalPosDOF, totalPosDOF) = _Matrix::Identity(totalPosDOF, totalPosDOF);
-	D.block(totalPosDOF, totalPosDOF, totalVelDOF, totalVelDOF) = Mr;
+	D.block(totalPosDOF, totalPosDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
 	_Matrix DInv = D.inverse();
 
 	_Matrix C(energeMomentumConstraintDim, 1);
 	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
 	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
 	int iter = 0;
+	_Vector mq_old = mq;
 	while (abs(C(0, 0)) > 1e-3)
 	{
 		//if (iter >= 10)
@@ -392,7 +393,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 			vec.segment(3, 3) = w_abs_world[i];
 			bm[i] = vec;
 		}
-		ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
 		std::vector<_Matrix> positionDerivative;
 		ComputeDxOverDp(positionDerivative);
 		
@@ -430,19 +431,20 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		ComputeHt(q, rel_ori);
 		ComputeMr();
 		MrInverse = Mr.inverse();
-		D.block(totalPosDOF, totalPosDOF, totalVelDOF, totalVelDOF) = Mr;
+		D.block(totalPosDOF, totalPosDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
 		DInv = D.inverse();
 		qdot = mq.segment(totalPosDOF, totalVelDOF);
 		ForwardAngularAndTranslationalVelocity(qdot);
 		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
 		iter++;
 	}
-	//std::cout << iter << std::endl;
+	//_Scalar correctionError = (mq - mq_old).norm();
+	//std::cout << correctionError << std::endl;
 }
 
 void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia)
 {
-	_Scalar delta = 1e-6;
+	_Scalar delta = 1e-9;
 	
 	_Matrix d0, d1;
 	d0.resize(6, 1);
