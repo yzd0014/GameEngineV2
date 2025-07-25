@@ -66,7 +66,6 @@ namespace eae6320
 		_Matrix ComputeDuGlobalOverDp(int i, _Vector3& uGlobal);//currently only works for hinge joint
 		_Matrix ComputeDhGlobalOverDp(int i);//currently only works for hinge joint
 		
-		_Scalar ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi);
 		void SwingLimitCheck();
 		void ResolveSwingLimit(const _Scalar h);
 		void ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h);
@@ -87,6 +86,7 @@ namespace eae6320
 		_Scalar ComputeTwistEulerError(int jointNum);
 		void ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J);
 		void ComputeTwistEulerJacobian(int i, bool isUpperBound, _Matrix& o_J);
+		void ComputeTwistDirectJacobian(int jointNum, int i_limitType, _Matrix& o_J);
 		void ComputeSwingJacobian(int jointNum, _Matrix& o_J);
 		void SwitchConstraint(int i);
 		void UpdateInitialPosition();//call this function whenever poistion is updated
