@@ -9,60 +9,6 @@
 #include <math.h>
 #include <iomanip>
 
-//test the gradient of twist constraint
-void eae6320::MultiBody::UnitTest0()
-{
-	_Vector3 q_old(-0.613267, -1.48335, 0.614194);
-	q.segment(0, 3) = q_old;
-	Forward();
-	jointLimit[0] = 0.5 * M_PI;
-	TwistLimitCheck();
-	_Scalar c_old = g[0];
-	
-	_Scalar dq = 0.0000001;
-
-	_Vector3 gradC;
-	q(0) = q(0) + dq;
-	Forward();
-	TwistLimitCheck();
-	gradC(0) = (g[0] - c_old) / dq;
-
-	q.segment(0, 3) = q_old;
-	q(1) = q(1) + dq;
-	Forward();
-	TwistLimitCheck();
-	gradC(1) = (g[0] - c_old) / dq;
-
-	q.segment(0, 3) = q_old;
-	q(2) = q(2) + dq;
-	Forward();
-	TwistLimitCheck();
-	gradC(2) = (g[0] - c_old) / dq;
-
-	std::cout << gradC.transpose() << std::endl;
-
-	q.segment(0, 3) = q_old;
-	_Vector3 p = _Vector3(0, -10, 0);
-	_Vector3 T0;
-	_Vector3 RP = R_local[0] * p;
-	T0 = -J_rotation[0].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * R_local[0] * Math::ToSkewSymmetricMatrix(p) * RP;
-	_Vector3 T1;
-	_Vector3 RPRP = R_local[0] * Math::ToSkewSymmetricMatrix(p) * RP;
-	T1 = J_rotation[0].transpose() * Math::ToSkewSymmetricMatrix(RPRP) * Math::ToSkewSymmetricMatrix(p) * RP;
-	_Vector3 T2;
-	T2 = -J_rotation[0].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * R_local[0].transpose() * Math::ToSkewSymmetricMatrix(p) * RP;
-	_Vector3 T3;
-	//T3 = 2.0 * cos(jointLimit[i]) * J_rotation[i].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(p) * RP;
-	T3 = -2.0 * J_rotation[0].transpose() * Math::ToSkewSymmetricMatrix(RP) * Math::ToSkewSymmetricMatrix(p) * Math::ToSkewSymmetricMatrix(p) * RP;
-
-	_Vector s = p.cross(RP);
-	_Scalar SRS = s.dot(R_local[0] * s);
-
-	gradC.setZero();
-	gradC = (T0 + T1 + T2) / s.squaredNorm() - SRS / (s.squaredNorm() * s.squaredNorm()) * T3;
-	std::cout << gradC.transpose() << std::endl;
-}
-
 //test swing twist decomposition
 void eae6320::MultiBody::UnitTest1()
 {
@@ -227,19 +173,15 @@ void eae6320::MultiBody::UnitTest4()
 
 void eae6320::MultiBody::UnitTest6()
 {
-	numOfLinks = 1;
 	constraintSolverMode = IMPULSE;
 
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-	InitializeBodies(masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f));//4 is capsule, 3 is cube
 
-	int jointTypeArray[] = { BALL_JOINT_4D };
-	InitializeJoints(jointTypeArray);
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 
-	//SetZeroInitialCondition();
-
+	MultiBodyInitialization();
 	_Vector3 rot_vec(-0.25 * M_PI, 0.0, 0);
 	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
 	Forward();
@@ -247,9 +189,27 @@ void eae6320::MultiBody::UnitTest6()
 	_Vector3 world_w = R_global[0] * local_w;
 	qdot.segment(0, 3) = world_w;
 	Forward();
+	ConfigureSingleBallJoint(0, _Vector3(0, 0, 1), _Vector3(1, 0, 0), -1, 1e-6);
+}
 
-	//jointRange[0].first = 0.75 * M_PI;//swing
-	jointRange[0].second = 0.5 * M_PI;//twist
+void eae6320::MultiBody::UnitTest28()
+{
+	constraintSolverMode = IMPULSE;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+
+	MultiBodyInitialization();
+	_Vector3 rot_vec(-0.5 * M_PI, 0.0, 0);
+	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	Forward();
+	_Vector3 world_w = _Vector3(0.0, -2.0, 0.0);
+	qdot.segment(0, 3) = world_w;
+	Forward();
+	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.5 * M_PI, 1e-6);
 }
 
 void eae6320::MultiBody::UnitTest17()
@@ -1057,6 +1017,16 @@ void eae6320::MultiBody::RunUnitTest()
 		std::cout << "direct swing-twist constraint is being used" << std::endl;
 	}
 
+	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");
+	if (enablePositionSolve == 1)
+	{
+		std::cout << "position solve enabled" << std::endl;
+	}
+	else
+	{
+		std::cout << "position solve disabled" << std::endl;
+	}
+
 	int testCaseNum = 0;
 	Application::AddApplicationParameter(&testCaseNum, Application::ApplicationParameterType::integer, L"-example");
 	if (testCaseNum == 0)
@@ -1176,14 +1146,11 @@ void eae6320::MultiBody::RunUnitTest()
 		RagdollTest();
 		std::cout << "ragdoll test" << std::endl;
 	}
-	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");
-	if (enablePositionSolve == 1)
+	else if (testCaseNum == 20)
 	{
-		std::cout << "position solve enabled" << std::endl;
-	}
-	else
-	{
-		std::cout << "position solve disabled" << std::endl;
+		UnitTest28();
+		twistMode = DIRECT;
+		std::cout << "limitation of position based twist constraint" << std::endl;
 	}
 	std::cout << std::endl;
 }

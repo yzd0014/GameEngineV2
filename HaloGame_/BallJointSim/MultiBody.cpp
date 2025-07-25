@@ -179,26 +179,6 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	EulerIntegration(dt);
 	//RK3Integration(dt);
 	//RK4Integration(dt);
-
-	_Vector3 momentum = ComputeTranslationalMomentum();
-	_Vector3 angularMomentum = ComputeAngularMomentum();
-	//std::cout << "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
-	_Vector3 momErr = angularMomentum - angularMomentum0;
-	//std::cout << "angluar norm: " << angularMomentum.norm() << std::endl;
-	//std::cout << std::left << "angular mom err: " << std::setw(15) << momErr.transpose() << std::endl << std::endl;
-	//std::cout << std::left 
-	//	<< "tran:" << std::setw(15) << momentum.transpose()
-	//	<< "angluar:" << std::setw(15) << angularMomentum.transpose() << std::endl;
-	//std::cout << Physics::totalSimulationTime << " " << ComputeKineticEnergy() << std::endl << std::endl;
-	std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
-	/*std::cout << t << std::endl;
-	if (t >= 3.0)
-	{
-		_Scalar curr_energy = ComputeTotalEnergy();
-		_Scalar err = abs(curr_energy - kineticEnergy0) / kineticEnergy0;
-		LOG_TO_FILE << err << std::endl;
-		Physics::simPause = true;
-	}*/
 }
 
 void eae6320::MultiBody::ClampRotationVector()

@@ -66,21 +66,8 @@ namespace eae6320
 		_Matrix ComputeDuGlobalOverDp(int i, _Vector3& uGlobal);//currently only works for hinge joint
 		_Matrix ComputeDhGlobalOverDp(int i);//currently only works for hinge joint
 		
-		void SwingLimitCheck();
-		void ResolveSwingLimit(const _Scalar h);
-		void ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h);
-		
-		void TwistLimitCheck();
-		void ResolveTwistLimit(const _Scalar h);
-		void ResolveTwistLimitPBD(_Vector& i_q, const _Scalar h);
-		
-		void _BallJointLimitCheck();
-		void _ResolveJointLimit(const _Scalar h);
-		void _ResolveJointLimitPBD(_Vector& i_q, const _Scalar h);
-		
 		void BallJointLimitCheck();
 		void SolveVelocityJointLimit(const _Scalar h);
-		void SolvePositionJointLimit(const _Scalar h);
 		void SolvePositionJointLimit();
 		_Scalar ComputeSwingError(int jointNum);
 		_Scalar ComputeTwistEulerError(int jointNum);
@@ -91,23 +78,14 @@ namespace eae6320
 		void SwitchConstraint(int i);
 		void UpdateInitialPosition();//call this function whenever poistion is updated
 		
-
-		void PrePositionSolveProccessing();
-		void PostPositionSolveProccessing();
-
-		void KineticEnergyProjection();
-		void EnergyMomentumProjection();
-		void ManifoldProjection();
 		void EnergyConstraint();//defualt FEPR
 		void EnergyConstraintV2();//using energy at E0
 		void EnergyConstraintV3();//energy constraint only
-		void EnergyConstraintPosition();
 		void EnergyConstraintPositionVelocity();
 		void AcceleratedEnergyConstraint();//quasi-newton
 		//void AcceleratedEnergyConstraintV2();//add position
 		
 		//unit tests
-		void UnitTest0();
 		void UnitTest1();
 		void UnitTest2();
 		void UnitTest19();
@@ -135,6 +113,7 @@ namespace eae6320
 		void UnitTest25();
 		void UnitTest26();
 		void UnitTest27();
+		void UnitTest28();
 		void RagdollTest();
 		void HingeJointUnitTest0();
 		void PersistentDataTest();
