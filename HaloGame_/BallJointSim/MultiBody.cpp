@@ -176,9 +176,14 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	
 	ResetExternalForces();
 	if(m_control) m_control();
-	EulerIntegration(dt);
-	//RK3Integration(dt);
-	//RK4Integration(dt);
+	if (integrationMethod == EXPLICIT)
+	{
+		EulerIntegration(dt);
+	}
+	else if (integrationMethod == RK4)
+	{
+		RK4Integration(dt);
+	}
 }
 
 void eae6320::MultiBody::ClampRotationVector()
@@ -292,20 +297,6 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 		SolvePositionJointLimit();
 	}
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
-	ClampRotationVector();
-	Forward();
-}
-
-void eae6320::MultiBody::RK3Integration(const _Scalar h)
-{
-	_Vector k1 = h * MrInverse * ComputeQr_SikpVelocityUpdate(qdot);
-	_Vector k2 = h * MrInverse * ComputeQr(qdot + 0.5 * k1);
-	_Vector k3 = h * MrInverse * ComputeQr(qdot + 2.0 * k2 - k1);
-
-	qdot = qdot + (1.0f / 6.0f) * (k1 + 4 * k2 + k3);
-	
-	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
-
 	ClampRotationVector();
 	Forward();
 }

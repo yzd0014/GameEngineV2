@@ -53,16 +53,10 @@
     <ClCompile Include="MultiBodyUnitTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HingeJointUnitTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="JointLimit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StabilityConstraint.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DerivativeUnitTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MultiBodyExperimental.cpp">

@@ -82,7 +82,7 @@
 #define DIRECT 0
 #endif
 
-#ifndef EULER
+#ifndef EULER //alternative Euler model
 #define EULER 1
 #endif
 
@@ -92,4 +92,12 @@
 
 #ifndef EULER_V2
 #define EULER_V2 3
+#endif
+/*************************************/
+#ifndef EXPLICIT
+#define EXPLICIT 0
+#endif
+
+#ifndef RK4
+#define RK4 1
 #endif

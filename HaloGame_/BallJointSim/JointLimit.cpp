@@ -405,9 +405,7 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		for (size_t k = 0; k < constraintNum; k++)
 		{
 			int i = jointsID[k];
-			//_Scalar beta = 0.9f;
 			_Scalar beta = 0.1;
-			//_Scalar SlopP = 0.00001f;
 			_Scalar SlopP = 0;
 			error(k) = beta * std::max<_Scalar>(-constraintValue[k] - SlopP, 0.0);
 		}
