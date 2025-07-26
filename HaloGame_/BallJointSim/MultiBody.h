@@ -51,7 +51,7 @@ namespace eae6320
 		void Forward();
 		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
-		void ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
+		void ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
 		void ComputeDxOverDp(std::vector<_Matrix>& o_derivative);
 		void Populate_q(std::vector<_Quat>& i_quat, _Vector& o_q);
 		void Populate_quat(_Vector& i_q, std::vector<_Quat>& o_quat, bool normalization);

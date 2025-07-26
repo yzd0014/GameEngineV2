@@ -1007,7 +1007,7 @@ void eae6320::MultiBody::EnergyConstraintPosition()
 			vec.segment(3, 3) = w_abs_world[i];
 			bm[i] = vec;
 		}
-		ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
 		std::vector<_Matrix> positionDerivative;
 		ComputeDxOverDp(positionDerivative);
 

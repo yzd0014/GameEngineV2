@@ -393,7 +393,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 			vec.segment(3, 3) = w_abs_world[i];
 			bm[i] = vec;
 		}
-		ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b, 1e-3);
 		std::vector<_Matrix> positionDerivative;
 		ComputeDxOverDp(positionDerivative);
 		
@@ -442,9 +442,9 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	//std::cout << correctionError << std::endl;
 }
 
-void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia)
+void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta)
 {
-	_Scalar delta = 1e-9;
+	_Scalar delta = i_delta;
 	
 	_Matrix d0, d1;
 	d0.resize(6, 1);
@@ -477,7 +477,11 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, st
 			Populate_quat(q, rel_ori, false);
 			ComputeHt(q, rel_ori);
 			d1 = Ht[i] * i_bj;
+			
+			std::cout << std::endl << std::setprecision(16) << d1 << std::endl;
+			std::cout << std::endl << std::setprecision(16) << d0 << std::endl;
 			o_Jacobian[i].block<6, 1>(0, k) = (d1 - d0) / delta;
+			std::cout << std::endl << std::setprecision(16) << (d1 - d0) / delta << std::endl;
 		}
 	}
 	

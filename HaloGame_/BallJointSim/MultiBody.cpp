@@ -282,7 +282,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//EnergyMomentumProjection();
 	//ManifoldProjection();
 	
-	EnergyConstraintPositionVelocity();
+	//EnergyConstraintPositionVelocity();
 	//EnergyConstraintPosition();
 	//AcceleratedEnergyConstraint();
 	//totalEnergy0 = ComputeTotalEnergy();
@@ -446,6 +446,7 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 			Gt[i].block(0, posStartIndex[k], 6, posDOF[k]) = D_temp * G[k];
 			k = parentArr[k];
 		}
+		
 		/*for (int k = 0; k <= i; k++)
 		{
 			_Matrix H_temp;
