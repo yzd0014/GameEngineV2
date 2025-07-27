@@ -24,7 +24,7 @@
 # Project User Settings
 #----------------------
 
-*.vcxproj.user
+#*.vcxproj.user
 
 # Intellisense
 #-------------
