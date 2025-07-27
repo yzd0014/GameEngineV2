@@ -57,60 +57,13 @@ eae6320::cResult eae6320::BallJointSim::Initialize()
 	{
 		//cbApplication* pApp = this;
 		MultiBody * pMultiBody = new MultiBody(defaultEffect, mesh_anchor, Physics::sRigidBodyState(Math::sVector(0, 0, 0)), this);
-		//GameCommon::GameObject * pMultiBody = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
 		pMultiBody->m_color = Math::sVector(1, 0, 0);
 	}
-
-	//{
-	//	std::vector<GameCommon::GameObject *> links;
-	//	int bodyNum = 2;
-	//	for (int i = 0; i < bodyNum; i++)
-	//	{
-	//		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
-	//		links.push_back(pGameObject);
-	//		noColliderObjects.push_back(pGameObject);
-	//	}
-
-	//	Physics::sRigidBodyState objState(Math::sVector(6.0f, 0.0f, 0.0f));
-	//	MultiBody * pMultiBody = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
-	//	pMultiBody->rotationMode = LOCAL_MODE;
-	//	pMultiBody->controlMode = SPD;
-	//	//GameCommon::GameObject * pGameObject = new MujocoBallJoint(pRedEffect, mesh_anchor, objState, links, bodyNum);
-	//	//GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
-	//	noColliderObjects.push_back(pMultiBody);
-	//}
-
-	//{
-	//	std::vector<GameCommon::GameObject *> links;
-	//	int bodyNum = 2;
-	//	for (int i = 0; i < bodyNum; i++)
-	//	{
-	//		GameCommon::GameObject *pGameObject = new GameCommon::GameObject(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
-	//		links.push_back(pGameObject);
-	//		noColliderObjects.push_back(pGameObject);
-	//	}
-
-	//	Physics::sRigidBodyState objState(Math::sVector(-6.0f, 0.0f, 0.0f));
-	//	MultiBody * pMultiBody = new MultiBody(pRedEffect, mesh_anchor, objState, links, bodyNum);
-	//	pMultiBody->rotationMode = MUJOCO_MODE;
-	//	pMultiBody->controlMode = KINEMATIC;
-	//	//GameCommon::GameObject * pGameObject = new MujocoBallJoint(pRedEffect, mesh_anchor, objState, links, bodyNum);
-	//	//GameCommon::GameObject * pGameObject = new SphericalJointV2(pRedEffect, mesh_anchor, objState, links, bodyNum);
-	//	noColliderObjects.push_back(pMultiBody);
-	//}
-
 	//Ground
 	{
 		Physics::sRigidBodyState objState(Math::sVector(0.0f, -10.0f, 0.0f));
 		GameCommon::GameObject * pGameObject = new GameCommon::GameObject(defaultEffect, mesh_plane, objState);
 	}
-
-	//cube with ball joint
-	//{
-	//	//HingeJointCube * pGameObject = new HingeJointCube(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
-	//	SphericalJoint *pGameObject = new SphericalJoint(pDefaultEffect, mesh_cube, Physics::sRigidBodyState());
-	//	noColliderObjects.push_back(pGameObject);
-	//}
 	return Results::Success;
 }
 
@@ -135,11 +88,6 @@ void  eae6320::BallJointSim::UpdateSimulationBasedOnTime(const double i_elapsedS
 
 eae6320::cResult eae6320::BallJointSim::CleanUp()
 {
-	/*
-	UserOutput::DebugPrint("Cloth Simulation(%d times) : %f ticks(%f s)",
-		g_Profiler.m_Allccumulators[0]->m_Count,
-		g_Profiler.m_Allccumulators[0]->average(),
-		g_Profiler.m_Allccumulators[0]->getAverageTime());*/
 	cbApplication::CleanUp();
 	return Results::Success;
 }
