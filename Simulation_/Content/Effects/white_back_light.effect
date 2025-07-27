@@ -1,0 +1,8 @@
+return
+{
+	AlphaTransparency = false,
+	DepthBuffering = true,
+	DrawBothTriangleSides = true,
+	vertexShader = "Shaders/Vertex/standard.shader",
+	fragmentShader = "Shaders/Fragment/white_back_light.shader",
+}

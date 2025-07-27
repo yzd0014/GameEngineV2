@@ -163,13 +163,6 @@ eae6320::cResult eae6320::Application::cbApplication::CleanUp()
 		Mesh::s_manager.Release(masterMeshArray[i]);
 	}
 	masterMeshArray.clear();
-
-	//delete sound
-	for (size_t i = 0; i < soundArray.size(); i++) {
-		delete soundArray[i];
-	}
-	soundArray.clear();
-
 	return Results::Success;
 }
 

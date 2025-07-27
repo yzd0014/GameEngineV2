@@ -295,15 +295,6 @@ NewAssetTypeInfo( "effects",
     end
   }
 )
-
---Audio
-NewAssetTypeInfo( "audio",
-	{
-		GetBuilderRelativePath = function()
-			return "AudioBuilder.exe"
-		end
-	}
-)
 -- Local Function Definitions
 --===========================
 

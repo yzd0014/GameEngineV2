@@ -1,8 +1,0 @@
-return
-{
-	AlphaTransparency = false,
-	DepthBuffering = false,
-	DrawBothTriangleSides = true,
-	vertexShader = "Shaders/Vertex/gui_r.shader",
-	fragmentShader = "Shaders/Fragment/purple.shader",
-}

@@ -16,7 +16,6 @@
 #include <Engine/Results/Results.h>
 #include "Engine/GameCommon/GameObject.h"
 #include "Engine/GameCommon/Camera.h"
-#include "Engine/Audio/Sound.h"
 #include "Engine/Graphics/Graphics.h"
 
 #if defined( EAE6320_PLATFORM_WINDOWS )
@@ -87,7 +86,6 @@ namespace eae6320
 		public:
 			double m_dt;
 			bool render = true;
-			std::vector<Engine::Sound *> soundArray;
 
 			// Different platforms have different parameters that get passed to a program's entry point
 			struct sEntryPointParameters
