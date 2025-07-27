@@ -393,9 +393,7 @@
     <ClCompile Include="EntryPoint.cpp" />
     <ClCompile Include="JointLimit.cpp" />
     <ClCompile Include="MultiBody.cpp" />
-    <ClCompile Include="MultiBodyExperimental.cpp" />
     <ClCompile Include="MultiBodyUnitTest.cpp" />
-    <ClCompile Include="StabilityConstraint.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resource Files\eaeAlien.ico" />

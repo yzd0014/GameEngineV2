@@ -453,46 +453,28 @@ void eae6320::MultiBody::UnitTest5_1()
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 3.089, 1.5708);
 }
 
+void eae6320::MultiBody::UnitTest0()
+{
+	constraintSolverMode = IMPULSE;
+
+	_Matrix3 localInertiaTensor;
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+
+	MultiBodyInitialization();
+	_Vector3 rot_vec(-0.5 * M_PI, 0.0, 0);
+	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	Forward();
+	_Vector3 world_w = _Vector3(0.0, -2.0, 0.0);
+	qdot.segment(0, 3) = world_w;
+	Forward();
+	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.5 * M_PI, 1e-6);
+}
+
 void eae6320::MultiBody::RunUnitTest()
 {
-	//UnitTest1(); //test swing twist decomposition with rotaion matrix
-	//UnitTest2(); //test extreme case for twist with single body
-	//UnitTest3();//chain mimic with two bodies
-	//UnitTest4();//angular velocity of _Vector3(-2.0, 2.0, 0.0) for the 2nd body
-	//UnitTest5();//test induced twist for single body; use swing limit to enforce singularity point pass through
-	//UnitTest6();//two basic intial conditions to verify Euler twist constraint
-	//UnitTest7();//test swing twist decomp with quat
-	//UnitTest8(); //mujoco ball joint constraint test for single body
-	//UnitTest9();//swing for 3d ball joint
-	//UnitTest10();//twist invarience two bodies.
-	//UnitTest11();//5 body
-	//UnitTest12();//2 cube
-	//HingeJointUnitTest0();//hinge joint with auto constraint
-	//UnitTest13();//vector vield switch test
-	//UnitTest14();//5 body for Euler twist
-	//UnitTest15();//incremental model single body
-	//PersistentDataTest();
-	//UnitTest16();//load initial condition from file
-	//EulerDecompositionAccuracyTest();
-	
-	m_MatlabSave = [this]()
-	{
-		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
-		LOG_TO_FILE << t << " ";
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			LOG_TO_FILE << pos[i].transpose() << " " << rel_ori[i];
-			if (i != numOfLinks - 1)
-			{
-				LOG_TO_FILE << " ";
-			}
-			else
-			{
-				LOG_TO_FILE << " " << ComputeTotalEnergy() << std::endl;
-			}
-		}
-	};
-	
 	Application::AddApplicationParameter(&damping, Application::ApplicationParameterType::float_point, L"-damping");
 	Application::AddApplicationParameter(&twistMode, Application::ApplicationParameterType::integer, L"-tm");
 	if (twistMode == EULER_V2 || twistMode == EULER)
@@ -585,6 +567,12 @@ void eae6320::MultiBody::RunUnitTest()
 		UnitTest5_8b();
 		twistMode = EULER_V2;
 		std::cout << "ragdoll test2" << std::endl;
+	}
+	else if (testCaseNum == 12)
+	{
+		UnitTest0();
+		twistMode = DIRECT;
+		std::cout << "limitation of position based twist constraint" << std::endl;
 	}
 	std::cout << std::endl;
 }

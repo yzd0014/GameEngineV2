@@ -22,13 +22,11 @@ namespace eae6320
 		int twistMode = EULER_V2;
 		int integrationMethod = EXPLICIT;
 		bool gravity = false ;
-		bool enablePositionSolve = true;//position solve currently doesn't support free joint
+		bool enablePositionSolve = true;
 		bool adaptiveTimestep = false;
 		Application::cbApplication* pApp = nullptr;
 	private:
-		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void MultiBodyInitialization();
-		void InitializeJoints(int* i_jointType);
 		void ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
 		void ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
 		void AddRigidBody(int parent, int i_jointType, _Vector3 jointPositionParent, _Vector3 jointPositionChild, Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor);
@@ -50,11 +48,6 @@ namespace eae6320
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void Forward();
 		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat);
-		void ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
-		void ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
-		void ComputeDxOverDp(std::vector<_Matrix>& o_derivative);
-		void Populate_q(std::vector<_Quat>& i_quat, _Vector& o_q);
-		void Populate_quat(_Vector& i_q, std::vector<_Quat>& o_quat, bool normalization);
 		
 		void ClampRotationVector();
 		_Scalar ComputeKineticEnergy();
@@ -62,9 +55,6 @@ namespace eae6320
 		_Scalar ComputeTotalEnergy();
 		_Vector3 ComputeTranslationalMomentum();
 		_Vector3 ComputeAngularMomentum();
-
-		_Matrix ComputeDuGlobalOverDp(int i, _Vector3& uGlobal);//currently only works for hinge joint
-		_Matrix ComputeDhGlobalOverDp(int i);//currently only works for hinge joint
 		
 		void BallJointLimitCheck();
 		void SolveVelocityJointLimit(const _Scalar h);
@@ -78,13 +68,6 @@ namespace eae6320
 		void SwitchConstraint(int i);
 		void UpdateInitialPosition();//call this function whenever poistion is updated
 		
-		void EnergyConstraint();//defualt FEPR
-		void EnergyConstraintV2();//using energy at E0
-		void EnergyConstraintV3();//energy constraint only
-		void EnergyConstraintPositionVelocity();
-		void AcceleratedEnergyConstraint();//quasi-newton
-		//void AcceleratedEnergyConstraintV2();//add position
-		
 		//unit tests
 		void UnitTest5_1();//section 5.1 in the paper
 		void UnitTest5_2();//section 5.2 in the paper
@@ -97,6 +80,7 @@ namespace eae6320
 		void UnitTest5_7();//section 5.7 in the paper
 		void UnitTest5_8a();//section 5.8 in the paper
 		void UnitTest5_8b();//section 5.8 in the paper
+		void UnitTest0();
 		void RunUnitTest();
 
 		void SaveDataToMatlab(_Scalar totalDuration);
@@ -104,16 +88,11 @@ namespace eae6320
 
 		_Vector q;
 		_Vector qdot;
-		_Vector x;//used for position solve
-		_Vector xOld;
 		std::vector<int> jointType;
 		std::vector<int> posDOF;
-		std::vector<int> xDOF;//used for position solve
 		std::vector<int> velDOF;
 		std::vector<int> posStartIndex;
 		std::vector<int> velStartIndex;
-		std::vector<int> xStartIndex;//used for position solve
-		std::vector<int> xJointType;
 		std::vector<int> parentArr;
 		_Matrix Mr;
 		_Matrix MrInverse;
@@ -140,15 +119,6 @@ namespace eae6320
 		std::vector<_Matrix> D;
 		std::vector<_Matrix> Ht;
 		std::vector<_Matrix> H;
-		std::vector<_Matrix> Gt;//Gt is the same as Ht when there is no ball joint.
-		std::vector<_Matrix> G;//G is the same as H when there is no ball joint.
-		std::vector<_Matrix> HtDerivativeTimes_b;
-		std::vector<_Matrix> MassMatrixDerivativeTimes_b;
-		std::vector<_Matrix> mA;
-		std::vector<_Matrix> mB;
-		std::vector<_Matrix> mE;
-		std::vector<_Matrix> mN;
-		
 		
 		std::vector<_Quat> obs_ori;
 		std::vector<_Quat> rel_ori;//relative rotation to parent for each body
@@ -178,9 +148,8 @@ namespace eae6320
 		_Matrix effectiveMass0;
 		_Matrix effectiveMass1;
 		_Scalar swingEpsilon = 1e-6;//0.000001;
-		
+
 		std::vector<_Scalar> totalTwist;
-		std::vector<_Matrix3> old_R_local;
 
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;
