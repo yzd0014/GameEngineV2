@@ -2,7 +2,7 @@
 #include "EigenHelper.h"
 #include <iostream>
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Math
 	{
@@ -202,7 +202,7 @@ namespace eae6320
 			u = 1.0f - v - w;
 		}
 
-		eae6320::Math::sVector GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c, bool guaranteeOutwards)
+		sca2025::Math::sVector GetSurfaceNormal(Math::sVector a, Math::sVector b, Math::sVector c, bool guaranteeOutwards)
 		{
 			float bias = 0.000000000001f;
 			Math::sVector faceNormal;

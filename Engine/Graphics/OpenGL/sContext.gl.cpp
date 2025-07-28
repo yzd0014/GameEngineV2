@@ -15,7 +15,7 @@
 
 namespace
 {
-	eae6320::cResult CreateRenderingContext();
+	sca2025::cResult CreateRenderingContext();
 }
 
 // Interface
@@ -24,7 +24,7 @@ namespace
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::sContext::Initialize( const sInitializationParameters& i_initializationParameters )
+sca2025::cResult sca2025::Graphics::sContext::Initialize( const sInitializationParameters& i_initializationParameters )
 {
 	auto result = Results::Success;
 
@@ -52,7 +52,7 @@ OnExit:
 	return result;
 }
 
-eae6320::cResult eae6320::Graphics::sContext::CleanUp()
+sca2025::cResult sca2025::Graphics::sContext::CleanUp()
 {
 	auto result = Results::Success;
 
@@ -101,9 +101,9 @@ eae6320::cResult eae6320::Graphics::sContext::CleanUp()
 
 namespace
 {
-	eae6320::cResult CreateRenderingContext()
+	sca2025::cResult CreateRenderingContext()
 	{
-		auto& g_context = eae6320::Graphics::sContext::g_context;
+		auto& g_context = sca2025::Graphics::sContext::g_context;
 
 		// Get the device context
 		{
@@ -111,8 +111,8 @@ namespace
 			if ( g_context.deviceContext == NULL )
 			{
 				EAE6320_ASSERTF( false, "Couldn't get device context" );
-				eae6320::Logging::OutputError( "Windows failed to get the device context" );
-				return eae6320::Results::Failure;
+				sca2025::Logging::OutputError( "Windows failed to get the device context" );
+				return sca2025::Results::Failure;
 			}
 		}
 		// Set the pixel format for the window
@@ -147,16 +147,16 @@ namespace
 					if ( returnedFormatCount == 0 )
 					{
 						EAE6320_ASSERTF( false, "Couldn't find a pixel format" );
-						eae6320::Logging::OutputError( "Windows couldn't find a pixel format that satisfied the desired attributes" );
-						return eae6320::Results::Failure;
+						sca2025::Logging::OutputError( "Windows couldn't find a pixel format that satisfied the desired attributes" );
+						return sca2025::Results::Failure;
 					}
 				}
 				else
 				{
-					const auto windowsErrorMessage = eae6320::Windows::GetLastSystemError();
+					const auto windowsErrorMessage = sca2025::Windows::GetLastSystemError();
 					EAE6320_ASSERTF( false, windowsErrorMessage.c_str() );
-					eae6320::Logging::OutputError( "Windows failed to choose the closest pixel format: %s", windowsErrorMessage.c_str() );
-					return eae6320::Results::Failure;
+					sca2025::Logging::OutputError( "Windows failed to choose the closest pixel format: %s", windowsErrorMessage.c_str() );
+					return sca2025::Results::Failure;
 				}
 			}
 			// Set it
@@ -177,10 +177,10 @@ namespace
 				}
 				if ( SetPixelFormat( g_context.deviceContext, pixelFormatId, &pixelFormatDescriptor ) == FALSE )
 				{
-					const auto windowsErrorMessage = eae6320::Windows::GetLastSystemError();
+					const auto windowsErrorMessage = sca2025::Windows::GetLastSystemError();
 					EAE6320_ASSERTF( false, windowsErrorMessage.c_str() );
-					eae6320::Logging::OutputError( "Windows couldn't set the desired pixel format: %s", windowsErrorMessage.c_str() );
-					return eae6320::Results::Failure;
+					sca2025::Logging::OutputError( "Windows couldn't set the desired pixel format: %s", windowsErrorMessage.c_str() );
+					return sca2025::Results::Failure;
 				}
 			}
 		}
@@ -208,7 +208,7 @@ namespace
 				if ( g_context.openGlRenderingContext == NULL )
 				{
 					DWORD errorCode;
-					const auto windowsErrorMessage = eae6320::Windows::GetLastSystemError( &errorCode );
+					const auto windowsErrorMessage = sca2025::Windows::GetLastSystemError( &errorCode );
 					std::ostringstream errorMessage;
 					errorMessage << "Windows failed to create an OpenGL rendering context: ";
 					if ( ( errorCode == ERROR_INVALID_VERSION_ARB )
@@ -226,22 +226,22 @@ namespace
 						errorMessage << windowsErrorMessage;
 					}
 					EAE6320_ASSERTF( false, errorMessage.str().c_str() );
-					eae6320::Logging::OutputError( errorMessage.str().c_str() );
+					sca2025::Logging::OutputError( errorMessage.str().c_str() );
 						
-					return eae6320::Results::Failure;
+					return sca2025::Results::Failure;
 				}
 			}
 			// Set it as the rendering context of this thread
 			if ( wglMakeCurrent( g_context.deviceContext, g_context.openGlRenderingContext ) == FALSE )
 			{
-				const auto windowsErrorMessage = eae6320::Windows::GetLastSystemError();
+				const auto windowsErrorMessage = sca2025::Windows::GetLastSystemError();
 				EAE6320_ASSERTF( false, windowsErrorMessage.c_str() );
-				eae6320::Logging::OutputError( "Windows failed to set the current OpenGL rendering context: %s",
+				sca2025::Logging::OutputError( "Windows failed to set the current OpenGL rendering context: %s",
 					windowsErrorMessage.c_str() );
-				return eae6320::Results::Failure;
+				return sca2025::Results::Failure;
 			}
 		}
 
-		return eae6320::Results::Success;
+		return sca2025::Results::Success;
 	}
 }

@@ -8,7 +8,7 @@
 
 using namespace Eigen;
 
-namespace eae6320
+namespace sca2025
 {
 	enum ColliderType { Box, Sphere };
 	namespace Physics
@@ -107,12 +107,12 @@ namespace eae6320
 			Collider(const Collider& i_v);
 
 			void InitializeCollider(AABB &i_box);
-			void UpdateTransformation(eae6320::Math::cMatrix_transformation i_t, eae6320::Math::cMatrix_transformation i_rot);
+			void UpdateTransformation(sca2025::Math::cMatrix_transformation i_t, sca2025::Math::cMatrix_transformation i_rot);
 			Math::sVector Center();
 			bool IsCollided(Collider& i_B, Contact& o_contact);
 			void RemoveManifold(ContactManifold3D* i_pManifold);
 
-			eae6320::Math::cMatrix_transformation m_transformation;
+			sca2025::Math::cMatrix_transformation m_transformation;
 			std::vector<Math::sVector> m_vertices;
 			std::vector<ContactManifold3D*> m_pManifolds;
 			sRigidBodyState* m_pParentRigidBody;

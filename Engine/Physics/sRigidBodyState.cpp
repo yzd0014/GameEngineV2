@@ -12,7 +12,7 @@
 #define EPA_MAX_NUM_ITERATIONS 30
 // Interface
 //==========
-eae6320::Physics::sRigidBodyState::sRigidBodyState()
+sca2025::Physics::sRigidBodyState::sRigidBodyState()
 {
 	mass = 1.0f;
 	//default value is for a 2x2x2 cube
@@ -21,7 +21,7 @@ eae6320::Physics::sRigidBodyState::sRigidBodyState()
 	localInverseInertiaTensor.m_22 = 1.0f / ((1.0f / 12.0f)* mass * 8);
 }
 
-eae6320::Physics::sRigidBodyState::sRigidBodyState(Math::sVector i_position)
+sca2025::Physics::sRigidBodyState::sRigidBodyState(Math::sVector i_position)
 {
 	mass = 1.0f;
 	//default value is for a 2x2x2 cube
@@ -32,7 +32,7 @@ eae6320::Physics::sRigidBodyState::sRigidBodyState(Math::sVector i_position)
 	position = i_position;
 }
 
-void eae6320::Physics::sRigidBodyState::Update( const float i_secondCountToIntegrate )
+void sca2025::Physics::sRigidBodyState::Update( const float i_secondCountToIntegrate )
 {
 	// Update velocity
 	{
@@ -58,14 +58,14 @@ void eae6320::Physics::sRigidBodyState::Update( const float i_secondCountToInteg
 		globalInverseInertiaTensor = local2WorldRot * localInverseInertiaTensor * world2LocalRot;
 	}
 }
-void eae6320::Physics::sRigidBodyState::UpdatePosition(const float i_secondCountToIntegrate) {
+void sca2025::Physics::sRigidBodyState::UpdatePosition(const float i_secondCountToIntegrate) {
 	position += velocity * i_secondCountToIntegrate;
 }
 
-void eae6320::Physics::sRigidBodyState::UpdateVelocity(const float i_secondCountToIntegrate) {
+void sca2025::Physics::sRigidBodyState::UpdateVelocity(const float i_secondCountToIntegrate) {
 	velocity += acceleration * i_secondCountToIntegrate;
 }
-void eae6320::Physics::sRigidBodyState::UpdateOrientation(const float i_secondCountToIntegrate) {
+void sca2025::Physics::sRigidBodyState::UpdateOrientation(const float i_secondCountToIntegrate) {
 	Math::cQuaternion deltaRot;
 	if (angularVelocity.GetLength() > 0.000001f)
 	{
@@ -79,12 +79,12 @@ void eae6320::Physics::sRigidBodyState::UpdateOrientation(const float i_secondCo
 }
 
 
-eae6320::Math::sVector eae6320::Physics::sRigidBodyState::PredictFuturePosition( const float i_secondCountToExtrapolate ) const
+sca2025::Math::sVector sca2025::Physics::sRigidBodyState::PredictFuturePosition( const float i_secondCountToExtrapolate ) const
 {
 	return position + (velocity * i_secondCountToExtrapolate );
 }
 
-eae6320::Math::cQuaternion eae6320::Physics::sRigidBodyState::PredictFutureOrientation(const float i_secondCountToExtrapolate) const
+sca2025::Math::cQuaternion sca2025::Physics::sRigidBodyState::PredictFutureOrientation(const float i_secondCountToExtrapolate) const
 {
 	//const auto rotation = Math::cQuaternion( angularSpeed * i_secondCountToExtrapolate, angularVelocity_axis_local );
 	Math::cQuaternion deltaRot;

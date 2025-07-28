@@ -14,7 +14,7 @@
 // Multiplication
 //---------------
 
-eae6320::Math::sVector eae6320::Math::cMatrix_transformation::operator *( const sVector i_rhs ) const
+sca2025::Math::sVector sca2025::Math::cMatrix_transformation::operator *( const sVector i_rhs ) const
 {
 	return sVector(
 		( m_00 * i_rhs.x ) + ( m_01 * i_rhs.y ) + ( m_02 * i_rhs.z ) + m_03,
@@ -23,7 +23,7 @@ eae6320::Math::sVector eae6320::Math::cMatrix_transformation::operator *( const 
 	);
 }
 
-eae6320::Math::cMatrix_transformation eae6320::Math::cMatrix_transformation::operator *( const cMatrix_transformation& i_rhs ) const
+sca2025::Math::cMatrix_transformation sca2025::Math::cMatrix_transformation::operator *( const cMatrix_transformation& i_rhs ) const
 {
 	return cMatrix_transformation(
 		( m_00 * i_rhs.m_00 ) + ( m_01 * i_rhs.m_10 ) + ( m_02 * i_rhs.m_20 ) + ( m_03 * i_rhs.m_30 ),
@@ -48,7 +48,7 @@ eae6320::Math::cMatrix_transformation eae6320::Math::cMatrix_transformation::ope
 	);
 }
 
-const eae6320::Math::cMatrix_transformation eae6320::Math::cMatrix_transformation::ConcatenateAffine(
+const sca2025::Math::cMatrix_transformation sca2025::Math::cMatrix_transformation::ConcatenateAffine(
 	const cMatrix_transformation& i_nextTransform, const cMatrix_transformation& i_firstTransform )
 {
 	// A few simplifying assumptions can be made for affine transformations vs. general 4x4 matrix multiplication
@@ -78,22 +78,22 @@ const eae6320::Math::cMatrix_transformation eae6320::Math::cMatrix_transformatio
 // Access
 //-------
 
-const eae6320::Math::sVector& eae6320::Math::cMatrix_transformation::GetRightDirection() const
+const sca2025::Math::sVector& sca2025::Math::cMatrix_transformation::GetRightDirection() const
 {
 	return *reinterpret_cast<const sVector*>( &m_00 );
 }
 
-const eae6320::Math::sVector& eae6320::Math::cMatrix_transformation::GetUpDirection() const
+const sca2025::Math::sVector& sca2025::Math::cMatrix_transformation::GetUpDirection() const
 {
 	return *reinterpret_cast<const sVector*>( &m_01 );
 }
 
-const eae6320::Math::sVector& eae6320::Math::cMatrix_transformation::GetBackDirection() const
+const sca2025::Math::sVector& sca2025::Math::cMatrix_transformation::GetBackDirection() const
 {
 	return *reinterpret_cast<const sVector*>( &m_02 );
 }
 
-const eae6320::Math::sVector& eae6320::Math::cMatrix_transformation::GetTranslation() const
+const sca2025::Math::sVector& sca2025::Math::cMatrix_transformation::GetTranslation() const
 {
 	return *reinterpret_cast<const sVector*>( &m_03 );
 }
@@ -101,13 +101,13 @@ const eae6320::Math::sVector& eae6320::Math::cMatrix_transformation::GetTranslat
 // Camera
 //-------
 
-eae6320::Math::cMatrix_transformation eae6320::Math::cMatrix_transformation::CreateWorldToCameraTransform(
+sca2025::Math::cMatrix_transformation sca2025::Math::cMatrix_transformation::CreateWorldToCameraTransform(
 	const cQuaternion& i_cameraOrientation, const sVector i_cameraPosition )
 {
 	return CreateWorldToCameraTransform( cMatrix_transformation( i_cameraOrientation, i_cameraPosition ) );
 }
 
-eae6320::Math::cMatrix_transformation eae6320::Math::cMatrix_transformation::CreateWorldToCameraTransform( const cMatrix_transformation& i_transform_localCameraToWorld )
+sca2025::Math::cMatrix_transformation sca2025::Math::cMatrix_transformation::CreateWorldToCameraTransform( const cMatrix_transformation& i_transform_localCameraToWorld )
 {
 	// Many simplifying assumptions can be made in order to create the inverse
 	// because in our class a camera can only ever have rotation and translation
@@ -124,7 +124,7 @@ eae6320::Math::cMatrix_transformation eae6320::Math::cMatrix_transformation::Cre
 		1.0f );
 }
 
-eae6320::Math::cMatrix_transformation eae6320::Math::cMatrix_transformation::CreateCameraToProjectedTransform_perspective(
+sca2025::Math::cMatrix_transformation sca2025::Math::cMatrix_transformation::CreateCameraToProjectedTransform_perspective(
 	const float i_verticalFieldOfView_inRadians,
 	const float i_aspectRatio,
 	const float i_z_nearPlane, const float i_z_farPlane )
@@ -151,7 +151,7 @@ eae6320::Math::cMatrix_transformation eae6320::Math::cMatrix_transformation::Cre
 // Initialization / Shut Down
 //---------------------------
 
-eae6320::Math::cMatrix_transformation::cMatrix_transformation( const cQuaternion& i_rotation, const sVector i_translation )
+sca2025::Math::cMatrix_transformation::cMatrix_transformation( const cQuaternion& i_rotation, const sVector i_translation )
 	:
 	m_30( 0.0f ), m_31( 0.0f ), m_32( 0.0f ),
 	m_03( i_translation.x ), m_13( i_translation.y ), m_23( i_translation.z ),
@@ -189,7 +189,7 @@ eae6320::Math::cMatrix_transformation::cMatrix_transformation( const cQuaternion
 // Initialization / Shut Down
 //---------------------------
 
-eae6320::Math::cMatrix_transformation::cMatrix_transformation(
+sca2025::Math::cMatrix_transformation::cMatrix_transformation(
 	const float i_00, const float i_10, const float i_20, const float i_30,
 	const float i_01, const float i_11, const float i_21, const float i_31,
 	const float i_02, const float i_12, const float i_22, const float i_32,

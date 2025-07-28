@@ -10,44 +10,44 @@
 // Interface
 //==========
 
-eae6320::cResult eae6320::Concurrency::WaitForEvent( const eae6320::Concurrency::cEvent& i_event, const unsigned int i_timeToWait_inMilliseconds )
+sca2025::cResult sca2025::Concurrency::WaitForEvent( const sca2025::Concurrency::cEvent& i_event, const unsigned int i_timeToWait_inMilliseconds )
 {
 	if ( i_event.m_handle )
 	{
 		const auto result = WaitForSingleObject( i_event.m_handle,
-			( i_timeToWait_inMilliseconds == eae6320::Concurrency::Constants::DontTimeOut ) ? INFINITE : static_cast<DWORD>( i_timeToWait_inMilliseconds ) );
+			( i_timeToWait_inMilliseconds == sca2025::Concurrency::Constants::DontTimeOut ) ? INFINITE : static_cast<DWORD>( i_timeToWait_inMilliseconds ) );
 		switch ( result )
 		{
 		// The event was signaled
 		case WAIT_OBJECT_0:
-			return eae6320::Results::Success;
+			return sca2025::Results::Success;
 		// The time-out period elapsed before the event was signaled
 		case WAIT_TIMEOUT:
-			return eae6320::Results::TimeOut;
+			return sca2025::Results::TimeOut;
 		// A Windows error prevented the wait
 		case WAIT_FAILED:
 			{
-				const auto errorMessage = eae6320::Windows::GetLastSystemError();
+				const auto errorMessage = sca2025::Windows::GetLastSystemError();
 				EAE6320_ASSERTF( false, "Failed to wait for an event: %s", errorMessage.c_str() );
-				eae6320::Logging::OutputError( "Windows failed waiting for an event: %s", errorMessage.c_str() );
+				sca2025::Logging::OutputError( "Windows failed waiting for an event: %s", errorMessage.c_str() );
 			}
 			break;
 		// An unexpected error occurred
 		default:
 			EAE6320_ASSERTF( false, "Failed to wait for an event" );
-			eae6320::Logging::OutputError( "Windows failed waiting for an event due to an unknown reason (this should never happen)" );
+			sca2025::Logging::OutputError( "Windows failed waiting for an event due to an unknown reason (this should never happen)" );
 		}
-		return eae6320::Results::Failure;
+		return sca2025::Results::Failure;
 	}
 	else
 	{
 		EAE6320_ASSERTF( false, "An event can't be waited for until it has been initialized" );
-		eae6320::Logging::OutputError( "An attempt was made to wait for an event that hadn't been initialized" );
-		return eae6320::Results::Failure;
+		sca2025::Logging::OutputError( "An attempt was made to wait for an event that hadn't been initialized" );
+		return sca2025::Results::Failure;
 	}
 }
 
-eae6320::cResult eae6320::Concurrency::cEvent::Signal()
+sca2025::cResult sca2025::Concurrency::cEvent::Signal()
 {
 	EAE6320_ASSERTF( m_handle, "An event can't be signaled until it has been initialized" );
 	if ( SetEvent( m_handle ) != FALSE )
@@ -63,7 +63,7 @@ eae6320::cResult eae6320::Concurrency::cEvent::Signal()
 	}
 }
 
-eae6320::cResult eae6320::Concurrency::cEvent::ResetToUnsignaled()
+sca2025::cResult sca2025::Concurrency::cEvent::ResetToUnsignaled()
 {
 	EAE6320_ASSERTF( m_handle, "An event can't be reset until it has been initialized" );
 	if ( ResetEvent( m_handle ) != FALSE )
@@ -82,7 +82,7 @@ eae6320::cResult eae6320::Concurrency::cEvent::ResetToUnsignaled()
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Concurrency::cEvent::Initialize( const EventType i_type, const EventState i_initialState )
+sca2025::cResult sca2025::Concurrency::cEvent::Initialize( const EventType i_type, const EventState i_initialState )
 {
 	constexpr SECURITY_ATTRIBUTES* const useDefaultSecurityAttributes = nullptr;
 	constexpr wchar_t* const noName = nullptr;
@@ -99,12 +99,12 @@ eae6320::cResult eae6320::Concurrency::cEvent::Initialize( const EventType i_typ
 	}
 }
 
-eae6320::Concurrency::cEvent::cEvent()
+sca2025::Concurrency::cEvent::cEvent()
 {
 
 }
 
-eae6320::cResult eae6320::Concurrency::cEvent::CleanUp()
+sca2025::cResult sca2025::Concurrency::cEvent::CleanUp()
 {
 	auto result = Results::Success;
 

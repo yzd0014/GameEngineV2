@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-namespace eae6320 {
+namespace sca2025 {
 	namespace GameCommon {
 		class GameObject;
 	}

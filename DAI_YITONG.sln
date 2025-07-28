@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.10
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HaloGame", "HaloGame", "{21313184-4A24-4F59-9A74-9E205A37191B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Simulation", "Simulation", "{21313184-4A24-4F59-9A74-9E205A37191B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Application", "Engine\Application\Application.vcxproj", "{E9A1C1DB-D622-4FB4-8CF0-C76DF6A8CB1B}"
 	ProjectSection(ProjectDependencies) = postProject

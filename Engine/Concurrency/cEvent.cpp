@@ -11,7 +11,7 @@
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::Concurrency::cEvent::~cEvent()
+sca2025::Concurrency::cEvent::~cEvent()
 {
 	const auto result = CleanUp();
 	EAE6320_ASSERT( result );

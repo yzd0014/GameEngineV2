@@ -8,7 +8,7 @@
 // Static Data Initialization
 //===========================
 
-eae6320::Graphics::sContext eae6320::Graphics::sContext::g_context;
+sca2025::Graphics::sContext sca2025::Graphics::sContext::g_context;
 
 // Interface
 //==========
@@ -16,7 +16,7 @@ eae6320::Graphics::sContext eae6320::Graphics::sContext::g_context;
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::Graphics::sContext::~sContext()
+sca2025::Graphics::sContext::~sContext()
 {
 	const auto result = CleanUp();
 	EAE6320_ASSERT( result );

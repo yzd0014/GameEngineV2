@@ -16,7 +16,7 @@
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::cShader::Initialize( const char* const i_path, const Platform::sDataFromFile& i_loadedShader )
+sca2025::cResult sca2025::Graphics::cShader::Initialize( const char* const i_path, const Platform::sDataFromFile& i_loadedShader )
 {
 	auto* const direct3dDevice = sContext::g_context.direct3dDevice;
 	EAE6320_ASSERT( direct3dDevice );
@@ -43,13 +43,13 @@ eae6320::cResult eae6320::Graphics::cShader::Initialize( const char* const i_pat
 		else
 		{
 			EAE6320_ASSERTF( false, "Shader %s object creation failed (HRESULT %#010x)", i_path, d3dResult );
-			eae6320::Logging::OutputError( "Direct3d failed to create the shader %s with HRESULT %#010x", i_path, d3dResult );
+			sca2025::Logging::OutputError( "Direct3d failed to create the shader %s with HRESULT %#010x", i_path, d3dResult );
 			return Results::Failure;
 		}
 	}
 }
 
-eae6320::cResult eae6320::Graphics::cShader::CleanUp()
+sca2025::cResult sca2025::Graphics::cShader::CleanUp()
 {
 	auto result = Results::Success;
 

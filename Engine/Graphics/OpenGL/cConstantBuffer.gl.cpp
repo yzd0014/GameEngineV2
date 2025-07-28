@@ -13,7 +13,7 @@
 // Render
 //-------
 
-void eae6320::Graphics::cConstantBuffer::Bind( const uint_fast8_t ) const
+void sca2025::Graphics::cConstantBuffer::Bind( const uint_fast8_t ) const
 {
 	EAE6320_ASSERT( m_bufferId != 0 );
 
@@ -23,7 +23,7 @@ void eae6320::Graphics::cConstantBuffer::Bind( const uint_fast8_t ) const
 	EAE6320_ASSERT( glGetError() == GL_NO_ERROR );
 }
 
-void eae6320::Graphics::cConstantBuffer::Update( const void* const i_data )
+void sca2025::Graphics::cConstantBuffer::Update( const void* const i_data )
 {
 	EAE6320_ASSERT( m_bufferId != 0 );
 
@@ -43,7 +43,7 @@ void eae6320::Graphics::cConstantBuffer::Update( const void* const i_data )
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::cConstantBuffer::CleanUp()
+sca2025::cResult sca2025::Graphics::cConstantBuffer::CleanUp()
 {
 	auto result = Results::Success;
 
@@ -71,7 +71,7 @@ eae6320::cResult eae6320::Graphics::cConstantBuffer::CleanUp()
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::cConstantBuffer::Initialize_platformSpecific( const void* const i_initialData )
+sca2025::cResult sca2025::Graphics::cConstantBuffer::Initialize_platformSpecific( const void* const i_initialData )
 {
 	auto result = Results::Success;
 
@@ -88,7 +88,7 @@ eae6320::cResult eae6320::Graphics::cConstantBuffer::Initialize_platformSpecific
 			{
 				result = Results::Failure;
 				EAE6320_ASSERTF( false, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
-				eae6320::Logging::OutputError( "OpenGL failed to bind the new uniform buffer %u: %s",
+				sca2025::Logging::OutputError( "OpenGL failed to bind the new uniform buffer %u: %s",
 					m_bufferId, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 				goto OnExit;
 			}
@@ -97,7 +97,7 @@ eae6320::cResult eae6320::Graphics::cConstantBuffer::Initialize_platformSpecific
 		{
 			result = Results::Failure;
 			EAE6320_ASSERTF( false, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
-			eae6320::Logging::OutputError( "OpenGL failed to get an unused uniform buffer ID: %s",
+			sca2025::Logging::OutputError( "OpenGL failed to get an unused uniform buffer ID: %s",
 				reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 			goto OnExit;
 		}
@@ -112,7 +112,7 @@ eae6320::cResult eae6320::Graphics::cConstantBuffer::Initialize_platformSpecific
 		{
 			result = Results::Failure;
 			EAE6320_ASSERTF( false, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
-			eae6320::Logging::OutputError( "OpenGL failed to allocate the new uniform buffer %u: %s",
+			sca2025::Logging::OutputError( "OpenGL failed to allocate the new uniform buffer %u: %s",
 				m_bufferId, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 			goto OnExit;
 		}

@@ -7,7 +7,7 @@
 
 using namespace Eigen;
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Math
 	{
@@ -20,7 +20,7 @@ namespace eae6320
 
 		inline cQuaternion ConvertEigenQuatToNativeQuat(Quaterniond i_quat)
 		{
-			return eae6320::Math::cQuaternion((float)i_quat.w(), (float)i_quat.x(), (float)i_quat.y(), (float)i_quat.z());
+			return sca2025::Math::cQuaternion((float)i_quat.w(), (float)i_quat.x(), (float)i_quat.y(), (float)i_quat.z());
 		}
 
 		inline Quaterniond ConertNativeQuatToEigenQuatd(cQuaternion i_quat)

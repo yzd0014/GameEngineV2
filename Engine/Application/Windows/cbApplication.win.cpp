@@ -21,14 +21,14 @@ namespace
 	// Initialization / Clean Up
 	//--------------------------
 
-	eae6320::cResult CreateMainWindow( const HINSTANCE i_thisInstanceOfTheApplication, const char* const i_windowName, const ATOM i_windowClass,
+	sca2025::cResult CreateMainWindow( const HINSTANCE i_thisInstanceOfTheApplication, const char* const i_windowName, const ATOM i_windowClass,
 		const uint16_t i_resolutionWidth, const uint16_t i_resolutionHeight,
-		eae6320::Application::cbApplication& io_application, HWND& o_window );
-	eae6320::cResult CreateMainWindowClass( const HINSTANCE i_thisInstanceOfTheApplication, const char* const i_mainWindowClassName,
+		sca2025::Application::cbApplication& io_application, HWND& o_window );
+	sca2025::cResult CreateMainWindowClass( const HINSTANCE i_thisInstanceOfTheApplication, const char* const i_mainWindowClassName,
 		WNDPROC fOnMessageReceivedFromWindows, ATOM& o_mainWindowClass,
 		const WORD* const i_iconId_large = nullptr, const WORD* const i_iconId_small = nullptr );
-	eae6320::cResult FreeMainWindow( HWND& io_window );
-	eae6320::cResult FreeMainWindowClass( const HINSTANCE i_thisInstanceOfTheApplication, ATOM& io_mainWindowClass );
+	sca2025::cResult FreeMainWindow( HWND& io_window );
+	sca2025::cResult FreeMainWindowClass( const HINSTANCE i_thisInstanceOfTheApplication, ATOM& io_mainWindowClass );
 }
 
 // Interface
@@ -37,7 +37,7 @@ namespace
 // Access
 //-------
 
-eae6320::cResult eae6320::Application::cbApplication::GetCurrentResolution( uint16_t& o_width, uint16_t& o_height ) const
+sca2025::cResult sca2025::Application::cbApplication::GetCurrentResolution( uint16_t& o_width, uint16_t& o_height ) const
 {
 	if ( ( m_resolutionWidth != 0 ) && ( m_resolutionHeight != 0 ) )
 	{
@@ -54,7 +54,7 @@ eae6320::cResult eae6320::Application::cbApplication::GetCurrentResolution( uint
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::Application::cbApplication::cbApplication()
+sca2025::Application::cbApplication::cbApplication()
 	:
 	m_exitCode( EXIT_SUCCESS )
 {
@@ -67,7 +67,7 @@ eae6320::Application::cbApplication::cbApplication()
 // Access
 //-------
 
-eae6320::Application::cbApplication* eae6320::Application::cbApplication::GetApplicationFromWindow( const HWND i_window )
+sca2025::Application::cbApplication* sca2025::Application::cbApplication::GetApplicationFromWindow( const HWND i_window )
 {
 	const auto userData = GetWindowLongPtr( i_window, GWLP_USERDATA );
 	auto* const application = reinterpret_cast<cbApplication*>( userData );
@@ -82,7 +82,7 @@ eae6320::Application::cbApplication* eae6320::Application::cbApplication::GetApp
 // Run
 //----
 
-eae6320::cResult eae6320::Application::cbApplication::RenderFramesWhileWaitingForApplicationToExit( int& o_exitCode )
+sca2025::cResult sca2025::Application::cbApplication::RenderFramesWhileWaitingForApplicationToExit( int& o_exitCode )
 {
 	// Enter an infinite loop that will continue until a WM_QUIT message is received from Windows
 	MSG message{};
@@ -150,7 +150,7 @@ eae6320::cResult eae6320::Application::cbApplication::RenderFramesWhileWaitingFo
 	return Results::Success;
 }
 
-eae6320::cResult eae6320::Application::cbApplication::Exit_platformSpecific( const int i_exitCode )
+sca2025::cResult sca2025::Application::cbApplication::Exit_platformSpecific( const int i_exitCode )
 {
 	// Send a WM_CLOSE message,
 	// which means that the application should terminate.
@@ -172,7 +172,7 @@ eae6320::cResult eae6320::Application::cbApplication::Exit_platformSpecific( con
 	return Results::Success;
 }
 
-LRESULT CALLBACK eae6320::Application::cbApplication::OnMessageReceivedFromWindows( HWND i_window, UINT i_message, WPARAM i_wParam, LPARAM i_lParam )
+LRESULT CALLBACK sca2025::Application::cbApplication::OnMessageReceivedFromWindows( HWND i_window, UINT i_message, WPARAM i_wParam, LPARAM i_lParam )
 {
 	// DispatchMessage() will send messages that the main window receives to this function.
 	// There are many messages that get sent to a window,
@@ -206,7 +206,7 @@ LRESULT CALLBACK eae6320::Application::cbApplication::OnMessageReceivedFromWindo
 			const auto& creationData = *reinterpret_cast<CREATESTRUCT*>( i_lParam );
 			// Retrieve the application pointer that was provided to CreateWindowEx()
 			auto* const application =
-				static_cast<eae6320::Application::cbApplication*>( creationData.lpCreateParams );
+				static_cast<sca2025::Application::cbApplication*>( creationData.lpCreateParams );
 			EAE6320_ASSERT( application );
 			// Assign the new handle
 			application->m_mainWindow = i_window;
@@ -281,7 +281,7 @@ LRESULT CALLBACK eae6320::Application::cbApplication::OnMessageReceivedFromWindo
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Application::cbApplication::Initialize_base( const sEntryPointParameters& i_entryPointParameters )
+sca2025::cResult sca2025::Application::cbApplication::Initialize_base( const sEntryPointParameters& i_entryPointParameters )
 {
 	auto result = Results::Success;
 
@@ -373,7 +373,7 @@ OnExit:
 	return result;
 }
 
-eae6320::cResult eae6320::Application::cbApplication::PopulateGraphicsInitializationParameters( Graphics::sInitializationParameters& o_initializationParameters )
+sca2025::cResult sca2025::Application::cbApplication::PopulateGraphicsInitializationParameters( Graphics::sInitializationParameters& o_initializationParameters )
 {
 	EAE6320_ASSERT( m_mainWindow != NULL );
 	o_initializationParameters.mainWindow = m_mainWindow;
@@ -386,14 +386,14 @@ eae6320::cResult eae6320::Application::cbApplication::PopulateGraphicsInitializa
 	return Results::Success;
 }
 
-eae6320::cResult eae6320::Application::cbApplication::PopulateUserOutputInitializationParameters( UserOutput::sInitializationParameters& o_initializationParameters )
+sca2025::cResult sca2025::Application::cbApplication::PopulateUserOutputInitializationParameters( UserOutput::sInitializationParameters& o_initializationParameters )
 {
 	EAE6320_ASSERT( m_mainWindow != NULL );
 	o_initializationParameters.mainWindow = m_mainWindow;
 	return Results::Success;
 }
 
-eae6320::cResult eae6320::Application::cbApplication::CleanUp_base()
+sca2025::cResult sca2025::Application::cbApplication::CleanUp_base()
 {
 	auto result = Results::Success;
 	if (render)
@@ -437,9 +437,9 @@ namespace
 	// Initialization / Clean Up
 	//--------------------------
 
-	eae6320::cResult CreateMainWindow( const HINSTANCE i_thisInstanceOfTheApplication, const char* const i_windowName, const ATOM i_windowClass,
+	sca2025::cResult CreateMainWindow( const HINSTANCE i_thisInstanceOfTheApplication, const char* const i_windowName, const ATOM i_windowClass,
 		const uint16_t i_resolutionWidth, const uint16_t i_resolutionHeight,
-		eae6320::Application::cbApplication& io_application, HWND& o_window )
+		sca2025::Application::cbApplication& io_application, HWND& o_window )
 	{
 		// Create the window
 		{
@@ -483,19 +483,19 @@ namespace
 			// CreateWindowEx() will return a "handle" to the window (kind of like a pointer),
 			// which is what we'll use when communicating with Windows to refer to this window
 			o_window = CreateWindowExW( windowStyle_extended, MAKEINTATOM( i_windowClass ),
-				eae6320::Windows::ConvertUtf8ToUtf16( i_windowName ).c_str(), windowStyle,
+				sca2025::Windows::ConvertUtf8ToUtf16( i_windowName ).c_str(), windowStyle,
 				position_x, position_y, width, height,
 				parent, menu, i_thisInstanceOfTheApplication, userData );
 			if ( o_window != NULL )
 			{
-				eae6320::Logging::OutputMessage( "Created main window \"%s\"", i_windowName );
+				sca2025::Logging::OutputMessage( "Created main window \"%s\"", i_windowName );
 			}
 			else
 			{
-				const auto errorMessage = eae6320::Windows::GetLastSystemError();
+				const auto errorMessage = sca2025::Windows::GetLastSystemError();
 				EAE6320_ASSERTF( false, "Main window wasn't created: %s", errorMessage.c_str() );
-				eae6320::Logging::OutputError( "Windows failed to create the main window: %s", errorMessage.c_str() );
-				return eae6320::Results::Failure;
+				sca2025::Logging::OutputError( "Windows failed to create the main window: %s", errorMessage.c_str() );
+				return sca2025::Results::Failure;
 			}
 		}
 
@@ -513,18 +513,18 @@ namespace
 				// Get the coordinates of the entire window
 				if ( GetWindowRect( o_window, &windowCoordinates ) == FALSE )
 				{
-					const auto errorMessage = eae6320::Windows::GetLastSystemError();
+					const auto errorMessage = sca2025::Windows::GetLastSystemError();
 					EAE6320_ASSERTF( false, "Couldn't get coordinates of the main window: %s", errorMessage.c_str() );
-					eae6320::Logging::OutputError( "Windows failed to get the coordinates of the main window: %s", errorMessage.c_str() );
+					sca2025::Logging::OutputError( "Windows failed to get the coordinates of the main window: %s", errorMessage.c_str() );
 					goto OnError;
 				}
 				// Get the dimensions of the client area
 				RECT clientDimensions;
 				if ( GetClientRect( o_window, &clientDimensions ) == FALSE )
 				{
-					const auto errorMessage = eae6320::Windows::GetLastSystemError();
+					const auto errorMessage = sca2025::Windows::GetLastSystemError();
 					EAE6320_ASSERTF( false, "Couldn't get the main window's client dimensions: %s", errorMessage.c_str() );
-					eae6320::Logging::OutputError( "Windows failed to get the dimensions of the main window's client area:: %s",
+					sca2025::Logging::OutputError( "Windows failed to get the dimensions of the main window's client area:: %s",
 						errorMessage.c_str() );
 					goto OnError;
 				}
@@ -541,15 +541,15 @@ namespace
 					windowCoordinates.left, windowCoordinates.top, desiredWidth_window, desiredHeight_window,
 					redrawTheWindowAfterItsBeenResized ) != FALSE )
 				{
-					eae6320::Logging::OutputMessage( "Set main window resolution to %u x %u",
+					sca2025::Logging::OutputMessage( "Set main window resolution to %u x %u",
 						i_resolutionWidth, i_resolutionHeight );
 				}
 				else
 				{
-					const auto errorMessage = eae6320::Windows::GetLastSystemError();
+					const auto errorMessage = sca2025::Windows::GetLastSystemError();
 					EAE6320_ASSERTF( false, "Couldn't resize the main window to &i x &i: %s",
 						desiredWidth_window, desiredHeight_window, errorMessage.c_str() );
-					eae6320::Logging::OutputError( "Windows failed to resize main window to &i x &i"
+					sca2025::Logging::OutputError( "Windows failed to resize main window to &i x &i"
 						" (based on a desired resolution of %u x %u): %s",
 						desiredWidth_window, desiredHeight_window, i_resolutionWidth, i_resolutionHeight, errorMessage.c_str() );
 					goto OnError;
@@ -557,7 +557,7 @@ namespace
 			}
 		}
 
-		return eae6320::Results::Success;
+		return sca2025::Results::Success;
 
 	OnError:
 
@@ -566,16 +566,16 @@ namespace
 			FreeMainWindow( o_window );
 		}
 
-		return eae6320::Results::Failure;
+		return sca2025::Results::Failure;
 	}
 
-	eae6320::cResult CreateMainWindowClass( const HINSTANCE i_thisInstanceOfTheApplication, const char* const i_mainWindowClassName,
+	sca2025::cResult CreateMainWindowClass( const HINSTANCE i_thisInstanceOfTheApplication, const char* const i_mainWindowClassName,
 		WNDPROC fOnMessageReceivedFromWindows, ATOM& o_mainWindowClass,
 		const WORD* const i_iconId_large, const WORD* const i_iconId_small )
 	{
 		// Populate a struct defining the window class that we want
 		WNDCLASSEXW wndClassEx{};
-		const auto mainWindowClassName = eae6320::Windows::ConvertUtf8ToUtf16( i_mainWindowClassName );
+		const auto mainWindowClassName = sca2025::Windows::ConvertUtf8ToUtf16( i_mainWindowClassName );
 		{
 			wndClassEx.cbSize = sizeof( wndClassEx );
 			wndClassEx.hInstance = i_thisInstanceOfTheApplication;
@@ -627,51 +627,51 @@ namespace
 		o_mainWindowClass = RegisterClassExW( &wndClassEx );
 		if ( o_mainWindowClass != NULL )
 		{
-			eae6320::Logging::OutputMessage( "Registered main window class \"%s\"", i_mainWindowClassName );
-			return eae6320::Results::Success;
+			sca2025::Logging::OutputMessage( "Registered main window class \"%s\"", i_mainWindowClassName );
+			return sca2025::Results::Success;
 		}
 		else
 		{
-			const auto errorMessage = eae6320::Windows::GetLastSystemError();
+			const auto errorMessage = sca2025::Windows::GetLastSystemError();
 			EAE6320_ASSERTF( false, "Main window class registration failed: %s", errorMessage.c_str() );
-			eae6320::Logging::OutputError( "Windows failed to register the main window class: %s", errorMessage.c_str() );
-			return eae6320::Results::Failure;
+			sca2025::Logging::OutputError( "Windows failed to register the main window class: %s", errorMessage.c_str() );
+			return sca2025::Results::Failure;
 		}
 	}
 
-	eae6320::cResult FreeMainWindow( HWND& io_window )
+	sca2025::cResult FreeMainWindow( HWND& io_window )
 	{
 		if ( DestroyWindow( io_window ) != FALSE )
 		{
-			eae6320::Logging::OutputMessage( "Destroyed main window" );
+			sca2025::Logging::OutputMessage( "Destroyed main window" );
 			// The handle should have been set to NULL in OnMessageReceivedFromWindows() WM_NCDESTROY
 			EAE6320_ASSERT( io_window == NULL );
 			io_window = NULL;
-			return eae6320::Results::Success;
+			return sca2025::Results::Success;
 		}
 		else
 		{
-			const auto errorMessage = eae6320::Windows::GetLastSystemError();
+			const auto errorMessage = sca2025::Windows::GetLastSystemError();
 			EAE6320_ASSERTF( false, "Main window wasn't destroyed: %s", errorMessage.c_str() );
-			eae6320::Logging::OutputError( "Windows failed to destroy the main window: %s", errorMessage.c_str() );
-			return eae6320::Results::Failure;
+			sca2025::Logging::OutputError( "Windows failed to destroy the main window: %s", errorMessage.c_str() );
+			return sca2025::Results::Failure;
 		}
 	}
 
-	eae6320::cResult FreeMainWindowClass( const HINSTANCE i_thisInstanceOfTheApplication, ATOM& io_mainWindowClass  )
+	sca2025::cResult FreeMainWindowClass( const HINSTANCE i_thisInstanceOfTheApplication, ATOM& io_mainWindowClass  )
 	{
 		if ( UnregisterClassW( MAKEINTATOM( io_mainWindowClass ), i_thisInstanceOfTheApplication ) != FALSE )
 		{
-			eae6320::Logging::OutputMessage( "Unregistered main window class" );
+			sca2025::Logging::OutputMessage( "Unregistered main window class" );
 			io_mainWindowClass = NULL;
-			return eae6320::Results::Success;
+			return sca2025::Results::Success;
 		}
 		else
 		{
-			const auto errorMessage = eae6320::Windows::GetLastSystemError();
+			const auto errorMessage = sca2025::Windows::GetLastSystemError();
 			EAE6320_ASSERTF( false, "Main window class wasn't unregistered: %s", errorMessage.c_str() );
-			eae6320::Logging::OutputError( "Windows failed to unregister the main window class: %s", errorMessage.c_str() );
-			return eae6320::Results::Failure;
+			sca2025::Logging::OutputError( "Windows failed to unregister the main window class: %s", errorMessage.c_str() );
+			return sca2025::Results::Failure;
 		}
 	}
 }

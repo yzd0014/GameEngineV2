@@ -29,8 +29,8 @@ namespace
 	public:
 
 		// Lua Functions
-		eae6320::cResult BuildAssets( const char* const i_path_assetsToBuild );
-		eae6320::cResult ConvertSourceRelativePathToBuiltRelativePath( const char* const i_sourceRelativePath, const char* const i_assetType,
+		sca2025::cResult BuildAssets( const char* const i_path_assetsToBuild );
+		sca2025::cResult ConvertSourceRelativePathToBuiltRelativePath( const char* const i_sourceRelativePath, const char* const i_assetType,
 			std::string& o_builtRelativePath, std::string* o_errorMessage );
 
 		// Access
@@ -56,10 +56,10 @@ namespace
 	private:
 
 		// Initialization / Clean Up
-		eae6320::cResult Initialize();
-		eae6320::cResult CleanUp();
+		sca2025::cResult Initialize();
+		sca2025::cResult CleanUp();
 
-		eae6320::cResult SaveReferenceToGlobalFunctionInRegistry( const char* const i_functionName, int &o_functionReference );
+		sca2025::cResult SaveReferenceToGlobalFunctionInRegistry( const char* const i_functionName, int &o_functionReference );
 	};
 }
 
@@ -79,7 +79,7 @@ namespace
 	// Error / Warning Output
 	//-----------------------
 
-	eae6320::cResult FormatErrorOrWarningMessage( const char* const i_message, std::string &o_message, va_list io_insertions );
+	sca2025::cResult FormatErrorOrWarningMessage( const char* const i_message, std::string &o_message, va_list io_insertions );
 
 	void OutputErrorMessage_platformSpecific( const char* const i_errorMessage, const char* const i_optionalFilePath,
 		const unsigned int* const i_optionalLineNumber, const unsigned int* const i_optionalColumnNumber );
@@ -104,12 +104,12 @@ namespace
 // Interface
 //==========
 
-eae6320::cResult eae6320::Assets::BuildAssets( const char* const i_path_assetsToBuild )
+sca2025::cResult sca2025::Assets::BuildAssets( const char* const i_path_assetsToBuild )
 {
 	return s_luaState.BuildAssets( i_path_assetsToBuild );
 }
 
-eae6320::cResult eae6320::Assets::ConvertSourceRelativePathToBuiltRelativePath( const char* const i_sourceRelativePath, const char* const i_assetType,
+sca2025::cResult sca2025::Assets::ConvertSourceRelativePathToBuiltRelativePath( const char* const i_sourceRelativePath, const char* const i_assetType,
 	std::string& o_builtRelativePath, std::string* o_errorMessage )
 {
 	return s_luaState.ConvertSourceRelativePathToBuiltRelativePath( i_sourceRelativePath, i_assetType, o_builtRelativePath, o_errorMessage );
@@ -118,10 +118,10 @@ eae6320::cResult eae6320::Assets::ConvertSourceRelativePathToBuiltRelativePath( 
 // Error / Warning Output
 //-----------------------
 
-void eae6320::Assets::OutputErrorMessage( const char* const i_errorMessage, ... )
+void sca2025::Assets::OutputErrorMessage( const char* const i_errorMessage, ... )
 {
 	std::string formattedMessage;
-	eae6320::cResult result;
+	sca2025::cResult result;
 	{
 		va_list insertions;
 		va_start( insertions, i_errorMessage );
@@ -135,11 +135,11 @@ void eae6320::Assets::OutputErrorMessage( const char* const i_errorMessage, ... 
 		OutputErrorMessage_platformSpecific( formattedMessage.c_str(), noPath, noFileInfo, noFileInfo );
 	}
 }
-void eae6320::Assets::OutputErrorMessageWithFileInfo( const char* const i_filePath,
+void sca2025::Assets::OutputErrorMessageWithFileInfo( const char* const i_filePath,
 	const char* const i_errorMessage, ... )
 {
 	std::string formattedMessage;
-	eae6320::cResult result;
+	sca2025::cResult result;
 	{
 		va_list insertions;
 		va_start( insertions, i_errorMessage );
@@ -152,12 +152,12 @@ void eae6320::Assets::OutputErrorMessageWithFileInfo( const char* const i_filePa
 		OutputErrorMessage_platformSpecific( formattedMessage.c_str(), i_filePath, noFileInfo, noFileInfo );
 	}
 }
-void eae6320::Assets::OutputErrorMessageWithFileInfo( const char* const i_filePath,
+void sca2025::Assets::OutputErrorMessageWithFileInfo( const char* const i_filePath,
 	const unsigned int i_lineNumber,
 	const char* const i_errorMessage, ... )
 {
 	std::string formattedMessage;
-	eae6320::cResult result;
+	sca2025::cResult result;
 	{
 		va_list insertions;
 		va_start( insertions, i_errorMessage );
@@ -170,12 +170,12 @@ void eae6320::Assets::OutputErrorMessageWithFileInfo( const char* const i_filePa
 		OutputErrorMessage_platformSpecific( formattedMessage.c_str(), i_filePath, &i_lineNumber, noFileInfo );
 	}
 }
-void eae6320::Assets::OutputErrorMessageWithFileInfo( const char* const i_filePath,
+void sca2025::Assets::OutputErrorMessageWithFileInfo( const char* const i_filePath,
 	const unsigned int i_lineNumber, const unsigned int i_columnNumber,
 	const char* const i_errorMessage, ... )
 {
 	std::string formattedMessage;
-	eae6320::cResult result;
+	sca2025::cResult result;
 	{
 		va_list insertions;
 		va_start( insertions, i_errorMessage );
@@ -188,10 +188,10 @@ void eae6320::Assets::OutputErrorMessageWithFileInfo( const char* const i_filePa
 	}
 }
 
-void eae6320::Assets::OutputWarningMessage( const char* const i_warningMessage, ... )
+void sca2025::Assets::OutputWarningMessage( const char* const i_warningMessage, ... )
 {
 	std::string formattedMessage;
-	eae6320::cResult result;
+	sca2025::cResult result;
 	{
 		va_list insertions;
 		va_start( insertions, i_warningMessage );
@@ -205,11 +205,11 @@ void eae6320::Assets::OutputWarningMessage( const char* const i_warningMessage, 
 		OutputWarningMessage_platformSpecific( formattedMessage.c_str(), noPath, noFileInfo, noFileInfo );
 	}
 }
-void eae6320::Assets::OutputWarningMessageWithFileInfo( const char* const i_filePath,
+void sca2025::Assets::OutputWarningMessageWithFileInfo( const char* const i_filePath,
 	const char* const i_warningMessage, ... )
 {
 	std::string formattedMessage;
-	eae6320::cResult result;
+	sca2025::cResult result;
 	{
 		va_list insertions;
 		va_start( insertions, i_warningMessage );
@@ -222,12 +222,12 @@ void eae6320::Assets::OutputWarningMessageWithFileInfo( const char* const i_file
 		OutputWarningMessage_platformSpecific( formattedMessage.c_str(), i_filePath, noFileInfo, noFileInfo );
 	}
 }
-void eae6320::Assets::OutputWarningMessageWithFileInfo( const char* const i_filePath,
+void sca2025::Assets::OutputWarningMessageWithFileInfo( const char* const i_filePath,
 	const unsigned int i_lineNumber,
 	const char* const i_warningMessage, ... )
 {
 	std::string formattedMessage;
-	eae6320::cResult result;
+	sca2025::cResult result;
 	{
 		va_list insertions;
 		va_start( insertions, i_warningMessage );
@@ -240,12 +240,12 @@ void eae6320::Assets::OutputWarningMessageWithFileInfo( const char* const i_file
 		OutputWarningMessage_platformSpecific( formattedMessage.c_str(), i_filePath, &i_lineNumber, noFileInfo );
 	}
 }
-void eae6320::Assets::OutputWarningMessageWithFileInfo( const char* const i_filePath,
+void sca2025::Assets::OutputWarningMessageWithFileInfo( const char* const i_filePath,
 	const unsigned int i_lineNumber, const unsigned int i_columnNumber,
 	const char* const i_warningMessage, ... )
 {
 	std::string formattedMessage;
-	eae6320::cResult result;
+	sca2025::cResult result;
 	{
 		va_list insertions;
 		va_start( insertions, i_warningMessage );
@@ -268,9 +268,9 @@ namespace
 
 	// Lua Functions
 
-	eae6320::cResult cLuaState::BuildAssets( const char* const i_path_assetsToBuild )
+	sca2025::cResult cLuaState::BuildAssets( const char* const i_path_assetsToBuild )
 	{
-		auto result = eae6320::Results::Success;
+		auto result = sca2025::Results::Success;
 
 		// Initialize the Lua environment if necessary
 		if ( luaState || ( result = Initialize() ) )
@@ -301,12 +301,12 @@ namespace
 						{
 						case LUA_ERRMEM:
 							{
-								result = eae6320::Results::OutOfMemory;
+								result = sca2025::Results::OutOfMemory;
 							}
 							break;
 						default:
 							{
-								result = eae6320::Results::Failure;
+								result = sca2025::Results::Failure;
 							}
 						}
 
@@ -317,13 +317,13 @@ namespace
 				{
 					if ( lua_isboolean( luaState, -1 ) )
 					{
-						result = lua_toboolean( luaState, -1 ) ? eae6320::Results::Success : eae6320::Results::Failure;
+						result = lua_toboolean( luaState, -1 ) ? sca2025::Results::Success : sca2025::Results::Failure;
 					}
 					else
 					{
-						result = eae6320::Results::Failure;
+						result = sca2025::Results::Failure;
 						{
-							eae6320::Assets::OutputErrorMessage( "BuildAssets() should return a boolean as return value #1, not a %s",
+							sca2025::Assets::OutputErrorMessage( "BuildAssets() should return a boolean as return value #1, not a %s",
 								luaL_typename( luaState, -1 ) );
 						}
 					}
@@ -333,9 +333,9 @@ namespace
 			}
 			else
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 				{
-					eae6320::Assets::OutputErrorMessageWithFileInfo( __FILE__, __LINE__,
+					sca2025::Assets::OutputErrorMessageWithFileInfo( __FILE__, __LINE__,
 						"The reference for the Lua BuildAssets() function returned a %s instead of a function."
 						" This shouldn't happen if the asset build library was initialized successfully",
 						lua_typename( luaState, type ) );
@@ -350,10 +350,10 @@ namespace
 		return result;
 	}
 
-	eae6320::cResult cLuaState::ConvertSourceRelativePathToBuiltRelativePath( const char* const i_sourceRelativePath, const char* const i_assetType,
+	sca2025::cResult cLuaState::ConvertSourceRelativePathToBuiltRelativePath( const char* const i_sourceRelativePath, const char* const i_assetType,
 		std::string& o_builtRelativePath, std::string* o_errorMessage )
 	{
-		auto result = eae6320::Results::Success;
+		auto result = sca2025::Results::Success;
 
 		// Initialize the Lua environment if necessary
 		if ( luaState || ( result = Initialize() ) )
@@ -385,12 +385,12 @@ namespace
 						{
 						case LUA_ERRMEM:
 							{
-								result = eae6320::Results::OutOfMemory;
+								result = sca2025::Results::OutOfMemory;
 							}
 							break;
 						default:
 							{
-								result = eae6320::Results::Failure;
+								result = sca2025::Results::Failure;
 							}
 						}
 
@@ -410,7 +410,7 @@ namespace
 							}
 							else
 							{
-								result = eae6320::Results::Failure;
+								result = sca2025::Results::Failure;
 								if ( o_errorMessage )
 								{
 									std::ostringstream errorMessage;
@@ -420,7 +420,7 @@ namespace
 								}
 								else
 								{
-									eae6320::Assets::OutputErrorMessage(
+									sca2025::Assets::OutputErrorMessage(
 										"ConvertSourceRelativePathToBuiltRelativePath() returned success but then a %s instead of a string",
 										luaL_typename( luaState, -1 ) );
 								}
@@ -428,7 +428,7 @@ namespace
 						}
 						else
 						{
-							result = eae6320::Results::Failure;
+							result = sca2025::Results::Failure;
 							if ( lua_isstring( luaState, -1 ) )
 							{
 								if ( o_errorMessage )
@@ -437,7 +437,7 @@ namespace
 								}
 								else
 								{
-									eae6320::Assets::OutputErrorMessage( lua_tostring( luaState, -1 ) );
+									sca2025::Assets::OutputErrorMessage( lua_tostring( luaState, -1 ) );
 								}
 							}
 							else
@@ -451,7 +451,7 @@ namespace
 								}
 								else
 								{
-									eae6320::Assets::OutputErrorMessage(
+									sca2025::Assets::OutputErrorMessage(
 										"On failure ConvertSourceRelativePathToBuiltRelativePath() should return a string error message as return value #2, not a %s",
 										luaL_typename( luaState, -1 ) );
 								}
@@ -460,7 +460,7 @@ namespace
 					}
 					else
 					{
-						result = eae6320::Results::Failure;
+						result = sca2025::Results::Failure;
 						if ( o_errorMessage )
 						{
 							std::ostringstream errorMessage;
@@ -470,7 +470,7 @@ namespace
 						}
 						else
 						{
-							eae6320::Assets::OutputErrorMessage( "ConvertSourceRelativePathToBuiltRelativePath() should return a boolean as return value #1, not a %s",
+							sca2025::Assets::OutputErrorMessage( "ConvertSourceRelativePathToBuiltRelativePath() should return a boolean as return value #1, not a %s",
 								luaL_typename( luaState, -2 ) );
 						}
 					}
@@ -480,7 +480,7 @@ namespace
 			}
 			else
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 				if ( o_errorMessage )
 				{
 					std::ostringstream errorMessage;
@@ -491,7 +491,7 @@ namespace
 				}
 				else
 				{
-					eae6320::Assets::OutputErrorMessageWithFileInfo( __FILE__, __LINE__,
+					sca2025::Assets::OutputErrorMessageWithFileInfo( __FILE__, __LINE__,
 						"The reference for the Lua ConvertSourceRelativePathToBuiltRelativePath() function returned a %s instead of a function."
 						" This shouldn't happen if the asset build library was initialized successfully",
 						lua_typename( luaState, type ) );
@@ -529,17 +529,17 @@ namespace
 
 	// Initialization / Clean Up
 
-	eae6320::cResult cLuaState::Initialize()
+	sca2025::cResult cLuaState::Initialize()
 	{
-		auto result = eae6320::Results::Success;
+		auto result = sca2025::Results::Success;
 
 		// Create a new Lua state
 		{
 			luaState = luaL_newstate();
 			if ( !luaState )
 			{
-				result = eae6320::Results::OutOfMemory;
-				eae6320::Assets::OutputErrorMessageWithFileInfo( __FILE__, __LINE__,
+				result = sca2025::Results::OutOfMemory;
+				sca2025::Assets::OutputErrorMessageWithFileInfo( __FILE__, __LINE__,
 					"Memory allocation error creating Lua state" );
 				goto OnExit;
 			}
@@ -583,9 +583,9 @@ namespace
 				{
 					constexpr char* const key = "OutputDir";
 					std::string errorMessage;
-					if ( !( result = eae6320::Platform::GetEnvironmentVariable( key, path, &errorMessage ) ) )
+					if ( !( result = sca2025::Platform::GetEnvironmentVariable( key, path, &errorMessage ) ) )
 					{
-						eae6320::Assets::OutputErrorMessageWithFileInfo( __FILE__, __LINE__, errorMessage.c_str() );
+						sca2025::Assets::OutputErrorMessageWithFileInfo( __FILE__, __LINE__, errorMessage.c_str() );
 						goto OnExit;
 					}
 				}
@@ -594,7 +594,7 @@ namespace
 			// Load and execute it
 			{
 				std::string errorMessage;
-				if ( eae6320::Platform::DoesFileExist( path.c_str(), &errorMessage ) )
+				if ( sca2025::Platform::DoesFileExist( path.c_str(), &errorMessage ) )
 				{
 					// Load the build script file as a "chunk",
 					// meaning there will be a callable function at the top of the stack
@@ -616,12 +616,12 @@ namespace
 							{
 							case LUA_ERRMEM:
 								{
-									result = eae6320::Results::OutOfMemory;
+									result = sca2025::Results::OutOfMemory;
 								}
 								break;
 							default:
 								{
-									result = eae6320::Results::InvalidFile;
+									result = sca2025::Results::InvalidFile;
 								}
 							}
 							goto OnExit;
@@ -637,12 +637,12 @@ namespace
 						{
 						case LUA_ERRMEM:
 							{
-								result = eae6320::Results::OutOfMemory;
+								result = sca2025::Results::OutOfMemory;
 							}
 							break;
 						default:
 							{
-								result = eae6320::Results::Failure;
+								result = sca2025::Results::Failure;
 							}
 						}
 						goto OnExit;
@@ -650,8 +650,8 @@ namespace
 				}
 				else
 				{
-					result = eae6320::Results::FileDoesntExist;
-					eae6320::Assets::OutputErrorMessageWithFileInfo( __FILE__, __LINE__, errorMessage.c_str() );
+					result = sca2025::Results::FileDoesntExist;
+					sca2025::Assets::OutputErrorMessageWithFileInfo( __FILE__, __LINE__, errorMessage.c_str() );
 					goto OnExit;
 				}
 			}
@@ -682,9 +682,9 @@ namespace
 		return result;
 	}
 
-	eae6320::cResult cLuaState::CleanUp()
+	sca2025::cResult cLuaState::CleanUp()
 	{
-		auto result = eae6320::Results::Success;
+		auto result = sca2025::Results::Success;
 
 		if ( luaState )
 		{
@@ -703,9 +703,9 @@ namespace
 		return result;
 	}
 
-	eae6320::cResult cLuaState::SaveReferenceToGlobalFunctionInRegistry( const char* const i_functionName, int &o_functionReference )
+	sca2025::cResult cLuaState::SaveReferenceToGlobalFunctionInRegistry( const char* const i_functionName, int &o_functionReference )
 	{
-		auto result = eae6320::Results::Success;
+		auto result = sca2025::Results::Success;
 
 		const auto type = lua_getglobal( luaState, i_functionName );
 		if ( type == LUA_TFUNCTION )
@@ -715,7 +715,7 @@ namespace
 		}
 		else
 		{
-			result = eae6320::Results::Failure;
+			result = sca2025::Results::Failure;
 			{
 				std::ostringstream errorMessage;
 				switch ( type )
@@ -732,7 +732,7 @@ namespace
 					}
 					break;
 				}
-				eae6320::Assets::OutputErrorMessageWithFileInfo( __FILE__, errorMessage.str().c_str() );
+				sca2025::Assets::OutputErrorMessageWithFileInfo( __FILE__, errorMessage.str().c_str() );
 			}
 			lua_pop( luaState, 1 );
 		}
@@ -749,7 +749,7 @@ namespace
 	// Error / Warning Output
 	//-----------------------
 
-	eae6320::cResult FormatErrorOrWarningMessage( const char* const i_message, std::string &o_message, va_list io_insertions )
+	sca2025::cResult FormatErrorOrWarningMessage( const char* const i_message, std::string &o_message, va_list io_insertions )
 	{
 		constexpr size_t bufferSize = 1024;
 		char buffer[bufferSize];
@@ -759,7 +759,7 @@ namespace
 			if ( formattingResult < bufferSize )
 			{
 				o_message = buffer;
-				return eae6320::Results::Success;
+				return sca2025::Results::Success;
 			}
 			else
 			{
@@ -772,7 +772,7 @@ namespace
 				const unsigned int lineNumber = __LINE__;
 				constexpr unsigned int* const noColumnNumber = nullptr;
 				OutputErrorMessage_platformSpecific( errorMessage.str().c_str(), __FILE__, &lineNumber, noColumnNumber );
-				return eae6320::Results::Failure;
+				return sca2025::Results::Failure;
 			}
 		}
 		else
@@ -783,7 +783,7 @@ namespace
 			const unsigned int lineNumber = __LINE__;
 			constexpr unsigned int* const noColumnNumber = nullptr;
 			OutputErrorMessage_platformSpecific( errorMessage.str().c_str(), __FILE__, &lineNumber, noColumnNumber );
-			return eae6320::Results::Failure;
+			return sca2025::Results::Failure;
 		}
 	}
 
@@ -791,7 +791,7 @@ namespace
 		const unsigned int* const i_optionalLineNumber, const unsigned int* const i_optionalColumnNumber )
 	{
 #if defined( EAE6320_PLATFORM_WINDOWS )
-		eae6320::Windows::OutputErrorMessageForVisualStudio( i_errorMessage, i_optionalFilePath, i_optionalLineNumber, i_optionalColumnNumber );
+		sca2025::Windows::OutputErrorMessageForVisualStudio( i_errorMessage, i_optionalFilePath, i_optionalLineNumber, i_optionalColumnNumber );
 #else
 	#error "No implementation exists for outputting asset build error messages!"
 #endif
@@ -801,7 +801,7 @@ namespace
 		const unsigned int* const i_optionalLineNumber, const unsigned int* const i_optionalColumnNumber )
 	{
 #if defined( EAE6320_PLATFORM_WINDOWS )
-		eae6320::Windows::OutputWarningMessageForVisualStudio( i_warningMessage, i_optionalFilePath, i_optionalLineNumber, i_optionalColumnNumber );
+		sca2025::Windows::OutputWarningMessageForVisualStudio( i_warningMessage, i_optionalFilePath, i_optionalLineNumber, i_optionalColumnNumber );
 #else
 	#error "No implementation exists for outputting asset build warning messages!"
 #endif
@@ -846,7 +846,7 @@ namespace
 			// Since we rely on timestamps to determine when a target was built
 			// its file time should be updated when the source gets copied
 			constexpr auto updateTheTargetFileTime = true;
-			if ( eae6320::Platform::CopyFile( i_path_source, i_path_target, noErrorIfTargetAlreadyExists, updateTheTargetFileTime, &errorMessage ) )
+			if ( sca2025::Platform::CopyFile( i_path_source, i_path_target, noErrorIfTargetAlreadyExists, updateTheTargetFileTime, &errorMessage ) )
 			{
 				lua_pushboolean( io_luaState, true );
 				constexpr int returnValueCount = 1;
@@ -878,7 +878,7 @@ namespace
 		}
 
 		std::string errorMessage;
-		if ( eae6320::Platform::CreateDirectoryIfItDoesntExist( i_path, &errorMessage ) )
+		if ( sca2025::Platform::CreateDirectoryIfItDoesntExist( i_path, &errorMessage ) )
 		{
 			constexpr int returnValueCount = 0;
 			return returnValueCount;
@@ -905,7 +905,7 @@ namespace
 		}
 
 		std::string errorMessage;
-		if ( eae6320::Platform::DoesFileExist( i_path, &errorMessage ) )
+		if ( sca2025::Platform::DoesFileExist( i_path, &errorMessage ) )
 		{
 			lua_pushboolean( io_luaState, true );
 			constexpr int returnValueCount = 1;
@@ -937,7 +937,7 @@ namespace
 
 		int exitCode;
 		std::string errorMessage;
-		if ( eae6320::Platform::ExecuteCommand( i_command, &exitCode, &errorMessage ) )
+		if ( sca2025::Platform::ExecuteCommand( i_command, &exitCode, &errorMessage ) )
 		{
 			lua_pushboolean( io_luaState, true );
 			lua_pushinteger( io_luaState, exitCode );
@@ -970,7 +970,7 @@ namespace
 
 		std::string value;
 		std::string errorMessage;
-		if ( eae6320::Platform::GetEnvironmentVariable( i_key, value, &errorMessage ) )
+		if ( sca2025::Platform::GetEnvironmentVariable( i_key, value, &errorMessage ) )
 		{
 			lua_pushstring( io_luaState, value.c_str() );
 			constexpr int returnValueCount = 1;
@@ -1017,7 +1017,7 @@ namespace
 
 		std::vector<std::string> paths;
 		std::string errorMessage;
-		if ( eae6320::Platform::GetFilesInDirectory( i_path, paths, i_shouldSubdirectoriesBeSearchedRecursively, &errorMessage ) )
+		if ( sca2025::Platform::GetFilesInDirectory( i_path, paths, i_shouldSubdirectoriesBeSearchedRecursively, &errorMessage ) )
 		{
 			const auto arraySize = paths.size();
 			EAE6320_ASSERT( arraySize < ( uint64_t( 1 ) << ( sizeof( int ) * 8 ) ) );
@@ -1056,7 +1056,7 @@ namespace
 		// Get the last time that the file was written to
 		uint64_t lastWriteTime;
 		std::string errorMessage;
-		if ( eae6320::Platform::GetLastWriteTime( i_path, lastWriteTime, &errorMessage ) )
+		if ( sca2025::Platform::GetLastWriteTime( i_path, lastWriteTime, &errorMessage ) )
 		{
 			lua_pushnumber( io_luaState, static_cast<lua_Number>( lastWriteTime ) );
 			constexpr int returnValueCount = 1;
@@ -1085,7 +1085,7 @@ namespace
 
 		// Invalidate the last time that the file was written to
 		std::string errorMessage;
-		if ( eae6320::Platform::InvalidateLastWriteTime( i_path, &errorMessage ) )
+		if ( sca2025::Platform::InvalidateLastWriteTime( i_path, &errorMessage ) )
 		{
 			constexpr int returnValueCount = 0;
 			return returnValueCount;
@@ -1129,11 +1129,11 @@ namespace
 		// Output the error message
 		if ( i_optionalFileName )
 		{
-			eae6320::Assets::OutputErrorMessageWithFileInfo( i_optionalFileName, i_errorMessage );
+			sca2025::Assets::OutputErrorMessageWithFileInfo( i_optionalFileName, i_errorMessage );
 		}
 		else
 		{
-			eae6320::Assets::OutputErrorMessage( i_errorMessage );
+			sca2025::Assets::OutputErrorMessage( i_errorMessage );
 		}
 
 		constexpr int returnValueCount = 0;
@@ -1173,11 +1173,11 @@ namespace
 		// Output the warning message
 		if ( i_optionalFileName )
 		{
-			eae6320::Assets::OutputWarningMessageWithFileInfo( i_optionalFileName, i_warningMessage );
+			sca2025::Assets::OutputWarningMessageWithFileInfo( i_optionalFileName, i_warningMessage );
 		}
 		else
 		{
-			eae6320::Assets::OutputWarningMessage( i_warningMessage );
+			sca2025::Assets::OutputWarningMessage( i_warningMessage );
 		}
 
 		constexpr int returnValueCount = 0;

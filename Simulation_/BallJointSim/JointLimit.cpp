@@ -8,7 +8,7 @@
 #include <math.h>
 #include <iomanip>
 
-void eae6320::MultiBody::UpdateInitialPosition()
+void sca2025::MultiBody::UpdateInitialPosition()
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -21,14 +21,14 @@ void eae6320::MultiBody::UpdateInitialPosition()
 	}
 }
 
-_Scalar eae6320::MultiBody::ComputeSwingError(int jointNum)
+_Scalar sca2025::MultiBody::ComputeSwingError(int jointNum)
 {
 	_Scalar out;
 	out = twistAxis[jointNum].dot(R_local[jointNum] * twistAxis[jointNum]) - cos(jointRange[jointNum].first);
 	return out;
 }
 
-void eae6320::MultiBody::SwitchConstraint(int i)
+void sca2025::MultiBody::SwitchConstraint(int i)
 {
 	_Scalar eulerEpsilon = 1e-6;
 	if (M_PI * 0.5 - abs(mBeta[i]) > eulerEpsilon)
@@ -63,7 +63,7 @@ void eae6320::MultiBody::SwitchConstraint(int i)
 	}
 }
 
-_Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum)
+_Scalar sca2025::MultiBody::ComputeTwistEulerError(int jointNum)
 {
 	_Scalar out = 0;
 	_Vector3 rotatedX = R_local[jointNum] * eulerX[jointNum];
@@ -100,7 +100,7 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum)
 	return out;
 }
 
-void eae6320::MultiBody::BallJointLimitCheck()
+void sca2025::MultiBody::BallJointLimitCheck()
 {
 	jointsID.clear();
 	constraintValue.clear();
@@ -232,12 +232,12 @@ void eae6320::MultiBody::BallJointLimitCheck()
 	constraintNum = jointsID.size();
 }
 
-void eae6320::MultiBody::ComputeSwingJacobian(int jointNum, _Matrix& o_J)
+void sca2025::MultiBody::ComputeSwingJacobian(int jointNum, _Matrix& o_J)
 {
 	o_J = ((R_local[jointNum] * twistAxis[jointNum]).cross(twistAxis[jointNum])).transpose();
 }
 
-void eae6320::MultiBody::ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J)
+void sca2025::MultiBody::ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J)
 {
 	_Matrix A0;
 	_Vector3 mVec;
@@ -259,7 +259,7 @@ void eae6320::MultiBody::ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J)
 	}
 }
 
-void eae6320::MultiBody::ComputeTwistEulerJacobian(int i, bool isUpperBound, _Matrix& o_J)
+void sca2025::MultiBody::ComputeTwistEulerJacobian(int i, bool isUpperBound, _Matrix& o_J)
 {
 	_Matrix3 R_yzx = eulerDecompositionOffsetMat[i] * R_local[i] * eulerDecompositionOffsetMat[i].transpose();
 	_Matrix J_yzx;
@@ -275,7 +275,7 @@ void eae6320::MultiBody::ComputeTwistEulerJacobian(int i, bool isUpperBound, _Ma
 	}
 }
 
-void eae6320::MultiBody::ComputeTwistDirectJacobian(int jointNum, int i_limitType, _Matrix& o_J)
+void sca2025::MultiBody::ComputeTwistDirectJacobian(int jointNum, int i_limitType, _Matrix& o_J)
 {
 	int i = jointNum;
 	if (i_limitType == TWIST_WITH_SWING)
@@ -301,7 +301,7 @@ void eae6320::MultiBody::ComputeTwistDirectJacobian(int jointNum, int i_limitTyp
 	}
 }
 
-void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
+void sca2025::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 {
 	if (constraintNum > 0)
 	{
@@ -395,7 +395,7 @@ void eae6320::MultiBody::SolveVelocityJointLimit(const _Scalar h)
 	}
 }
 
-void eae6320::MultiBody::SolvePositionJointLimit()
+void sca2025::MultiBody::SolvePositionJointLimit()
 {
 	if (constraintNum > 0)
 	{

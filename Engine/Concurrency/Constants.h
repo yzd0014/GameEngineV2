@@ -5,7 +5,7 @@
 #ifndef EAE6320_CONCURRENCY_CONSTANTS_H
 #define EAE6320_CONCURRENCY_CONSTANTS_H
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Concurrency
 	{

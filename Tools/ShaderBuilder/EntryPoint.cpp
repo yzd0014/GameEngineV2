@@ -12,5 +12,5 @@
 
 int main( int i_argumentCount, char** i_arguments )
 {
-	return eae6320::Assets::Build<eae6320::Assets::cShaderBuilder>( i_arguments, i_argumentCount );
+	return sca2025::Assets::Build<sca2025::Assets::cShaderBuilder>( i_arguments, i_argumentCount );
 }

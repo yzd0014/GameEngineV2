@@ -3,7 +3,7 @@
 #include "Engine/Math/cMatrix_transformation.h"
 #include "PhysicsSimulation.h"
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Physics
 	{
@@ -17,7 +17,7 @@ namespace eae6320
 	}
 }
 
-void eae6320::Physics::HingeJoint::ResolveHingJoint(float i_dt)
+void sca2025::Physics::HingeJoint::ResolveHingJoint(float i_dt)
 {
 	//ball joint solver
 	{

@@ -27,7 +27,7 @@
 // Run
 //----
 
-void eae6320::BallJointSim::UpdateBasedOnInput()
+void sca2025::BallJointSim::UpdateBasedOnInput()
 {
 	// Is the user pressing the ESC key?
 	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::Escape])
@@ -41,7 +41,7 @@ void eae6320::BallJointSim::UpdateBasedOnInput()
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::BallJointSim::Initialize()
+sca2025::cResult sca2025::BallJointSim::Initialize()
 {
 	GameplayUtility::DrawXYZCoordinate(Vector3d(0, -8, 0));
 	//initialize camera 
@@ -67,14 +67,14 @@ eae6320::cResult eae6320::BallJointSim::Initialize()
 	return Results::Success;
 }
 
-void eae6320::BallJointSim::UpdateSimulationBasedOnInput() {
+void sca2025::BallJointSim::UpdateSimulationBasedOnInput() {
 	if (isGameOver == false)
 	{
 		cbApplication::UpdateSimulationBasedOnInput();
 	}
 }
 
-void  eae6320::BallJointSim::UpdateSimulationBasedOnTime(const double i_elapsedSecondCount_sinceLastUpdate) {
+void  sca2025::BallJointSim::UpdateSimulationBasedOnTime(const double i_elapsedSecondCount_sinceLastUpdate) {
 	if (isGameOver == false)
 	{
 		cbApplication::UpdateSimulationBasedOnTime(i_elapsedSecondCount_sinceLastUpdate);
@@ -86,7 +86,7 @@ void  eae6320::BallJointSim::UpdateSimulationBasedOnTime(const double i_elapsedS
 }
 
 
-eae6320::cResult eae6320::BallJointSim::CleanUp()
+sca2025::cResult sca2025::BallJointSim::CleanUp()
 {
 	cbApplication::CleanUp();
 	return Results::Success;

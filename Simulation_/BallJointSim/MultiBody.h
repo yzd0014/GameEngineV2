@@ -7,9 +7,9 @@
 #include "Engine/Math/DataTypeDefine.h"
 #include "Engine/Math/3DMathHelpers.h"
 
-namespace eae6320
+namespace sca2025
 {
-	class MultiBody : public eae6320::GameCommon::GameObject
+	class MultiBody : public sca2025::GameCommon::GameObject
 	{
 	public:
 		MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, Application::cbApplication* i_application);

@@ -9,12 +9,12 @@
 #include "Engine/Math/3DMathHelpers.h"
 #include "Engine/Math/EigenHelper.h"
 
-namespace eae6320
+namespace sca2025
 {
 	namespace GameplayUtility
 	{
 		Application::cbApplication* pGameApplication = nullptr;
-		eae6320::Assets::cHandle<Mesh> arrowMesh;
+		sca2025::Assets::cHandle<Mesh> arrowMesh;
 		
 		Math::sVector MouseRayCasting()//return a ray direction in word sapce 
 		{

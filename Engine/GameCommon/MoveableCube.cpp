@@ -6,7 +6,7 @@
 #include "Engine/Math/3DMathHelpers.h"
 #include "Engine/GameCommon/Camera.h"
 
-void eae6320::MoveableCube::UpdateGameObjectBasedOnInput() {
+void sca2025::MoveableCube::UpdateGameObjectBasedOnInput() {
 	//gameObject movement
 	//reset to defualt velocity
 	m_State.velocity = Math::sVector(0, 0, 0);
@@ -93,9 +93,9 @@ void eae6320::MoveableCube::UpdateGameObjectBasedOnInput() {
 	*/
 	
 }
-void eae6320::MoveableCube::Tick(const float i_secondCountToIntegrate)
+void sca2025::MoveableCube::Tick(const float i_secondCountToIntegrate)
 {
 	//m_State.euler_x = m_State.euler_x + axis_X_velocity * i_secondCountToIntegrate;
 	//m_State.euler_y = m_State.euler_y + axis_Y_velocity * i_secondCountToIntegrate;
 }
-eae6320::MoveableCube::~MoveableCube() {}
+sca2025::MoveableCube::~MoveableCube() {}

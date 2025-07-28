@@ -1,6 +1,6 @@
 #include "Mesh.h"
 
-namespace eae6320
+namespace sca2025
 {
-	std::vector<eae6320::Assets::cHandle<Mesh>> masterMeshArray;
+	std::vector<sca2025::Assets::cHandle<Mesh>> masterMeshArray;
 }

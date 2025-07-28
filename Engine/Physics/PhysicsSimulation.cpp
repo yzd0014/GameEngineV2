@@ -9,7 +9,7 @@
 #include "CollisionResolver.h"
 #include "Engine/Physics/HingeJoint.h"
 
-namespace eae6320 {
+namespace sca2025 {
 	namespace Physics {
 		double totalSimulationTime = 0;
 

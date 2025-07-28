@@ -15,7 +15,7 @@
 // Interface
 //==========
 
-eae6320::cResult eae6320::Concurrency::cThread::Start( fThreadFunction const i_threadFunction, void* const io_userData )
+sca2025::cResult sca2025::Concurrency::cThread::Start( fThreadFunction const i_threadFunction, void* const io_userData )
 {
 	auto result = Results::Success;
 
@@ -114,7 +114,7 @@ eae6320::cResult eae6320::Concurrency::cThread::Start( fThreadFunction const i_t
 						" and the application is now in an unstable state and may crash or show unpredictable behavior." );
 					if ( TerminateThread( m_handle, result ) == FALSE )
 					{
-						const auto errorMessage = eae6320::Windows::GetLastSystemError();
+						const auto errorMessage = sca2025::Windows::GetLastSystemError();
 						EAE6320_ASSERTF( false, "Couldn't forcibly terminate a thread: %s", errorMessage.c_str() );
 						Logging::OutputError( "Windows failed to forcibly terminate the new thread: %s", errorMessage.c_str() );
 					}
@@ -133,7 +133,7 @@ eae6320::cResult eae6320::Concurrency::cThread::Start( fThreadFunction const i_t
 	{
 		result = Results::Failure;
 		EAE6320_ASSERTF( false, "A thread can't be started if it is already running" );
-		eae6320::Logging::OutputError( "An attempt was made to start a thread that was already running" );
+		sca2025::Logging::OutputError( "An attempt was made to start a thread that was already running" );
 		goto OnExit;
 	}
 
@@ -142,12 +142,12 @@ OnExit:
 	return result;
 }
 
-eae6320::cResult eae6320::Concurrency::WaitForThreadToStop( cThread& io_thread, const unsigned int i_timeToWait_inMilliseconds )
+sca2025::cResult sca2025::Concurrency::WaitForThreadToStop( cThread& io_thread, const unsigned int i_timeToWait_inMilliseconds )
 {
 	if ( io_thread.m_handle )
 	{
 		const auto result = WaitForSingleObject( io_thread.m_handle,
-			( i_timeToWait_inMilliseconds == eae6320::Concurrency::Constants::DontTimeOut ) ? INFINITE : static_cast<DWORD>( i_timeToWait_inMilliseconds ) );
+			( i_timeToWait_inMilliseconds == sca2025::Concurrency::Constants::DontTimeOut ) ? INFINITE : static_cast<DWORD>( i_timeToWait_inMilliseconds ) );
 		switch ( result )
 		{
 		// The thread exited
@@ -156,21 +156,21 @@ eae6320::cResult eae6320::Concurrency::WaitForThreadToStop( cThread& io_thread, 
 			return io_thread.CleanUp();
 		// The time-out period elapsed before the thread exited
 		case WAIT_TIMEOUT:
-			return eae6320::Results::TimeOut;
+			return sca2025::Results::TimeOut;
 		// A Windows error prevented the wait
 		case WAIT_FAILED:
 			{
-				const auto errorMessage = eae6320::Windows::GetLastSystemError();
+				const auto errorMessage = sca2025::Windows::GetLastSystemError();
 				EAE6320_ASSERTF( false, "Failed to wait for a thread to exit: %s", errorMessage.c_str() );
-				eae6320::Logging::OutputError( "Windows failed waiting for a thread to exit: %s", errorMessage.c_str() );
+				sca2025::Logging::OutputError( "Windows failed waiting for a thread to exit: %s", errorMessage.c_str() );
 			}
 			break;
 		// An unexpected error occurred
 		default:
 			EAE6320_ASSERTF( false, "Failed to wait for a thread to exit" );
-			eae6320::Logging::OutputError( "Windows failed waiting for a thread to exit due to an unknown reason (this should never happen)" );
+			sca2025::Logging::OutputError( "Windows failed waiting for a thread to exit due to an unknown reason (this should never happen)" );
 		}
-		return eae6320::Results::Failure;
+		return sca2025::Results::Failure;
 	}
 	else
 	{
@@ -178,14 +178,14 @@ eae6320::cResult eae6320::Concurrency::WaitForThreadToStop( cThread& io_thread, 
 		// Even calling the function with a NULL handle is probably a user error,
 		// the thread isn't running (assuming the user didn't call CleanUp() prematurely)
 		// and so success is returned
-		return eae6320::Results::Success;
+		return sca2025::Results::Success;
 	}
 }
 
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::Concurrency::cThread::cThread()
+sca2025::Concurrency::cThread::cThread()
 {
 
 }
@@ -196,9 +196,9 @@ eae6320::Concurrency::cThread::cThread()
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Concurrency::cThread::CleanUp()
+sca2025::cResult sca2025::Concurrency::cThread::CleanUp()
 {
-	cResult result = eae6320::Results::Success;
+	cResult result = sca2025::Results::Success;
 
 	if ( m_handle )
 	{
@@ -211,7 +211,7 @@ eae6320::cResult eae6320::Concurrency::cThread::CleanUp()
 			}
 			if ( result )
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 			}
 		}
 		m_handle = NULL;

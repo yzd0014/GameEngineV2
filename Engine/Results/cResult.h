@@ -13,7 +13,7 @@
 // Enumerations
 //=============
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Results
 	{
@@ -58,7 +58,7 @@ namespace eae6320
 // Class Declaration
 //==================
 
-namespace eae6320
+namespace sca2025
 {
 	class cResult
 	{
@@ -102,7 +102,7 @@ namespace eae6320
 		// The final 16 bits are an arbitrary ID assigned by the system when defining the result.
 		// No function is provided to get the ID;
 		// instead, the caller is expected to compare the entire result against the named result, e.g.:
-		//	if ( myResult == eae6320::Results::Success )
+		//	if ( myResult == sca2025::Results::Success )
 
 		constexpr bool operator ==( const cResult i_rhs ) const
 		{

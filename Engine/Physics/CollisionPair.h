@@ -1,6 +1,6 @@
 #pragma once
 #include "Engine/Math/sVector.h"
-namespace eae6320 {
+namespace sca2025 {
 	namespace Physics {
 		struct sRigidBodyState;
 		

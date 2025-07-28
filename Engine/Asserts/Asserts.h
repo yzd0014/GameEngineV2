@@ -34,7 +34,7 @@
 //=============================
 
 #ifdef EAE6320_ASSERTS_AREENABLED
-	namespace eae6320
+	namespace sca2025
 	{
 		namespace Asserts
 		{
@@ -62,7 +62,7 @@
 	{	\
 		static auto shouldThisAssertBeIgnored = false;	\
 		if ( !shouldThisAssertBeIgnored && !static_cast<bool>( i_assertion )	\
-			&& eae6320::Asserts::ShowMessageIfAssertionIsFalseAndReturnWhetherToBreak( __LINE__, __FILE__, shouldThisAssertBeIgnored, "" ) )	\
+			&& sca2025::Asserts::ShowMessageIfAssertionIsFalseAndReturnWhetherToBreak( __LINE__, __FILE__, shouldThisAssertBeIgnored, "" ) )	\
 		{	\
 			EAE6320_ASSERTS_BREAK;	\
 		}	\
@@ -71,7 +71,7 @@
 	{	\
 		static auto shouldThisAssertBeIgnored = false;	\
 		if ( !shouldThisAssertBeIgnored && !static_cast<bool>( i_assertion ) \
-			&& eae6320::Asserts::ShowMessageIfAssertionIsFalseAndReturnWhetherToBreak( __LINE__, __FILE__,	\
+			&& sca2025::Asserts::ShowMessageIfAssertionIsFalseAndReturnWhetherToBreak( __LINE__, __FILE__,	\
 				shouldThisAssertBeIgnored, i_messageToDisplayWhenAssertionIsFalse, __VA_ARGS__ ) )	\
 		{	\
 			EAE6320_ASSERTS_BREAK;	\

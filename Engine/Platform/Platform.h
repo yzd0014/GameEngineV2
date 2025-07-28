@@ -25,7 +25,7 @@
 // Interface
 //==========
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Platform
 	{
@@ -68,7 +68,7 @@ namespace eae6320
 // Result Definitions
 //===================
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Results
 	{

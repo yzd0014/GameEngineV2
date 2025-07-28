@@ -6,7 +6,7 @@
 #include "Engine/Graphics/VertexFormats.h"
 #include "Tools/AssetBuildLibrary/Functions.h"
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Assets
 	{
@@ -15,11 +15,11 @@ namespace eae6320
 		private:
 			virtual cResult Build(const std::vector<std::string>& i_arguments) override;
 
-			eae6320::cResult LoadTableValues_xyz(lua_State& io_luaState, std::vector<eae6320::Graphics::VertexFormats::sMesh> &o_vertexArray) {
-				auto result = eae6320::Results::Success;
+			sca2025::cResult LoadTableValues_xyz(lua_State& io_luaState, std::vector<sca2025::Graphics::VertexFormats::sMesh> &o_vertexArray) {
+				auto result = sca2025::Results::Success;
 				const auto valueCount = luaL_len(&io_luaState, -1);
 
-				eae6320::Graphics::VertexFormats::sMesh vertex;
+				sca2025::Graphics::VertexFormats::sMesh vertex;
 				for (int i = 1; i <= valueCount; ++i) {
 					lua_pushinteger(&io_luaState, i);
 					lua_gettable(&io_luaState, -2);
@@ -40,8 +40,8 @@ namespace eae6320
 				return result;
 			}
 
-			eae6320::cResult LoadTableValues_normal(lua_State& io_luaState, std::vector<eae6320::Graphics::VertexFormats::sMesh> &o_vertexArray) {
-				auto result = eae6320::Results::Success;
+			sca2025::cResult LoadTableValues_normal(lua_State& io_luaState, std::vector<sca2025::Graphics::VertexFormats::sMesh> &o_vertexArray) {
+				auto result = sca2025::Results::Success;
 				const auto valueCount = luaL_len(&io_luaState, -1);
 
 				for (int i = 1; i <= valueCount; ++i) {
@@ -62,8 +62,8 @@ namespace eae6320
 				return result;
 			}
 			
-			eae6320::cResult LoadTableValues_vertexPosition(lua_State& io_luaState, std::vector<eae6320::Graphics::VertexFormats::sMesh> &o_vertexArray) {
-				auto result = eae6320::Results::Success;
+			sca2025::cResult LoadTableValues_vertexPosition(lua_State& io_luaState, std::vector<sca2025::Graphics::VertexFormats::sMesh> &o_vertexArray) {
+				auto result = sca2025::Results::Success;
 				constexpr auto* const key = "position";
 				lua_pushstring(&io_luaState, key);
 				lua_gettable(&io_luaState, -2);
@@ -74,8 +74,8 @@ namespace eae6320
 				return result;
 			}
 			
-			eae6320::cResult LoadTableValues_vertexNormal(lua_State& io_luaState, std::vector<eae6320::Graphics::VertexFormats::sMesh> &o_vertexArray) {
-				auto result = eae6320::Results::Success;
+			sca2025::cResult LoadTableValues_vertexNormal(lua_State& io_luaState, std::vector<sca2025::Graphics::VertexFormats::sMesh> &o_vertexArray) {
+				auto result = sca2025::Results::Success;
 				constexpr auto* const key = "normal";
 				lua_pushstring(&io_luaState, key);
 				lua_gettable(&io_luaState, -2);
@@ -85,13 +85,13 @@ namespace eae6320
 				lua_pop(&io_luaState, 1);
 				return result;
 			}
-			eae6320::cResult LoadTableValues_vertex(lua_State& io_luaState, std::vector<eae6320::Graphics::VertexFormats::sMesh> &o_vertexArray) {
-				auto result = eae6320::Results::Success;
+			sca2025::cResult LoadTableValues_vertex(lua_State& io_luaState, std::vector<sca2025::Graphics::VertexFormats::sMesh> &o_vertexArray) {
+				auto result = sca2025::Results::Success;
 				const auto vertexCount = luaL_len(&io_luaState, -1);
 				/*
 				if (vertexCount > 65536) {
-					eae6320::UserOutput::Print("Number of vertices needds to be less than 65536");
-					result = eae6320::Results::Failure;
+					sca2025::UserOutput::Print("Number of vertices needds to be less than 65536");
+					result = sca2025::Results::Failure;
 					return result;
 				}*/
 				for (int i = 1; i <= vertexCount; ++i) {
@@ -102,7 +102,7 @@ namespace eae6320
 						result = LoadTableValues_vertexNormal(io_luaState, o_vertexArray);
 					}
 					else {
-						result = eae6320::Results::Failure;
+						result = sca2025::Results::Failure;
 					}
 					lua_pop(&io_luaState, 1);
 				}
@@ -110,8 +110,8 @@ namespace eae6320
 				return result;
 			}
 
-			eae6320::cResult LoadTableValues_vertexAarray(lua_State& io_luaState, std::vector<eae6320::Graphics::VertexFormats::sMesh> &o_vertexArray) {
-				auto result = eae6320::Results::Success;
+			sca2025::cResult LoadTableValues_vertexAarray(lua_State& io_luaState, std::vector<sca2025::Graphics::VertexFormats::sMesh> &o_vertexArray) {
+				auto result = sca2025::Results::Success;
 
 				constexpr auto* const key = "vertexArray";
 				lua_pushstring(&io_luaState, key);
@@ -125,8 +125,8 @@ namespace eae6320
 				lua_pop(&io_luaState, 1);
 				return result;
 			}
-			eae6320::cResult LoadTableValues_index(lua_State& io_luaState, std::vector<uint16_t> &o_indexArray) {
-				auto result = eae6320::Results::Success;
+			sca2025::cResult LoadTableValues_index(lua_State& io_luaState, std::vector<uint16_t> &o_indexArray) {
+				auto result = sca2025::Results::Success;
 				const auto indexCount = luaL_len(&io_luaState, -1);
 				for (int i = 1; i <= indexCount; ++i) {
 					lua_pushinteger(&io_luaState, i);
@@ -138,8 +138,8 @@ namespace eae6320
 				return result;
 			}
 
-			eae6320::cResult LoadTableValues_indexArray(lua_State& io_luaState, std::vector<uint16_t> &o_indexArray) {
-				auto result = eae6320::Results::Success;
+			sca2025::cResult LoadTableValues_indexArray(lua_State& io_luaState, std::vector<uint16_t> &o_indexArray) {
+				auto result = sca2025::Results::Success;
 				constexpr auto* const key = "indexArray";
 				lua_pushstring(&io_luaState, key);
 				lua_gettable(&io_luaState, -2);
@@ -150,8 +150,8 @@ namespace eae6320
 				lua_pop(&io_luaState, 1);
 				return result;
 			}
-			eae6320::cResult LoadTableValues(lua_State& io_luaState, std::vector<eae6320::Graphics::VertexFormats::sMesh> &o_vertexArray, std::vector<uint16_t> &o_indexArray) {
-				auto result = eae6320::Results::Success;
+			sca2025::cResult LoadTableValues(lua_State& io_luaState, std::vector<sca2025::Graphics::VertexFormats::sMesh> &o_vertexArray, std::vector<uint16_t> &o_indexArray) {
+				auto result = sca2025::Results::Success;
 
 				if (!(result = LoadTableValues_vertexAarray(io_luaState, o_vertexArray)))
 				{
@@ -165,8 +165,8 @@ namespace eae6320
 				return result;
 			}
 
-			eae6320::cResult LoadAsset(const char* const i_path, std::vector<eae6320::Graphics::VertexFormats::sMesh> &o_vertexArray, std::vector<uint16_t> &o_indexArray) {
-				auto result = eae6320::Results::Success;
+			sca2025::cResult LoadAsset(const char* const i_path, std::vector<sca2025::Graphics::VertexFormats::sMesh> &o_vertexArray, std::vector<uint16_t> &o_indexArray) {
+				auto result = sca2025::Results::Success;
 
 				// Create a new Lua state
 				lua_State* luaState = nullptr;
@@ -174,11 +174,11 @@ namespace eae6320
 					luaState = luaL_newstate();
 					if (!luaState)
 					{
-						result = eae6320::Results::OutOfMemory;
+						result = sca2025::Results::OutOfMemory;
 						m_path_source;
 						OutputErrorMessageWithFileInfo(m_path_source, "Failed to create a new Lua state");
 						//std::cerr << "Failed to create a new Lua state" << std::endl;
-						return eae6320::Results::Failure;
+						return sca2025::Results::Failure;
 					}
 				}
 
@@ -189,7 +189,7 @@ namespace eae6320
 					const auto luaResult = luaL_loadfile(luaState, i_path);
 					if (luaResult != LUA_OK)
 					{
-						result = eae6320::Results::Failure;
+						result = sca2025::Results::Failure;
 						//std::cerr << lua_tostring(luaState, -1) << std::endl;
 						OutputErrorMessageWithFileInfo(m_path_source, lua_tostring(luaState, -1));
 						// Pop the error message
@@ -213,7 +213,7 @@ namespace eae6320
 							// A correct asset file _must_ return a table
 							if (!lua_istable(luaState, -1))
 							{
-								result = eae6320::Results::InvalidFile;
+								result = sca2025::Results::InvalidFile;
 								//std::cerr << "Asset files must return a table (instead of a " << luaL_typename(luaState, -1) << ")" << std::endl;
 								OutputErrorMessageWithFileInfo(m_path_source, "Asset files must return a table");
 								// Pop the returned non-table value
@@ -223,7 +223,7 @@ namespace eae6320
 						}
 						else
 						{
-							result = eae6320::Results::InvalidFile;
+							result = sca2025::Results::InvalidFile;
 							//std::cerr << "Asset files must return a single table (instead of " << returnedValueCount << " values)" << std::endl;
 							OutputErrorMessageWithFileInfo(m_path_source, "Asset files must return a single table");
 							// Pop every value that was returned
@@ -233,7 +233,7 @@ namespace eae6320
 					}
 					else
 					{
-						result = eae6320::Results::InvalidFile;
+						result = sca2025::Results::InvalidFile;
 						//std::cerr << lua_tostring(luaState, -1) << std::endl;
 						OutputErrorMessageWithFileInfo(m_path_source, lua_tostring(luaState, -1));
 						// Pop the error message

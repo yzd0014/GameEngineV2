@@ -11,7 +11,7 @@
 // Build
 //------
 
-eae6320::cResult eae6320::Assets::cShaderBuilder::Build( const std::vector<std::string>& i_arguments )
+sca2025::cResult sca2025::Assets::cShaderBuilder::Build( const std::vector<std::string>& i_arguments )
 {
 	// Decide which kind of shader program to compile
 	Graphics::ShaderTypes::eType shaderType = Graphics::ShaderTypes::Unknown;

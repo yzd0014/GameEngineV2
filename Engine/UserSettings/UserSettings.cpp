@@ -19,9 +19,9 @@
 namespace
 {
 	uint16_t s_resolutionHeight = 0;
-	auto s_resolutionHeight_validity = eae6320::Results::Failure;
+	auto s_resolutionHeight_validity = sca2025::Results::Failure;
 	uint16_t s_resolutionWidth = 0;
-	auto s_resolutionWidth_validity = eae6320::Results::Failure;
+	auto s_resolutionWidth_validity = sca2025::Results::Failure;
 
 	constexpr auto* const s_userSettingsFileName = "settings.ini";
 
@@ -34,9 +34,9 @@ namespace
 
 namespace
 {
-	eae6320::cResult InitializeIfNecessary();
-	eae6320::cResult LoadUserSettingsIntoLuaTable( lua_State& io_luaState );
-	eae6320::cResult PopulateUserSettingsFromLuaTable( lua_State& io_luaState );
+	sca2025::cResult InitializeIfNecessary();
+	sca2025::cResult LoadUserSettingsIntoLuaTable( lua_State& io_luaState );
+	sca2025::cResult PopulateUserSettingsFromLuaTable( lua_State& io_luaState );
 
 	// Called if Lua panics
 	// (e.g. when an unhandled error is thrown)
@@ -46,7 +46,7 @@ namespace
 // Interface
 //==========
 
-eae6320::cResult eae6320::UserSettings::GetDesiredInitialResolutionWidth( uint16_t& o_width )
+sca2025::cResult sca2025::UserSettings::GetDesiredInitialResolutionWidth( uint16_t& o_width )
 {
 	const auto result = InitializeIfNecessary();
 	if ( result )
@@ -63,7 +63,7 @@ eae6320::cResult eae6320::UserSettings::GetDesiredInitialResolutionWidth( uint16
 	}
 }
 
-eae6320::cResult eae6320::UserSettings::GetDesiredInitialResolutionHeight( uint16_t& o_height )
+sca2025::cResult sca2025::UserSettings::GetDesiredInitialResolutionHeight( uint16_t& o_height )
 {
 	const auto result = InitializeIfNecessary();
 	if ( result )
@@ -85,21 +85,21 @@ eae6320::cResult eae6320::UserSettings::GetDesiredInitialResolutionHeight( uint1
 
 namespace
 {
-	eae6320::cResult InitializeIfNecessary()
+	sca2025::cResult InitializeIfNecessary()
 	{
-		static eae6320::cResult isInitialized;
-		if ( isInitialized != eae6320::Results::Undefined )
+		static sca2025::cResult isInitialized;
+		if ( isInitialized != sca2025::Results::Undefined )
 		{
 			return isInitialized;
 		}
 
-		auto result = eae6320::Results::Success;
+		auto result = sca2025::Results::Success;
 
 		// Create a new Lua state
 		lua_State* luaState = nullptr;
 		auto wasUserSettingsEnvironmentCreated = false;
 
-		const eae6320::cScopeCleanUp autoCleanUp( [&]()
+		const sca2025::cScopeCleanUp autoCleanUp( [&]()
 			{
 				// Free the Lua environment
 				if ( luaState )
@@ -126,9 +126,9 @@ namespace
 			}
 			else
 			{
-				result = eae6320::Results::OutOfMemory;
+				result = sca2025::Results::OutOfMemory;
 				EAE6320_ASSERTF( false, "Failed to create a new Lua state" );
-				eae6320::Logging::OutputError( "Failed to create a new Lua state for the user settings" );
+				sca2025::Logging::OutputError( "Failed to create a new Lua state for the user settings" );
 				return result;
 			}
 		}
@@ -144,9 +144,9 @@ namespace
 			}
 			else
 			{
-				result = eae6320::Results::OutOfMemory;
+				result = sca2025::Results::OutOfMemory;
 				EAE6320_ASSERTF( false, "Lua didn't increase its tack for a new table" );
-				eae6320::Logging::OutputError( "User settings files can't be processed"
+				sca2025::Logging::OutputError( "User settings files can't be processed"
 					" because Lua can't increase its stack for a new table" );
 				return result;
 			}
@@ -166,19 +166,19 @@ namespace
 		}
 		else
 		{
-			result = eae6320::Results::Failure;
+			result = sca2025::Results::Failure;
 			EAE6320_ASSERTF( false, "Unhandled Lua error" );
-			eae6320::Logging::OutputError( "User settings files can't be processed"
+			sca2025::Logging::OutputError( "User settings files can't be processed"
 				" because of an unhandled Lua error" );
 		}
 
 		return result;
 	}
 
-	eae6320::cResult LoadUserSettingsIntoLuaTable( lua_State& io_luaState )
+	sca2025::cResult LoadUserSettingsIntoLuaTable( lua_State& io_luaState )
 	{
 		// Load the user settings file into the Lua environment
-		if ( eae6320::Platform::DoesFileExist( s_userSettingsFileName ) )
+		if ( sca2025::Platform::DoesFileExist( s_userSettingsFileName ) )
 		{
 			constexpr int requiredStackSlotCount = 0
 				// The file as a function
@@ -208,10 +208,10 @@ namespace
 						else
 						{
 							EAE6320_ASSERT( false );
-							eae6320::Logging::OutputError( "Internal error setting the Lua environment for the user settings file \"%s\"!"
+							sca2025::Logging::OutputError( "Internal error setting the Lua environment for the user settings file \"%s\"!"
 								" This should never happen", s_userSettingsFileName );
 							lua_pop( &io_luaState, 2 );
-							return eae6320::Results::Failure;
+							return sca2025::Results::Failure;
 						}
 					}
 					// Call the Lua function
@@ -224,7 +224,7 @@ namespace
 						const auto luaResult = lua_pcall( &io_luaState, noArguments, noReturnValues, noErrorMessageHandler );
 						if ( luaResult == LUA_OK )
 						{
-							return eae6320::Results::Success;
+							return sca2025::Results::Success;
 						}
 						else
 						{
@@ -234,16 +234,16 @@ namespace
 							EAE6320_ASSERTF( false, "User settings file error: %s", luaErrorMessage.c_str() );
 							if ( luaResult == LUA_ERRRUN )
 							{
-								eae6320::Logging::OutputError( "Error in the user settings file \"%s\": %s",
+								sca2025::Logging::OutputError( "Error in the user settings file \"%s\": %s",
 									s_userSettingsFileName, luaErrorMessage );
 							}
 							else
 							{
-								eae6320::Logging::OutputError( "Error processing the user settings file \"%s\": %s",
+								sca2025::Logging::OutputError( "Error processing the user settings file \"%s\": %s",
 									s_userSettingsFileName, luaErrorMessage );
 							}
 
-							return eae6320::Results::InvalidFile;
+							return sca2025::Results::InvalidFile;
 						}
 					}
 				}
@@ -255,55 +255,55 @@ namespace
 					if ( luaResult == LUA_ERRFILE )
 					{
 						EAE6320_ASSERTF( false, "Error opening or reading user settings file: %s", luaErrorMessage.c_str() );
-						eae6320::Logging::OutputError( "Error opening or reading the user settings file \"%s\" even though it exists: %s",
+						sca2025::Logging::OutputError( "Error opening or reading the user settings file \"%s\" even though it exists: %s",
 							s_userSettingsFileName, luaErrorMessage.c_str() );
 
 					}
 					else if ( luaResult == LUA_ERRSYNTAX )
 					{
 						EAE6320_ASSERTF( false, "Syntax error in user settings file: %s", luaErrorMessage.c_str() );
-						eae6320::Logging::OutputError( "Syntax error in the user settings file \"%s\": %s",
+						sca2025::Logging::OutputError( "Syntax error in the user settings file \"%s\": %s",
 							s_userSettingsFileName, luaErrorMessage.c_str() );
 					}
 					else
 					{
 						EAE6320_ASSERTF( false, "Error loading user settings file: %s", luaErrorMessage.c_str() );
-						eae6320::Logging::OutputError( "Error loading the user settings file \"%s\": %s",
+						sca2025::Logging::OutputError( "Error loading the user settings file \"%s\": %s",
 							s_userSettingsFileName, luaErrorMessage.c_str() );
 					}
 
-					return eae6320::Results::InvalidFile;
+					return sca2025::Results::InvalidFile;
 				}
 			}
 			else
 			{
 				EAE6320_ASSERTF( false, "Not enough stack space to load user settings file" );
-				eae6320::Logging::OutputError( "Lua can't allocate enough stack space to load the user settings file \"%s\"",
+				sca2025::Logging::OutputError( "Lua can't allocate enough stack space to load the user settings file \"%s\"",
 					s_userSettingsFileName );
-				return eae6320::Results::OutOfMemory;
+				return sca2025::Results::OutOfMemory;
 			}
 		}
 		else
 		{
 			// If loading the file failed because the file doesn't exist it's ok;
 			// default values will be used
-			eae6320::Logging::OutputMessage( "The user settings file \"%s\" doesn't exist. Using default settings instead.",
+			sca2025::Logging::OutputMessage( "The user settings file \"%s\" doesn't exist. Using default settings instead.",
 				s_userSettingsFileName );
-			return eae6320::Results::FileDoesntExist;
+			return sca2025::Results::FileDoesntExist;
 		}
 	}
 
-	eae6320::cResult PopulateUserSettingsFromLuaTable( lua_State& io_luaState )
+	sca2025::cResult PopulateUserSettingsFromLuaTable( lua_State& io_luaState )
 	{
-		auto result = eae6320::Results::Success;
+		auto result = sca2025::Results::Success;
 
 		// There should always be enough stack space because the file had to be loaded,
 		// but it doesn't hurt to do a sanity check in the context of this function
 		if ( !lua_checkstack( &io_luaState, 1 ) )
 		{
 			EAE6320_ASSERTF( false, "Not enough stack space to read a setting from user settings file" );
-			eae6320::Logging::OutputError( "Lua can't allocate enough stack space to read each user setting" );
-			return eae6320::Results::OutOfMemory;
+			sca2025::Logging::OutputError( "Lua can't allocate enough stack space to read each user setting" );
+			return sca2025::Results::OutOfMemory;
 		}
 
 		// Resolution Width
@@ -321,27 +321,27 @@ namespace
 					if ( luaInteger <= maxWidth )
 					{
 						s_resolutionWidth = static_cast<uint16_t>( luaInteger );
-						s_resolutionWidth_validity = eae6320::Results::Success;
-						eae6320::Logging::OutputMessage( "User settings defined resolution width of %u", s_resolutionWidth );
+						s_resolutionWidth_validity = sca2025::Results::Success;
+						sca2025::Logging::OutputMessage( "User settings defined resolution width of %u", s_resolutionWidth );
 					}
 					else
 					{
-						s_resolutionWidth_validity = eae6320::Results::InvalidFile;
-						eae6320::Logging::OutputMessage( "The user settings file %s specifies a resolution width (%i)"
+						s_resolutionWidth_validity = sca2025::Results::InvalidFile;
+						sca2025::Logging::OutputMessage( "The user settings file %s specifies a resolution width (%i)"
 							" that is bigger than the maximum (%u)", s_userSettingsFileName, luaInteger, maxWidth );
 					}
 				}
 				else
 				{
-					s_resolutionWidth_validity = eae6320::Results::InvalidFile;
-					eae6320::Logging::OutputMessage( "The user settings file %s specifies a non-positive resolution width (%i)",
+					s_resolutionWidth_validity = sca2025::Results::InvalidFile;
+					sca2025::Logging::OutputMessage( "The user settings file %s specifies a non-positive resolution width (%i)",
 						s_userSettingsFileName, luaInteger );
 				}
 			}
 			else
 			{
-				s_resolutionWidth_validity = eae6320::Results::InvalidFile;
-				eae6320::Logging::OutputMessage( "The user settings file %s specifies a %s for %s instead of an integer",
+				s_resolutionWidth_validity = sca2025::Results::InvalidFile;
+				sca2025::Logging::OutputMessage( "The user settings file %s specifies a %s for %s instead of an integer",
 					s_userSettingsFileName, luaL_typename( &io_luaState, -1 ), key_width );
 			}
 			lua_pop( &io_luaState, 1 );
@@ -361,27 +361,27 @@ namespace
 					if ( luaInteger <= maxHeight )
 					{
 						s_resolutionHeight = static_cast<uint16_t>( luaInteger );
-						s_resolutionHeight_validity = eae6320::Results::Success;
-						eae6320::Logging::OutputMessage( "User settings defined resolution height of %u", s_resolutionHeight );
+						s_resolutionHeight_validity = sca2025::Results::Success;
+						sca2025::Logging::OutputMessage( "User settings defined resolution height of %u", s_resolutionHeight );
 					}
 					else
 					{
-						s_resolutionHeight_validity = eae6320::Results::InvalidFile;
-						eae6320::Logging::OutputMessage( "The user settings file %s specifies a resolution height (%i)"
+						s_resolutionHeight_validity = sca2025::Results::InvalidFile;
+						sca2025::Logging::OutputMessage( "The user settings file %s specifies a resolution height (%i)"
 							" that is bigger than the maximum (%u)", s_userSettingsFileName, luaInteger, maxHeight );
 					}
 				}
 				else
 				{
-					s_resolutionHeight_validity = eae6320::Results::InvalidFile;
-					eae6320::Logging::OutputMessage( "The user settings file %s specifies a non-positive resolution height (%i)",
+					s_resolutionHeight_validity = sca2025::Results::InvalidFile;
+					sca2025::Logging::OutputMessage( "The user settings file %s specifies a non-positive resolution height (%i)",
 						s_userSettingsFileName, luaInteger );
 				}
 			}
 			else
 			{
-				s_resolutionWidth_validity = eae6320::Results::InvalidFile;
-				eae6320::Logging::OutputMessage( "The user settings file %s specifies a %s for %s instead of an integer",
+				s_resolutionWidth_validity = sca2025::Results::InvalidFile;
+				sca2025::Logging::OutputMessage( "The user settings file %s specifies a %s for %s instead of an integer",
 					s_userSettingsFileName, luaL_typename( &io_luaState, -1 ), key_height );
 			}
 			lua_pop( &io_luaState, 1 );
@@ -396,11 +396,11 @@ namespace
 		{
 			if ( lua_isstring( io_luaState, -1 ) )
 			{
-				eae6320::Logging::OutputError( "Lua is panicking when processing User Settings: %s", lua_tostring( io_luaState, -1 ) );
+				sca2025::Logging::OutputError( "Lua is panicking when processing User Settings: %s", lua_tostring( io_luaState, -1 ) );
 			}
 			else
 			{
-				eae6320::Logging::OutputError( "Lua is panicking for an unknown reason when processing User Settings" );
+				sca2025::Logging::OutputError( "Lua is panicking for an unknown reason when processing User Settings" );
 			}
 		}
 		// Jump back to the restore point
@@ -410,9 +410,9 @@ namespace
 		}
 
 		// This code should never be reached
-		eae6320::Logging::OutputError( "The application was not able to recover from Lua's panicking."
+		sca2025::Logging::OutputError( "The application was not able to recover from Lua's panicking."
 			" It is about to be forcefully exited." );
-		eae6320::UserOutput::Print( "An unexpected error occurred when processing User Settings (see the log file for details)."
+		sca2025::UserOutput::Print( "An unexpected error occurred when processing User Settings (see the log file for details)."
 			" The application is about to exit" );
 		return 0;
 	}

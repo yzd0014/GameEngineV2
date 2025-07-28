@@ -13,7 +13,7 @@
 // Render
 //-------
 
-void eae6320::Graphics::cRenderState::Bind() const
+void sca2025::Graphics::cRenderState::Bind() const
 {
 	// Alpha Transparency
 	if ( IsAlphaTransparencyEnabled() )
@@ -74,7 +74,7 @@ void eae6320::Graphics::cRenderState::Bind() const
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::cRenderState::CleanUp()
+sca2025::cResult sca2025::Graphics::cRenderState::CleanUp()
 {
 	return Results::Success;
 }
@@ -85,7 +85,7 @@ eae6320::cResult eae6320::Graphics::cRenderState::CleanUp()
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::cRenderState::InitializeFromBits()
+sca2025::cResult sca2025::Graphics::cRenderState::InitializeFromBits()
 {
 	// OpenGL uses the bits directly at binding time
 	return Results::Success;

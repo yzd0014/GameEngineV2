@@ -19,7 +19,7 @@ namespace
 // Interface
 //==========
 
-eae6320::cResult eae6320::Windows::OpenGl::CreateHiddenContextWindow( HINSTANCE& io_applicationInstance, sHiddenWindowInfo& o_info, std::string* const o_errorMessage )
+sca2025::cResult sca2025::Windows::OpenGl::CreateHiddenContextWindow( HINSTANCE& io_applicationInstance, sHiddenWindowInfo& o_info, std::string* const o_errorMessage )
 {
 	auto result = Results::Success;
 
@@ -205,7 +205,7 @@ OnExit:
 	return result;
 }
 
-eae6320::cResult eae6320::Windows::OpenGl::FreeHiddenContextWindow( const HINSTANCE& i_applicationInstance, sHiddenWindowInfo& io_info, std::string* const o_errorMessage )
+sca2025::cResult sca2025::Windows::OpenGl::FreeHiddenContextWindow( const HINSTANCE& i_applicationInstance, sHiddenWindowInfo& io_info, std::string* const o_errorMessage )
 {
 	auto result = Results::Success;
 

@@ -16,7 +16,7 @@
 // Class Declaration
 //==================
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Assets
 	{

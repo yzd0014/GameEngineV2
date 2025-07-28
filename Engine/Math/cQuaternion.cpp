@@ -22,7 +22,7 @@ namespace
 // Multiplication
 //---------------
 
-eae6320::Math::cQuaternion eae6320::Math::cQuaternion::operator *( const cQuaternion i_rhs ) const
+sca2025::Math::cQuaternion sca2025::Math::cQuaternion::operator *( const cQuaternion i_rhs ) const
 {
 	return cQuaternion(
 		( m_w * i_rhs.m_w ) - ( ( m_x * i_rhs.m_x ) + ( m_y * i_rhs.m_y ) + ( m_z * i_rhs.m_z ) ),
@@ -34,14 +34,14 @@ eae6320::Math::cQuaternion eae6320::Math::cQuaternion::operator *( const cQuater
 // Inversion
 //----------
 
-void eae6320::Math::cQuaternion::Invert()
+void sca2025::Math::cQuaternion::Invert()
 {
 	m_x = -m_x;
 	m_y = -m_y;
 	m_z = -m_z;
 }
 
-eae6320::Math::cQuaternion eae6320::Math::cQuaternion::GetInverse() const
+sca2025::Math::cQuaternion sca2025::Math::cQuaternion::GetInverse() const
 {
 	return cQuaternion( m_w, -m_x, -m_y, -m_z );
 }
@@ -49,7 +49,7 @@ eae6320::Math::cQuaternion eae6320::Math::cQuaternion::GetInverse() const
 // Normalization
 //--------------
 
-void eae6320::Math::cQuaternion::Normalize()
+void sca2025::Math::cQuaternion::Normalize()
 {
 	const auto length = std::sqrt( ( m_w * m_w ) + ( m_x * m_x ) + ( m_y * m_y ) + ( m_z * m_z ) );
 	EAE6320_ASSERTF( length > s_epsilon, "Can't divide by zero" );
@@ -60,7 +60,7 @@ void eae6320::Math::cQuaternion::Normalize()
 	m_z *= length_reciprocal;
 }
 
-eae6320::Math::cQuaternion eae6320::Math::cQuaternion::GetNormalized() const
+sca2025::Math::cQuaternion sca2025::Math::cQuaternion::GetNormalized() const
 {
 	const auto length = std::sqrt( ( m_w * m_w ) + ( m_x * m_x ) + ( m_y * m_y ) + ( m_z * m_z ) );
 	EAE6320_ASSERTF( length > s_epsilon, "Can't divide by zero" );
@@ -71,7 +71,7 @@ eae6320::Math::cQuaternion eae6320::Math::cQuaternion::GetNormalized() const
 // Products
 //---------
 
-float eae6320::Math::Dot( const cQuaternion i_lhs, const cQuaternion i_rhs )
+float sca2025::Math::Dot( const cQuaternion i_lhs, const cQuaternion i_rhs )
 {
 	return ( i_lhs.m_w * i_rhs.m_w ) + ( i_lhs.m_x * i_rhs.m_x ) + ( i_lhs.m_y * i_rhs.m_y ) + ( i_lhs.m_z * i_rhs.m_z );
 }
@@ -79,7 +79,7 @@ float eae6320::Math::Dot( const cQuaternion i_lhs, const cQuaternion i_rhs )
 // Access
 //-------
 
-eae6320::Math::sVector eae6320::Math::cQuaternion::CalculateForwardDirection() const
+sca2025::Math::sVector sca2025::Math::cQuaternion::CalculateForwardDirection() const
 {
 	const auto _2x = m_x + m_x;
 	const auto _2y = m_y + m_y;
@@ -96,7 +96,7 @@ eae6320::Math::sVector eae6320::Math::cQuaternion::CalculateForwardDirection() c
 // Initialization / Shut Down
 //---------------------------
 
-eae6320::Math::cQuaternion::cQuaternion( const float i_angleInRadians, const sVector i_axisOfRotation_normalized )
+sca2025::Math::cQuaternion::cQuaternion( const float i_angleInRadians, const sVector i_axisOfRotation_normalized )
 {
 	const auto theta_half = i_angleInRadians * 0.5f;
 	m_w = std::cos( theta_half );
@@ -112,14 +112,14 @@ eae6320::Math::cQuaternion::cQuaternion( const float i_angleInRadians, const sVe
 // Initialization / Shut Down
 //---------------------------
 
-eae6320::Math::cQuaternion::cQuaternion( const float i_w, const float i_x, const float i_y, const float i_z )
+sca2025::Math::cQuaternion::cQuaternion( const float i_w, const float i_x, const float i_y, const float i_z )
 	:
 	m_w( i_w ), m_x( i_x ), m_y( i_y ), m_z( i_z )
 {
 
 }
 
-eae6320::Math::sVector eae6320::Math::cQuaternion::Quaternion2Euler()
+sca2025::Math::sVector sca2025::Math::cQuaternion::Quaternion2Euler()
 {
 	float res[3];
 	Math::sVector rot;
@@ -136,13 +136,13 @@ eae6320::Math::sVector eae6320::Math::cQuaternion::Quaternion2Euler()
 	return rot;
 }
 
-void eae6320::Math::cQuaternion::threeaxisrot(float r11, float r12, float r21, float r31, float r32, float res[]) {
+void sca2025::Math::cQuaternion::threeaxisrot(float r11, float r12, float r21, float r31, float r32, float res[]) {
 	res[0] = atan2(r31, r32);
 	res[1] = asin(r21);
 	res[2] = atan2(r11, r12);
 }
 
-eae6320::Math::sVector eae6320::Math::cQuaternion::Quaternion2AxisAngle()
+sca2025::Math::sVector sca2025::Math::cQuaternion::Quaternion2AxisAngle()
 {
 	if (m_w > 1) Normalize(); // if w>1 acos and sqrt will produce errors, this cant happen if quaternion is normalised
 	float angle = 2 * acos(m_w);
@@ -165,7 +165,7 @@ eae6320::Math::sVector eae6320::Math::cQuaternion::Quaternion2AxisAngle()
 	return rot;
 }
 
-eae6320::Math::cQuaternion eae6320::Math::ConvertEigenQuatToNativeQuat(Eigen::Quaternionf i_quat)
+sca2025::Math::cQuaternion sca2025::Math::ConvertEigenQuatToNativeQuat(Eigen::Quaternionf i_quat)
 {
-	return eae6320::Math::cQuaternion(i_quat.w(), i_quat.x(), i_quat.y(), i_quat.z());
+	return sca2025::Math::cQuaternion(i_quat.w(), i_quat.x(), i_quat.y(), i_quat.z());
 }

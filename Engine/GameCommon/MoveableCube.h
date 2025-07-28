@@ -1,10 +1,10 @@
 #pragma once
 #include "GameObject.h"
 
-namespace eae6320 {
-	class MoveableCube : public eae6320::GameCommon::GameObject {
+namespace sca2025 {
+	class MoveableCube : public sca2025::GameCommon::GameObject {
 	public:
-		MoveableCube(Effect * i_pEffect, eae6320::Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State):
+		MoveableCube(Effect * i_pEffect, sca2025::Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State):
 			GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 		{
 

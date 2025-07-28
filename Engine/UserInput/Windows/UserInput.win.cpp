@@ -9,7 +9,7 @@
 #include "Winuser.h"
 // Interface
 //==========
-void eae6320::UserInput::TrackKeyState()
+void sca2025::UserInput::TrackKeyState()
 {
 	for (uint8_t i = 0; i < 128; i++)
 	{
@@ -57,7 +57,7 @@ void eae6320::UserInput::TrackKeyState()
 	KeyState::currFrameKeyState[159] = IsKeyPressed(0x7b);//F12 = 0x7b,
 }
 
-void eae6320::UserInput::UpdateLastFrameKeyState()
+void sca2025::UserInput::UpdateLastFrameKeyState()
 {
 	for (int i = 0; i < 131; i++) 
 	{
@@ -65,7 +65,7 @@ void eae6320::UserInput::UpdateLastFrameKeyState()
 	}
 }
 
-bool eae6320::UserInput::IsKeyFromReleasedToPressed(const uint_fast8_t i_keyCode)
+bool sca2025::UserInput::IsKeyFromReleasedToPressed(const uint_fast8_t i_keyCode)
 {
 	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
 	bool output = false;
@@ -76,7 +76,7 @@ bool eae6320::UserInput::IsKeyFromReleasedToPressed(const uint_fast8_t i_keyCode
 	return output;
 }
 
-bool eae6320::UserInput::IsKeyFromPressedToReleased(const uint_fast8_t i_keyCode)
+bool sca2025::UserInput::IsKeyFromPressedToReleased(const uint_fast8_t i_keyCode)
 {
 	//index 128: left mouse button, 129: middle mouse button, 130: right mouse button
 	bool output = false;
@@ -87,14 +87,14 @@ bool eae6320::UserInput::IsKeyFromPressedToReleased(const uint_fast8_t i_keyCode
 	return output;
 }
 
-bool eae6320::UserInput::IsKeyPressed( const uint_fast8_t i_keyCode )
+bool sca2025::UserInput::IsKeyPressed( const uint_fast8_t i_keyCode )
 {
 	const auto keyState = GetAsyncKeyState( i_keyCode );
 	const short isKeyDownMask = ~1;
 	return ( keyState & isKeyDownMask ) != 0;
 }
 
-void eae6320::UserInput::GetMouseMoveDistanceInDeltaTime(int * o_xTravel, int * o_yTravel) {
+void sca2025::UserInput::GetMouseMoveDistanceInDeltaTime(int * o_xTravel, int * o_yTravel) {
 
 	POINT screenPos[1];
 	GetCursorPos(screenPos);
@@ -114,7 +114,7 @@ void eae6320::UserInput::GetMouseMoveDistanceInDeltaTime(int * o_xTravel, int * 
 		}
 	}
 	MouseMovement::xPosCached = currentX;
-	//eae6320::UserOutput::DebugPrint("%d", currentX);
+	//sca2025::UserOutput::DebugPrint("%d", currentX);
 
 	//get y distanse and clamp y position
 	int currentY = (int)screenPos[0].y;
@@ -154,7 +154,7 @@ void eae6320::UserInput::GetMouseMoveDistanceInDeltaTime(int * o_xTravel, int * 
 	MouseMovement::yPosCached = currentY;
 }
 
-void eae6320::UserInput::GetCursorPositionInWindow(int* o_x, int* o_y)
+void sca2025::UserInput::GetCursorPositionInWindow(int* o_x, int* o_y)
 {
 	POINT Pos[1];
 	GetCursorPos(Pos);
@@ -163,7 +163,7 @@ void eae6320::UserInput::GetCursorPositionInWindow(int* o_x, int* o_y)
 	*o_y = (int)Pos[0].y;
 }
 
-void eae6320::UserInput::ConfineCursorWithinWindow()
+void sca2025::UserInput::ConfineCursorWithinWindow()
 {
 	//get window size
 	RECT rcClient;
@@ -198,7 +198,7 @@ void eae6320::UserInput::ConfineCursorWithinWindow()
 	//std::cout << Pos[0].x << ", " << Pos[0].y << std::endl;
 }
 
-void eae6320::UserInput::GetCursorDisplacementSinceLastCall(int * o_xTravel, int * o_yTravel)
+void sca2025::UserInput::GetCursorDisplacementSinceLastCall(int * o_xTravel, int * o_yTravel)
 {
 	POINT screenPos[1];
 	GetCursorPos(screenPos);

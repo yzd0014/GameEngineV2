@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine/Math/sVector.h"
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Application
 	{
@@ -11,7 +11,7 @@ namespace eae6320
 	namespace GameplayUtility
 	{
 		extern Application::cbApplication* pGameApplication;
-		extern eae6320::Assets::cHandle<Mesh> arrowMesh;
+		extern sca2025::Assets::cHandle<Mesh> arrowMesh;
 
 		Math::sVector MouseRayCasting();
 		GameCommon::GameObject* DrawArrow(Vector3d startPoint, Vector3d dir, Math::sVector color, double scaling);

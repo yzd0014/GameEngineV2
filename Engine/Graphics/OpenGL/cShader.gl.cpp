@@ -29,13 +29,13 @@ namespace
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::cShader::Initialize( const char* const i_path, const Platform::sDataFromFile& i_loadedShader )
+sca2025::cResult sca2025::Graphics::cShader::Initialize( const char* const i_path, const Platform::sDataFromFile& i_loadedShader )
 {
 	auto result = Results::Success;
 
 	GLuint shaderId = 0;
-	const auto shaderType = ( m_type == eae6320::Graphics::ShaderTypes::Vertex ) ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER;
-	const auto* const shaderType_description = ( shaderType == eae6320::Graphics::ShaderTypes::Vertex ) ? "vertex" : "fragment";
+	const auto shaderType = ( m_type == sca2025::Graphics::ShaderTypes::Vertex ) ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER;
+	const auto* const shaderType_description = ( shaderType == sca2025::Graphics::ShaderTypes::Vertex ) ? "vertex" : "fragment";
 
 	// Verify that compiling shaders at run-time is supported
 	{
@@ -45,7 +45,7 @@ eae6320::cResult eae6320::Graphics::cShader::Initialize( const char* const i_pat
 		{
 			result = Results::Failure;
 			EAE6320_ASSERT( false );
-			eae6320::Logging::OutputError( "Compiling shaders at run-time isn't supported on this implementation (this should never happen)" );
+			sca2025::Logging::OutputError( "Compiling shaders at run-time isn't supported on this implementation (this should never happen)" );
 			goto OnExit;
 		}
 	}
@@ -58,7 +58,7 @@ eae6320::cResult eae6320::Graphics::cShader::Initialize( const char* const i_pat
 		{
 			result = Results::Failure;
 			EAE6320_ASSERTF( false, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
-			eae6320::Logging::OutputError( "OpenGL failed to get an unused %s shader ID: %s",
+			sca2025::Logging::OutputError( "OpenGL failed to get an unused %s shader ID: %s",
 				shaderType_description, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 			goto OnExit;
 		}
@@ -66,7 +66,7 @@ eae6320::cResult eae6320::Graphics::cShader::Initialize( const char* const i_pat
 		{
 			result = Results::Failure;
 			EAE6320_ASSERT( false );
-			eae6320::Logging::OutputError( "OpenGL failed to get an unused %s shader ID", shaderType_description );
+			sca2025::Logging::OutputError( "OpenGL failed to get an unused %s shader ID", shaderType_description );
 			goto OnExit;
 		}
 	}
@@ -80,7 +80,7 @@ eae6320::cResult eae6320::Graphics::cShader::Initialize( const char* const i_pat
 		{
 			result = Results::Failure;
 			EAE6320_ASSERTF( false, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
-			eae6320::Logging::OutputError( "OpenGL failed to set the shader source code from %s: %s",
+			sca2025::Logging::OutputError( "OpenGL failed to set the shader source code from %s: %s",
 				i_path, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 			goto OnExit;
 		}
@@ -113,7 +113,7 @@ eae6320::cResult eae6320::Graphics::cShader::Initialize( const char* const i_pat
 					{
 						result = Results::Failure;
 						EAE6320_ASSERTF( false, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
-						eae6320::Logging::OutputError( "OpenGL failed to get compilation info about the shader source code of %s: %s",
+						sca2025::Logging::OutputError( "OpenGL failed to get compilation info about the shader source code of %s: %s",
 							i_path, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 						goto OnExit;
 					}
@@ -122,7 +122,7 @@ eae6320::cResult eae6320::Graphics::cShader::Initialize( const char* const i_pat
 				{
 					result = Results::Failure;
 					EAE6320_ASSERTF( false, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
-					eae6320::Logging::OutputError( "OpenGL failed to get the length of the shader compilation info of %s: %s",
+					sca2025::Logging::OutputError( "OpenGL failed to get the length of the shader compilation info of %s: %s",
 						i_path, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 					goto OnExit;
 				}
@@ -138,7 +138,7 @@ eae6320::cResult eae6320::Graphics::cShader::Initialize( const char* const i_pat
 					{
 						result = Results::Failure;
 						EAE6320_ASSERTF( false, compilationInfo.c_str() );
-						eae6320::Logging::OutputError( "OpenGL failed to compile the shader %s: %s",
+						sca2025::Logging::OutputError( "OpenGL failed to compile the shader %s: %s",
 							i_path, compilationInfo.c_str() );
 						goto OnExit;
 					}
@@ -147,7 +147,7 @@ eae6320::cResult eae6320::Graphics::cShader::Initialize( const char* const i_pat
 				{
 					result = Results::Failure;
 					EAE6320_ASSERTF( false, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
-					eae6320::Logging::OutputError( "OpenGL failed to find if compilation of the shader source code from %s succeeded: %s",
+					sca2025::Logging::OutputError( "OpenGL failed to find if compilation of the shader source code from %s succeeded: %s",
 						i_path, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 					goto OnExit;
 				}
@@ -157,7 +157,7 @@ eae6320::cResult eae6320::Graphics::cShader::Initialize( const char* const i_pat
 		{
 			result = Results::Failure;
 			EAE6320_ASSERTF( false, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
-			eae6320::Logging::OutputError( "OpenGL failed to compile the shader source code from %s: %s",
+			sca2025::Logging::OutputError( "OpenGL failed to compile the shader source code from %s: %s",
 				i_path, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 			goto OnExit;
 		}
@@ -178,7 +178,7 @@ OnExit:
 			if ( errorCode != GL_NO_ERROR )
 			{
 				EAE6320_ASSERTF( false, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
-				eae6320::Logging::OutputError( "OpenGL failed to delete the shader ID %u: %s",
+				sca2025::Logging::OutputError( "OpenGL failed to delete the shader ID %u: %s",
 					shaderId, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 			}
 			shaderId = 0;
@@ -188,7 +188,7 @@ OnExit:
 	return result;
 }
 
-eae6320::cResult eae6320::Graphics::cShader::CleanUp()
+sca2025::cResult sca2025::Graphics::cShader::CleanUp()
 {
 	auto result = Results::Success;
 
@@ -203,7 +203,7 @@ eae6320::cResult eae6320::Graphics::cShader::CleanUp()
 				result = Results::Failure;
 			}
 			EAE6320_ASSERTF( false, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
-			eae6320::Logging::OutputError( "OpenGL failed to delete the shader ID %u: %s",
+			sca2025::Logging::OutputError( "OpenGL failed to delete the shader ID %u: %s",
 				m_shaderId, reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 		}
 		m_shaderId = 0;

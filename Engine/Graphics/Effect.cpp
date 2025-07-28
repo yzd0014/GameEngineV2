@@ -1,7 +1,7 @@
 #include "Effect.h"
 #include "sContext.h"
 
-namespace eae6320
+namespace sca2025
 {
 	std::vector<Effect*> masterEffectArray;
 	Math::sVector lightSourceADir = Math::sVector(0, -1, 0);
@@ -14,17 +14,17 @@ Effect::Effect() {
 	m_programId = 0;
 #endif
 }
-eae6320::cResult Effect::InitializeShadingData(const char* const i_vertexPath, const char* const i_fragmentPath, uint8_t i_renderStateBits) {
-	auto result = eae6320::Results::Success;
+sca2025::cResult Effect::InitializeShadingData(const char* const i_vertexPath, const char* const i_fragmentPath, uint8_t i_renderStateBits) {
+	auto result = sca2025::Results::Success;
 
-	if (!(result = eae6320::Graphics::cShader::s_manager.Load(i_vertexPath,
-		m_vertexShader, eae6320::Graphics::ShaderTypes::Vertex)))
+	if (!(result = sca2025::Graphics::cShader::s_manager.Load(i_vertexPath,
+		m_vertexShader, sca2025::Graphics::ShaderTypes::Vertex)))
 	{
 		EAE6320_ASSERT(false);
 		goto OnExit;
 	}
-	if (!(result = eae6320::Graphics::cShader::s_manager.Load(i_fragmentPath,
-		m_fragmentShader, eae6320::Graphics::ShaderTypes::Fragment)))
+	if (!(result = sca2025::Graphics::cShader::s_manager.Load(i_fragmentPath,
+		m_fragmentShader, sca2025::Graphics::ShaderTypes::Fragment)))
 	{
 		EAE6320_ASSERT(false);
 		goto OnExit;
@@ -43,17 +43,17 @@ eae6320::cResult Effect::InitializeShadingData(const char* const i_vertexPath, c
 		const auto errorCode = glGetError();
 		if (errorCode != GL_NO_ERROR)
 		{
-			result = eae6320::Results::Failure;
+			result = sca2025::Results::Failure;
 			EAE6320_ASSERTF(false, reinterpret_cast<const char*>(gluErrorString(errorCode)));
-			eae6320::Logging::OutputError("OpenGL failed to create a program: %s",
+			sca2025::Logging::OutputError("OpenGL failed to create a program: %s",
 				reinterpret_cast<const char*>(gluErrorString(errorCode)));
 			goto OnExit;
 		}
 		else if (m_programId == 0)
 		{
-			result = eae6320::Results::Failure;
+			result = sca2025::Results::Failure;
 			EAE6320_ASSERT(false);
-			eae6320::Logging::OutputError("OpenGL failed to create a program");
+			sca2025::Logging::OutputError("OpenGL failed to create a program");
 			goto OnExit;
 		}
 	}
@@ -61,26 +61,26 @@ eae6320::cResult Effect::InitializeShadingData(const char* const i_vertexPath, c
 	{
 		// Vertex
 		{
-			glAttachShader(m_programId, eae6320::Graphics::cShader::s_manager.Get(m_vertexShader)->m_shaderId);
+			glAttachShader(m_programId, sca2025::Graphics::cShader::s_manager.Get(m_vertexShader)->m_shaderId);
 			const auto errorCode = glGetError();
 			if (errorCode != GL_NO_ERROR)
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 				EAE6320_ASSERTF(false, reinterpret_cast<const char*>(gluErrorString(errorCode)));
-				eae6320::Logging::OutputError("OpenGL failed to attach the vertex shader to the program: %s",
+				sca2025::Logging::OutputError("OpenGL failed to attach the vertex shader to the program: %s",
 					reinterpret_cast<const char*>(gluErrorString(errorCode)));
 				goto OnExit;
 			}
 		}
 		// Fragment
 		{
-			glAttachShader(m_programId, eae6320::Graphics::cShader::s_manager.Get(m_fragmentShader)->m_shaderId);
+			glAttachShader(m_programId, sca2025::Graphics::cShader::s_manager.Get(m_fragmentShader)->m_shaderId);
 			const auto errorCode = glGetError();
 			if (errorCode != GL_NO_ERROR)
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 				EAE6320_ASSERTF(false, reinterpret_cast<const char*>(gluErrorString(errorCode)));
-				eae6320::Logging::OutputError("OpenGL failed to attach the fragment shader to the program: %s",
+				sca2025::Logging::OutputError("OpenGL failed to attach the fragment shader to the program: %s",
 					reinterpret_cast<const char*>(gluErrorString(errorCode)));
 				goto OnExit;
 			}
@@ -117,18 +117,18 @@ eae6320::cResult Effect::InitializeShadingData(const char* const i_vertexPath, c
 					}
 					else
 					{
-						result = eae6320::Results::Failure;
+						result = sca2025::Results::Failure;
 						EAE6320_ASSERTF(false, reinterpret_cast<const char*>(gluErrorString(errorCode)));
-						eae6320::Logging::OutputError("OpenGL failed to get link info of the program: %s",
+						sca2025::Logging::OutputError("OpenGL failed to get link info of the program: %s",
 							reinterpret_cast<const char*>(gluErrorString(errorCode)));
 						goto OnExit;
 					}
 				}
 				else
 				{
-					result = eae6320::Results::Failure;
+					result = sca2025::Results::Failure;
 					EAE6320_ASSERTF(false, reinterpret_cast<const char*>(gluErrorString(errorCode)));
-					eae6320::Logging::OutputError("OpenGL failed to get the length of the program link info: %s",
+					sca2025::Logging::OutputError("OpenGL failed to get the length of the program link info: %s",
 						reinterpret_cast<const char*>(gluErrorString(errorCode)));
 					goto OnExit;
 				}
@@ -142,18 +142,18 @@ eae6320::cResult Effect::InitializeShadingData(const char* const i_vertexPath, c
 				{
 					if (didLinkingSucceed == GL_FALSE)
 					{
-						result = eae6320::Results::Failure;
+						result = sca2025::Results::Failure;
 						EAE6320_ASSERTF(false, linkInfo.c_str());
-						eae6320::Logging::OutputError("The program failed to link: %s",
+						sca2025::Logging::OutputError("The program failed to link: %s",
 							linkInfo.c_str());
 						goto OnExit;
 					}
 				}
 				else
 				{
-					result = eae6320::Results::Failure;
+					result = sca2025::Results::Failure;
 					EAE6320_ASSERTF(false, reinterpret_cast<const char*>(gluErrorString(errorCode)));
-					eae6320::Logging::OutputError("OpenGL failed to find out if linking of the program succeeded: %s",
+					sca2025::Logging::OutputError("OpenGL failed to find out if linking of the program succeeded: %s",
 						reinterpret_cast<const char*>(gluErrorString(errorCode)));
 					goto OnExit;
 				}
@@ -161,9 +161,9 @@ eae6320::cResult Effect::InitializeShadingData(const char* const i_vertexPath, c
 		}
 		else
 		{
-			result = eae6320::Results::Failure;
+			result = sca2025::Results::Failure;
 			EAE6320_ASSERTF(false, reinterpret_cast<const char*>(gluErrorString(errorCode)));
-			eae6320::Logging::OutputError("OpenGL failed to link the program: %s",
+			sca2025::Logging::OutputError("OpenGL failed to link the program: %s",
 				reinterpret_cast<const char*>(gluErrorString(errorCode)));
 			goto OnExit;
 		}
@@ -179,9 +179,9 @@ OnExit:
 			const auto errorCode = glGetError();
 			if (errorCode != GL_NO_ERROR)
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 				EAE6320_ASSERTF(false, reinterpret_cast<const char*>(gluErrorString(errorCode)));
-				eae6320::Logging::OutputError("OpenGL failed to delete the program: %s",
+				sca2025::Logging::OutputError("OpenGL failed to delete the program: %s",
 					reinterpret_cast<const char*>(gluErrorString(errorCode)));
 			}
 			m_programId = 0;
@@ -199,16 +199,16 @@ void Effect::Bind() {
 		// Vertex shader
 		{
 			EAE6320_ASSERT(m_vertexShader);
-			auto* const shader = eae6320::Graphics::cShader::s_manager.Get(m_vertexShader);
+			auto* const shader = sca2025::Graphics::cShader::s_manager.Get(m_vertexShader);
 			EAE6320_ASSERT(shader && shader->m_shaderObject.vertex);
-			eae6320::Graphics::sContext::g_context.direct3dImmediateContext->VSSetShader(shader->m_shaderObject.vertex, noInterfaces, interfaceCount);
+			sca2025::Graphics::sContext::g_context.direct3dImmediateContext->VSSetShader(shader->m_shaderObject.vertex, noInterfaces, interfaceCount);
 		}
 		// Fragment shader
 		{
 			EAE6320_ASSERT(m_fragmentShader);
-			auto* const shader = eae6320::Graphics::cShader::s_manager.Get(m_fragmentShader);
+			auto* const shader = sca2025::Graphics::cShader::s_manager.Get(m_fragmentShader);
 			EAE6320_ASSERT(shader && shader->m_shaderObject.fragment);
-			eae6320::Graphics::sContext::g_context.direct3dImmediateContext->PSSetShader(shader->m_shaderObject.fragment, noInterfaces, interfaceCount);
+			sca2025::Graphics::sContext::g_context.direct3dImmediateContext->PSSetShader(shader->m_shaderObject.fragment, noInterfaces, interfaceCount);
 		}
 	}
 
@@ -223,7 +223,7 @@ void Effect::Bind() {
 	
 }
 
-eae6320::cResult Effect::CleanUp(eae6320::cResult result) {
+sca2025::cResult Effect::CleanUp(sca2025::cResult result) {
 #if defined( EAE6320_PLATFORM_GL )
 	if (m_programId != 0)
 	{
@@ -233,10 +233,10 @@ eae6320::cResult Effect::CleanUp(eae6320::cResult result) {
 		{
 			if (result)
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 			}
 			EAE6320_ASSERTF(false, reinterpret_cast<const char*>(gluErrorString(errorCode)));
-			eae6320::Logging::OutputError("OpenGL failed to delete the program: %s",
+			sca2025::Logging::OutputError("OpenGL failed to delete the program: %s",
 				reinterpret_cast<const char*>(gluErrorString(errorCode)));
 		}
 		m_programId = 0;
@@ -244,7 +244,7 @@ eae6320::cResult Effect::CleanUp(eae6320::cResult result) {
 #endif
 	if (m_vertexShader)
 	{
-		const auto localResult = eae6320::Graphics::cShader::s_manager.Release(m_vertexShader);
+		const auto localResult = sca2025::Graphics::cShader::s_manager.Release(m_vertexShader);
 		if (!localResult)
 		{
 			EAE6320_ASSERT(false);
@@ -256,7 +256,7 @@ eae6320::cResult Effect::CleanUp(eae6320::cResult result) {
 	}
 	if (m_fragmentShader)
 	{
-		const auto localResult = eae6320::Graphics::cShader::s_manager.Release(m_fragmentShader);
+		const auto localResult = sca2025::Graphics::cShader::s_manager.Release(m_fragmentShader);
 		if (!localResult)
 		{
 			EAE6320_ASSERT(false);

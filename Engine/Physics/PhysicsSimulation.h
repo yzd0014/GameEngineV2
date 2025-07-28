@@ -4,7 +4,7 @@
 #include "HingeJoint.h"
 #include <vector>
 #define constraintMaxNum 50
-namespace eae6320 {
+namespace sca2025 {
 	struct CollisionPair;
 
 	namespace Physics {

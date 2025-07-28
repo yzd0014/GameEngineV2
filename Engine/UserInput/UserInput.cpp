@@ -1,6 +1,6 @@
 #include "UserInput.h"
 #include "Engine/UserOutput/UserOutput.h"
-namespace eae6320
+namespace sca2025
 {
 	namespace UserInput
 	{

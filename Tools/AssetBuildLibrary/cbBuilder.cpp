@@ -13,7 +13,7 @@
 // Build
 //------
 
-eae6320::cResult eae6320::Assets::cbBuilder::ParseCommandArgumentsAndBuild( char* const* i_arguments, const unsigned int i_argumentCount )
+sca2025::cResult sca2025::Assets::cbBuilder::ParseCommandArgumentsAndBuild( char* const* i_arguments, const unsigned int i_argumentCount )
 {
 	constexpr unsigned int commandCount = 1;
 	const auto actualArgumentCount = i_argumentCount - commandCount;
@@ -48,7 +48,7 @@ eae6320::cResult eae6320::Assets::cbBuilder::ParseCommandArgumentsAndBuild( char
 			{
 				errorMessage << "only " << actualArgumentCount << " were provided\n";
 			}
-			eae6320::Assets::OutputErrorMessage( errorMessage.str().c_str() );
+			sca2025::Assets::OutputErrorMessage( errorMessage.str().c_str() );
 		}
 		return Results::Failure;
 	}

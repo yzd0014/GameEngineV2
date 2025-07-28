@@ -39,10 +39,10 @@ namespace
 
 namespace
 {
-	eae6320::cResult BuildAndVerifyGeneratedShaderSource( const char* const i_path_source, const char* const i_path_target,
-		const eae6320::Graphics::ShaderTypes::eType i_shaderType, const std::string& i_source );
-	eae6320::cResult PreProcessShaderSource( const char* const i_path_source, std::string& o_shaderSource_preProcessed );
-	eae6320::cResult SaveGeneratedShaderSource( const char* const i_path, const std::string& i_source );
+	sca2025::cResult BuildAndVerifyGeneratedShaderSource( const char* const i_path_source, const char* const i_path_target,
+		const sca2025::Graphics::ShaderTypes::eType i_shaderType, const std::string& i_source );
+	sca2025::cResult PreProcessShaderSource( const char* const i_path_source, std::string& o_shaderSource_preProcessed );
+	sca2025::cResult SaveGeneratedShaderSource( const char* const i_path, const std::string& i_source );
 
 	// This helper struct exists to be able to dynamically allocate memory to get "log info"
 	// which will automatically be freed when the struct goes out of scope
@@ -60,7 +60,7 @@ namespace
 // Build
 //------
 
-eae6320::cResult eae6320::Assets::cShaderBuilder::Build( const Graphics::ShaderTypes::eType i_shaderType, const std::vector<std::string>& i_arguments )
+sca2025::cResult sca2025::Assets::cShaderBuilder::Build( const Graphics::ShaderTypes::eType i_shaderType, const std::vector<std::string>& i_arguments )
 {
 	auto result = Results::Success;
 
@@ -88,20 +88,20 @@ OnExit:
 
 namespace
 {
-	eae6320::cResult BuildAndVerifyGeneratedShaderSource( const char* const i_path_source, const char* const i_path_target,
-		const eae6320::Graphics::ShaderTypes::eType i_shaderType, const std::string& i_source )
+	sca2025::cResult BuildAndVerifyGeneratedShaderSource( const char* const i_path_source, const char* const i_path_target,
+		const sca2025::Graphics::ShaderTypes::eType i_shaderType, const std::string& i_source )
 	{
-		auto result = eae6320::Results::Success;
+		auto result = sca2025::Results::Success;
 
 		HINSTANCE hInstance = NULL;
-		eae6320::Windows::OpenGl::sHiddenWindowInfo hiddenWindowInfo;
+		sca2025::Windows::OpenGl::sHiddenWindowInfo hiddenWindowInfo;
 
 		// Load any required OpenGL extensions
 		{
 			std::string errorMessage;
-			if ( !( result = eae6320::OpenGlExtensions::Load( &errorMessage ) ) )
+			if ( !( result = sca2025::OpenGlExtensions::Load( &errorMessage ) ) )
 			{
-				eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source, errorMessage.c_str() );
+				sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source, errorMessage.c_str() );
 				goto OnExit;
 			}
 		}
@@ -109,9 +109,9 @@ namespace
 		// Create a hidden OpenGL window
 		{
 			std::string errorMessage;
-			if ( !( result = eae6320::Windows::OpenGl::CreateHiddenContextWindow( hInstance, hiddenWindowInfo, &errorMessage ) ) )
+			if ( !( result = sca2025::Windows::OpenGl::CreateHiddenContextWindow( hInstance, hiddenWindowInfo, &errorMessage ) ) )
 			{
-				eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source, errorMessage.c_str() );
+				sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source, errorMessage.c_str() );
 				goto OnExit;
 			}
 		}
@@ -141,7 +141,7 @@ namespace
 			}
 			else
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 				{
 					std::ostringstream errorMessage;
 					errorMessage << "OpenGL failed to return a string identifying the GPU vendor";
@@ -149,7 +149,7 @@ namespace
 					{
 						errorMessage << ": " << reinterpret_cast<const char*>( gluErrorString( errorCode ) );
 					}
-					eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source, errorMessage.str().c_str() );
+					sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source, errorMessage.str().c_str() );
 				}
 				goto OnExit;
 			}
@@ -160,8 +160,8 @@ namespace
 			glGetBooleanv( GL_SHADER_COMPILER, &isShaderCompilingSupported );
 			if ( !isShaderCompilingSupported )
 			{
-				result = eae6320::Results::Failure;
-				eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source,
+				result = sca2025::Results::Failure;
+				sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source,
 					"Compiling shaders at run-time isn't supported on this implementation (this should never happen)" );
 				goto OnExit;
 			}
@@ -174,15 +174,15 @@ namespace
 			GLenum shaderType;
 			switch ( i_shaderType )
 			{
-			case eae6320::Graphics::ShaderTypes::Vertex:
+			case sca2025::Graphics::ShaderTypes::Vertex:
 				shaderType = GL_VERTEX_SHADER;
 				break;
-			case eae6320::Graphics::ShaderTypes::Fragment:
+			case sca2025::Graphics::ShaderTypes::Fragment:
 				shaderType = GL_FRAGMENT_SHADER;
 				break;
 			default:
-				result = eae6320::Results::Failure;
-				eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source,
+				result = sca2025::Results::Failure;
+				sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source,
 					"No OpenGL implementation exists for the platform-independent shader type %i", i_shaderType );
 				goto OnExit;
 			}
@@ -192,15 +192,15 @@ namespace
 				const auto errorCode = glGetError();
 				if ( errorCode != GL_NO_ERROR )
 				{
-					result = eae6320::Results::Failure;
-					eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source,
+					result = sca2025::Results::Failure;
+					sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source,
 						"OpenGL failed to get an unused shader ID: %s", reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 					goto OnExit;
 				}
 				else if ( shaderId == 0 )
 				{
-					result = eae6320::Results::Failure;
-					eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source, "OpenGL failed to get an unused shader ID" );
+					result = sca2025::Results::Failure;
+					sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source, "OpenGL failed to get an unused shader ID" );
 					goto OnExit;
 				}
 			}
@@ -213,8 +213,8 @@ namespace
 				const auto errorCode = glGetError();
 				if ( errorCode != GL_NO_ERROR )
 				{
-					result = eae6320::Results::Failure;
-					eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source,
+					result = sca2025::Results::Failure;
+					sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source,
 						"OpenGL failed to set the shader source code: %s", reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 					goto OnExit;
 				}
@@ -247,8 +247,8 @@ namespace
 						}
 						else
 						{
-							result = eae6320::Results::Failure;
-							eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source,
+							result = sca2025::Results::Failure;
+							sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source,
 								"OpenGL failed to get compilation info of the shader source code: %s",
 								reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 							goto OnExit;
@@ -256,8 +256,8 @@ namespace
 					}
 					else
 					{
-						result = eae6320::Results::Failure;
-						eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source,
+						result = sca2025::Results::Failure;
+						sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source,
 							"OpenGL failed to get the length of the shader compilation info: %s",
 							reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 						goto OnExit;
@@ -272,7 +272,7 @@ namespace
 					{
 						if ( didCompilationSucceed == GL_FALSE )
 						{
-							result = eae6320::Results::Failure;
+							result = sca2025::Results::Failure;
 
 							// Convert the error messages into something that will be output in Visual Studio's Error window
 							// (and that will open the file when double-clicked)
@@ -345,8 +345,8 @@ namespace
 					}
 					else
 					{
-						result = eae6320::Results::Failure;
-						eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source,
+						result = sca2025::Results::Failure;
+						sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source,
 							"OpenGL failed to find out if compilation of the shader source code succeeded: %s",
 							reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 						goto OnExit;
@@ -355,8 +355,8 @@ namespace
 			}
 			else
 			{
-				result = eae6320::Results::Failure;
-				eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source,
+				result = sca2025::Results::Failure;
+				sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source,
 					"OpenGL failed to compile the shader source code: %s", reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 				goto OnExit;
 			}
@@ -372,9 +372,9 @@ namespace
 			{
 				if ( result )
 				{
-					result = eae6320::Results::Failure;
+					result = sca2025::Results::Failure;
 				}
-				eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source,
+				sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source,
 					"OpenGL failed to delete the shader source code: %s", reinterpret_cast<const char*>( gluErrorString( errorCode ) ) );
 				goto OnExit;
 			}
@@ -383,23 +383,23 @@ namespace
 
 		{
 			std::string errorMessage;
-			const auto localResult = eae6320::Windows::OpenGl::FreeHiddenContextWindow( hInstance, hiddenWindowInfo, &errorMessage );
+			const auto localResult = sca2025::Windows::OpenGl::FreeHiddenContextWindow( hInstance, hiddenWindowInfo, &errorMessage );
 			if ( !localResult )
 			{
 				if ( result )
 				{
 					result = localResult;
 				}
-				eae6320::Assets::OutputErrorMessageWithFileInfo( i_path_source, errorMessage.c_str() );
+				sca2025::Assets::OutputErrorMessageWithFileInfo( i_path_source, errorMessage.c_str() );
 			}
 		}
 
 		return result;
 	}
 
-	eae6320::cResult PreProcessShaderSource( const char* const i_path_source, std::string& o_shaderSource_preProcessed )
+	sca2025::cResult PreProcessShaderSource( const char* const i_path_source, std::string& o_shaderSource_preProcessed )
 	{
-		auto result = eae6320::Results::Success;
+		auto result = sca2025::Results::Success;
 
 		// Get the content directories to use as #include search paths
 		std::string includeSearchPathArgument_engineSourceContentDir, includeSearchPathArgument_gameSourceContentDir;
@@ -409,27 +409,27 @@ namespace
 
 			// EngineSourceContentDir
 			{
-				if ( result = eae6320::Platform::GetEnvironmentVariable(
+				if ( result = sca2025::Platform::GetEnvironmentVariable(
 					"EngineSourceContentDir", includeSearchPathArgument_engineSourceContentDir, &errorMessage ) )
 				{
 					includeSearchPathArgument_engineSourceContentDir = prefix + includeSearchPathArgument_engineSourceContentDir;
 				}
 				else
 				{
-					eae6320::Assets::OutputErrorMessage( "Failed to get the engine's source content directory: %s", errorMessage.c_str() );
+					sca2025::Assets::OutputErrorMessage( "Failed to get the engine's source content directory: %s", errorMessage.c_str() );
 					goto OnExit;
 				}
 			}
 			// GameSourceContentDir
 			{
-				if ( result = eae6320::Platform::GetEnvironmentVariable(
+				if ( result = sca2025::Platform::GetEnvironmentVariable(
 					"GameSourceContentDir", includeSearchPathArgument_gameSourceContentDir, &errorMessage ) )
 				{
 					includeSearchPathArgument_gameSourceContentDir = prefix + includeSearchPathArgument_gameSourceContentDir;
 				}
 				else
 				{
-					eae6320::Assets::OutputErrorMessage( "Failed to get the game's source content directory: %s", errorMessage.c_str() );
+					sca2025::Assets::OutputErrorMessage( "Failed to get the game's source content directory: %s", errorMessage.c_str() );
 					goto OnExit;
 				}
 			}
@@ -477,13 +477,13 @@ namespace
 			const auto localResult = mcpp_lib_main( static_cast<int>( argumentCount ), arguments );
 			if ( localResult == EXIT_SUCCESS )
 			{
-				const auto* const shaderSource_preProcessed = mcpp_get_mem_buffer( static_cast<OUTDEST>( eae6320::mcpp::OUTDEST::Out ) );
+				const auto* const shaderSource_preProcessed = mcpp_get_mem_buffer( static_cast<OUTDEST>( sca2025::mcpp::OUTDEST::Out ) );
 				o_shaderSource_preProcessed = shaderSource_preProcessed ? shaderSource_preProcessed : "";
 			}
 			else
 			{
-				result = eae6320::Results::Failure;
-				std::cerr << mcpp_get_mem_buffer( static_cast<OUTDEST>( eae6320::mcpp::OUTDEST::Err ) );
+				result = sca2025::Results::Failure;
+				std::cerr << mcpp_get_mem_buffer( static_cast<OUTDEST>( sca2025::mcpp::OUTDEST::Err ) );
 				goto OnExit;
 			}
 		}
@@ -519,13 +519,13 @@ namespace
 		return result;
 	}
 
-	eae6320::cResult SaveGeneratedShaderSource( const char* const i_path, const std::string& i_shader )
+	sca2025::cResult SaveGeneratedShaderSource( const char* const i_path, const std::string& i_shader )
 	{
-		eae6320::cResult result;
+		sca2025::cResult result;
 		std::string errorMessage;
-		if ( !( result = eae6320::Platform::WriteBinaryFile( i_path, i_shader.c_str(), i_shader.length(), &errorMessage ) ) )
+		if ( !( result = sca2025::Platform::WriteBinaryFile( i_path, i_shader.c_str(), i_shader.length(), &errorMessage ) ) )
 		{
-			eae6320::Assets::OutputErrorMessageWithFileInfo( i_path, errorMessage.c_str() );
+			sca2025::Assets::OutputErrorMessageWithFileInfo( i_path, errorMessage.c_str() );
 		}
 		return result;
 	}

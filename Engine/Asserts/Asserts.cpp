@@ -13,7 +13,7 @@
 
 #ifdef EAE6320_ASSERTS_AREENABLED
 
-bool eae6320::Asserts::ShowMessageIfAssertionIsFalseAndReturnWhetherToBreak( const unsigned int i_lineNumber, const char* const i_file,
+bool sca2025::Asserts::ShowMessageIfAssertionIsFalseAndReturnWhetherToBreak( const unsigned int i_lineNumber, const char* const i_file,
 	bool& io_shouldThisAssertBeIgnoredInTheFuture, const char* const i_message, ... )
 {
 	// Construct the message

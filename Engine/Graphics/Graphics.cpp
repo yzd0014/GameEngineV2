@@ -28,7 +28,7 @@
 // Static Data Initialization
 //===========================
 #define maxNumActors 7000
-namespace eae6320
+namespace sca2025
 {
 	namespace Graphics
 	{
@@ -47,8 +47,8 @@ namespace
 {
 	
 	// Constant buffer object
-	eae6320::Graphics::cConstantBuffer s_constantBuffer_perFrame(eae6320::Graphics::ConstantBufferTypes::PerFrame);
-	eae6320::Graphics::cConstantBuffer s_constantBuffer_perDrawCall(eae6320::Graphics::ConstantBufferTypes::PerDrawCall);
+	sca2025::Graphics::cConstantBuffer s_constantBuffer_perFrame(sca2025::Graphics::ConstantBufferTypes::PerFrame);
+	sca2025::Graphics::cConstantBuffer s_constantBuffer_perDrawCall(sca2025::Graphics::ConstantBufferTypes::PerDrawCall);
 	// Submission Data
 	//----------------
 
@@ -56,8 +56,8 @@ namespace
 	// it must cache whatever is necessary in order to render a frame
 	struct sDataRequiredToRenderAFrame
 	{
-		eae6320::Graphics::ConstantBufferFormats::sPerFrame constantData_perFrame;
-		eae6320::Graphics::ConstantBufferFormats::sPerDrawCall constantData_perDrawCall[maxNumActors];
+		sca2025::Graphics::ConstantBufferFormats::sPerFrame constantData_perFrame;
+		sca2025::Graphics::ConstantBufferFormats::sPerDrawCall constantData_perDrawCall[maxNumActors];
 		float BGColor[4];
 		Effect* allEffectInScreen[maxNumActors];
 		Mesh* allMeshInScreen[maxNumActors];
@@ -75,17 +75,17 @@ namespace
 	// the main/render thread and the application loop thread can work in parallel but stay in sync:
 	// This event is signaled by the application loop thread when it has finished submitting render data for a frame
 	// (the main/render thread waits for the signal)
-	eae6320::Concurrency::cEvent s_whenAllDataHasBeenSubmittedFromApplicationThread;
+	sca2025::Concurrency::cEvent s_whenAllDataHasBeenSubmittedFromApplicationThread;
 	// This event is signaled by the main/render thread when it has swapped render data pointers.
 	// This means that the renderer is now working with all the submitted data it needs to render the next frame,
 	// and the application loop thread can start submitting data for the following frame
 	// (the application loop thread waits for the signal)
-	eae6320::Concurrency::cEvent s_whenDataForANewFrameCanBeSubmittedFromApplicationThread;
+	sca2025::Concurrency::cEvent s_whenDataForANewFrameCanBeSubmittedFromApplicationThread;
 	
 	View s_View;
 }
 //************************************************cache data from application*********************************
-void eae6320::Graphics::SubmitElapsedTime(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_simulationTime)
+void sca2025::Graphics::SubmitElapsedTime(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_simulationTime)
 {
 	EAE6320_ASSERT(s_dataBeingSubmittedByApplicationThread);
 	auto& constantData_perFrame = s_dataBeingSubmittedByApplicationThread->constantData_perFrame;
@@ -93,19 +93,19 @@ void eae6320::Graphics::SubmitElapsedTime(const float i_elapsedSecondCount_syste
 	constantData_perFrame.g_elapsedSecondCount_simulationTime = i_elapsedSecondCount_simulationTime;
 }
 
-void eae6320::Graphics::SubmitCamera(Math::cMatrix_transformation &i_transform_worldToCamera, Math::cMatrix_transformation &i_transform_cameraToProjected) {
+void sca2025::Graphics::SubmitCamera(Math::cMatrix_transformation &i_transform_worldToCamera, Math::cMatrix_transformation &i_transform_cameraToProjected) {
 	s_dataBeingSubmittedByApplicationThread->constantData_perFrame.g_transform_worldToCamera = i_transform_worldToCamera;
 	s_dataBeingSubmittedByApplicationThread->constantData_perFrame.g_transform_cameraToProjected = i_transform_cameraToProjected;
 	s_dataBeingSubmittedByApplicationThread->constantData_perFrame.g_lightSourceADir = lightSourceADir;
 	s_dataBeingSubmittedByApplicationThread->constantData_perFrame.g_lightSourceBDir = lightSourceBDir;
 }
-void eae6320::Graphics::SubmitBGColor(const float *i_color) {
+void sca2025::Graphics::SubmitBGColor(const float *i_color) {
 	for (int i = 0; i < 4; i++) {
 		s_dataBeingSubmittedByApplicationThread->BGColor[i] = i_color[i];
 	}
 }
 
-void eae6320::Graphics::SubmitObject(Math::sVector i_color, Math::cMatrix_transformation &i_localToWorldMat, Effect *i_pEffect, Mesh * i_pMesh) {
+void sca2025::Graphics::SubmitObject(Math::sVector i_color, Math::cMatrix_transformation &i_localToWorldMat, Effect *i_pEffect, Mesh * i_pMesh) {
 	s_dataBeingSubmittedByApplicationThread->constantData_perDrawCall[s_dataBeingSubmittedByApplicationThread->numberOfObject].g_transform_localToWorld
 		= i_localToWorldMat;
 
@@ -123,16 +123,16 @@ void eae6320::Graphics::SubmitObject(Math::sVector i_color, Math::cMatrix_transf
 }
 
 //*******************************************************************************************************************
-eae6320::cResult eae6320::Graphics::WaitUntilDataForANewFrameCanBeSubmitted(const unsigned int i_timeToWait_inMilliseconds)
+sca2025::cResult sca2025::Graphics::WaitUntilDataForANewFrameCanBeSubmitted(const unsigned int i_timeToWait_inMilliseconds)
 {
 	return Concurrency::WaitForEvent(s_whenDataForANewFrameCanBeSubmittedFromApplicationThread, i_timeToWait_inMilliseconds);
 }
-eae6320::cResult eae6320::Graphics::SignalThatAllDataForAFrameHasBeenSubmitted()
+sca2025::cResult sca2025::Graphics::SignalThatAllDataForAFrameHasBeenSubmitted()
 {
 	return s_whenAllDataHasBeenSubmittedFromApplicationThread.Signal();
 }
 
-void eae6320::Graphics::RenderFrame()
+void sca2025::Graphics::RenderFrame()
 {
 	//manage system time in rendering thread instead of simulation thread because rendering thread will
 		//never be paused and thus has a better time resolution
@@ -151,7 +151,7 @@ void eae6320::Graphics::RenderFrame()
 		Math::cQuaternion orientation = mainCamera.orientation;
 		Math::cMatrix_transformation worldToCameraMat = Math::cMatrix_transformation::CreateWorldToCameraTransform(orientation, position);
 		Math::cMatrix_transformation cameraToProjectedMat = mainCamera.GetCameraToProjectedMat();
-		eae6320::Graphics::SubmitCamera(worldToCameraMat, cameraToProjectedMat);
+		sca2025::Graphics::SubmitCamera(worldToCameraMat, cameraToProjectedMat);
 		
 		renderBufferMutex.Lock();
 		if (isDataSubmittedFromApplication)
@@ -257,7 +257,7 @@ void eae6320::Graphics::RenderFrame()
 	}
 }
 
-void eae6320::Graphics::UpdateSimulationBasedOnInput()
+void sca2025::Graphics::UpdateSimulationBasedOnInput()
 {
 	UserInput::TrackKeyState();
 	mainCamera.UpdateCameraBasedOnInput();
@@ -278,7 +278,7 @@ void eae6320::Graphics::UpdateSimulationBasedOnInput()
 	
 }
 
-void eae6320::Graphics::ClearDataBeingSubmittedByApplicationThread()
+void sca2025::Graphics::ClearDataBeingSubmittedByApplicationThread()
 {
 	// Once everything has been drawn the data that was submitted for this frame
 	// should be cleaned up and cleared.
@@ -299,7 +299,7 @@ void eae6320::Graphics::ClearDataBeingSubmittedByApplicationThread()
 	}
 }
 
-eae6320::cResult eae6320::Graphics::Initialize(const sInitializationParameters& i_initializationParameters)
+sca2025::cResult sca2025::Graphics::Initialize(const sInitializationParameters& i_initializationParameters)
 {
 	Time::tickCount_previousLoop = Time::GetCurrentSystemTimeTickCount();
 	
@@ -379,7 +379,7 @@ OnExit:
 	return result;
 }
 
-eae6320::cResult eae6320::Graphics::CleanUp()
+sca2025::cResult sca2025::Graphics::CleanUp()
 {
 	auto result = Results::Success;
 

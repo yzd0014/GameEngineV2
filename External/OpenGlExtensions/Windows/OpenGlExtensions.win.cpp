@@ -68,7 +68,7 @@ PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
 // Initialization
 //---------------
 
-eae6320::cResult eae6320::OpenGlExtensions::Load( std::string* const o_errorMessage )
+sca2025::cResult sca2025::OpenGlExtensions::Load( std::string* const o_errorMessage )
 {
 	auto result = Results::Success;
 
@@ -181,7 +181,7 @@ namespace
 		std::string wglErrorMessage;
 		if ( !address )
 		{
-			wglErrorMessage = eae6320::Windows::GetLastSystemError();
+			wglErrorMessage = sca2025::Windows::GetLastSystemError();
 			EAE6320_ASSERTF( false, "The OpenGL extension function \"%s\" wasn't found"
 				" (it will now be looked for in the non-extension Windows functions)", i_functionName );
 		}
@@ -206,7 +206,7 @@ namespace
 				}
 				else
 				{
-					const auto windowsErrorMessage = eae6320::Windows::GetLastSystemError();
+					const auto windowsErrorMessage = sca2025::Windows::GetLastSystemError();
 					if ( wglErrorMessage.empty() )
 					{
 						wglErrorMessage = windowsErrorMessage;

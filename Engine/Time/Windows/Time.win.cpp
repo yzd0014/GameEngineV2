@@ -16,7 +16,7 @@ namespace
 	uint64_t s_tickCountPerSecond = 0;
 }
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Time
 	{
@@ -30,7 +30,7 @@ namespace eae6320
 // Time
 //-----
 
-uint64_t eae6320::Time::GetCurrentSystemTimeTickCount()
+uint64_t sca2025::Time::GetCurrentSystemTimeTickCount()
 {
 	LARGE_INTEGER totalTickCountSinceSystemBoot;
 	const auto result = QueryPerformanceCounter( &totalTickCountSinceSystemBoot );
@@ -40,19 +40,19 @@ uint64_t eae6320::Time::GetCurrentSystemTimeTickCount()
 	return static_cast<uint64_t>( totalTickCountSinceSystemBoot.QuadPart );
 }
 
-double eae6320::Time::ConvertTicksToSeconds( const uint64_t i_tickCount )
+double sca2025::Time::ConvertTicksToSeconds( const uint64_t i_tickCount )
 {
 	EAE6320_ASSERT( s_tickCountPerSecond > 0 );
 	return static_cast<double>( i_tickCount ) / static_cast<double>( s_tickCountPerSecond );
 }
 
-uint64_t eae6320::Time::ConvertSecondsToTicks( const double i_secondCount )
+uint64_t sca2025::Time::ConvertSecondsToTicks( const double i_secondCount )
 {
 	EAE6320_ASSERT( s_tickCountPerSecond > 0 );
 	return static_cast<uint64_t>( ( i_secondCount * static_cast<double>( s_tickCountPerSecond ) ) + 0.5 );
 }
 
-double eae6320::Time::ConvertRatePerSecondToRatePerTick( const double i_rate_perSecond )
+double sca2025::Time::ConvertRatePerSecondToRatePerTick( const double i_rate_perSecond )
 {
 	EAE6320_ASSERT( s_tickCountPerSecond > 0 );
 	return i_rate_perSecond / static_cast<double>( s_tickCountPerSecond );
@@ -61,7 +61,7 @@ double eae6320::Time::ConvertRatePerSecondToRatePerTick( const double i_rate_per
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Time::Initialize()
+sca2025::cResult sca2025::Time::Initialize()
 {
 	auto result = Results::Success;
 
@@ -102,7 +102,7 @@ OnExit:
 	return result;
 }
 
-eae6320::cResult eae6320::Time::CleanUp()
+sca2025::cResult sca2025::Time::CleanUp()
 {
 	return Results::Success;
 }

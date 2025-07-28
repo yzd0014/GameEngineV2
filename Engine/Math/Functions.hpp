@@ -12,7 +12,7 @@
 //==========
 
 	template<typename tUnsignedInteger, class EnforceUnsigned>
-tUnsignedInteger eae6320::Math::RoundUpToMultiple( const tUnsignedInteger i_value, const tUnsignedInteger i_multiple )
+tUnsignedInteger sca2025::Math::RoundUpToMultiple( const tUnsignedInteger i_value, const tUnsignedInteger i_multiple )
 {
 	EAE6320_ASSERTF( i_multiple != 0, "Zero isn't a valid multiple" );
 	EAE6320_ASSERTF( i_multiple > 0, "The multiple must be positive" );
@@ -25,7 +25,7 @@ tUnsignedInteger eae6320::Math::RoundUpToMultiple( const tUnsignedInteger i_valu
 }
 
 	template<typename tUnsignedInteger, class EnforceUnsigned>
-tUnsignedInteger eae6320::Math::RoundUpToMultiple_powerOf2( const tUnsignedInteger i_value, const tUnsignedInteger i_multipleWhichIsAPowerOf2 )
+tUnsignedInteger sca2025::Math::RoundUpToMultiple_powerOf2( const tUnsignedInteger i_value, const tUnsignedInteger i_multipleWhichIsAPowerOf2 )
 {
 	EAE6320_ASSERTF( i_multipleWhichIsAPowerOf2 != 0, "Zero isn't a valid multiple" );
 	EAE6320_ASSERTF( i_multipleWhichIsAPowerOf2 > 0, "The multiple must be positive" );

@@ -2,7 +2,7 @@
 #include "Engine/Physics/sRigidBodyState.h"
 #include "Engine/Math/cMatrix_transformation.h"
 
-namespace eae6320 {
+namespace sca2025 {
 	namespace GameCommon {
 		class Camera {
 		public:

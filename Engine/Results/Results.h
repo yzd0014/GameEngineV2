@@ -13,7 +13,7 @@
 // Result Definitions
 //===================
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Results
 	{

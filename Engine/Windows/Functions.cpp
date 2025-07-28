@@ -47,7 +47,7 @@ namespace
 // Interface
 //==========
 
-std::wstring eae6320::Windows::ConvertUtf8ToUtf16( const char* const i_string_utf8 )
+std::wstring sca2025::Windows::ConvertUtf8ToUtf16( const char* const i_string_utf8 )
 {
 	// Calculate how many UTF-16 code units are required
 	int requiredCodeUnitCount_includingNullTerminator;
@@ -69,7 +69,7 @@ std::wstring eae6320::Windows::ConvertUtf8ToUtf16( const char* const i_string_ut
 			LeaveCriticalSection( &s_mutex_lastError.criticalSection );
 			EAE6320_ASSERTF( false, "The number of code units required to convert \"%s\""
 				" to UTF16 wasn't calculated: %s", i_string_utf8, GetFormattedSystemMessage( errorCode ).c_str() );
-			eae6320::Logging::OutputError( "Windows couldn't calculate how many code units"
+			sca2025::Logging::OutputError( "Windows couldn't calculate how many code units"
 				" are required to convert a UTF-8 string to UTF-16: %s" "\n"
 				"\t" "The UTF-8 string is:" "\n"
 				"%s",
@@ -98,7 +98,7 @@ std::wstring eae6320::Windows::ConvertUtf8ToUtf16( const char* const i_string_ut
 				LeaveCriticalSection( &s_mutex_lastError.criticalSection );
 				EAE6320_ASSERTF( false, "The UTF-8 string \"%s\""
 					" wasn't converted to UTF-16: %s", i_string_utf8, GetFormattedSystemMessage( errorCode ).c_str() );
-				eae6320::Logging::OutputError( "Windows couldn't convert a UTF-8 string to UTF-16: %s" "\n"
+				sca2025::Logging::OutputError( "Windows couldn't convert a UTF-8 string to UTF-16: %s" "\n"
 					"\t" "The UTF-8 string is:" "\n"
 					"%s",
 					GetFormattedSystemMessage( errorCode ).c_str(), i_string_utf8 );
@@ -115,7 +115,7 @@ std::wstring eae6320::Windows::ConvertUtf8ToUtf16( const char* const i_string_ut
 	}
 }
 
-std::string eae6320::Windows::ConvertUtf16ToUtf8( const wchar_t* const i_string_utf16 )
+std::string sca2025::Windows::ConvertUtf16ToUtf8( const wchar_t* const i_string_utf16 )
 {
 	// Calculate how many UTF-18 code units are required
 	int requiredCodeUnitCount_includingNullTerminator;
@@ -140,7 +140,7 @@ std::string eae6320::Windows::ConvertUtf16ToUtf8( const wchar_t* const i_string_
 			LeaveCriticalSection( &s_mutex_lastError.criticalSection );
 			EAE6320_ASSERTF( false, "The number of code units required to convert a UTF-16 string"
 				" to UTF-8 wasn't calculated: %s", GetFormattedSystemMessage( errorCode ).c_str() );
-			eae6320::Logging::OutputError( "Windows couldn't calculate how many code units"
+			sca2025::Logging::OutputError( "Windows couldn't calculate how many code units"
 				" are required to convert a UTF-16 string to UTF-8: %s",
 				GetFormattedSystemMessage( errorCode ).c_str() );
 			return "INVALIDCONVERSION";
@@ -168,7 +168,7 @@ std::string eae6320::Windows::ConvertUtf16ToUtf8( const wchar_t* const i_string_
 				LeaveCriticalSection( &s_mutex_lastError.criticalSection );
 				EAE6320_ASSERTF( false, "A UTF-16 string"
 					" wasn't converted to UTF-8: %s", GetFormattedSystemMessage( errorCode ).c_str() );
-				eae6320::Logging::OutputError( "Windows couldn't convert a UTF-16 string to UTF-8: %s",
+				sca2025::Logging::OutputError( "Windows couldn't convert a UTF-16 string to UTF-8: %s",
 					GetFormattedSystemMessage( errorCode ).c_str() );
 				return "INVALIDCONVERSION";
 			}
@@ -183,7 +183,7 @@ std::string eae6320::Windows::ConvertUtf16ToUtf8( const wchar_t* const i_string_
 	}
 }
 
-eae6320::cResult eae6320::Windows::CopyFile( const char* const i_path_source, const char* const i_path_target,
+sca2025::cResult sca2025::Windows::CopyFile( const char* const i_path_source, const char* const i_path_target,
 	const bool i_shouldFunctionFailIfTargetAlreadyExists, const bool i_shouldTargetFileTimeBeModified,
 	std::string* const o_errorMessage )
 {
@@ -312,7 +312,7 @@ eae6320::cResult eae6320::Windows::CopyFile( const char* const i_path_source, co
 	return Results::Success;
 }
 
-eae6320::cResult eae6320::Windows::CreateDirectoryIfItDoesntExist( const std::string& i_filePath, std::string* const o_errorMessage )
+sca2025::cResult sca2025::Windows::CreateDirectoryIfItDoesntExist( const std::string& i_filePath, std::string* const o_errorMessage )
 {
 	// Manipulate the path into a form that SHCreateDirectoryEx() likes
 	std::string directory;
@@ -371,7 +371,7 @@ eae6320::cResult eae6320::Windows::CreateDirectoryIfItDoesntExist( const std::st
 	return Results::Success;
 }
 
-bool eae6320::Windows::DoesFileExist( const char* const i_path, std::string* const o_errorMessage )
+bool sca2025::Windows::DoesFileExist( const char* const i_path, std::string* const o_errorMessage )
 {
 	// Try to get information about the file
 	WIN32_FIND_DATAW fileData;
@@ -412,12 +412,12 @@ bool eae6320::Windows::DoesFileExist( const char* const i_path, std::string* con
 	}
 }
 
-eae6320::cResult eae6320::Windows::ExecuteCommand( const char* const i_command, DWORD* const o_exitCode, std::string* const o_errorMessage )
+sca2025::cResult sca2025::Windows::ExecuteCommand( const char* const i_command, DWORD* const o_exitCode, std::string* const o_errorMessage )
 {
 	return ExecuteCommand( NULL, i_command, o_exitCode, o_errorMessage );
 }
 
-eae6320::cResult eae6320::Windows::ExecuteCommand( const char* const i_path, const char* const i_optionalArguments,
+sca2025::cResult sca2025::Windows::ExecuteCommand( const char* const i_path, const char* const i_optionalArguments,
 	DWORD* const o_exitCode, std::string* const o_errorMessage )
 {
 	// Get a non-const char* command line
@@ -633,7 +633,7 @@ eae6320::cResult eae6320::Windows::ExecuteCommand( const char* const i_path, con
 	}
 }
 
-eae6320::cResult eae6320::Windows::GetFilesInDirectory( const std::string& i_path, std::vector<std::string>& o_paths,
+sca2025::cResult sca2025::Windows::GetFilesInDirectory( const std::string& i_path, std::vector<std::string>& o_paths,
 	const bool i_shouldSubdirectoriesBeSearchedRecursively, std::string* const o_errorMessage )
 {
 	auto result = Results::Success;
@@ -751,7 +751,7 @@ eae6320::cResult eae6320::Windows::GetFilesInDirectory( const std::string& i_pat
 	return result;
 }
 
-eae6320::cResult eae6320::Windows::GetEnvironmentVariable( const char* const i_key, std::string& o_value, std::string* const o_errorMessage )
+sca2025::cResult sca2025::Windows::GetEnvironmentVariable( const char* const i_key, std::string& o_value, std::string* const o_errorMessage )
 {
 	// Windows requires a character buffer
 	// to copy the environment variable into.
@@ -816,7 +816,7 @@ eae6320::cResult eae6320::Windows::GetEnvironmentVariable( const char* const i_k
 	}
 }
 
-std::string eae6320::Windows::GetFormattedSystemMessage( const DWORD i_code )
+std::string sca2025::Windows::GetFormattedSystemMessage( const DWORD i_code )
 {
 	std::string errorMessage;
 	{
@@ -869,7 +869,7 @@ std::string eae6320::Windows::GetFormattedSystemMessage( const DWORD i_code )
 	return errorMessage;
 }
 
-std::string eae6320::Windows::GetLastSystemError( DWORD* const o_optionalErrorCode )
+std::string sca2025::Windows::GetLastSystemError( DWORD* const o_optionalErrorCode )
 {
 	// Windows stores the error as a code
 	const auto errorCode = GetLastError();
@@ -880,7 +880,7 @@ std::string eae6320::Windows::GetLastSystemError( DWORD* const o_optionalErrorCo
 	return GetFormattedSystemMessage( errorCode );
 }
 
-eae6320::cResult eae6320::Windows::GetLastWriteTime( const char* const i_path, uint64_t& o_lastWriteTime, std::string* const o_errorMessage )
+sca2025::cResult sca2025::Windows::GetLastWriteTime( const char* const i_path, uint64_t& o_lastWriteTime, std::string* const o_errorMessage )
 {
 	// Get the last time that the file was written to
 	ULARGE_INTEGER lastWriteTime;
@@ -933,7 +933,7 @@ eae6320::cResult eae6320::Windows::GetLastWriteTime( const char* const i_path, u
 	return Results::Success;
 }
 
-eae6320::cResult eae6320::Windows::InvalidateLastWriteTime( const char* const i_path, std::string* const o_errorMessage )
+sca2025::cResult sca2025::Windows::InvalidateLastWriteTime( const char* const i_path, std::string* const o_errorMessage )
 {
 	HANDLE fileHandle = INVALID_HANDLE_VALUE;
 
@@ -1038,7 +1038,7 @@ eae6320::cResult eae6320::Windows::InvalidateLastWriteTime( const char* const i_
 	return Results::Success;
 }
 
-eae6320::cResult eae6320::Windows::LoadBinaryFile( const char* const i_path, sDataFromFile& o_data, std::string* const o_errorMessage )
+sca2025::cResult sca2025::Windows::LoadBinaryFile( const char* const i_path, sDataFromFile& o_data, std::string* const o_errorMessage )
 {
 	auto result = Results::Success;
 
@@ -1186,19 +1186,19 @@ eae6320::cResult eae6320::Windows::LoadBinaryFile( const char* const i_path, sDa
 	return result;
 }
 
-void eae6320::Windows::OutputErrorMessageForVisualStudio( const char* const i_errorMessage, const char* const i_optionalFilePath,
+void sca2025::Windows::OutputErrorMessageForVisualStudio( const char* const i_errorMessage, const char* const i_optionalFilePath,
 	const unsigned int* const i_optionalLineNumber, const unsigned int* const i_optionalColumnNumber )
 {
 	OutputMessageForVisualStudio( "error", i_errorMessage, i_optionalFilePath, i_optionalLineNumber, i_optionalColumnNumber );
 }
 
-void eae6320::Windows::OutputWarningMessageForVisualStudio( const char* const i_errorMessage, const char* const i_optionalFilePath,
+void sca2025::Windows::OutputWarningMessageForVisualStudio( const char* const i_errorMessage, const char* const i_optionalFilePath,
 	const unsigned int* const i_optionalLineNumber, const unsigned int* const i_optionalColumnNumber )
 {
 	OutputMessageForVisualStudio( "warning", i_errorMessage, i_optionalFilePath, i_optionalLineNumber, i_optionalColumnNumber );
 }
 
-eae6320::cResult eae6320::Windows::WriteBinaryFile( const char* const i_path, const void* const i_data, const size_t i_size, std::string* const o_errorMessage )
+sca2025::cResult sca2025::Windows::WriteBinaryFile( const char* const i_path, const void* const i_data, const size_t i_size, std::string* const o_errorMessage )
 {
 	HANDLE fileHandle = INVALID_HANDLE_VALUE;
 

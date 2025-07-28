@@ -1,6 +1,6 @@
 #include "GameObject.h"
 #include "Camera.h"
-namespace eae6320 {
+namespace sca2025 {
 	std::vector<GameCommon::GameObject *> colliderObjects;//game objects with colliders
 	std::vector<GameCommon::GameObject *> noColliderObjects;//game objects without colliders
 	Concurrency::cMutex gameObjectArrayMutex;

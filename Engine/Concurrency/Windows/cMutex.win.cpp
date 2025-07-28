@@ -6,17 +6,17 @@
 // Interface
 //==========
 
-void eae6320::Concurrency::cMutex::Lock()
+void sca2025::Concurrency::cMutex::Lock()
 {
 	AcquireSRWLockExclusive( &m_srwLock );
 }
 
-eae6320::cResult eae6320::Concurrency::cMutex::LockIfPossible()
+sca2025::cResult sca2025::Concurrency::cMutex::LockIfPossible()
 {
 	return ( TryAcquireSRWLockExclusive( &m_srwLock ) != FALSE ) ? Results::Success : Results::Failure;
 }
 
-void eae6320::Concurrency::cMutex::Unlock()
+void sca2025::Concurrency::cMutex::Unlock()
 {
 	ReleaseSRWLockExclusive( &m_srwLock );
 }
@@ -24,7 +24,7 @@ void eae6320::Concurrency::cMutex::Unlock()
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::Concurrency::cMutex::cMutex()
+sca2025::Concurrency::cMutex::cMutex()
 	:
 	m_srwLock( SRWLOCK_INIT )
 {
@@ -33,7 +33,7 @@ eae6320::Concurrency::cMutex::cMutex()
 	// InitializeSRWLock( &m_srwLock );
 }
 
-eae6320::Concurrency::cMutex::~cMutex()
+sca2025::Concurrency::cMutex::~cMutex()
 {
 
 }

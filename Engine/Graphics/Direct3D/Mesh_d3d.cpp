@@ -16,26 +16,26 @@
 #include "Engine/Math/sVector.h"
 #include <utility>
 
-eae6320::Assets::cManager<Mesh> Mesh::s_manager;
+sca2025::Assets::cManager<Mesh> Mesh::s_manager;
 
 Mesh::Mesh() {
 	m_indexBuffer = nullptr;
 	m_vertexBuffer = nullptr;
 	m_vertexInputLayout = nullptr;
 }
-eae6320::cResult Mesh::InitializeGeometry(uint16_t i_vertexCount, uint16_t i_indexCount, eae6320::Graphics::VertexFormats::sMesh * i_vertexData, uint16_t * i_indexData) {
+sca2025::cResult Mesh::InitializeGeometry(uint16_t i_vertexCount, uint16_t i_indexCount, sca2025::Graphics::VertexFormats::sMesh * i_vertexData, uint16_t * i_indexData) {
 	
-	auto result = eae6320::Results::Success;
+	auto result = sca2025::Results::Success;
 
-	auto* const direct3dDevice = eae6320::Graphics::sContext::g_context.direct3dDevice;
+	auto* const direct3dDevice = sca2025::Graphics::sContext::g_context.direct3dDevice;
 	EAE6320_ASSERT(direct3dDevice);
 
 	// Initialize vertex format
 	{
 		// Load the compiled binary vertex shader for the input layout
-		eae6320::Platform::sDataFromFile vertexShaderDataFromFile;
+		sca2025::Platform::sDataFromFile vertexShaderDataFromFile;
 		std::string errorMessage;
-		if (result = eae6320::Platform::LoadBinaryFile("data/Shaders/Vertex/vertexInputLayout.shader", vertexShaderDataFromFile, &errorMessage))
+		if (result = sca2025::Platform::LoadBinaryFile("data/Shaders/Vertex/vertexInputLayout.shader", vertexShaderDataFromFile, &errorMessage))
 		{
 			// Create the vertex layout
 
@@ -60,7 +60,7 @@ eae6320::cResult Mesh::InitializeGeometry(uint16_t i_vertexCount, uint16_t i_ind
 					positionElement.SemanticIndex = 0;	// (Semantics without modifying indices at the end can always use zero)
 					positionElement.Format = DXGI_FORMAT_R32G32B32_FLOAT;
 					positionElement.InputSlot = 0;
-					positionElement.AlignedByteOffset = offsetof(eae6320::Graphics::VertexFormats::sMesh, x);
+					positionElement.AlignedByteOffset = offsetof(sca2025::Graphics::VertexFormats::sMesh, x);
 					positionElement.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 					positionElement.InstanceDataStepRate = 0;	// (Must be zero for per-vertex data)
 				}
@@ -73,7 +73,7 @@ eae6320::cResult Mesh::InitializeGeometry(uint16_t i_vertexCount, uint16_t i_ind
 					normalElement.SemanticIndex = 0;	// (Semantics without modifying indices at the end can always use zero)
 					normalElement.Format = DXGI_FORMAT_R32G32B32_FLOAT;
 					normalElement.InputSlot = 0;
-					normalElement.AlignedByteOffset = offsetof(eae6320::Graphics::VertexFormats::sMesh, nor_x);
+					normalElement.AlignedByteOffset = offsetof(sca2025::Graphics::VertexFormats::sMesh, nor_x);
 					normalElement.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 					normalElement.InstanceDataStepRate = 0;	// (Must be zero for per-vertex data)
 				}
@@ -83,9 +83,9 @@ eae6320::cResult Mesh::InitializeGeometry(uint16_t i_vertexCount, uint16_t i_ind
 				vertexShaderDataFromFile.data, vertexShaderDataFromFile.size, &m_vertexInputLayout);
 			if (FAILED(result))
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 				EAE6320_ASSERTF(false, "Geometry vertex input layout creation failed (HRESULT %#010x)", d3dResult);
-				eae6320::Logging::OutputError("Direct3D failed to create the geometry vertex input layout (HRESULT %#010x)", d3dResult);
+				sca2025::Logging::OutputError("Direct3D failed to create the geometry vertex input layout (HRESULT %#010x)", d3dResult);
 			}
 
 			vertexShaderDataFromFile.Free();
@@ -93,7 +93,7 @@ eae6320::cResult Mesh::InitializeGeometry(uint16_t i_vertexCount, uint16_t i_ind
 		else
 		{
 			EAE6320_ASSERTF(false, errorMessage.c_str());
-			eae6320::Logging::OutputError("The geometry vertex input layout shader couldn't be loaded: %s", errorMessage.c_str());
+			sca2025::Logging::OutputError("The geometry vertex input layout shader couldn't be loaded: %s", errorMessage.c_str());
 			goto OnExit;
 		}
 	}
@@ -102,7 +102,7 @@ eae6320::cResult Mesh::InitializeGeometry(uint16_t i_vertexCount, uint16_t i_ind
 
 		D3D11_BUFFER_DESC bufferDescription{};
 		{
-			const auto bufferSize = i_vertexCount * sizeof(eae6320::Graphics::VertexFormats::sMesh);
+			const auto bufferSize = i_vertexCount * sizeof(sca2025::Graphics::VertexFormats::sMesh);
 			EAE6320_ASSERT(bufferSize < (uint64_t(1u) << (sizeof(bufferDescription.ByteWidth) * 8)));
 			bufferDescription.ByteWidth = static_cast<unsigned int>(bufferSize);
 			bufferDescription.Usage = D3D11_USAGE_DYNAMIC;	// In our class the buffer will never change after it's been created
@@ -122,9 +122,9 @@ eae6320::cResult Mesh::InitializeGeometry(uint16_t i_vertexCount, uint16_t i_ind
 		const auto d3dResult = direct3dDevice->CreateBuffer(&bufferDescription, &initialData, &m_vertexBuffer);
 		if (FAILED(d3dResult))
 		{
-			result = eae6320::Results::Failure;
+			result = sca2025::Results::Failure;
 			EAE6320_ASSERTF(false, "Geometry vertex buffer creation failed (HRESULT %#010x)", d3dResult);
-			eae6320::Logging::OutputError("Direct3D failed to create a geometry vertex buffer (HRESULT %#010x)", d3dResult);
+			sca2025::Logging::OutputError("Direct3D failed to create a geometry vertex buffer (HRESULT %#010x)", d3dResult);
 			goto OnExit;
 		}
 	}
@@ -151,9 +151,9 @@ eae6320::cResult Mesh::InitializeGeometry(uint16_t i_vertexCount, uint16_t i_ind
 		const auto success = direct3dDevice->CreateBuffer(&indexBufferDescription, &indexInitialData, &m_indexBuffer);
 		if (FAILED(success))
 		{
-			result = eae6320::Results::Failure;
+			result = sca2025::Results::Failure;
 			EAE6320_ASSERTF(false, "Geometry index buffer creation failed (HRESULT %#010x)", success);
-			eae6320::Logging::OutputError("Direct3D failed to create a geometry index buffer (HRESULT %#010x)", success);
+			sca2025::Logging::OutputError("Direct3D failed to create a geometry index buffer (HRESULT %#010x)", success);
 			goto OnExit;
 		}
 	}
@@ -173,15 +173,15 @@ void Mesh::UpdateMeshNormals()
 		int16_t index_1 = m_pIndexDataInRAM[i + 2];
 		int16_t index_2 = m_pIndexDataInRAM[i + 1];
 
-		eae6320::Math::sVector vec_1(m_pVertexDataInRAM[index_1].x - m_pVertexDataInRAM[index_0].x,
+		sca2025::Math::sVector vec_1(m_pVertexDataInRAM[index_1].x - m_pVertexDataInRAM[index_0].x,
 			m_pVertexDataInRAM[index_1].y - m_pVertexDataInRAM[index_0].y,
 			m_pVertexDataInRAM[index_1].z - m_pVertexDataInRAM[index_0].z);
 
-		eae6320::Math::sVector vec_2(m_pVertexDataInRAM[index_2].x - m_pVertexDataInRAM[index_0].x,
+		sca2025::Math::sVector vec_2(m_pVertexDataInRAM[index_2].x - m_pVertexDataInRAM[index_0].x,
 			m_pVertexDataInRAM[index_2].y - m_pVertexDataInRAM[index_0].y,
 			m_pVertexDataInRAM[index_2].z - m_pVertexDataInRAM[index_0].z);
 
-		eae6320::Math::sVector normal = eae6320::Math::Cross(vec_1, vec_2);
+		sca2025::Math::sVector normal = sca2025::Math::Cross(vec_1, vec_2);
 		normal.Normalize();
 		m_pVertexDataInRAM[index_0].nor_x = normal.x;
 		m_pVertexDataInRAM[index_0].nor_y = normal.y;
@@ -209,7 +209,7 @@ void Mesh::Draw() {
 		constexpr DXGI_FORMAT indexFormat = DXGI_FORMAT_R16_UINT;
 		// The indices start at the beginning of the buffer
 		constexpr unsigned int offset = 0;
-		eae6320::Graphics::sContext::g_context.direct3dImmediateContext->IASetIndexBuffer(m_indexBuffer, indexFormat, offset);
+		sca2025::Graphics::sContext::g_context.direct3dImmediateContext->IASetIndexBuffer(m_indexBuffer, indexFormat, offset);
 	}
 	
 	// Bind a specific vertex buffer to the device as a data source
@@ -218,22 +218,22 @@ void Mesh::Draw() {
 		constexpr unsigned int startingSlot = 0;
 		constexpr unsigned int vertexBufferCount = 1;
 		// The "stride" defines how large a single vertex is in the stream of data
-		constexpr unsigned int bufferStride = sizeof(eae6320::Graphics::VertexFormats::sMesh);
+		constexpr unsigned int bufferStride = sizeof(sca2025::Graphics::VertexFormats::sMesh);
 		// It's possible to start streaming data in the middle of a vertex buffer
 		constexpr unsigned int bufferOffset = 0;
-		eae6320::Graphics::sContext::g_context.direct3dImmediateContext->IASetVertexBuffers(startingSlot, vertexBufferCount, &m_vertexBuffer, &bufferStride, &bufferOffset);
+		sca2025::Graphics::sContext::g_context.direct3dImmediateContext->IASetVertexBuffers(startingSlot, vertexBufferCount, &m_vertexBuffer, &bufferStride, &bufferOffset);
 	}
 	// Specify what kind of data the vertex buffer holds
 	{
 		// Set the layout (which defines how to interpret a single vertex)
 		{
 			EAE6320_ASSERT(m_vertexInputLayout);
-			eae6320::Graphics::sContext::g_context.direct3dImmediateContext->IASetInputLayout(m_vertexInputLayout);
+			sca2025::Graphics::sContext::g_context.direct3dImmediateContext->IASetInputLayout(m_vertexInputLayout);
 		}
 		// Set the topology (which defines how to interpret multiple vertices as a single "primitive";
 		// the vertex buffer was defined as a triangle list
 		// (meaning that every primitive is a triangle and will be defined by three vertices)
-		eae6320::Graphics::sContext::g_context.direct3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		sca2025::Graphics::sContext::g_context.direct3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	}
 	//draw
 	{
@@ -241,21 +241,21 @@ void Mesh::Draw() {
 		// It's possible to start rendering primitives in the middle of the stream
 		constexpr unsigned int indexOfFirstIndexToUse = 0;
 		constexpr unsigned int offsetToAddToEachIndex = 0;
-		eae6320::Graphics::sContext::g_context.direct3dImmediateContext->DrawIndexed(static_cast<unsigned int>(indexCountToRender), indexOfFirstIndexToUse, offsetToAddToEachIndex);
+		sca2025::Graphics::sContext::g_context.direct3dImmediateContext->DrawIndexed(static_cast<unsigned int>(indexCountToRender), indexOfFirstIndexToUse, offsetToAddToEachIndex);
 	}
 }
 
 void Mesh::UpdataVertexBuffer() {
-	auto* const direct3dDeviceContext = eae6320::Graphics::sContext::g_context.direct3dImmediateContext;
+	auto* const direct3dDeviceContext = sca2025::Graphics::sContext::g_context.direct3dImmediateContext;
 	
 	D3D11_MAPPED_SUBRESOURCE resource;
 	direct3dDeviceContext->Map(m_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
-	memcpy(resource.pData, m_pVertexDataInRAM, m_numberOfVertices * sizeof(eae6320::Graphics::VertexFormats::sMesh));
+	memcpy(resource.pData, m_pVertexDataInRAM, m_numberOfVertices * sizeof(sca2025::Graphics::VertexFormats::sMesh));
 	direct3dDeviceContext->Unmap(m_vertexBuffer, 0);
 
 }
 
-eae6320::cResult Mesh::CleanUp(eae6320::cResult result) {
+sca2025::cResult Mesh::CleanUp(sca2025::cResult result) {
 	if (m_vertexBuffer)
 	{
 		m_vertexBuffer->Release();

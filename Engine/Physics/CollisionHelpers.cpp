@@ -10,7 +10,7 @@
 #define EPA_MAX_NUM_ITERATIONS 30
 // Interface
 
-eae6320::Physics::SupportResult eae6320::Physics::Collider::getFarthestPointInDirection(Math::sVector i_dir)
+sca2025::Physics::SupportResult sca2025::Physics::Collider::getFarthestPointInDirection(Math::sVector i_dir)
 {
 	SupportResult supportResult;
 	if (m_type == Box)
@@ -40,7 +40,7 @@ eae6320::Physics::SupportResult eae6320::Physics::Collider::getFarthestPointInDi
 	return supportResult;
 }
 
-void eae6320::Physics::Collider::RemoveManifold(ContactManifold3D* i_pManifold)
+void sca2025::Physics::Collider::RemoveManifold(ContactManifold3D* i_pManifold)
 {
 	for (size_t i = 0; i < m_pManifolds.size(); i++)
 	{
@@ -53,7 +53,7 @@ void eae6320::Physics::Collider::RemoveManifold(ContactManifold3D* i_pManifold)
 	}
 }
 
-eae6320::Physics::SupportResult eae6320::Physics::Collider::supportFunction(Collider&i_A, Collider&i_B, Math::sVector i_dir)
+sca2025::Physics::SupportResult sca2025::Physics::Collider::supportFunction(Collider&i_A, Collider&i_B, Math::sVector i_dir)
 {
 	auto a = i_A.getFarthestPointInDirection(i_dir);
 	auto b = i_B.getFarthestPointInDirection(i_dir*-1);
@@ -64,7 +64,7 @@ eae6320::Physics::SupportResult eae6320::Physics::Collider::supportFunction(Coll
 	return supportResult;
 }
 
-eae6320::Math::sVector eae6320::Physics::Collider::Center()
+sca2025::Math::sVector sca2025::Physics::Collider::Center()
 {
 	Math::sVector center;
 	if (m_type != Sphere)
@@ -81,7 +81,7 @@ eae6320::Math::sVector eae6320::Physics::Collider::Center()
 	return center;
 }
 
-eae6320::Physics::Contact eae6320::Physics::Collider::getContact(Simplex&i_simplex, Collider* coll2)
+sca2025::Physics::Contact sca2025::Physics::Collider::getContact(Simplex&i_simplex, Collider* coll2)
 {
 	Contact contact;//output
 
@@ -240,7 +240,7 @@ eae6320::Physics::Contact eae6320::Physics::Collider::getContact(Simplex&i_simpl
 	return contact;
 }
 
-bool eae6320::Physics::Collider::IsCollided(Collider&i_B, Contact& o_contact)
+bool sca2025::Physics::Collider::IsCollided(Collider&i_B, Contact& o_contact)
 {
 	Math::sVector dir = i_B.Center() - this->Center();
 	Simplex simplex;
@@ -261,7 +261,7 @@ bool eae6320::Physics::Collider::IsCollided(Collider&i_B, Contact& o_contact)
 	}
 }
 
-bool eae6320::Physics::Simplex::ContainsOrigin(Math::sVector &t_direction)
+bool sca2025::Physics::Simplex::ContainsOrigin(Math::sVector &t_direction)
 {
 	Math::sVector a, b, c, d;
 	Math::sVector ab, ac, ao;
@@ -367,21 +367,21 @@ bool eae6320::Physics::Simplex::ContainsOrigin(Math::sVector &t_direction)
 	return false;
 }
 
-eae6320::Physics::Collider::Collider() { m_vertices.clear(); }
+sca2025::Physics::Collider::Collider() { m_vertices.clear(); }
 
-eae6320::Physics::Collider::Collider(std::vector<Math::sVector>& i_v, ColliderType i_type)
+sca2025::Physics::Collider::Collider(std::vector<Math::sVector>& i_v, ColliderType i_type)
 {
 	m_vertices = i_v;
 	m_type = i_type;
 }
 
-eae6320::Physics::Collider::Collider(const Collider& i_v)
+sca2025::Physics::Collider::Collider(const Collider& i_v)
 {
 	m_vertices = i_v.m_vertices;
 	m_type = i_v.m_type;
 }
 
-void eae6320::Physics::Collider::InitializeCollider(AABB &i_box)
+void sca2025::Physics::Collider::InitializeCollider(AABB &i_box)
 {
 	m_vertices.resize(8);
 	for (int i = 0; i < 8; i++)
@@ -403,14 +403,14 @@ void eae6320::Physics::Collider::InitializeCollider(AABB &i_box)
 	m_vertices[7].z = -m_vertices[7].z;
 }
 
-void eae6320::Physics::Collider::UpdateTransformation(eae6320::Math::cMatrix_transformation i_t, eae6320::Math::cMatrix_transformation i_rot)
+void sca2025::Physics::Collider::UpdateTransformation(sca2025::Math::cMatrix_transformation i_t, sca2025::Math::cMatrix_transformation i_rot)
 {
 	m_transformation = i_t;
 	m_rotMatrix = i_rot;
 
 }
 
-void eae6320::Physics::MergeContact(Contact& i_contact, ContactManifold3D& o_dest)
+void sca2025::Physics::MergeContact(Contact& i_contact, ContactManifold3D& o_dest)
 {
 	float persistentThresholdSQ = 0.0025f;
 

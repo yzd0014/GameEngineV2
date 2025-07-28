@@ -16,11 +16,11 @@
 
 // Interface
 //==========
-bool eae6320::Application::enableConsole = false;
-LPWSTR* eae6320::Application::argv = nullptr;
-int eae6320::Application::argc = 0;
+bool sca2025::Application::enableConsole = false;
+LPWSTR* sca2025::Application::argv = nullptr;
+int sca2025::Application::argc = 0;
 
-void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const double i_elapsedSecondCount_sinceLastUpdate)
+void sca2025::Application::cbApplication::UpdateSimulationBasedOnTime(const double i_elapsedSecondCount_sinceLastUpdate)
 {
 	size_t size_physicsObject = colliderObjects.size();
 	// ***********************run physics****************************************************	
@@ -39,7 +39,7 @@ void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const doub
 	Physics::totalSimulationTime += i_elapsedSecondCount_sinceLastUpdate;
 }
 
-void eae6320::Application::cbApplication::UpdateSimulationBasedOnInput()
+void sca2025::Application::cbApplication::UpdateSimulationBasedOnInput()
 {
 	size_t numOfObjects = colliderObjects.size();
 	for (size_t i = 0; i < numOfObjects; i++) {
@@ -51,14 +51,14 @@ void eae6320::Application::cbApplication::UpdateSimulationBasedOnInput()
 	}
 }
 
-void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate)
+void sca2025::Application::cbApplication::SubmitDataToBeRendered(const float i_elapsedSecondCount_systemTime, const float i_elapsedSecondCount_sinceLastSimulationUpdate)
 {
 	if(Graphics::renderThreadNoWait)
 		Graphics::ClearDataBeingSubmittedByApplicationThread();
 
 	//submit background color
 	float color[] = { 0.0f, 0.7f, 1.0f , 1.0f };
-	eae6320::Graphics::SubmitBGColor(color);
+	sca2025::Graphics::SubmitBGColor(color);
 
 	//submit gameObject with colliders 
 	for (size_t i = 0; i < colliderObjects.size(); i++) {
@@ -76,7 +76,7 @@ void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_e
 			orientation = colliderObjects[i]->m_State.orientation;
 		}
 		//submit
-		eae6320::Graphics::SubmitObject(colliderObjects[i]->m_color, Math::cMatrix_transformation(orientation, position),
+		sca2025::Graphics::SubmitObject(colliderObjects[i]->m_color, Math::cMatrix_transformation(orientation, position),
 			colliderObjects[i]->GetEffect(), Mesh::s_manager.Get(colliderObjects[i]->GetMesh()));
 
 	}
@@ -116,11 +116,11 @@ void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_e
 			transformTotal.m_13 = static_cast<float>(noColliderObjects[i]->m_State.position.y);
 			transformTotal.m_23 = static_cast<float>(noColliderObjects[i]->m_State.position.z);
 
-			eae6320::Graphics::SubmitObject(noColliderObjects[i]->m_color, transformTotal, noColliderObjects[i]->GetEffect(), Mesh::s_manager.Get(noColliderObjects[i]->GetMesh()));
+			sca2025::Graphics::SubmitObject(noColliderObjects[i]->m_color, transformTotal, noColliderObjects[i]->GetEffect(), Mesh::s_manager.Get(noColliderObjects[i]->GetMesh()));
 		}
 		else
 		{
-			eae6320::Graphics::SubmitObject(noColliderObjects[i]->m_color, Math::cMatrix_transformation(orientation, position),
+			sca2025::Graphics::SubmitObject(noColliderObjects[i]->m_color, Math::cMatrix_transformation(orientation, position),
 				noColliderObjects[i]->GetEffect(), Mesh::s_manager.Get(noColliderObjects[i]->GetMesh()));
 		}
 	}
@@ -132,12 +132,12 @@ void eae6320::Application::cbApplication::SubmitDataToBeRendered(const float i_e
 		Math::sVector predictedPosition = mainCamera.PredictFuturePosition(i_elapsedSecondCount_sinceLastSimulationUpdate);
 		Math::cQuaternion predictedOrientation = mainCamera.PredictFutureOrientation(i_elapsedSecondCount_sinceLastSimulationUpdate);
 		//submit
-		eae6320::Graphics::SubmitCamera(Math::cMatrix_transformation::CreateWorldToCameraTransform(predictedOrientation, predictedPosition),
+		sca2025::Graphics::SubmitCamera(Math::cMatrix_transformation::CreateWorldToCameraTransform(predictedOrientation, predictedPosition),
 			mainCamera.GetCameraToProjectedMat());
 	}
 }
 
-eae6320::cResult eae6320::Application::cbApplication::CleanUp()
+sca2025::cResult sca2025::Application::cbApplication::CleanUp()
 {
 	//release all game objects first
 	size_t numOfObjects = colliderObjects.size();
@@ -166,12 +166,12 @@ eae6320::cResult eae6320::Application::cbApplication::CleanUp()
 	return Results::Success;
 }
 
-double eae6320::Application::cbApplication::GetElapsedSecondCount_systemTime() const
+double sca2025::Application::cbApplication::GetElapsedSecondCount_systemTime() const
 {
 	return Time::ConvertTicksToSeconds( m_tickCount_systemTime_current - m_tickCount_systemTime_whenApplicationStarted );
 }
 
-void eae6320::Application::cbApplication::SetSimulationRate( const float i_simulationRate )
+void sca2025::Application::cbApplication::SetSimulationRate( const float i_simulationRate )
 {
 	m_simulationRate = i_simulationRate;
 }
@@ -179,7 +179,7 @@ void eae6320::Application::cbApplication::SetSimulationRate( const float i_simul
 // Run
 //------
 
-int eae6320::Application::cbApplication::ParseEntryPointParametersAndRun( const sEntryPointParameters& i_entryPointParameters )
+int sca2025::Application::cbApplication::ParseEntryPointParametersAndRun( const sEntryPointParameters& i_entryPointParameters )
 {
 	int exitCode = EXIT_SUCCESS;
 
@@ -233,7 +233,7 @@ OnExit:
 	return exitCode;
 }
 
-eae6320::cResult eae6320::Application::cbApplication::Exit( const int i_exitCode )
+sca2025::cResult sca2025::Application::cbApplication::Exit( const int i_exitCode )
 {
 	const auto result = Exit_platformSpecific( i_exitCode );
 	if ( result )
@@ -247,7 +247,7 @@ eae6320::cResult eae6320::Application::cbApplication::Exit( const int i_exitCode
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::Application::cbApplication::~cbApplication()
+sca2025::Application::cbApplication::~cbApplication()
 {
 	CleanUp_base();
 }
@@ -261,7 +261,7 @@ eae6320::Application::cbApplication::~cbApplication()
 // Run
 //----
 
-void eae6320::Application::cbApplication::UpdateUntilExit()
+void sca2025::Application::cbApplication::UpdateUntilExit()
 {
 	// This stores the number of ticks that have elapsed since the system has been running,
 	// and it gets updated at the start of every iteration of the application loop
@@ -453,7 +453,7 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 	}
 }
 
-void eae6320::Application::cbApplication::SimulationLoopWithoutRendering()
+void sca2025::Application::cbApplication::SimulationLoopWithoutRendering()
 {
 	const double h = GetSimulationUpdatePeriod_inSeconds();
 	while (true)
@@ -466,7 +466,7 @@ void eae6320::Application::cbApplication::SimulationLoopWithoutRendering()
 	}
 }
 
-void eae6320::Application::cbApplication::EntryPoint_applicationLoopThread( void* const io_application )
+void sca2025::Application::cbApplication::EntryPoint_applicationLoopThread( void* const io_application )
 {
 	auto *const application = static_cast<cbApplication*>( io_application );
 	EAE6320_ASSERT( application );
@@ -476,7 +476,7 @@ void eae6320::Application::cbApplication::EntryPoint_applicationLoopThread( void
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Application::cbApplication::Initialize_all( const sEntryPointParameters& i_entryPointParameters )
+sca2025::cResult sca2025::Application::cbApplication::Initialize_all( const sEntryPointParameters& i_entryPointParameters )
 {
 	auto result = Results::Success;
 
@@ -533,7 +533,7 @@ OnExit:
 	return result;
 }
 
-void eae6320::Application::cbApplication::EnableConsolePrinting(bool enabled)
+void sca2025::Application::cbApplication::EnableConsolePrinting(bool enabled)
 {
 	enableConsole = enabled;
 	if (enabled)
@@ -544,7 +544,7 @@ void eae6320::Application::cbApplication::EnableConsolePrinting(bool enabled)
 	}
 }
 
-eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
+sca2025::cResult sca2025::Application::cbApplication::Initialize_engine()
 {
 	auto result = Results::Success;
 
@@ -587,7 +587,7 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 		//initialize rendering primitive
 		{
 			LOAD_MESH("data/meshes/arrow.mesh", mesh_arrow)
-			eae6320::GameplayUtility::arrowMesh = mesh_arrow;
+			sca2025::GameplayUtility::arrowMesh = mesh_arrow;
 			LOAD_EFFECT("data/effects/default.effect", pDefaultEffect)
 			defaultEffect = pDefaultEffect;
 		}
@@ -613,7 +613,7 @@ OnExit:
 	return result;
 }
 
-eae6320::cResult eae6320::Application::cbApplication::CleanUp_all()
+sca2025::cResult sca2025::Application::cbApplication::CleanUp_all()
 {
 	auto result = Results::Success;
 
@@ -709,7 +709,7 @@ eae6320::cResult eae6320::Application::cbApplication::CleanUp_all()
 	return result;
 }
 
-eae6320::cResult eae6320::Application::cbApplication::CleanUp_engine()
+sca2025::cResult sca2025::Application::cbApplication::CleanUp_engine()
 {
 	auto result = Results::Success;
 	if (render)
@@ -743,7 +743,7 @@ eae6320::cResult eae6320::Application::cbApplication::CleanUp_engine()
 	return result;
 }
 
-void eae6320::Application::AddApplicationParameter(void* outputPtr, enum ApplicationParameterType type, const std::wstring& prefix)
+void sca2025::Application::AddApplicationParameter(void* outputPtr, enum ApplicationParameterType type, const std::wstring& prefix)
 {
 	if (type == integer)
 	{

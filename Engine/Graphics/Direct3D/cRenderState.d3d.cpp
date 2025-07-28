@@ -15,7 +15,7 @@
 // Render
 //-------
 
-void eae6320::Graphics::cRenderState::Bind() const
+void sca2025::Graphics::cRenderState::Bind() const
 {
 	auto* const direct3dImmediateContext = sContext::g_context.direct3dImmediateContext;
 	EAE6320_ASSERT( direct3dImmediateContext );
@@ -43,7 +43,7 @@ void eae6320::Graphics::cRenderState::Bind() const
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::cRenderState::CleanUp()
+sca2025::cResult sca2025::Graphics::cRenderState::CleanUp()
 {
 	auto result = Results::Success;
 
@@ -72,7 +72,7 @@ eae6320::cResult eae6320::Graphics::cRenderState::CleanUp()
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::cRenderState::InitializeFromBits()
+sca2025::cResult sca2025::Graphics::cRenderState::InitializeFromBits()
 {
 	auto result = Results::Success;
 
@@ -120,7 +120,7 @@ eae6320::cResult eae6320::Graphics::cRenderState::InitializeFromBits()
 		{
 			result = Results::Failure;
 			EAE6320_ASSERTF( false, "CreateBlendState() failed (HRESULT %#010x)", d3dResult );
-			eae6320::Logging::OutputError( "Direct3D failed to create a blend render state object from %u with HRESULT %#010x", m_bits, d3dResult );
+			sca2025::Logging::OutputError( "Direct3D failed to create a blend render state object from %u with HRESULT %#010x", m_bits, d3dResult );
 			goto OnExit;
 		}
 	}
@@ -158,7 +158,7 @@ eae6320::cResult eae6320::Graphics::cRenderState::InitializeFromBits()
 		{
 			result = Results::Failure;
 			EAE6320_ASSERTF( false, "CreateDepthStencilState() failed (HRESULT %#010x)", d3dResult );
-			eae6320::Logging::OutputError( "Direct3D failed to create a depth/stencil render state object from %u with HRESULT %#010x", m_bits, d3dResult );
+			sca2025::Logging::OutputError( "Direct3D failed to create a depth/stencil render state object from %u with HRESULT %#010x", m_bits, d3dResult );
 			goto OnExit;
 		}
 	}
@@ -196,7 +196,7 @@ eae6320::cResult eae6320::Graphics::cRenderState::InitializeFromBits()
 		{
 			result = Results::Failure;
 			EAE6320_ASSERTF( false, "CreateRasterizerState() failed (HRESULT %#010x)", d3dResult );
-			eae6320::Logging::OutputError( "Direct3D failed to create a rasterizer render state object from %u with HRESULT %#010x", m_bits, d3dResult );
+			sca2025::Logging::OutputError( "Direct3D failed to create a rasterizer render state object from %u with HRESULT %#010x", m_bits, d3dResult );
 			goto OnExit;
 		}
 	}

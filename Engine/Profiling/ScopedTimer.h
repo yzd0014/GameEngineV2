@@ -6,12 +6,12 @@
 class ScopedTimer {
 public:
 	ScopedTimer(Accumulator * i_pAccumulator) :
-		m_Start(eae6320::Time::GetCurrentSystemTimeTickCount()),
+		m_Start(sca2025::Time::GetCurrentSystemTimeTickCount()),
 		m_pAccumulator(i_pAccumulator)
 	{
 	}
 	~ScopedTimer() {
-		uint64_t currentTick = eae6320::Time::GetCurrentSystemTimeTickCount();
+		uint64_t currentTick = sca2025::Time::GetCurrentSystemTimeTickCount();
 		uint64_t elapsedTicks = uint64_t(currentTick - m_Start);
 		*m_pAccumulator += elapsedTicks;
 	}

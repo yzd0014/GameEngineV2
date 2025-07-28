@@ -11,7 +11,7 @@
 #define fakeZero -0.000001f
 #define epsilon 1.0e-9f
 
-namespace eae6320 {
+namespace sca2025 {
 	namespace Physics {
 		bool  CollisionDetection(sRigidBodyState  & i_object_A, sRigidBodyState & i_object_B, float i_dt, Math::sVector &o_normal4A, float &o_collisionTime) {
 			

@@ -13,7 +13,7 @@
 
 namespace
 {
-	eae6320::cResult CreateDevice( const unsigned int i_resolutionWidth, const unsigned int i_resolutionHeight );
+	sca2025::cResult CreateDevice( const unsigned int i_resolutionWidth, const unsigned int i_resolutionHeight );
 }
 
 // Interface
@@ -22,7 +22,7 @@ namespace
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::sContext::Initialize( const sInitializationParameters& i_initializationParameters )
+sca2025::cResult sca2025::Graphics::sContext::Initialize( const sInitializationParameters& i_initializationParameters )
 {
 	auto result = Results::Success;
 
@@ -40,7 +40,7 @@ OnExit:
 	return result;
 }
 
-eae6320::cResult eae6320::Graphics::sContext::CleanUp()
+sca2025::cResult sca2025::Graphics::sContext::CleanUp()
 {
 	auto result = Results::Success;
 
@@ -70,9 +70,9 @@ eae6320::cResult eae6320::Graphics::sContext::CleanUp()
 
 namespace
 {
-	eae6320::cResult CreateDevice( const unsigned int i_resolutionWidth, const unsigned int i_resolutionHeight )
+	sca2025::cResult CreateDevice( const unsigned int i_resolutionWidth, const unsigned int i_resolutionHeight )
 	{
-		auto& g_context = eae6320::Graphics::sContext::g_context;
+		auto& g_context = sca2025::Graphics::sContext::g_context;
 
 		IDXGIAdapter* const useDefaultAdapter = nullptr;
 		constexpr D3D_DRIVER_TYPE useHardwareRendering = D3D_DRIVER_TYPE_HARDWARE;
@@ -121,13 +121,13 @@ namespace
 			&g_context.swapChain, &g_context.direct3dDevice, &highestSupportedFeatureLevel, &g_context.direct3dImmediateContext );
 		if ( SUCCEEDED( d3dResult ) )
 		{
-			return eae6320::Results::Success;
+			return sca2025::Results::Success;
 		}
 		else
 		{
 			EAE6320_ASSERT( false );
-			eae6320::Logging::OutputError( "Direct3D failed to create a Direct3D11 device with HRESULT %#010x", d3dResult );
-			return eae6320::Results::Failure;
+			sca2025::Logging::OutputError( "Direct3D failed to create a Direct3D11 device with HRESULT %#010x", d3dResult );
+			return sca2025::Results::Failure;
 		}
 	}
 }

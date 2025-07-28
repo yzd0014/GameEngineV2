@@ -25,7 +25,7 @@
 // Interface
 //==========
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Assets
 	{
@@ -74,7 +74,7 @@ namespace eae6320
 			std::vector<sAssetRecord> m_assetRecords;
 			std::vector<uint16_t> m_unusedAssetRecordIndices;
 			std::map< std::string, cHandle<tAsset> > m_map_pathsToHandles;
-			eae6320::Concurrency::cMutex m_mutex;
+			sca2025::Concurrency::cMutex m_mutex;
 		};
 	}
 }

@@ -5,7 +5,7 @@
 #include "External/EigenLibrary/Eigen/Dense"
 
 using namespace Eigen;
-namespace eae6320
+namespace sca2025
 {
 	namespace Physics
 	{

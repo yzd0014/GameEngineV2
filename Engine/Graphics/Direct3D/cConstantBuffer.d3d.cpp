@@ -17,7 +17,7 @@
 // Render
 //-------
 
-void eae6320::Graphics::cConstantBuffer::Bind( const uint_fast8_t i_shaderTypesToBindTo ) const
+void sca2025::Graphics::cConstantBuffer::Bind( const uint_fast8_t i_shaderTypesToBindTo ) const
 {
 	auto* const direct3dImmediateContext = sContext::g_context.direct3dImmediateContext;
 	EAE6320_ASSERT( direct3dImmediateContext );
@@ -35,7 +35,7 @@ void eae6320::Graphics::cConstantBuffer::Bind( const uint_fast8_t i_shaderTypesT
 	}
 }
 
-void eae6320::Graphics::cConstantBuffer::Update( const void* const i_data )
+void sca2025::Graphics::cConstantBuffer::Update( const void* const i_data )
 {
 	auto* const direct3dImmediateContext = sContext::g_context.direct3dImmediateContext;
 	EAE6320_ASSERT( direct3dImmediateContext );
@@ -84,7 +84,7 @@ OnExit:
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::cConstantBuffer::CleanUp()
+sca2025::cResult sca2025::Graphics::cConstantBuffer::CleanUp()
 {
 	auto result = Results::Success;
 
@@ -103,7 +103,7 @@ eae6320::cResult eae6320::Graphics::cConstantBuffer::CleanUp()
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::cConstantBuffer::Initialize_platformSpecific( const void* const i_initialData )
+sca2025::cResult sca2025::Graphics::cConstantBuffer::Initialize_platformSpecific( const void* const i_initialData )
 {
 	auto* const direct3dDevice = sContext::g_context.direct3dDevice;
 	EAE6320_ASSERT( direct3dDevice );
@@ -136,7 +136,7 @@ eae6320::cResult eae6320::Graphics::cConstantBuffer::Initialize_platformSpecific
 	else
 	{
 		EAE6320_ASSERTF( false, "Couldn't create constant buffer creation (HRESULT %#010x)", d3dResult );
-		eae6320::Logging::OutputError( "Direct3D failed to create a constant buffer with HRESULT %#010x", d3dResult );
+		sca2025::Logging::OutputError( "Direct3D failed to create a constant buffer with HRESULT %#010x", d3dResult );
 		return Results::Failure;
 	}
 }

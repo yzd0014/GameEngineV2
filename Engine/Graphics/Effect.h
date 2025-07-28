@@ -29,14 +29,14 @@ class Effect {
 public:
 	EAE6320_ASSETS_DECLAREREFERENCECOUNTINGFUNCTIONS()
 	void Bind();
-	static eae6320::cResult Load(const char* const i_path, Effect* &o_Effect) {
+	static sca2025::cResult Load(const char* const i_path, Effect* &o_Effect) {
 		Effect* pEffect = new Effect();
 		const char *vertexShaderPath;
 		const char *fragmentShaderPath;
 		uint8_t renderState;
 		
-		eae6320::Platform::sDataFromFile pData;
-		eae6320::Platform::LoadBinaryFile(i_path, pData);
+		sca2025::Platform::sDataFromFile pData;
+		sca2025::Platform::LoadBinaryFile(i_path, pData);
 
 		uintptr_t currentOffset = reinterpret_cast<uintptr_t>(pData.data);
 		
@@ -59,21 +59,21 @@ public:
 		pData.Free();
 
 		o_Effect = pEffect;
-		return eae6320::Results::Success;
+		return sca2025::Results::Success;
 	}
 	EAE6320_ASSETS_DECLAREDELETEDREFERENCECOUNTEDFUNCTIONS(Effect)
 		
 private:	
 	Effect();
 	~Effect() {
-		CleanUp(eae6320::Results::Success);
+		CleanUp(sca2025::Results::Success);
 	}
-	eae6320::cResult InitializeShadingData(const char* const i_vertexPath, const char* const i_fragmentPath, uint8_t i_renderStateBits);
-	eae6320::cResult CleanUp(eae6320::cResult result);
+	sca2025::cResult InitializeShadingData(const char* const i_vertexPath, const char* const i_fragmentPath, uint8_t i_renderStateBits);
+	sca2025::cResult CleanUp(sca2025::cResult result);
 
-	eae6320::Graphics::cRenderState m_renderState;
-	eae6320::Graphics::cShader::Handle m_vertexShader;
-	eae6320::Graphics::cShader::Handle m_fragmentShader;
+	sca2025::Graphics::cRenderState m_renderState;
+	sca2025::Graphics::cShader::Handle m_vertexShader;
+	sca2025::Graphics::cShader::Handle m_fragmentShader;
 #if defined( EAE6320_PLATFORM_D3D )
 #elif defined( EAE6320_PLATFORM_GL )
 	GLuint m_programId;
@@ -81,7 +81,7 @@ private:
 	EAE6320_ASSETS_DECLAREREFERENCECOUNT()
 };
 
-namespace eae6320
+namespace sca2025
 {
 	extern std::vector<Effect*> masterEffectArray;
 	extern Math::sVector lightSourceADir;

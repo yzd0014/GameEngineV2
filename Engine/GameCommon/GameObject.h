@@ -5,7 +5,7 @@
 #include "External/EigenLibrary/Eigen/Dense"
 
 using namespace Eigen;
-namespace eae6320 {
+namespace sca2025 {
 	namespace GameCommon
 	{
 		class GameObject;
@@ -19,7 +19,7 @@ namespace eae6320 {
 		class GameObject {
 		public: 
 			GameObject(){}
-			GameObject(Effect * i_pEffect, eae6320::Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State) {//constructor
+			GameObject(Effect * i_pEffect, sca2025::Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State) {//constructor
 				if (i_pEffect != nullptr)
 				{
 					m_Mesh = i_Mesh;
@@ -102,7 +102,7 @@ namespace eae6320 {
 				i_pEffect->IncrementReferenceCount();
 				m_pEffect = i_pEffect;
 			}
-			void SetMesh(eae6320::Assets::cHandle<Mesh> i_Mesh) {
+			void SetMesh(sca2025::Assets::cHandle<Mesh> i_Mesh) {
 				Mesh::s_manager.Get(m_Mesh)->DecrementReferenceCount();
 				m_Mesh = i_Mesh;
 				Mesh::s_manager.Get(m_Mesh)->IncrementReferenceCount();
@@ -110,7 +110,7 @@ namespace eae6320 {
 			Effect * GetEffect() const {
 				return m_pEffect;
 			}
-			eae6320::Assets::cHandle<Mesh> GetMesh() const {
+			sca2025::Assets::cHandle<Mesh> GetMesh() const {
 				return m_Mesh;
 			}
 			void DestroyGameObject() {
@@ -124,7 +124,7 @@ namespace eae6320 {
 			Vector3d scale = Vector3d(1, 1, 1);
 			char objectType[20];
 		private:
-			eae6320::Assets::cHandle<Mesh> m_Mesh;
+			sca2025::Assets::cHandle<Mesh> m_Mesh;
 			Effect* m_pEffect = nullptr;
 			bool active = true;
 		};	

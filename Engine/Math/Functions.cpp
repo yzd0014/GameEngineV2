@@ -12,17 +12,17 @@
 // Interface
 //==========
 
-float eae6320::Math::ConvertDegreesToRadians( const float i_degrees )
+float sca2025::Math::ConvertDegreesToRadians( const float i_degrees )
 {
 	return i_degrees * ( Pi / 180.0f );
 }
 
-float eae6320::Math::ConvertRadiansToDegrees(const float i_radians)
+float sca2025::Math::ConvertRadiansToDegrees(const float i_radians)
 {
 	return i_radians * 180.0f / Pi;
 }
 
-uint16_t eae6320::Math::ConvertFloatToHalf( const float i_value )
+uint16_t sca2025::Math::ConvertFloatToHalf( const float i_value )
 {
 	// Get the individual bits of the floating point value
 	uint32_t bitRepresentation;
@@ -108,12 +108,12 @@ uint16_t eae6320::Math::ConvertFloatToHalf( const float i_value )
 	}
 }
 
-float eae6320::Math::ConvertHorizontalFieldOfViewToVerticalFieldOfView( const float i_horizontalFieldOfView_inRadians,
+float sca2025::Math::ConvertHorizontalFieldOfViewToVerticalFieldOfView( const float i_horizontalFieldOfView_inRadians,
 	const float i_aspectRatio )
 {
 	return 2.0f * std::atan( std::tan( i_horizontalFieldOfView_inRadians * 0.5f ) / i_aspectRatio );
 }
 
-bool eae6320::Math::floatEqual(float i_left, float i_right) {
+bool sca2025::Math::floatEqual(float i_left, float i_right) {
 	return abs(i_left - i_right) < 0.001f;
 }

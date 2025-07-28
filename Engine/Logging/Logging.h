@@ -18,7 +18,7 @@
 // Interface
 //==========
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Logging
 	{
@@ -42,11 +42,11 @@ namespace eae6320
 }
 
 #define LOG_TO_FILE \
-if (!eae6320::Logging::fileOpened)\
+if (!sca2025::Logging::fileOpened)\
 {\
-	eae6320::Logging::logStream.open("sim_data.csv", std::ios::out | std::ios::app);\
-	eae6320::Logging::fileOpened = true;\
+	sca2025::Logging::logStream.open("sim_data.csv", std::ios::out | std::ios::app);\
+	sca2025::Logging::fileOpened = true;\
 }\
-eae6320::Logging::logStream
+sca2025::Logging::logStream
 
 #endif	// EAE6320_LOGGING_H

@@ -21,7 +21,7 @@ using namespace Eigen;
 // Struct Declaration
 //===================
 
-namespace eae6320
+namespace sca2025
 {	
 	namespace Physics
 	{

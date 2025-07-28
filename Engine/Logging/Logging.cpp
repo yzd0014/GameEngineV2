@@ -23,10 +23,10 @@ namespace
 	public:
 
 		// Logging
-		eae6320::cResult OutputMessage( const std::string& i_message );
+		sca2025::cResult OutputMessage( const std::string& i_message );
 		void FlushLog();
 		// Initialization / Clean Up
-		eae6320::cResult InitializeIfNecesary();
+		sca2025::cResult InitializeIfNecesary();
 		static void CleanUp();
 		~cLogging();
 
@@ -39,7 +39,7 @@ namespace
 	};
 }
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Logging
 	{
@@ -56,7 +56,7 @@ namespace
 	cLogging s_logger;
 	auto s_hasTheLoggerBeenDestroyed = false;
 	auto s_hasTheLogFileAlreadyBeenWrittenTo = false;
-	auto s_cleanUpResult = eae6320::Results::Failure;
+	auto s_cleanUpResult = sca2025::Results::Failure;
 }
 
 // Helper Function Declarations
@@ -64,7 +64,7 @@ namespace
 
 namespace
 {
-	eae6320::cResult OutputMessage( const char* const i_message, va_list io_insertions );
+	sca2025::cResult OutputMessage( const char* const i_message, va_list io_insertions );
 }
 
 // Interface
@@ -73,7 +73,7 @@ namespace
 // Output
 //-------
 
-eae6320::cResult eae6320::Logging::OutputMessage( const char* const i_message, ... )
+sca2025::cResult sca2025::Logging::OutputMessage( const char* const i_message, ... )
 {
 	cResult result;
 	{
@@ -88,7 +88,7 @@ eae6320::cResult eae6320::Logging::OutputMessage( const char* const i_message, .
 	return result;
 }
 
-eae6320::cResult eae6320::Logging::OutputError( const char* const i_errorMessage, ... )
+sca2025::cResult sca2025::Logging::OutputError( const char* const i_errorMessage, ... )
 {
 	cResult result;
 	{
@@ -104,12 +104,12 @@ eae6320::cResult eae6320::Logging::OutputError( const char* const i_errorMessage
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Logging::Initialize()
+sca2025::cResult sca2025::Logging::Initialize()
 {
 	return s_logger.InitializeIfNecesary();
 }
 
-eae6320::cResult eae6320::Logging::CleanUp()
+sca2025::cResult sca2025::Logging::CleanUp()
 {
 	cLogging::CleanUp();
 	if (fileOpened)
@@ -129,18 +129,18 @@ namespace
 
 	// Logging
 
-	eae6320::cResult cLogging::OutputMessage( const std::string& i_message )
+	sca2025::cResult cLogging::OutputMessage( const std::string& i_message )
 	{
 		if ( InitializeIfNecesary() )
 		{
 			// Write the message to the file
 			m_outputStream << i_message << "\n";
 
-			return eae6320::Results::Success;
+			return sca2025::Results::Success;
 		}
 		else
 		{
-			return eae6320::Results::Failure;
+			return sca2025::Results::Failure;
 		}
 	}
 
@@ -151,7 +151,7 @@ namespace
 
 	// Initialization / Clean UP
 
-	eae6320::cResult cLogging::InitializeIfNecesary()
+	sca2025::cResult cLogging::InitializeIfNecesary()
 	{
 		// If there is an error when the application is exiting
 		// the logger may have already been destroyed
@@ -159,7 +159,7 @@ namespace
 		{
 			if ( m_outputStream.is_open() )
 			{
-				return eae6320::Results::Success;
+				return sca2025::Results::Success;
 			}
 			else
 			{
@@ -170,23 +170,23 @@ namespace
 					if ( m_outputStream.is_open() )
 					{
 						s_hasTheLogFileAlreadyBeenWrittenTo = true;
-						eae6320::Logging::OutputMessage( "Opened log file \"%s\"", EAE6320_LOGGING_PATH );
+						sca2025::Logging::OutputMessage( "Opened log file \"%s\"", EAE6320_LOGGING_PATH );
 						FlushLog();
-						return eae6320::Results::Success;
+						return sca2025::Results::Success;
 					}
 					else
 					{
-						return eae6320::Results::Failure;
+						return sca2025::Results::Failure;
 					}
 				}
 				else
 				{
 					m_outputStream.open( EAE6320_LOGGING_PATH, std::ofstream::app );
-					const auto result = m_outputStream.is_open() ? eae6320::Results::Success : eae6320::Results::Failure;
+					const auto result = m_outputStream.is_open() ? sca2025::Results::Success : sca2025::Results::Failure;
 					EAE6320_ASSERT( result );
 					if ( result )
 					{
-						eae6320::Logging::OutputMessage( "Re-opened log file" );
+						sca2025::Logging::OutputMessage( "Re-opened log file" );
 						FlushLog();
 					}
 					return result;
@@ -210,17 +210,17 @@ namespace
 					{
 						EAE6320_ASSERTF( false, "Calling atexit() to register logging clean up on a revived logger failed with a return value of %i", result );
 						CleanUp();
-						return eae6320::Results::Failure;
+						return sca2025::Results::Failure;
 					}
 				}
 			}
 			// Re-open the file
 			m_outputStream.open( EAE6320_LOGGING_PATH, std::ofstream::app );
-			const auto result = m_outputStream.is_open() ? eae6320::Results::Success : eae6320::Results::Failure;
+			const auto result = m_outputStream.is_open() ? sca2025::Results::Success : sca2025::Results::Failure;
 			EAE6320_ASSERT( result );
 			if ( result )
 			{
-				eae6320::Logging::OutputMessage( "Re-opened log file after it had been destroyed" );
+				sca2025::Logging::OutputMessage( "Re-opened log file after it had been destroyed" );
 				FlushLog();
 			}
 			return result;
@@ -232,20 +232,20 @@ namespace
 		if ( s_logger.m_outputStream.is_open() )
 		{
 			{
-				eae6320::Logging::OutputMessage( "Closing log file" );
+				sca2025::Logging::OutputMessage( "Closing log file" );
 				s_logger.FlushLog();
 			}
 			s_logger.m_outputStream.close();
-			s_cleanUpResult = !s_logger.m_outputStream.is_open() ? eae6320::Results::Success : eae6320::Results::Failure;
+			s_cleanUpResult = !s_logger.m_outputStream.is_open() ? sca2025::Results::Success : sca2025::Results::Failure;
 			EAE6320_ASSERTF( s_cleanUpResult, "Log file wasn't closed" );
 			if ( !s_cleanUpResult )
 			{
-				eae6320::Logging::OutputError( "Error: Log file did not close" );
+				sca2025::Logging::OutputError( "Error: Log file did not close" );
 			}
 			return;
 		}
 
-		s_cleanUpResult = eae6320::Results::Success;
+		s_cleanUpResult = sca2025::Results::Success;
 	}
 
 	cLogging::~cLogging()
@@ -260,7 +260,7 @@ namespace
 
 namespace
 {
-	eae6320::cResult OutputMessage( const char* const i_message, va_list io_insertions )
+	sca2025::cResult OutputMessage( const char* const i_message, va_list io_insertions )
 	{
 		constexpr size_t bufferSize = 512;
 		char buffer[bufferSize];
@@ -281,7 +281,7 @@ namespace
 					" Cut-off message is:\n\t" << buffer;
 				s_logger.OutputMessage( errorMessage.str().c_str() );
 				// Return failure regardless of whether the unformatted message was output
-				return eae6320::Results::Failure;
+				return sca2025::Results::Failure;
 			}
 		}
 		else
@@ -291,7 +291,7 @@ namespace
 			errorMessage << "ENCODING ERROR! Unformatted message was:\n\t" << i_message;
 			s_logger.OutputMessage( errorMessage.str().c_str() );
 			// Return failure regardless of whether the unformatted message was output
-			return eae6320::Results::Failure;
+			return sca2025::Results::Failure;
 		}
 	}
 }

@@ -21,7 +21,7 @@ extern "C"
 	#include "2.7.2/src/mcpp_lib.h"
 }
 
-namespace eae6320
+namespace sca2025
 {
 	namespace mcpp
 	{

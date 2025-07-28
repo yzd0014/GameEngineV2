@@ -10,7 +10,7 @@
 #include <iomanip>
 
 
-void eae6320::MultiBody::UnitTest5_6()
+void sca2025::MultiBody::UnitTest5_6()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = false;
@@ -32,7 +32,7 @@ void eae6320::MultiBody::UnitTest5_6()
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.5 * M_PI, 1e-6);
 }
 
-void eae6320::MultiBody::UnitTest5_4a()
+void sca2025::MultiBody::UnitTest5_4a()
 {
 	constraintSolverMode = IMPULSE;
 
@@ -53,7 +53,7 @@ void eae6320::MultiBody::UnitTest5_4a()
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(1, 0, 0), -1, 0.5 * M_PI);
 }
 
-void eae6320::MultiBody::UnitTest5_4b()
+void sca2025::MultiBody::UnitTest5_4b()
 {
 	constraintSolverMode = IMPULSE;
 
@@ -74,7 +74,7 @@ void eae6320::MultiBody::UnitTest5_4b()
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(1, 0, 0), -1, 0.5 * M_PI);
 }
 
-void eae6320::MultiBody::UnitTest5_2()
+void sca2025::MultiBody::UnitTest5_2()
 {
 	constraintSolverMode = IMPULSE;
 
@@ -91,7 +91,7 @@ void eae6320::MultiBody::UnitTest5_2()
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), -1, 1e-6);//head
 }
 
-void eae6320::MultiBody::UnitTest5_5()
+void sca2025::MultiBody::UnitTest5_5()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = false;
@@ -109,7 +109,7 @@ void eae6320::MultiBody::UnitTest5_5()
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), -1, 0.25 * M_PI);
 }
 
-void eae6320::MultiBody::UnitTest5_7()
+void sca2025::MultiBody::UnitTest5_7()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
@@ -142,7 +142,7 @@ void eae6320::MultiBody::UnitTest5_7()
 	}
 }
 
-void eae6320::MultiBody::UnitTest5_8a()
+void sca2025::MultiBody::UnitTest5_8a()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
@@ -232,7 +232,7 @@ void eae6320::MultiBody::UnitTest5_8a()
 	};
 }
 
-void eae6320::MultiBody::UnitTest5_8b()
+void sca2025::MultiBody::UnitTest5_8b()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
@@ -326,7 +326,7 @@ void eae6320::MultiBody::UnitTest5_8b()
 	};
 }
 
-void eae6320::MultiBody::UnitTest5_3a()
+void sca2025::MultiBody::UnitTest5_3a()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = false;
@@ -370,7 +370,7 @@ void eae6320::MultiBody::UnitTest5_3a()
 	{
 		_Vector3 z(0, 0, -1);
 		static _Vector3 z0;
-		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+		_Scalar t = (_Scalar)sca2025::Physics::totalSimulationTime;
 		if (t <= 1e-8)
 		{
 			z0 = R_local[0] * z;
@@ -381,7 +381,7 @@ void eae6320::MultiBody::UnitTest5_3a()
 	};
 }
 
-void eae6320::MultiBody::UnitTest5_3b()
+void sca2025::MultiBody::UnitTest5_3b()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = false;
@@ -424,7 +424,7 @@ void eae6320::MultiBody::UnitTest5_3b()
 	{
 		_Vector3 z(0, 0, -1);
 		static _Vector3 z0;
-		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+		_Scalar t = (_Scalar)sca2025::Physics::totalSimulationTime;
 		if (t <= 1e-8)
 		{
 			z0 = R_local[0] * z;
@@ -435,7 +435,7 @@ void eae6320::MultiBody::UnitTest5_3b()
 	};
 }
 
-void eae6320::MultiBody::UnitTest5_1()
+void sca2025::MultiBody::UnitTest5_1()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = false;
@@ -452,7 +452,7 @@ void eae6320::MultiBody::UnitTest5_1()
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 3.089, 1.5708);
 }
 
-void eae6320::MultiBody::UnitTest0()
+void sca2025::MultiBody::UnitTest0()
 {
 	constraintSolverMode = IMPULSE;
 
@@ -472,7 +472,7 @@ void eae6320::MultiBody::UnitTest0()
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.5 * M_PI, 1e-6);
 }
 
-void eae6320::MultiBody::RunUnitTest()
+void sca2025::MultiBody::RunUnitTest()
 {
 	Application::AddApplicationParameter(&damping, Application::ApplicationParameterType::float_point, L"-damping");
 	Application::AddApplicationParameter(&twistMode, Application::ApplicationParameterType::integer, L"-tm");

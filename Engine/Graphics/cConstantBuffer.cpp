@@ -14,7 +14,7 @@
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::cConstantBuffer::Initialize( const void* const i_initialData )
+sca2025::cResult sca2025::Graphics::cConstantBuffer::Initialize( const void* const i_initialData )
 {
 	auto result = Results::Success;
 
@@ -55,14 +55,14 @@ OnExit:
 	return result;
 }
 
-eae6320::Graphics::cConstantBuffer::cConstantBuffer( const ConstantBufferTypes i_type )
+sca2025::Graphics::cConstantBuffer::cConstantBuffer( const ConstantBufferTypes i_type )
 	:
 	m_type( i_type )
 {
 
 }
 
-eae6320::Graphics::cConstantBuffer::~cConstantBuffer()
+sca2025::Graphics::cConstantBuffer::~cConstantBuffer()
 {
 	const auto result = CleanUp();
 	EAE6320_ASSERT( result );

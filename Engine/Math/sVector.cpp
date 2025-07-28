@@ -20,12 +20,12 @@ namespace
 // Addition
 //---------
 
-eae6320::Math::sVector eae6320::Math::sVector::operator +( const sVector i_rhs ) const
+sca2025::Math::sVector sca2025::Math::sVector::operator +( const sVector i_rhs ) const
 {
 	return sVector( x + i_rhs.x, y + i_rhs.y, z + i_rhs.z );
 }
 
-eae6320::Math::sVector& eae6320::Math::sVector::operator +=( const sVector i_rhs )
+sca2025::Math::sVector& sca2025::Math::sVector::operator +=( const sVector i_rhs )
 {
 	x += i_rhs.x;
 	y += i_rhs.y;
@@ -36,12 +36,12 @@ eae6320::Math::sVector& eae6320::Math::sVector::operator +=( const sVector i_rhs
 // Subtraction / Negation
 //-----------------------
 
-eae6320::Math::sVector eae6320::Math::sVector::operator -( const sVector i_rhs ) const
+sca2025::Math::sVector sca2025::Math::sVector::operator -( const sVector i_rhs ) const
 {
 	return sVector( x - i_rhs.x, y - i_rhs.y, z - i_rhs.z );
 }
 
-eae6320::Math::sVector& eae6320::Math::sVector::operator -=( const sVector i_rhs )
+sca2025::Math::sVector& sca2025::Math::sVector::operator -=( const sVector i_rhs )
 {
 	x -= i_rhs.x;
 	y -= i_rhs.y;
@@ -49,7 +49,7 @@ eae6320::Math::sVector& eae6320::Math::sVector::operator -=( const sVector i_rhs
 	return *this;
 }
 
-eae6320::Math::sVector eae6320::Math::sVector::operator -() const
+sca2025::Math::sVector sca2025::Math::sVector::operator -() const
 {
 	return sVector( -x, -y, -z );
 }
@@ -57,12 +57,12 @@ eae6320::Math::sVector eae6320::Math::sVector::operator -() const
 // Multiplication
 //---------------
 
-eae6320::Math::sVector eae6320::Math::sVector::operator *( const float i_rhs ) const
+sca2025::Math::sVector sca2025::Math::sVector::operator *( const float i_rhs ) const
 {
 	return sVector( x * i_rhs, y * i_rhs, z * i_rhs );
 }
 
-eae6320::Math::sVector& eae6320::Math::sVector::operator *=( const float i_rhs )
+sca2025::Math::sVector& sca2025::Math::sVector::operator *=( const float i_rhs )
 {
 	x *= i_rhs;
 	y *= i_rhs;
@@ -70,7 +70,7 @@ eae6320::Math::sVector& eae6320::Math::sVector::operator *=( const float i_rhs )
 	return *this;
 }
 
-eae6320::Math::sVector eae6320::Math::operator *( const float i_lhs, const eae6320::Math::sVector i_rhs )
+sca2025::Math::sVector sca2025::Math::operator *( const float i_lhs, const sca2025::Math::sVector i_rhs )
 {
 	return i_rhs * i_lhs;
 }
@@ -78,13 +78,13 @@ eae6320::Math::sVector eae6320::Math::operator *( const float i_lhs, const eae63
 // Division
 //---------
 
-eae6320::Math::sVector eae6320::Math::sVector::operator /( const float i_rhs ) const
+sca2025::Math::sVector sca2025::Math::sVector::operator /( const float i_rhs ) const
 {
 	EAE6320_ASSERTF( std::abs( i_rhs ) > s_epsilon, "Can't divide by zero" );
 	return sVector( x / i_rhs, y / i_rhs, z / i_rhs );
 }
 
-eae6320::Math::sVector& eae6320::Math::sVector::operator /=( const float i_rhs )
+sca2025::Math::sVector& sca2025::Math::sVector::operator /=( const float i_rhs )
 {
 	EAE6320_ASSERTF( std::abs( i_rhs ) > s_epsilon, "Can't divide by zero" );
 	x /= i_rhs;
@@ -96,20 +96,20 @@ eae6320::Math::sVector& eae6320::Math::sVector::operator /=( const float i_rhs )
 // Length / Normalization
 //-----------------------
 
-float eae6320::Math::sVector::GetLength() const
+float sca2025::Math::sVector::GetLength() const
 {
 	const auto length_squared = ( x * x ) + ( y * y ) + ( z * z );
 	EAE6320_ASSERTF( length_squared >= 0.0f, "Can't take a square root of a negative number" );
 	return std::sqrt( length_squared );
 }
 
-float eae6320::Math::sVector::GetLengthSQ() const
+float sca2025::Math::sVector::GetLengthSQ() const
 {
 	const auto length_squared = (x * x) + (y * y) + (z * z);
 	return length_squared;
 }
 
-float eae6320::Math::sVector::Normalize()
+float sca2025::Math::sVector::Normalize()
 {
 	const auto length = GetLength();
 	EAE6320_ASSERTF( length > s_epsilon, "Can't divide by zero" );
@@ -117,7 +117,7 @@ float eae6320::Math::sVector::Normalize()
 	return length;
 }
 
-eae6320::Math::sVector eae6320::Math::sVector::GetNormalized() const
+sca2025::Math::sVector sca2025::Math::sVector::GetNormalized() const
 {
 	const auto length = GetLength();
 	EAE6320_ASSERTF( length > s_epsilon, "Can't divide by zero" );
@@ -127,12 +127,12 @@ eae6320::Math::sVector eae6320::Math::sVector::GetNormalized() const
 // Products
 //---------
 
-float eae6320::Math::Dot( const sVector i_lhs, const sVector i_rhs )
+float sca2025::Math::Dot( const sVector i_lhs, const sVector i_rhs )
 {
 	return ( i_lhs.x * i_rhs.x ) + ( i_lhs.y * i_rhs.y ) + ( i_lhs.z * i_rhs.z );
 }
 
-eae6320::Math::sVector eae6320::Math::Cross( const sVector i_lhs, const sVector i_rhs )
+sca2025::Math::sVector sca2025::Math::Cross( const sVector i_lhs, const sVector i_rhs )
 {
 	return sVector(
 		( i_lhs.y * i_rhs.z ) - ( i_lhs.z * i_rhs.y ),
@@ -144,13 +144,13 @@ eae6320::Math::sVector eae6320::Math::Cross( const sVector i_lhs, const sVector 
 // Comparison
 //-----------
 
-bool eae6320::Math::sVector::operator ==( const sVector i_rhs ) const
+bool sca2025::Math::sVector::operator ==( const sVector i_rhs ) const
 {
 	// Use & rather than && to prevent branches (all three comparisons will be evaluated)
 	return ( x == i_rhs.x ) & ( y == i_rhs.y ) & ( z == i_rhs.z );
 }
 
-bool eae6320::Math::sVector::operator !=( const sVector i_rhs ) const
+bool sca2025::Math::sVector::operator !=( const sVector i_rhs ) const
 {
 	// Use | rather than || to prevent branches (all three comparisons will be evaluated)
 	return ( x != i_rhs.x ) | ( y != i_rhs.y ) | ( z != i_rhs.z );
@@ -159,14 +159,14 @@ bool eae6320::Math::sVector::operator !=( const sVector i_rhs ) const
 // Initialization / Shut Down
 //---------------------------
 
-eae6320::Math::sVector::sVector( const float i_x, const float i_y, const float i_z )
+sca2025::Math::sVector::sVector( const float i_x, const float i_y, const float i_z )
 	:
 	x( i_x ), y( i_y ), z( i_z )
 {
 
 }
 
-void eae6320::Math::GetSkewSymmetricMatrix(Vector3f &i_vecotor, Matrix3f &o_matrix)
+void sca2025::Math::GetSkewSymmetricMatrix(Vector3f &i_vecotor, Matrix3f &o_matrix)
 {
 	o_matrix.setZero();
 	o_matrix(0, 1) = -i_vecotor(2);
@@ -177,7 +177,7 @@ void eae6320::Math::GetSkewSymmetricMatrix(Vector3f &i_vecotor, Matrix3f &o_matr
 	o_matrix(2, 1) = i_vecotor(0);
 }
 
-Matrix3f eae6320::Math::ToSkewSymmetricMatrix(Vector3f &i_vecotor)
+Matrix3f sca2025::Math::ToSkewSymmetricMatrix(Vector3f &i_vecotor)
 {
 	Matrix3f output;
 	output.setZero();
@@ -191,7 +191,7 @@ Matrix3f eae6320::Math::ToSkewSymmetricMatrix(Vector3f &i_vecotor)
 	return output;
 }
 
-Matrix3d eae6320::Math::ToSkewSymmetricMatrix(Vector3d &i_vecotor)
+Matrix3d sca2025::Math::ToSkewSymmetricMatrix(Vector3d &i_vecotor)
 {
 	Matrix3d output;
 	output.setZero();
@@ -205,14 +205,14 @@ Matrix3d eae6320::Math::ToSkewSymmetricMatrix(Vector3d &i_vecotor)
 	return output;
 }
 
-void eae6320::Math::NativeVector2EigenVector(sVector i_vector, Vector3f &o_vector)
+void sca2025::Math::NativeVector2EigenVector(sVector i_vector, Vector3f &o_vector)
 {
 	o_vector(0) = i_vector.x;
 	o_vector(1) = i_vector.y;
 	o_vector(2) = i_vector.z;
 }
 
-eae6320::Math::sVector eae6320::Math::EigenVector2nativeVector(const Vector3f &i_vector)
+sca2025::Math::sVector sca2025::Math::EigenVector2nativeVector(const Vector3f &i_vector)
 {
 	sVector output;
 	output.x = i_vector(0);
@@ -222,7 +222,7 @@ eae6320::Math::sVector eae6320::Math::EigenVector2nativeVector(const Vector3f &i
 	return output;
 }
 
-eae6320::Math::sVector eae6320::Math::EigenVector2nativeVector(const Vector3d &i_vector)
+sca2025::Math::sVector sca2025::Math::EigenVector2nativeVector(const Vector3d &i_vector)
 {
 	sVector output;
 	output.x = static_cast<float>(i_vector(0));
@@ -232,7 +232,7 @@ eae6320::Math::sVector eae6320::Math::EigenVector2nativeVector(const Vector3d &i
 	return output;
 }
 
-Vector3f eae6320::Math::NativeVector2EigenVector(const sVector &i_vector)
+Vector3f sca2025::Math::NativeVector2EigenVector(const sVector &i_vector)
 {
 	Vector3f output;
 	output(0) = i_vector.x;
@@ -242,7 +242,7 @@ Vector3f eae6320::Math::NativeVector2EigenVector(const sVector &i_vector)
 	return output;
 }
 
-eae6320::Math::sVector eae6320::Math::GetTangentVector(sVector n)
+sca2025::Math::sVector sca2025::Math::GetTangentVector(sVector n)
 {
 	sVector t;
 	if (abs(n.x) >= 0.57735f)

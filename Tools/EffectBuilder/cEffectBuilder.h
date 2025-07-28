@@ -4,7 +4,7 @@
 #include "Tools/AssetBuildLibrary/Functions.h"
 #include "Engine/Graphics/cRenderState.h"
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Assets
 	{
@@ -12,8 +12,8 @@ namespace eae6320
 		{
 		private:
 			virtual cResult Build(const std::vector<std::string>& i_arguments) override;
-			eae6320::cResult LoadAndWriteAsset(const char* const i_path) {
-				auto result = eae6320::Results::Success;
+			sca2025::cResult LoadAndWriteAsset(const char* const i_path) {
+				auto result = sca2025::Results::Success;
 
 				// Create a new Lua state
 				lua_State* luaState = nullptr;
@@ -21,10 +21,10 @@ namespace eae6320
 					luaState = luaL_newstate();
 					if (!luaState)
 					{
-						result = eae6320::Results::OutOfMemory;
+						result = sca2025::Results::OutOfMemory;
 						m_path_source;
 						OutputErrorMessageWithFileInfo(m_path_source, "Failed to create a new Lua state");
-						return eae6320::Results::Failure;
+						return sca2025::Results::Failure;
 					}
 				}
 
@@ -35,7 +35,7 @@ namespace eae6320
 					const auto luaResult = luaL_loadfile(luaState, i_path);
 					if (luaResult != LUA_OK)
 					{
-						result = eae6320::Results::Failure;
+						result = sca2025::Results::Failure;
 						OutputErrorMessageWithFileInfo(m_path_source, lua_tostring(luaState, -1));
 						// Pop the error message
 						lua_pop(luaState, 1);
@@ -58,7 +58,7 @@ namespace eae6320
 							// A correct asset file _must_ return a table
 							if (!lua_istable(luaState, -1))
 							{
-								result = eae6320::Results::InvalidFile;
+								result = sca2025::Results::InvalidFile;
 								OutputErrorMessageWithFileInfo(m_path_source, "Asset files must return a table");
 								// Pop the returned non-table value
 								lua_pop(luaState, 1);
@@ -67,7 +67,7 @@ namespace eae6320
 						}
 						else
 						{
-							result = eae6320::Results::InvalidFile;
+							result = sca2025::Results::InvalidFile;
 							OutputErrorMessageWithFileInfo(m_path_source, "Asset files must return a single table");
 							// Pop every value that was returned
 							lua_pop(luaState, returnedValueCount);
@@ -76,7 +76,7 @@ namespace eae6320
 					}
 					else
 					{
-						result = eae6320::Results::InvalidFile;
+						result = sca2025::Results::InvalidFile;
 						//std::cerr << lua_tostring(luaState, -1) << std::endl;
 						OutputErrorMessageWithFileInfo(m_path_source, lua_tostring(luaState, -1));
 						// Pop the error message
@@ -102,8 +102,8 @@ namespace eae6320
 
 				return result;
 			}
-			eae6320::cResult LoadAndWriteTableValues_stringKeys(lua_State& io_luaState) {
-				auto result = eae6320::Results::Success;
+			sca2025::cResult LoadAndWriteTableValues_stringKeys(lua_State& io_luaState) {
+				auto result = sca2025::Results::Success;
 				FILE * pFile;
 				
 				bool alpha = false;

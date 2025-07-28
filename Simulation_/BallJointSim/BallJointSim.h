@@ -21,7 +21,7 @@
 
 // Class Declaration
 //==================
-namespace eae6320
+namespace sca2025
 {
 	class BallJointSim : public Application::cbApplication
 	{
@@ -94,7 +94,7 @@ namespace eae6320
 // Result Definitions
 //===================
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Results
 	{

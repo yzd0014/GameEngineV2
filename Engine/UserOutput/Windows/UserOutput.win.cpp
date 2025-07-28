@@ -21,7 +21,7 @@ namespace
 // Interface
 //==========
 
-void eae6320::UserOutput::Print( const char* const i_message, ... )
+void sca2025::UserOutput::Print( const char* const i_message, ... )
 {
 	std::string message;
 	{
@@ -67,7 +67,7 @@ void eae6320::UserOutput::Print( const char* const i_message, ... )
 		Windows::ConvertUtf8ToUtf16( caption ).c_str(), MB_OK | MB_ICONINFORMATION );
 }
 
-void eae6320::UserOutput::DebugPrint(const char * i_fmt, ...) {
+void sca2025::UserOutput::DebugPrint(const char * i_fmt, ...) {
 	const size_t lenTemp = 256;
 	char strTemp[lenTemp] = "Debug: ";
 	strcat_s(strTemp, i_fmt);
@@ -90,14 +90,14 @@ void eae6320::UserOutput::DebugPrint(const char * i_fmt, ...) {
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::UserOutput::Initialize( const sInitializationParameters& i_initializationParameters )
+sca2025::cResult sca2025::UserOutput::Initialize( const sInitializationParameters& i_initializationParameters )
 {
 	s_mainWindow = i_initializationParameters.mainWindow;
 
 	return Results::Success;
 }
 
-eae6320::cResult eae6320::UserOutput::CleanUp()
+sca2025::cResult sca2025::UserOutput::CleanUp()
 {
 	s_mainWindow = NULL;
 

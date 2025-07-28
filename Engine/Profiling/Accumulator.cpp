@@ -24,6 +24,6 @@ float Accumulator::average() {
 }
 
 double Accumulator::getAverageTime() {
-	return eae6320::Time::ConvertTicksToSeconds((uint64_t)average());
+	return sca2025::Time::ConvertTicksToSeconds((uint64_t)average());
 	//return Timing::getTimeDiff_ms((long)average());
 }

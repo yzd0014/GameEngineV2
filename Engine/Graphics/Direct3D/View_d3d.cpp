@@ -23,15 +23,15 @@ View::View() {
 	m_depthStencilView = nullptr;
 }
 
-eae6320::cResult View::InitializeViews(const eae6320::Graphics::sInitializationParameters& i_initializationParameters) {
+sca2025::cResult View::InitializeViews(const sca2025::Graphics::sInitializationParameters& i_initializationParameters) {
 	const unsigned int i_resolutionWidth = i_initializationParameters.resolutionWidth;
 	const unsigned int i_resolutionHeight = i_initializationParameters.resolutionHeight;
-	auto result = eae6320::Results::Success;
+	auto result = sca2025::Results::Success;
 
 	ID3D11Texture2D* backBuffer = nullptr;
 	ID3D11Texture2D* depthBuffer = nullptr;
 
-	auto& g_context = eae6320::Graphics::sContext::g_context;
+	auto& g_context = sca2025::Graphics::sContext::g_context;
 	auto* const direct3dDevice = g_context.direct3dDevice;
 	EAE6320_ASSERT(direct3dDevice);
 	auto* const direct3dImmediateContext = g_context.direct3dImmediateContext;
@@ -48,9 +48,9 @@ eae6320::cResult View::InitializeViews(const eae6320::Graphics::sInitializationP
 			const auto d3dResult = g_context.swapChain->GetBuffer(bufferIndex, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer));
 			if (FAILED(d3dResult))
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 				EAE6320_ASSERTF(false, "Couldn't get the back buffer from the swap chain (HRESULT %#010x)", d3dResult);
-				eae6320::Logging::OutputError("Direct3D failed to get the back buffer from the swap chain (HRESULT %#010x)", d3dResult);
+				sca2025::Logging::OutputError("Direct3D failed to get the back buffer from the swap chain (HRESULT %#010x)", d3dResult);
 				goto OnExit;
 			}
 		}
@@ -60,9 +60,9 @@ eae6320::cResult View::InitializeViews(const eae6320::Graphics::sInitializationP
 			const auto d3dResult = direct3dDevice->CreateRenderTargetView(backBuffer, accessAllSubResources, &m_renderTargetView);
 			if (FAILED(d3dResult))
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 				EAE6320_ASSERTF(false, "Couldn't create render target view (HRESULT %#010x)", d3dResult);
-				eae6320::Logging::OutputError("Direct3D failed to create the render target view (HRESULT %#010x)", d3dResult);
+				sca2025::Logging::OutputError("Direct3D failed to create the render target view (HRESULT %#010x)", d3dResult);
 				goto OnExit;
 			}
 		}
@@ -95,9 +95,9 @@ eae6320::cResult View::InitializeViews(const eae6320::Graphics::sInitializationP
 			const auto d3dResult = direct3dDevice->CreateTexture2D(&textureDescription, noInitialData, &depthBuffer);
 			if (FAILED(d3dResult))
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 				EAE6320_ASSERTF(false, "Couldn't create depth buffer (HRESULT %#010x)", d3dResult);
-				eae6320::Logging::OutputError("Direct3D failed to create the depth buffer resource (HRESULT %#010x)", d3dResult);
+				sca2025::Logging::OutputError("Direct3D failed to create the depth buffer resource (HRESULT %#010x)", d3dResult);
 				goto OnExit;
 			}
 		}
@@ -107,9 +107,9 @@ eae6320::cResult View::InitializeViews(const eae6320::Graphics::sInitializationP
 			const auto d3dResult = direct3dDevice->CreateDepthStencilView(depthBuffer, noSubResources, &m_depthStencilView);
 			if (FAILED(d3dResult))
 			{
-				result = eae6320::Results::Failure;
+				result = sca2025::Results::Failure;
 				EAE6320_ASSERTF(false, "Couldn't create depth stencil view (HRESULT %#010x)", d3dResult);
-				eae6320::Logging::OutputError("Direct3D failed to create the depth stencil view (HRESULT %#010x)", d3dResult);
+				sca2025::Logging::OutputError("Direct3D failed to create the depth stencil view (HRESULT %#010x)", d3dResult);
 				goto OnExit;
 			}
 		}
@@ -153,7 +153,7 @@ OnExit:
 }
 
 void View::Clear(const float * i_pColor) {
-	auto* const direct3dImmediateContext = eae6320::Graphics::sContext::g_context.direct3dImmediateContext;
+	auto* const direct3dImmediateContext = sca2025::Graphics::sContext::g_context.direct3dImmediateContext;
 	EAE6320_ASSERT(direct3dImmediateContext);
 
 	// Every frame an entirely new image will be created.
@@ -180,7 +180,7 @@ void View::Clear(const float * i_pColor) {
 }
 
 void View::Swap() {
-	auto* const swapChain = eae6320::Graphics::sContext::g_context.swapChain;
+	auto* const swapChain = sca2025::Graphics::sContext::g_context.swapChain;
 	EAE6320_ASSERT(swapChain);
 	constexpr unsigned int swapImmediately = 0;
 	constexpr unsigned int presentNextFrame = 0;

@@ -18,8 +18,8 @@
 #include <utility>
 
 View::View(){}
-eae6320::cResult View::InitializeViews(const eae6320::Graphics::sInitializationParameters& i_initializationParameters) {
-	auto result = eae6320::Results::Success;
+sca2025::cResult View::InitializeViews(const sca2025::Graphics::sInitializationParameters& i_initializationParameters) {
+	auto result = sca2025::Results::Success;
 	return result;
 }
 
@@ -55,7 +55,7 @@ void View::Clear(const float * i_pColor) {
 	}
 }
 void View::Swap() {
-	const auto deviceContext = eae6320::Graphics::sContext::g_context.deviceContext;
+	const auto deviceContext = sca2025::Graphics::sContext::g_context.deviceContext;
 	EAE6320_ASSERT(deviceContext != NULL);
 
 	const auto glResult = SwapBuffers(deviceContext);

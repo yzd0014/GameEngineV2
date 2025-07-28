@@ -21,7 +21,7 @@ namespace
 
 	public:
 
-		eae6320::cResult Initialize();
+		sca2025::cResult Initialize();
 		cIncludeHelper( const std::string& i_shaderSourcePath );
 
 		// Inherited Interface
@@ -51,7 +51,7 @@ namespace
 // Build
 //------
 
-eae6320::cResult eae6320::Assets::cShaderBuilder::Build( const Graphics::ShaderTypes::eType i_shaderType, const std::vector<std::string>& i_arguments )
+sca2025::cResult sca2025::Assets::cShaderBuilder::Build( const Graphics::ShaderTypes::eType i_shaderType, const std::vector<std::string>& i_arguments )
 {
 	auto result = Results::Success;
 
@@ -126,9 +126,9 @@ eae6320::cResult eae6320::Assets::cShaderBuilder::Build( const Graphics::ShaderT
 	// Write the compiled shader to disk
 	{
 		std::string errorMessage;
-		if ( !( result = eae6320::Platform::WriteBinaryFile( m_path_target, compiledCode->GetBufferPointer(), compiledCode->GetBufferSize(), &errorMessage ) ) )
+		if ( !( result = sca2025::Platform::WriteBinaryFile( m_path_target, compiledCode->GetBufferPointer(), compiledCode->GetBufferSize(), &errorMessage ) ) )
 		{
-			eae6320::Assets::OutputErrorMessageWithFileInfo( m_path_source, errorMessage.c_str() );
+			sca2025::Assets::OutputErrorMessageWithFileInfo( m_path_source, errorMessage.c_str() );
 		}
 	}
 
@@ -152,9 +152,9 @@ namespace
 	// Interface
 	//----------
 
-	eae6320::cResult cIncludeHelper::Initialize()
+	sca2025::cResult cIncludeHelper::Initialize()
 	{
-		auto result = eae6320::Results::Success;
+		auto result = sca2025::Results::Success;
 
 		// Calculate the directory of the source file
 		{
@@ -174,19 +174,19 @@ namespace
 
 			// EngineSourceContentDir
 			{
-				if ( !( result = eae6320::Platform::GetEnvironmentVariable(
+				if ( !( result = sca2025::Platform::GetEnvironmentVariable(
 					"EngineSourceContentDir", m_engineSourceContentDirectory, &errorMessage ) ) )
 				{
-					eae6320::Assets::OutputErrorMessage( "Failed to get the engine's source content directory: %s", errorMessage.c_str() );
+					sca2025::Assets::OutputErrorMessage( "Failed to get the engine's source content directory: %s", errorMessage.c_str() );
 					goto OnExit;
 				}
 			}
 			// GameSourceContentDir
 			{
-				if ( !( result = eae6320::Platform::GetEnvironmentVariable(
+				if ( !( result = sca2025::Platform::GetEnvironmentVariable(
 					"GameSourceContentDir", m_gameSourceContentDirectory, &errorMessage ) ) )
 				{
-					eae6320::Assets::OutputErrorMessage( "Failed to get the game's source content directory: %s", errorMessage.c_str() );
+					sca2025::Assets::OutputErrorMessage( "Failed to get the game's source content directory: %s", errorMessage.c_str() );
 					goto OnExit;
 				}
 			}
@@ -212,7 +212,7 @@ namespace
 	{
 		auto result = S_OK;
 
-		eae6320::Platform::sDataFromFile dataFromFile;
+		sca2025::Platform::sDataFromFile dataFromFile;
 
 		EAE6320_ASSERT( o_dataFromFile );
 		EAE6320_ASSERT( o_dataSize );
@@ -228,10 +228,10 @@ namespace
 			case D3D_INCLUDE_LOCAL:
 				{
 					pathToOpen = m_shaderSourceDirectory + i_path;
-					if ( !eae6320::Platform::DoesFileExist( pathToOpen.c_str() ) )
+					if ( !sca2025::Platform::DoesFileExist( pathToOpen.c_str() ) )
 					{
 						result = ERROR_PATH_NOT_FOUND;
-						eae6320::Assets::OutputErrorMessageWithFileInfo( m_shaderSourcePath.c_str(),
+						sca2025::Assets::OutputErrorMessageWithFileInfo( m_shaderSourcePath.c_str(),
 							"The file %s doesn't exist (from the requested #include path \"%s\"", pathToOpen.c_str(), i_path );
 						goto OnExit;
 					}
@@ -241,13 +241,13 @@ namespace
 				{
 					// Files in the game source content directory take precedence over those in the engine source content directory
 					pathToOpen = m_gameSourceContentDirectory + i_path;
-					if ( !eae6320::Platform::DoesFileExist( pathToOpen.c_str() ) )
+					if ( !sca2025::Platform::DoesFileExist( pathToOpen.c_str() ) )
 					{
 						pathToOpen = m_engineSourceContentDirectory + i_path;
-						if ( !eae6320::Platform::DoesFileExist( pathToOpen.c_str() ) )
+						if ( !sca2025::Platform::DoesFileExist( pathToOpen.c_str() ) )
 						{
 							result = ERROR_PATH_NOT_FOUND;
-							eae6320::Assets::OutputErrorMessageWithFileInfo( m_shaderSourcePath.c_str(),
+							sca2025::Assets::OutputErrorMessageWithFileInfo( m_shaderSourcePath.c_str(),
 								"The file %s doesn't exist (from the requested #include path \"%s\"", pathToOpen.c_str(), i_path );
 							goto OnExit;
 						}
@@ -259,7 +259,7 @@ namespace
 
 		{
 			std::string errorMessage;
-			const auto localResult = eae6320::Platform::LoadBinaryFile( pathToOpen.c_str(), dataFromFile, &errorMessage );
+			const auto localResult = sca2025::Platform::LoadBinaryFile( pathToOpen.c_str(), dataFromFile, &errorMessage );
 			if ( localResult )
 			{
 				*o_dataFromFile = dataFromFile.data;
@@ -268,7 +268,7 @@ namespace
 			}
 			else
 			{
-				eae6320::Assets::OutputErrorMessageWithFileInfo( __FILE__, __LINE__,
+				sca2025::Assets::OutputErrorMessageWithFileInfo( __FILE__, __LINE__,
 					"Failed to open requested #include path: %s",
 					errorMessage.c_str() );
 				goto OnExit;
@@ -294,7 +294,7 @@ namespace
 		// This data should be from the Open() function:
 		// Assign it bad to the platform data structure
 		// so that it can be deallocated consistently
-		eae6320::Platform::sDataFromFile dataFromFile;
+		sca2025::Platform::sDataFromFile dataFromFile;
 		dataFromFile.data = const_cast<void*>( i_data );
 		dataFromFile.Free();
 

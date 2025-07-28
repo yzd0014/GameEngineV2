@@ -8,7 +8,7 @@
 #include <math.h>
 #include <iomanip>
 
-eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, Application::cbApplication* i_application):
+sca2025::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, Application::cbApplication* i_application):
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 {
 	RunUnitTest();
@@ -17,7 +17,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	pApp = i_application;
 }
 
-void eae6320::MultiBody::MultiBodyInitialization()
+void sca2025::MultiBody::MultiBodyInitialization()
 {
 	w_abs_world.resize(numOfLinks);
 	w_rel_world.resize(numOfLinks);
@@ -102,7 +102,7 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	qdot.setZero();
 }
 
-void eae6320::MultiBody::ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle)
+void sca2025::MultiBody::ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -110,7 +110,7 @@ void eae6320::MultiBody::ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, 
 	}
 }
 
-void eae6320::MultiBody::ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle)
+void sca2025::MultiBody::ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle)
 {
 	int i = bodyNum;
 	eulerX[i] = xAxis;//axis in parent frame
@@ -130,7 +130,7 @@ void eae6320::MultiBody::ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, 
 	eulerDecompositionOffset[i] = Math::RotationConversion_MatToQuat(deformationGradient);
 }
 
-void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
+void sca2025::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
@@ -157,7 +157,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	}
 }
 
-void eae6320::MultiBody::ClampRotationVector()
+void sca2025::MultiBody::ClampRotationVector()
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -182,7 +182,7 @@ void eae6320::MultiBody::ClampRotationVector()
 	}
 }
 
-void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, _Scalar h)
+void sca2025::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, _Scalar h)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -208,7 +208,7 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _
 	}
 }
 
-void eae6320::MultiBody::EulerIntegration(const _Scalar h)
+void sca2025::MultiBody::EulerIntegration(const _Scalar h)
 {
 	_Vector Qr = ComputeQr_SikpVelocityUpdate(qdot);
 	_Vector qddot = MrInverse * Qr;
@@ -230,7 +230,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	Forward();
 }
 
-void eae6320::MultiBody::RK4Integration(const _Scalar h)
+void sca2025::MultiBody::RK4Integration(const _Scalar h)
 {
 	_Vector k1 = MrInverse * ComputeQr_SikpVelocityUpdate(qdot);
 	_Vector k2 = MrInverse * ComputeQr(qdot + 0.5 * h * k1);
@@ -255,7 +255,7 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	Forward();
 }
 
-void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
+void sca2025::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 {
 	ForwardKinematics(i_q, i_quat);
 	for (int i = 0; i < numOfLinks; i++)
@@ -351,7 +351,7 @@ void eae6320::MultiBody::ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat)
 	}
 }
 
-void eae6320::MultiBody::ComputeMr()
+void sca2025::MultiBody::ComputeMr()
 {
 	Mr.setZero();
 	for (int i = 0; i < numOfLinks; i++)
@@ -365,7 +365,7 @@ void eae6320::MultiBody::ComputeMr()
 	}
 }
 
-_Vector eae6320::MultiBody::ComputeQr_SikpVelocityUpdate(_Vector& i_qdot)
+_Vector sca2025::MultiBody::ComputeQr_SikpVelocityUpdate(_Vector& i_qdot)
 {
 	std::vector<_Vector> gamma_t;
 	ComputeGamma_t(gamma_t, i_qdot);
@@ -394,13 +394,13 @@ _Vector eae6320::MultiBody::ComputeQr_SikpVelocityUpdate(_Vector& i_qdot)
 	return Qr;
 }
 
-_Vector eae6320::MultiBody::ComputeQr(_Vector i_qdot)
+_Vector sca2025::MultiBody::ComputeQr(_Vector i_qdot)
 {
 	ForwardAngularAndTranslationalVelocity(i_qdot);
 	return ComputeQr_SikpVelocityUpdate(i_qdot);
 }
 
-void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot)
+void sca2025::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot)
 {	
 	std::vector<_Vector> gamma;
 	gamma.resize(numOfLinks);
@@ -513,7 +513,7 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 	}
 }
 
-void eae6320::MultiBody::ForwardAngularAndTranslationalVelocity(_Vector& i_qdot)
+void sca2025::MultiBody::ForwardAngularAndTranslationalVelocity(_Vector& i_qdot)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -524,7 +524,7 @@ void eae6320::MultiBody::ForwardAngularAndTranslationalVelocity(_Vector& i_qdot)
 	}
 }
 
-void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat)
+void sca2025::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -611,7 +611,7 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 	}
 }
 
-void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat)
+void sca2025::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat)
 {
 	UpdateBodyRotation(i_q, i_quat);
 	for (int i = 0; i < numOfLinks; i++)
@@ -657,7 +657,7 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 	}
 }
 
-void eae6320::MultiBody::ResetExternalForces()
+void sca2025::MultiBody::ResetExternalForces()
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -665,7 +665,7 @@ void eae6320::MultiBody::ResetExternalForces()
 	}
 }
 
-void eae6320::MultiBody::Forward()
+void sca2025::MultiBody::Forward()
 {
 	ComputeHt(q, rel_ori);
 	ComputeMr();
@@ -673,7 +673,7 @@ void eae6320::MultiBody::Forward()
 	ForwardAngularAndTranslationalVelocity(qdot);
 }
 
-_Vector3 eae6320::MultiBody::ComputeTranslationalMomentum()
+_Vector3 sca2025::MultiBody::ComputeTranslationalMomentum()
 {
 	_Vector3 translationalMomentum;
 	translationalMomentum.setZero();
@@ -684,7 +684,7 @@ _Vector3 eae6320::MultiBody::ComputeTranslationalMomentum()
 	return translationalMomentum;
 }
 
-_Vector3 eae6320::MultiBody::ComputeAngularMomentum()
+_Vector3 sca2025::MultiBody::ComputeAngularMomentum()
 {
 	_Vector3 angularMomentum;
 	angularMomentum.setZero();
@@ -695,7 +695,7 @@ _Vector3 eae6320::MultiBody::ComputeAngularMomentum()
 	return angularMomentum;
 }
 
-_Scalar eae6320::MultiBody::ComputeKineticEnergy()
+_Scalar sca2025::MultiBody::ComputeKineticEnergy()
 {
 	_Scalar out = 0;
 	for (int i = 0; i < numOfLinks; i++)
@@ -711,7 +711,7 @@ _Scalar eae6320::MultiBody::ComputeKineticEnergy()
 	return out;
 }
 
-_Scalar eae6320::MultiBody::ComputePotentialEnergy()
+_Scalar sca2025::MultiBody::ComputePotentialEnergy()
 {
 	_Scalar out = 0;
 	for (int i = 0; i < numOfLinks; i++)
@@ -727,21 +727,21 @@ _Scalar eae6320::MultiBody::ComputePotentialEnergy()
 	return out;
 }
 
-_Scalar eae6320::MultiBody::ComputeTotalEnergy()
+_Scalar sca2025::MultiBody::ComputeTotalEnergy()
 {
 	_Scalar energy = ComputeKineticEnergy();
 	if (gravity) energy += ComputePotentialEnergy();
 	return energy;
 }
 
-void eae6320::MultiBody::SetHingeJoint(int jointNum, _Vector3 hingeDirLocal, _Scalar hingeLength)
+void sca2025::MultiBody::SetHingeJoint(int jointNum, _Vector3 hingeDirLocal, _Scalar hingeLength)
 {
 	hingeDirLocals[jointNum] = hingeDirLocal.normalized();
 	hingeDirGlobals[jointNum] = hingeDirLocals[jointNum];
 	hingeMagnitude[jointNum] = hingeLength;
 }
 
-void eae6320::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 jointPositionChild, _Vector3 jointPositionParent, Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor)
+void sca2025::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 jointPositionChild, _Vector3 jointPositionParent, Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor)
 {
 	//initialize body
 	GameCommon::GameObject *pGameObject = new GameCommon::GameObject(defaultEffect, i_mesh, Physics::sRigidBodyState());
@@ -810,7 +810,7 @@ void eae6320::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 join
 	numOfLinks++;
 }
 
-void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
+void sca2025::MultiBody::UpdateGameObjectBasedOnInput()
 {
 	if (UserInput::IsKeyFromReleasedToPressed('R'))
 	{
@@ -857,11 +857,11 @@ void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
 	}
 }
 
-void eae6320::MultiBody::SaveDataToMatlab(_Scalar totalDuration)
+void sca2025::MultiBody::SaveDataToMatlab(_Scalar totalDuration)
 {
 	static _Scalar targetTime = 1;
 	static int frames_saved = 0;
-	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+	_Scalar t = (_Scalar)sca2025::Physics::totalSimulationTime;
 	_Scalar logInterval = 0.0001;
 	if (t <= totalDuration)
 	{	
@@ -877,11 +877,11 @@ void eae6320::MultiBody::SaveDataToMatlab(_Scalar totalDuration)
 	}
 	else
 	{
-		eae6320::Physics::simPause = true;
+		sca2025::Physics::simPause = true;
 	}
 }
 
-void eae6320::MultiBody::SaveDataToHoudini(_Scalar totalDuration, _Scalar logInterval, int numOfFrames)
+void sca2025::MultiBody::SaveDataToHoudini(_Scalar totalDuration, _Scalar logInterval, int numOfFrames)
 {
 	_Scalar interval;
 	if (logInterval < 0)
@@ -894,7 +894,7 @@ void eae6320::MultiBody::SaveDataToHoudini(_Scalar totalDuration, _Scalar logInt
 	}
 	static _Scalar targetTime = 1;
 	static int frames_saved = 0;
-	_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+	_Scalar t = (_Scalar)sca2025::Physics::totalSimulationTime;
 	if (frames_saved < numOfFrames)
 	{
 		if (t == 0 || t >= targetTime)
@@ -909,6 +909,6 @@ void eae6320::MultiBody::SaveDataToHoudini(_Scalar totalDuration, _Scalar logInt
 	}
 	else
 	{
-		eae6320::Physics::simPause = true;
+		sca2025::Physics::simPause = true;
 	}
 }

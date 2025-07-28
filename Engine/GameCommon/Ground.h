@@ -1,12 +1,12 @@
 #pragma once
 #include "GameObject.h"
 
-namespace eae6320 
+namespace sca2025 
 {
-	class Ground : public eae6320::GameCommon::GameObject 
+	class Ground : public sca2025::GameCommon::GameObject 
 	{
 	public:
-		Ground(Effect * i_pEffect, eae6320::Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State) :
+		Ground(Effect * i_pEffect, sca2025::Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State) :
 			GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
 		{
 			m_State.mass = 1000000;

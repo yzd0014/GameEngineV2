@@ -17,7 +17,7 @@
 //-------
 
 	template <class tAsset>
-tAsset* eae6320::Assets::cManager<tAsset>::Get( const cHandle<tAsset> i_handle )
+tAsset* sca2025::Assets::cManager<tAsset>::Get( const cHandle<tAsset> i_handle )
 {
 	EAE6320_ASSERTF( i_handle, "This handle is invalid (it has never been associated with a valid asset)" );
 	// Lock the collections
@@ -54,7 +54,7 @@ tAsset* eae6320::Assets::cManager<tAsset>::Get( const cHandle<tAsset> i_handle )
 //--------------------------
 
 	template <class tAsset> template <typename... tConstructorArguments>
-eae6320::cResult eae6320::Assets::cManager<tAsset>::Load( const char* const i_path, cHandle<tAsset>& o_handle, tConstructorArguments&&... i_constructorArguments )
+sca2025::cResult sca2025::Assets::cManager<tAsset>::Load( const char* const i_path, cHandle<tAsset>& o_handle, tConstructorArguments&&... i_constructorArguments )
 {
 	// Get the existing asset if the path has already been loaded
 	{
@@ -162,7 +162,7 @@ eae6320::cResult eae6320::Assets::cManager<tAsset>::Load( const char* const i_pa
 }
 
 	template <class tAsset>
-eae6320::cResult eae6320::Assets::cManager<tAsset>::Release( cHandle<tAsset>& o_handle )
+sca2025::cResult sca2025::Assets::cManager<tAsset>::Release( cHandle<tAsset>& o_handle )
 {
 	auto result = Results::Success;
 
@@ -223,13 +223,13 @@ eae6320::cResult eae6320::Assets::cManager<tAsset>::Release( cHandle<tAsset>& o_
 }
 
 	template <class tAsset>
-eae6320::cResult eae6320::Assets::cManager<tAsset>::Initialize()
+sca2025::cResult sca2025::Assets::cManager<tAsset>::Initialize()
 {
 	return Results::Success;
 }
 
 	template <class tAsset>
-eae6320::cResult eae6320::Assets::cManager<tAsset>::CleanUp()
+sca2025::cResult sca2025::Assets::cManager<tAsset>::CleanUp()
 {
 	auto result = Results::Success;
 
@@ -274,7 +274,7 @@ eae6320::cResult eae6320::Assets::cManager<tAsset>::CleanUp()
 }
 
 	template <class tAsset>
-eae6320::Assets::cManager<tAsset>::~cManager<tAsset>()
+sca2025::Assets::cManager<tAsset>::~cManager<tAsset>()
 {
 	const auto result = CleanUp();
 	EAE6320_ASSERT( result );
@@ -284,7 +284,7 @@ eae6320::Assets::cManager<tAsset>::~cManager<tAsset>()
 //===============
 
 	template <class tAsset>
-eae6320::Assets::cManager<tAsset>::sAssetRecord::sAssetRecord( tAsset* const i_asset, const uint16_t i_id, const uint16_t i_referenceCount )
+sca2025::Assets::cManager<tAsset>::sAssetRecord::sAssetRecord( tAsset* const i_asset, const uint16_t i_id, const uint16_t i_referenceCount )
 	:
 	asset( i_asset ), id( i_id ), referenceCount( i_referenceCount )
 {

@@ -2,7 +2,7 @@
 #include "sRigidBodyState.h"
 #include <vector>
 
-namespace eae6320 
+namespace sca2025 
 {
 	namespace Physics 
 	{

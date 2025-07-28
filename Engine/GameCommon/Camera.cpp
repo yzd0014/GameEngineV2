@@ -6,12 +6,12 @@
 #include "Engine/Time/Time.h"
 #include "Engine/Graphics/Graphics.h"
 #include "Engine/Physics/PhysicsSimulation.h"
-namespace eae6320
+namespace sca2025
 {
 	GameCommon::Camera mainCamera;
 }
 
-eae6320::GameCommon::Camera::Camera(Math::sVector i_position, Math::sVector i_orientation, const float i_verticalFieldOfView_inRadians, const float i_aspectRatio, const float i_z_nearPlane, const float i_z_farPlane) {
+sca2025::GameCommon::Camera::Camera(Math::sVector i_position, Math::sVector i_orientation, const float i_verticalFieldOfView_inRadians, const float i_aspectRatio, const float i_z_nearPlane, const float i_z_farPlane) {
 	position = i_position;
 	orientationEuler = i_orientation;
 
@@ -22,7 +22,7 @@ eae6320::GameCommon::Camera::Camera(Math::sVector i_position, Math::sVector i_or
 }
 
 
-void eae6320::GameCommon::Camera::Initialize(Math::sVector i_position, Math::sVector i_orientation, const float i_verticalFieldOfView_inRadians, const float i_aspectRatio, const float i_z_nearPlane, const float i_z_farPlane) {
+void sca2025::GameCommon::Camera::Initialize(Math::sVector i_position, Math::sVector i_orientation, const float i_verticalFieldOfView_inRadians, const float i_aspectRatio, const float i_z_nearPlane, const float i_z_farPlane) {
 	position = i_position;
 	orientationEuler = i_orientation;
 
@@ -34,7 +34,7 @@ void eae6320::GameCommon::Camera::Initialize(Math::sVector i_position, Math::sVe
 	tickCount_keyIsDown = 0;
 }
 
-void eae6320::GameCommon::Camera::UpdateState(const float i_secondCountToIntegrate) {
+void sca2025::GameCommon::Camera::UpdateState(const float i_secondCountToIntegrate) {
 	//update position
 	position += velocity * i_secondCountToIntegrate;
 	if (!Graphics::renderThreadNoWait)
@@ -68,7 +68,7 @@ void eae6320::GameCommon::Camera::UpdateState(const float i_secondCountToIntegra
 	}
 }
 
-void eae6320::GameCommon::Camera::UpdateCameraOrientation(const float i_secondCountToIntegrate)
+void sca2025::GameCommon::Camera::UpdateCameraOrientation(const float i_secondCountToIntegrate)
 {
 	//update orientation
 	orientationEuler.x = orientationEuler.x + axis_X_velocity * i_secondCountToIntegrate;
@@ -87,15 +87,15 @@ void eae6320::GameCommon::Camera::UpdateCameraOrientation(const float i_secondCo
 	orientation.Normalize();
 }
 
-eae6320::Math::cMatrix_transformation eae6320::GameCommon::Camera::GetWorldToCameraMat() {
+sca2025::Math::cMatrix_transformation sca2025::GameCommon::Camera::GetWorldToCameraMat() {
 	return Math::cMatrix_transformation::CreateWorldToCameraTransform(orientation, position);
 }
 
-eae6320::Math::cMatrix_transformation eae6320::GameCommon::Camera::GetCameraToProjectedMat() {
+sca2025::Math::cMatrix_transformation sca2025::GameCommon::Camera::GetCameraToProjectedMat() {
 	return Math::cMatrix_transformation::CreateCameraToProjectedTransform_perspective(m_verticalFieldOfView_inRadians, m_aspectRatio, m_z_nearPlane, m_z_farPlane);
 }
 
-void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
+void sca2025::GameCommon::Camera::UpdateCameraBasedOnInput() {
 	//reset velocity before update velocity
 	velocity = Math::sVector(0, 0, 0);
 	
@@ -159,7 +159,7 @@ void eae6320::GameCommon::Camera::UpdateCameraBasedOnInput() {
 	}
 }
 
-eae6320::Math::cQuaternion eae6320::GameCommon::Camera::PredictFutureOrientation(const float i_secondCountToExtrapolate) const
+sca2025::Math::cQuaternion sca2025::GameCommon::Camera::PredictFutureOrientation(const float i_secondCountToExtrapolate) const
 {
 	auto rot_x = orientationEuler.x + axis_X_velocity * i_secondCountToExtrapolate;
 	auto rot_y = orientationEuler.y + axis_Y_velocity * i_secondCountToExtrapolate;
@@ -177,7 +177,7 @@ eae6320::Math::cQuaternion eae6320::GameCommon::Camera::PredictFutureOrientation
 	
 	return rotation.GetNormalized();
 }
-eae6320::Math::sVector eae6320::GameCommon::Camera::PredictFuturePosition(const float i_secondCountToExtrapolate) const
+sca2025::Math::sVector sca2025::GameCommon::Camera::PredictFuturePosition(const float i_secondCountToExtrapolate) const
 {
 	return position + (velocity * i_secondCountToExtrapolate);
 }

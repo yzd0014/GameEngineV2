@@ -74,7 +74,7 @@ extern PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 // Initialization
 //---------------
 
-namespace eae6320
+namespace sca2025
 {
 	namespace OpenGlExtensions
 	{

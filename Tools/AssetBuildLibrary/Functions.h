@@ -14,16 +14,16 @@
 // Interface
 //==========
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Assets
 	{
-		eae6320::cResult BuildAssets( const char* const i_path_assetsToBuild );
+		sca2025::cResult BuildAssets( const char* const i_path_assetsToBuild );
 
 		// If an asset ("A") references another asset ("B")
 		// then that reference to B must be converted from a source path to a built path
 		// if it is included in the built A asset
-		eae6320::cResult ConvertSourceRelativePathToBuiltRelativePath( const char* const i_sourceRelativePath, const char* const i_assetType,
+		sca2025::cResult ConvertSourceRelativePathToBuiltRelativePath( const char* const i_sourceRelativePath, const char* const i_assetType,
 			std::string& o_builtRelativePath, std::string* o_errorMessage = nullptr );
 
 		// Error / Warning Output

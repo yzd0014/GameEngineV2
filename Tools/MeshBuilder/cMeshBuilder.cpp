@@ -4,10 +4,10 @@
 #include <Tools/AssetBuildLibrary/Functions.h>
 #include "Engine/Time/Time.h"
 #include "Engine/UserOutput/UserOutput.h"
-eae6320::cResult eae6320::Assets::cMeshBuilder::Build(const std::vector<std::string>& i_arguments) {
+sca2025::cResult sca2025::Assets::cMeshBuilder::Build(const std::vector<std::string>& i_arguments) {
 	std::string errorMessage;
 	cResult result;
-	std::vector<eae6320::Graphics::VertexFormats::sMesh> vertexArray;
+	std::vector<sca2025::Graphics::VertexFormats::sMesh> vertexArray;
 	std::vector<uint16_t> indexArray;
 
 	result = LoadAsset(m_path_source, vertexArray, indexArray);
@@ -20,7 +20,7 @@ eae6320::cResult eae6320::Assets::cMeshBuilder::Build(const std::vector<std::str
 	uint16_t numberOfIndex = (uint16_t)indexArray.size();
 
 	//create a array that can be used as input for fwrite()
-	eae6320::Graphics::VertexFormats::sMesh * verticesInput = new eae6320::Graphics::VertexFormats::sMesh[numberOfVertex];
+	sca2025::Graphics::VertexFormats::sMesh * verticesInput = new sca2025::Graphics::VertexFormats::sMesh[numberOfVertex];
 	for (uint16_t i = 0; i < numberOfVertex; i++) {
 		verticesInput[i] = vertexArray[i];
 	}
@@ -38,13 +38,13 @@ eae6320::cResult eae6320::Assets::cMeshBuilder::Build(const std::vector<std::str
 
 	fwrite(&numberOfVertex, sizeof(uint16_t), 1, pFile);
 	fwrite(&numberOfIndex, sizeof(uint16_t), 1, pFile);
-	fwrite(verticesInput, sizeof(eae6320::Graphics::VertexFormats::sMesh), numberOfVertex, pFile);
+	fwrite(verticesInput, sizeof(sca2025::Graphics::VertexFormats::sMesh), numberOfVertex, pFile);
 	fwrite(indicesInput, sizeof(uint16_t), numberOfIndex, pFile);
 
 	fclose(pFile);
 	delete[] verticesInput;
 	delete[] indicesInput;
-	//result = eae6320::Platform::CopyFileW(m_path_source, m_path_target, false, true, &errorMessage);
+	//result = sca2025::Platform::CopyFileW(m_path_source, m_path_target, false, true, &errorMessage);
 	
 	return result;
 }

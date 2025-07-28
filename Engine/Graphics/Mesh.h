@@ -34,23 +34,23 @@
 
 class Mesh {
 public:
-	//using Handle = eae6320::Assets::cHandle<Mesh>;
-	static eae6320::Assets::cManager<Mesh> s_manager;
-	eae6320::Graphics::VertexFormats::sMesh * m_pVertexDataInRAM;
+	//using Handle = sca2025::Assets::cHandle<Mesh>;
+	static sca2025::Assets::cManager<Mesh> s_manager;
+	sca2025::Graphics::VertexFormats::sMesh * m_pVertexDataInRAM;
 	uint16_t * m_pIndexDataInRAM;
 	bool updateVertexBuffer = false;
 
 	EAE6320_ASSETS_DECLAREREFERENCECOUNTINGFUNCTIONS()
 	void Draw();
-	static eae6320::cResult Load(const char* const i_path, Mesh* &o_Mesh) {
-		auto result = eae6320::Results::Success;
+	static sca2025::cResult Load(const char* const i_path, Mesh* &o_Mesh) {
+		auto result = sca2025::Results::Success;
 		Mesh* pMesh = new Mesh();
 		
 		//uint64_t elapsedTicks;
-		//elapsedTicks = eae6320::Time::GetCurrentSystemTimeTickCount();
+		//elapsedTicks = sca2025::Time::GetCurrentSystemTimeTickCount();
 
-		eae6320::Platform::sDataFromFile pData;
-		eae6320::Platform::LoadBinaryFile(i_path, pData);
+		sca2025::Platform::sDataFromFile pData;
+		sca2025::Platform::LoadBinaryFile(i_path, pData);
 
 		uintptr_t currentOffset = reinterpret_cast<uintptr_t>(pData.data);
 		uintptr_t finalOffset = currentOffset + pData.size;
@@ -65,9 +65,9 @@ public:
 		currentOffset += sizeof(indexCount);
 
 		//extract vertex array
-		eae6320::Graphics::VertexFormats::sMesh * vertexData = reinterpret_cast<eae6320::Graphics::VertexFormats::sMesh*>(currentOffset);
-		currentOffset += sizeof(eae6320::Graphics::VertexFormats::sMesh) * vertexCount;
-		pMesh->m_pVertexDataInRAM = new eae6320::Graphics::VertexFormats::sMesh[vertexCount];//log vertex data at CPU's ram
+		sca2025::Graphics::VertexFormats::sMesh * vertexData = reinterpret_cast<sca2025::Graphics::VertexFormats::sMesh*>(currentOffset);
+		currentOffset += sizeof(sca2025::Graphics::VertexFormats::sMesh) * vertexCount;
+		pMesh->m_pVertexDataInRAM = new sca2025::Graphics::VertexFormats::sMesh[vertexCount];//log vertex data at CPU's ram
 		for (uint16_t i = 0; i < vertexCount; i++) {
 			pMesh->m_pVertexDataInRAM[i] = vertexData[i];
 		}
@@ -81,13 +81,13 @@ public:
 		}
 
 		if (currentOffset != finalOffset) {
-			return eae6320::Results::Failure;
+			return sca2025::Results::Failure;
 		}
 		/*
-		elapsedTicks = eae6320::Time::GetCurrentSystemTimeTickCount() - elapsedTicks;
-		double elapsedSeconds = eae6320::Time::ConvertTicksToSeconds(elapsedTicks);
+		elapsedTicks = sca2025::Time::GetCurrentSystemTimeTickCount() - elapsedTicks;
+		double elapsedSeconds = sca2025::Time::ConvertTicksToSeconds(elapsedTicks);
 		if (indexCount > 30000) {
-			eae6320::UserOutput::DebugPrint("Bianry File Processing Time: %f", elapsedSeconds);
+			sca2025::UserOutput::DebugPrint("Bianry File Processing Time: %f", elapsedSeconds);
 		}
 		*/
 		result = pMesh->InitializeGeometry(vertexCount, indexCount, vertexData, indexData);
@@ -130,23 +130,23 @@ private:
 
 	Mesh();
 	~Mesh() {
-		CleanUp(eae6320::Results::Success);
+		CleanUp(sca2025::Results::Success);
 	}
 	void UpdataVertexBuffer();
-	eae6320::cResult InitializeGeometry(uint16_t i_vertexCount, uint16_t i_indexCount, eae6320::Graphics::VertexFormats::sMesh * i_vertexData, uint16_t * i_indexData);
-	eae6320::cResult CleanUp(eae6320::cResult result);
+	sca2025::cResult InitializeGeometry(uint16_t i_vertexCount, uint16_t i_indexCount, sca2025::Graphics::VertexFormats::sMesh * i_vertexData, uint16_t * i_indexData);
+	sca2025::cResult CleanUp(sca2025::cResult result);
 };
 
-namespace eae6320
+namespace sca2025
 {
-	extern std::vector<eae6320::Assets::cHandle<Mesh>> masterMeshArray;
+	extern std::vector<sca2025::Assets::cHandle<Mesh>> masterMeshArray;
 }
 
 #define LOAD_MESH(meshPath, meshName)\
-eae6320::Assets::cHandle<Mesh> meshName;\
+sca2025::Assets::cHandle<Mesh> meshName;\
 if(cbApplication::render)\
 {\
-	auto result = eae6320::Results::Success;\
+	auto result = sca2025::Results::Success;\
 	if (!(result = Mesh::s_manager.Load(meshPath, meshName))) {\
 		EAE6320_ASSERT(false);\
 	}\
@@ -154,5 +154,5 @@ if(cbApplication::render)\
 }\
 else\
 {\
-	meshName = eae6320::Assets::cHandle<Mesh>();\
+	meshName = sca2025::Assets::cHandle<Mesh>();\
 }

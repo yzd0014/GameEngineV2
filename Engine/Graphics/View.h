@@ -30,7 +30,7 @@ public:
 	ID3D11DepthStencilView* m_depthStencilView;
 #endif
 	View();
-	eae6320::cResult InitializeViews(const eae6320::Graphics::sInitializationParameters& i_initializationParameters);
+	sca2025::cResult InitializeViews(const sca2025::Graphics::sInitializationParameters& i_initializationParameters);
 	void Clear(const float * i_pColor);
 	void Swap();
 	void CleanUp();

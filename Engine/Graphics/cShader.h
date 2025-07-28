@@ -27,7 +27,7 @@
 // Shader Types
 //=============
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Graphics
 	{
@@ -55,7 +55,7 @@ namespace eae6320
 // Forward Declarations
 //=====================
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Platform
 	{
@@ -71,7 +71,7 @@ namespace eae6320
 // Class Declaration
 //==================
 
-namespace eae6320
+namespace sca2025
 {
 	namespace Graphics
 	{

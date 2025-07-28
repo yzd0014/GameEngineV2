@@ -11,7 +11,7 @@
 // Static Data Initialization
 //===========================
 
-eae6320::Assets::cManager<eae6320::Graphics::cShader> eae6320::Graphics::cShader::s_manager;
+sca2025::Assets::cManager<sca2025::Graphics::cShader> sca2025::Graphics::cShader::s_manager;
 
 // Interface
 //==========
@@ -19,7 +19,7 @@ eae6320::Assets::cManager<eae6320::Graphics::cShader> eae6320::Graphics::cShader
 // Initialization / Clean Up
 //--------------------------
 
-eae6320::cResult eae6320::Graphics::cShader::Load( const char* const i_path, cShader*& o_shader, const ShaderTypes::eType i_type )
+sca2025::cResult sca2025::Graphics::cShader::Load( const char* const i_path, cShader*& o_shader, const ShaderTypes::eType i_type )
 {
 	auto result = Results::Success;
 
@@ -94,14 +94,14 @@ OnExit:
 
 // Initialization / Clean Up
 //--------------------------
-eae6320::Graphics::cShader::cShader( const ShaderTypes::eType i_type )
+sca2025::Graphics::cShader::cShader( const ShaderTypes::eType i_type )
 	:
 	m_type( i_type )
 {
 
 }
 
-eae6320::Graphics::cShader::~cShader()
+sca2025::Graphics::cShader::~cShader()
 {
 	CleanUp();
 }

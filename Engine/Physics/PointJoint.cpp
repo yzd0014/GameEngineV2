@@ -4,7 +4,7 @@
 #include "External/EigenLibrary/Eigen/Dense"
 
 using namespace Eigen;
-void eae6320::Physics::PointJointsResolver(float i_dt)
+void sca2025::Physics::PointJointsResolver(float i_dt)
 {
 	for (size_t i = 0; i < allPointJoints.size(); i++)
 	{
@@ -12,7 +12,7 @@ void eae6320::Physics::PointJointsResolver(float i_dt)
 	}
 }
 
-void eae6320::Physics::PointJoint::ResolvePointJointConstrain(float i_dt)
+void sca2025::Physics::PointJoint::ResolvePointJointConstrain(float i_dt)
 {
 	Math::cMatrix_transformation Local2World_rotation(pGameObject->m_State.orientation, Math::sVector(0.0f, 0.0f, 0.0f));
 	Math::sVector worldExtend = Local2World_rotation * extend;

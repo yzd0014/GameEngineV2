@@ -12,7 +12,7 @@
 
 #ifdef EAE6320_ASSERTS_AREENABLED
 
-bool eae6320::Asserts::ShowMessageIfAssertionIsFalseAndReturnWhetherToBreak_platformSpecific(
+bool sca2025::Asserts::ShowMessageIfAssertionIsFalseAndReturnWhetherToBreak_platformSpecific(
 	std::ostringstream& io_message, bool& io_shouldThisAssertBeIgnoredInTheFuture )
 {
 #ifdef EAE6320_ASSERTS_SHOULDPRINTTODEBUGGER
