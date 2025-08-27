@@ -106,43 +106,25 @@ namespace eae6320
 		void AcceleratedEnergyConstraint();//quasi-newton
 		//void AcceleratedEnergyConstraintV2();//add position
 		
-		//unit tests
+			//unit tests
+		void UnitTest5_1();//section 5.1 in the paper
+		void UnitTest5_2();//section 5.2 in the paper
+		void UnitTest5_3a();//section 5.3 in the paper
+		void UnitTest5_3b();//section 5.3 in the paper
+		void UnitTest5_4a();//section 5.4 in the paper
+		void UnitTest5_4b();//section 5.4 in the paper
+		void UnitTest5_5();//section 5.5 in the paper
+		void UnitTest5_6();//section 5.6 in the paper
+		void UnitTest5_7();//section 5.7 in the paper
+		void UnitTest5_8a();//section 5.8 in the paper
+		void UnitTest5_8b();//section 5.8 in the paper
 		void UnitTest0();
-		void UnitTest1();
-		void UnitTest2();
-		void UnitTest19();
-		void UnitTest20();
-		void UnitTest3();
-		void UnitTest4();
-		void UnitTest5();
-		void UnitTest6();
-		void UnitTest17();
-		void UnitTest18();
-		void UnitTest7();
-		void UnitTest8();
-		void UnitTest9();
-		void UnitTest10();
-		void UnitTest11();
-		void UnitTest12();
-		void UnitTest13();
-		void UnitTest14();
-		void UnitTest15();
-		void UnitTest16();
-		void UnitTest21();
-		void UnitTest22();
-		void UnitTest23();
-		void UnitTest24();
-		void UnitTest25();
-		void UnitTest26();
-		void UnitTest27();
-		void RagdollTest();
-		void HingeJointUnitTest0();
-		void PersistentDataTest();
-		void FDTest();//finite differencing test
+		void RunUnitTest();
+		
+		void FDTest();
 		void AnalyticalTest();
 		void AnalyticalVsFD();
-		void EulerDecompositionAccuracyTest();
-		void RunUnitTest();
+		void HingeJointUnitTest0();
 
 		void SaveDataToMatlab(_Scalar totalDuration);
 		void SaveDataToHoudini(_Scalar totalDuration, _Scalar logInterval, int numOfFrames);

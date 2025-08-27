@@ -14,7 +14,7 @@ eae6320::MyActor::MyActor(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Phys
 	x = Vector3d(1, 0, 0);
 	z = Vector3d(0, 0, 1);
 	twistAxis = Vector3d(0, -1, 0);
-	UnitTest4();
+	UnitTest1();
 }
 
 void eae6320::MyActor::UnitTest1()
@@ -71,7 +71,7 @@ void eae6320::MyActor::UnitTest1()
 
 				Matrix3d eulerR = parentR * childR;
 				Vector3d zWorld = eulerR * z;
-				GameplayUtility::DrawArrowScaled(twistAxisWorld * rigidBodyScale, zWorld, Math::sVector(0, 0, 1), Vector3d(0.05, 0.05, 0.05));
+				//GameplayUtility::DrawArrowScaled(twistAxisWorld * rigidBodyScale, zWorld, Math::sVector(0, 0, 1), Vector3d(0.05, 0.05, 0.05));
 			}
 		}
 	}

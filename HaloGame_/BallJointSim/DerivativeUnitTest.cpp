@@ -249,15 +249,15 @@ void eae6320::MultiBody::AnalyticalVsFD()
 		bm[i] = vec;
 	}
 	
-	/*for (int i = 0; i < 8; i++)
+	for (int i = 0; i < 8; i++)
 	{
 		ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -2 - i));
 		LOG_TO_FILE << std::setprecision(std::numeric_limits<double>::max_digits10);
 		LOG_TO_FILE << HtDerivativeFD[0](0, 0) << std::endl;
-	}*/
-	ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -6));
-	std::cout << std::setprecision(16) << HtDerivativeFD[0](0, 0) << std::endl;
-	ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeAnalytical, MassDerivativeAnalytical);
+	}
+	//ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -6));
+	//std::cout << std::setprecision(16) << HtDerivativeFD[0](0, 0) << std::endl;
+	//ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeAnalytical, MassDerivativeAnalytical);
 	
 	std::cout << std::setprecision(16) << HtDerivativeAnalytical[0] << std::endl << std::endl;
 	std::cout << HtDerivativeAnalytical[1] << std::endl;
