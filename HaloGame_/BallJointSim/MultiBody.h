@@ -55,8 +55,12 @@ namespace eae6320
 		void ComputeDxOverDp(std::vector<_Matrix>& o_derivative);
 		void Populate_q(std::vector<_Quat>& i_quat, _Vector& o_q);
 		void Populate_quat(_Vector& i_q, std::vector<_Quat>& o_quat, bool normalization);
+		void UpdateConstraintJacobian();
+		void CopyFromQ2X();
+		void CopyFromX2Q();
 		
 		void ClampRotationVector();
+		_Scalar ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi);
 		_Scalar ComputeKineticEnergy();
 		_Scalar ComputePotentialEnergy();
 		_Scalar ComputeTotalEnergy();
@@ -66,7 +70,6 @@ namespace eae6320
 		_Matrix ComputeDuGlobalOverDp(int i, _Vector3& uGlobal);//currently only works for hinge joint
 		_Matrix ComputeDhGlobalOverDp(int i);//currently only works for hinge joint
 		
-		_Scalar ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi);
 		void SwingLimitCheck();
 		void ResolveSwingLimit(const _Scalar h);
 		void ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h);
@@ -79,17 +82,20 @@ namespace eae6320
 		void _ResolveJointLimit(const _Scalar h);
 		void _ResolveJointLimitPBD(_Vector& i_q, const _Scalar h);
 		
+		void ConstraintSolve(const _Scalar h);
 		void BallJointLimitCheck();
 		void SolveVelocityJointLimit(const _Scalar h);
-		void SolvePositionJointLimit(const _Scalar h);
+		void PBDStablization();
 		void SolvePositionJointLimit();
 		_Scalar ComputeSwingError(int jointNum);
 		_Scalar ComputeTwistEulerError(int jointNum);
+		_Scalar ComputeTwistDirectError(int jointNum);
 		void ComputeTwistEulerJacobian(int jointNum, _Matrix& o_J);
 		void ComputeTwistEulerJacobian(int i, bool isUpperBound, _Matrix& o_J);
 		void ComputeSwingJacobian(int jointNum, _Matrix& o_J);
 		void SwitchConstraint(int i);
 		void UpdateInitialPosition();//call this function whenever poistion is updated
+		void ComputeTwistDirectJacobian(int jointNum, int i_limitType, _Matrix& o_J);
 		
 
 		void PrePositionSolveProccessing();
@@ -163,7 +169,7 @@ namespace eae6320
 		
 		std::vector<_Matrix3> R_global;//rigidbody rotation
 		std::vector<_Matrix3> R_local;
-		std::vector<_Matrix3> J_rotation;//rotation jabobian matrix
+		std::vector<_Matrix3> J_exp;//rotation jabobian matrix
 		std::vector<_Matrix> D;
 		std::vector<_Matrix> Ht;
 		std::vector<_Matrix> H;

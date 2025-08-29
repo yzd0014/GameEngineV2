@@ -557,7 +557,6 @@ void eae6320::MultiBody::RunUnitTest()
 	if (testCaseNum == 1)
 	{
 		UnitTest5_1();
-		twistMode = EULER_V2;
 		std::cout << "compare with Unreal and Unity" << std::endl;
 	}
 	else if (testCaseNum == 2)

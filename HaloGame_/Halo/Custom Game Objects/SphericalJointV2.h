@@ -37,7 +37,7 @@ namespace eae6320
 		std::vector<MatrixXf> D;
 		std::vector<MatrixXf> H;
 		std::vector<VectorXf> gamma;
-		std::vector<Matrix3f> J_rotation;
+		std::vector<Matrix3f> J_exp;
 		std::vector<Matrix3f> R_global;//rigidbody rotation
 
 		std::vector<Vector3f> w_global;

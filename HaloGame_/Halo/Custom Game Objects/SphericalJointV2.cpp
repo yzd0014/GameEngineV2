@@ -25,7 +25,7 @@ eae6320::SphericalJointV2::SphericalJointV2(Effect * i_pEffect, Assets::cHandle<
 	D.resize(numOfLinks);
 	H.resize(numOfLinks);
 	gamma.resize(numOfLinks);
-	J_rotation.resize(numOfLinks);
+	J_exp.resize(numOfLinks);
 	R_global.resize(numOfLinks);
 
 	w_global.resize(numOfLinks);
@@ -105,11 +105,11 @@ void eae6320::SphericalJointV2::Tick(const double i_secondCountToIntegrate)
 		{
 			float b = B[i];
 			float c = C[i];
-			J_rotation[i] = MatrixXf::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(R[i]) + c * Math::ToSkewSymmetricMatrix(R[i]) * Math::ToSkewSymmetricMatrix(R[i]);
+			J_exp[i] = MatrixXf::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(R[i]) + c * Math::ToSkewSymmetricMatrix(R[i]) * Math::ToSkewSymmetricMatrix(R[i]);
 			//std::cout << J.determinant() << std::endl <<std::endl;
 			Matrix3f A;
-			if (i == 0) A = J_rotation[i];
-			else A = R_global[i - 1] * J_rotation[i];
+			if (i == 0) A = J_exp[i];
+			else A = R_global[i - 1] * J_exp[i];
 			H[i].resize(6, 3);
 			H[i].setZero();
 			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobals[i][0]) * A;
@@ -245,11 +245,11 @@ void eae6320::SphericalJointV2::ComputeR_ddotAndIntegrate(std::vector<Vector3f>&
 			Vector3f w_local = a * i_R_dot[i] - (b * i_R_dot[i]).cross(R[i]) + c * R[i].dot(i_R_dot[i]) * R[i];
 			if (i == 0)
 			{
-				w_global[i] = J_rotation[i] * i_R_dot[i];
+				w_global[i] = J_exp[i] * i_R_dot[i];
 			}
 			else
 			{
-				w_global[i] = w_global[i - 1] + R_global[i - 1] * J_rotation[i] * i_R_dot[i];
+				w_global[i] = w_global[i - 1] + R_global[i - 1] * J_exp[i] * i_R_dot[i];
 			}
 		}
 
@@ -335,7 +335,7 @@ void eae6320::SphericalJointV2::ComputeGamma(std::vector<Vector3f>& i_R_dot, std
 			}
 			else
 			{
-				gamma_theta = Math::ToSkewSymmetricMatrix(w_global[i - 1]) * R_global[i - 1] * J_rotation[i] * i_R_dot[i] + R_global[i - 1] * Jdot_rdot;
+				gamma_theta = Math::ToSkewSymmetricMatrix(w_global[i - 1]) * R_global[i - 1] * J_exp[i] * i_R_dot[i] + R_global[i - 1] * Jdot_rdot;
 			}
 			o_gamma[i].resize(6);
 			o_gamma[i].setZero();
