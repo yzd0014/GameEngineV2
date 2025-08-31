@@ -545,7 +545,11 @@ void eae6320::MultiBody::RunUnitTest()
 	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");
 	if (enablePositionSolve == 1)
 	{
-		std::cout << "position solve enabled" << std::endl;
+		std::cout << "position solve enabled (Baumgarte)" << std::endl;
+	}
+	if (enablePositionSolve == 2)
+	{
+		std::cout << "position solve enabled (PBD)" << std::endl;
 	}
 	else
 	{

@@ -185,7 +185,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				if (jointRange[i].second > 0 && jointRange[i].second - twistAngle < 0) //check twist constraint
 				{
 					_Scalar twistError = cos(twistAngle) - cos(jointRange[i].second);
-					std::cout << "direct twist error: " << twistError << std::endl;
+					//std::cout << "direct twist error: " << twistError << std::endl;
 					if (swingAngle < swingEpsilon || abs(swingAngle - M_PI) < swingEpsilon)
 					{
 						jointsID.push_back(i);
@@ -470,7 +470,6 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 {	
 	if (constraintNum > 0)
 	{
-		UpdateConstraintJacobian();
 		_Vector error;
 		error.resize(constraintNum);
 		error.setZero();

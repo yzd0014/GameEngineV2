@@ -21,7 +21,7 @@ namespace eae6320
 		int constraintType = SWING_C;//only used for testing
 		int twistMode = EULER_V2;
 		bool gravity = false ;
-		bool enablePositionSolve = true;//position solve currently doesn't support free joint
+		int enablePositionSolve = 0;//position solve currently doesn't support free joint
 		bool adaptiveTimestep = false;
 		Application::cbApplication* pApp = nullptr;
 	private:
@@ -59,7 +59,7 @@ namespace eae6320
 		void CopyFromQ2X();
 		void CopyFromX2Q();
 		
-		void ClampRotationVector();
+		void ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i);
 		_Scalar ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi);
 		_Scalar ComputeKineticEnergy();
 		_Scalar ComputePotentialEnergy();

@@ -185,28 +185,22 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	//std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
-void eae6320::MultiBody::ClampRotationVector()
+void eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
 {
-	for (int i = 0; i < numOfLinks; i++)
+	_Vector3 r = io_q.segment(posStartIndex[i], 3);
+	_Scalar theta = r.norm();
+	if (theta > M_PI)
 	{
-		if (jointType[i] == BALL_JOINT_3D)
-		{
-			_Vector3 r = q.segment(posStartIndex[i], 3);
-			_Scalar theta = r.norm();
-			if (theta > M_PI)
-			{
-				_Scalar eta = (_Scalar)(1.0f - 2.0f * M_PI / theta);
+		_Scalar eta = (_Scalar)(1.0f - 2.0f * M_PI / theta);
 
-				//reparameterize position
-				std::cout << "rotation vector clamped" << std::endl;
-				q.segment(posStartIndex[i], 3) = eta * r;
+		//reparameterize position
+		std::cout << "rotation vector clamped" << std::endl;
+		io_q.segment(posStartIndex[i], 3) = eta * r;
 
-				//reparameterize velocity
-				_Vector3 r_dot = qdot.segment(velStartIndex[i], 3);
-				_Vector3 r_dot_new = eta * r_dot + 2 * M_PI * (r.dot(r_dot) / pow(theta, 3)) * r;
-				qdot.segment(velStartIndex[i], 3) = r_dot_new;
-			}
-		}
+		//reparameterize velocity
+		_Vector3 r_dot = io_qdot.segment(velStartIndex[i], 3);
+		_Vector3 r_dot_new = eta * r_dot + 2 * M_PI * (r.dot(r_dot) / pow(theta, 3)) * r;
+		io_qdot.segment(velStartIndex[i], 3) = r_dot_new;
 	}
 }
 
@@ -216,7 +210,8 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _
 	{
 		if (jointType[i] == BALL_JOINT_3D)
 		{
-			o_q.segment(posStartIndex[i], 3) = i_q.segment(posStartIndex[i], 3) + i_qdot.segment(velStartIndex[i], 3) * h;
+			o_q.segment(posStartIndex[i], 3) = i_q.segment(posStartIndex[i], 3) + i_qdot.segment(velStartIndex[i], 3) * h;//TODO: add clamping
+			ClampRotationVector(o_q, i_qdot, i);
 		}
 		else if (jointType[i] == BALL_JOINT_4D)
 		{
@@ -247,16 +242,16 @@ void eae6320::MultiBody::ConstraintSolve(const _Scalar h)
 	{
 		BallJointLimitCheck();
 	}
-	if (enablePositionSolve)
+	if (enablePositionSolve == 2)
 	{
 		CopyFromQ2X();
-		//SolvePositionJointLimit();
 		PBDStablization();
 		CopyFromX2Q();
 	}
 	if (constraintSolverMode == IMPULSE)
 	{
 		SolveVelocityJointLimit(h);
+		if (enablePositionSolve == 1) SolvePositionJointLimit();
 	}
 }
 
@@ -270,7 +265,6 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	ConstraintSolve(h);
 	
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
-	ClampRotationVector();
 	Forward();
 	
 	//EnergyConstraintPositionVelocity();
@@ -294,7 +288,6 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	ConstraintSolve(h);
 
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
-	ClampRotationVector();
 	Forward();
 }
 
@@ -307,8 +300,6 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 	qdot = qdot + (1.0f / 6.0f) * (k1 + 4 * k2 + k3);
 	
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
-
-	ClampRotationVector();
 	Forward();
 }
 
@@ -881,6 +872,7 @@ void eae6320::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 join
 	{
 		velStartIndex.push_back(0);
 		posStartIndex.push_back(0);
+		xStartIndex.push_back(0);
 	}
 	else
 	{
