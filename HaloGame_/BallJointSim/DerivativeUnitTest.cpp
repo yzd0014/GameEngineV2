@@ -187,7 +187,7 @@ void eae6320::MultiBody::AnalyticalTest()
 		vec.segment(3, 3) = w_abs_world[i];
 		bm[i] = vec;
 	}
-	ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+	ComputeJacobianAndInertiaDerivative(totalPosDOF, qdot, bm, Ht, H, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
 	//LOG_TO_FILE << HtDerivativeTimes_b[0](0, 0) << std::endl;
 	//std::cout << HtDerivativeTimes_b[i] << std::endl << std::endl;
 	//std::cout << MassMatrixDerivativeTimes_b[i] << std::endl << std::endl;

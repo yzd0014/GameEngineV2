@@ -33,8 +33,8 @@ namespace eae6320
 		void AddRigidBody(int parent, int i_jointType, _Vector3 jointPositionParent, _Vector3 jointPositionChild, Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor);
 		void SetHingeJoint(int jointNum, _Vector3 hingeDirLocal, _Scalar hingeLength);
 
-		void ComputeMr();
-		void ComputeHt(_Vector& i_q, std::vector<_Quat>& i_quat);
+		void ComputeMr(_Matrix& o_M, std::vector<_Matrix>& i_Ht);
+		void ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matrix>& o_H, _Vector& i_q, std::vector<_Quat>& i_quat);
 		_Vector ComputeQr(_Vector i_qdot);
 		_Vector ComputeQr_SikpVelocityUpdate(_Vector& i_qdot);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot);
@@ -50,14 +50,15 @@ namespace eae6320
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void Forward();
 		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat);
-		void ComputeJacobianAndInertiaDerivative(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
+		void ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
 		void ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
-		void ComputeDxOverDp(std::vector<_Matrix>& o_derivative);
+		void ComputeDxOverDp(std::vector<_Matrix>& o_derivative, std::vector<_Matrix>& i_Ht, int i_totalDOF);
 		void Populate_q(std::vector<_Quat>& i_quat, _Vector& o_q);
 		void Populate_quat(_Vector& i_q, std::vector<_Quat>& o_quat, bool normalization);
 		void UpdateConstraintJacobian();
 		void CopyFromQ2X();
 		void CopyFromX2Q();
+		void UpdateXDot(_Vector& o_xdot, _Vector& i_x, _Vector& i_qdot);
 		
 		void ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i);
 		_Scalar ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi);
@@ -67,7 +68,7 @@ namespace eae6320
 		_Vector3 ComputeTranslationalMomentum();
 		_Vector3 ComputeAngularMomentum();
 
-		_Matrix ComputeDuGlobalOverDp(int i, _Vector3& uGlobal);//currently only works for hinge joint
+		_Matrix ComputeDuGlobalOverDp(int i, _Vector3& uGlobal, std::vector<_Matrix>& i_Ht, int i_totalDOF);//currently only works for hinge joint and ball joint 3d
 		_Matrix ComputeDhGlobalOverDp(int i);//currently only works for hinge joint
 		
 		void SwingLimitCheck();
@@ -125,6 +126,8 @@ namespace eae6320
 		void UnitTest5_8a();//section 5.8 in the paper
 		void UnitTest5_8b();//section 5.8 in the paper
 		void UnitTest0();
+		void HingeJointTest();
+		void BallJointTest();
 		void RunUnitTest();
 		
 		void FDTest();
@@ -138,7 +141,7 @@ namespace eae6320
 		_Vector q;
 		_Vector qdot;
 		_Vector x;//used for position solve
-		_Vector xOld;
+		_Vector xdot;
 		std::vector<int> jointType;
 		std::vector<int> posDOF;
 		std::vector<int> xDOF;//used for position solve
@@ -308,6 +311,28 @@ namespace eae6320
 			else zeta = (1 - i_a / (2 * i_b)) / (theta * theta);
 
 			return zeta;
+		}
+		
+		inline _Matrix ComputeExponentialMapJacobian(_Vector& i_q, int i)
+		{
+			int j = parentArr[i];
+			_Vector3 r = i_q.segment(posStartIndex[i], 3);
+			_Scalar theta = r.norm();
+			_Scalar b = Compute_b(theta);
+			_Scalar a = Compute_a(theta);
+			_Scalar c = Compute_c(theta, a);
+			J_exp[i] = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
+			_Matrix3 A;
+			if (i == 0) A = J_exp[i];
+			else A = R_global[j] * J_exp[i];
+
+			_Matrix out;
+			out.resize(6, 3);
+			out.setZero();
+			out.block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * A;
+			out.block<3, 3>(3, 0) = A;
+
+			return out;
 		}
 	};
 }

@@ -556,7 +556,7 @@ void eae6320::MultiBody::ResolveTwistLimitPBD(_Vector& i_q, const _Scalar h)
 				if (posDOF[j] == velDOF[j]) i_q.segment(posStartIndex[j], posDOF[j]) = i_q.segment(posStartIndex[j], posDOF[j]) + R_correction.segment(velStartIndex[j], velDOF[j]);
 			}
 
-			ComputeHt(i_q, rel_ori);
+			ComputeHt(Ht, H, i_q, rel_ori);
 		}
 
 	/*	{
@@ -925,89 +925,89 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 }
 
 //***************************************************************************************************
-void eae6320::MultiBody::EnergyConstraintPosition()
-{
-	int energeMomentumConstraintDim = 1;
-	int nq = totalPosDOF;
-	int n = nq + energeMomentumConstraintDim;
-
-	Populate_q(rel_ori, q);
-	
-	_Vector mq(nq);
-	mq.setZero();
-	mq.segment(0, totalPosDOF) = q;
-
-	_Matrix grad_C(energeMomentumConstraintDim, nq);
-	grad_C.setZero();
-
-	//_Matrix DInv;
-	//DInv = Mr.inverse();
-
-	_Matrix C(energeMomentumConstraintDim, 1);
-	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
-	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
-	int iter = 0;
-	while (abs(C(0, 0)) > 1e-3)
-	{
-		//if (iter >= 10)
-		//{
-		//	//std::cout << "limit reached!" << std::endl;
-		//	break;
-		//}
-		std::vector<_Vector> bm;
-		bm.resize(numOfLinks);
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			_Vector vec;
-			vec.resize(6);
-			vec.segment(0, 3) = vel[i];
-			vec.segment(3, 3) = w_abs_world[i];
-			bm[i] = vec;
-		}
-		ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
-		std::vector<_Matrix> positionDerivative;
-		ComputeDxOverDp(positionDerivative);
-
-		_Matrix M0;
-		M0.resize(1, totalPosDOF);
-		M0.setZero();
-		_Matrix M1;
-		M1.resize(3, totalPosDOF);
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			//***********************kinetic energy derivative*****************************
-			M0 = M0 + qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
-			//***********************potential energy derivative*****************************
-			_Vector3 g(0.0f, 9.81f, 0.0f);
-			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * positionDerivative[i];
-		}
-
-		grad_C.block(0, 0, 1, totalPosDOF) = M0;
-		//_Matrix K = grad_C * DInv * grad_C.transpose();
-		_Matrix K = grad_C * grad_C.transpose();
-		if (K.determinant() < 1e-7)
-		{
-			_Matrix mI;
-			mI.resize(energeMomentumConstraintDim, energeMomentumConstraintDim);
-			mI.setIdentity();
-			K = K + 1e-7 * mI;
-		}
-		lambdaNew = K.inverse() * C;
-		//_Vector delta_q = -DInv * grad_C.transpose() * lambdaNew;
-		_Vector delta_q = -grad_C.transpose() * lambdaNew;
-		mq = mq + delta_q;
-
-		q = mq;
-		Populate_quat(q, rel_ori, false);
-		mq.segment(0, totalPosDOF) = q;
-		ComputeHt(q, rel_ori);
-		ComputeMr();
-		//MrInverse = Mr.inverse();
-		//DInv = MrInverse;
-		ForwardAngularAndTranslationalVelocity(qdot);
-		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
-		iter++;
-	}
-	Populate_quat(q, rel_ori, true);
-	//std::cout << iter << std::endl;
-}
+//void eae6320::MultiBody::EnergyConstraintPosition()
+//{
+//	int energeMomentumConstraintDim = 1;
+//	int nq = totalPosDOF;
+//	int n = nq + energeMomentumConstraintDim;
+//
+//	Populate_q(rel_ori, q);
+//	
+//	_Vector mq(nq);
+//	mq.setZero();
+//	mq.segment(0, totalPosDOF) = q;
+//
+//	_Matrix grad_C(energeMomentumConstraintDim, nq);
+//	grad_C.setZero();
+//
+//	//_Matrix DInv;
+//	//DInv = Mr.inverse();
+//
+//	_Matrix C(energeMomentumConstraintDim, 1);
+//	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
+//	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+//	int iter = 0;
+//	while (abs(C(0, 0)) > 1e-3)
+//	{
+//		//if (iter >= 10)
+//		//{
+//		//	//std::cout << "limit reached!" << std::endl;
+//		//	break;
+//		//}
+//		std::vector<_Vector> bm;
+//		bm.resize(numOfLinks);
+//		for (int i = 0; i < numOfLinks; i++)
+//		{
+//			_Vector vec;
+//			vec.resize(6);
+//			vec.segment(0, 3) = vel[i];
+//			vec.segment(3, 3) = w_abs_world[i];
+//			bm[i] = vec;
+//		}
+//		ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+//		std::vector<_Matrix> positionDerivative;
+//		ComputeDxOverDp(positionDerivative);
+//
+//		_Matrix M0;
+//		M0.resize(1, totalPosDOF);
+//		M0.setZero();
+//		_Matrix M1;
+//		M1.resize(3, totalPosDOF);
+//		for (int i = 0; i < numOfLinks; i++)
+//		{
+//			//***********************kinetic energy derivative*****************************
+//			M0 = M0 + qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
+//			//***********************potential energy derivative*****************************
+//			_Vector3 g(0.0f, 9.81f, 0.0f);
+//			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * positionDerivative[i];
+//		}
+//
+//		grad_C.block(0, 0, 1, totalPosDOF) = M0;
+//		//_Matrix K = grad_C * DInv * grad_C.transpose();
+//		_Matrix K = grad_C * grad_C.transpose();
+//		if (K.determinant() < 1e-7)
+//		{
+//			_Matrix mI;
+//			mI.resize(energeMomentumConstraintDim, energeMomentumConstraintDim);
+//			mI.setIdentity();
+//			K = K + 1e-7 * mI;
+//		}
+//		lambdaNew = K.inverse() * C;
+//		//_Vector delta_q = -DInv * grad_C.transpose() * lambdaNew;
+//		_Vector delta_q = -grad_C.transpose() * lambdaNew;
+//		mq = mq + delta_q;
+//
+//		q = mq;
+//		Populate_quat(q, rel_ori, false);
+//		mq.segment(0, totalPosDOF) = q;
+//		ComputeHt(Ht, q, rel_ori);
+//		ComputeMr(Mr, Ht);
+//		//MrInverse = Mr.inverse();
+//		//DInv = MrInverse;
+//		ForwardAngularAndTranslationalVelocity(qdot);
+//		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;//TODO
+//		iter++;
+//	}
+//	Populate_quat(q, rel_ori, true);
+//	//std::cout << iter << std::endl;
+//}

@@ -508,8 +508,8 @@ void eae6320::MultiBody::PBDStablization()
 		{
 			J_pbd.setZero();
 			ForwardKinematics(x, rel_ori);
-			ComputeHt(x, rel_ori);
-			ComputeMr();
+			ComputeHt(Ht, H, x, rel_ori);
+			ComputeMr(Mr, Ht);
 			UpdateConstraintJacobian();
 			for (size_t k = 0; k < constraintNum; k++)
 			{
