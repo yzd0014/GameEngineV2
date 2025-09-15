@@ -491,12 +491,12 @@ void eae6320::MultiBody::HingeJointTest()
 	SetHingeJoint(0, _Vector3(0, 0, 1), 0);
 	AddRigidBody(0, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 1
 	SetHingeJoint(1, _Vector3(0, 0, 1), 0);
-	AddRigidBody(1, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 2
-	SetHingeJoint(2, _Vector3(0, 0, 1), 0);
-	AddRigidBody(2, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 3
-	SetHingeJoint(3, _Vector3(0, 0, 1), 0);
-	AddRigidBody(3, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 4
-	SetHingeJoint(4, _Vector3(0, 0, 1), 0);
+	//AddRigidBody(1, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 2
+	//SetHingeJoint(2, _Vector3(0, 0, 1), 0);
+	//AddRigidBody(2, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 3
+	//SetHingeJoint(3, _Vector3(0, 0, 1), 0);
+	//AddRigidBody(3, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 4
+	//SetHingeJoint(4, _Vector3(0, 0, 1), 0);
 	//AddRigidBody(1, HINGE_JOINT, _Vector3(1.0f, 0.0f, 0.0f), _Vector3(-0.5f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 5
 	//SetHingeJoint(5, _Vector3(0, 0, 1), 0);
 	//AddRigidBody(5, HINGE_JOINT, _Vector3(1.0f, 0.0f, 0.0f), _Vector3(-1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 6
@@ -508,12 +508,21 @@ void eae6320::MultiBody::HingeJointTest()
 
 	m_keyPressSave = [this](FILE * i_pFile)
 	{
-		int dof = static_cast<int>(q.size());
-		for (int i = 0; i < dof; i++)
+		int qDof = static_cast<int>(q.size());
+		Populate_q(rel_ori, q);
+		for (int i = 0; i < qDof; i++)
 		{
 			fwrite(&q(i), sizeof(double), 1, i_pFile);
 		}
-		for (int i = 0; i < dof; i++)
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			fwrite(&rel_ori[i].w(), sizeof(double), 1, i_pFile);
+			fwrite(&rel_ori[i].x(), sizeof(double), 1, i_pFile);
+			fwrite(&rel_ori[i].y(), sizeof(double), 1, i_pFile);
+			fwrite(&rel_ori[i].z(), sizeof(double), 1, i_pFile);
+		}
+		int vDof = static_cast<int>(qdot.size());
+		for (int i = 0; i < vDof; i++)
 		{
 			fwrite(&qdot(i), sizeof(double), 1, i_pFile);
 		}
@@ -531,9 +540,9 @@ void eae6320::MultiBody::BallJointTest()
 
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
 	AddRigidBody(0, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 1
-	AddRigidBody(1, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 2
-	AddRigidBody(2, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 3
-	AddRigidBody(3, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 4
+	//AddRigidBody(1, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 2
+	//AddRigidBody(2, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 3
+	//AddRigidBody(3, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 4
 
 	MultiBodyInitialization();
 	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
@@ -546,6 +555,13 @@ void eae6320::MultiBody::BallJointTest()
 		for (int i = 0; i < qDof; i++)
 		{
 			fwrite(&q(i), sizeof(double), 1, i_pFile);
+		}
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			fwrite(&rel_ori[i].w(), sizeof(double), 1, i_pFile);
+			fwrite(&rel_ori[i].x(), sizeof(double), 1, i_pFile);
+			fwrite(&rel_ori[i].y(), sizeof(double), 1, i_pFile);
+			fwrite(&rel_ori[i].z(), sizeof(double), 1, i_pFile);
 		}
 		int vDof = static_cast<int>(qdot.size());
 		for (int i = 0; i < vDof; i++)
@@ -625,7 +641,7 @@ void eae6320::MultiBody::RunUnitTest()
 	{
 		std::cout << "position solve enabled (Baumgarte)" << std::endl;
 	}
-	if (enablePositionSolve == 2)
+	else if (enablePositionSolve == 2)
 	{
 		std::cout << "position solve enabled (PBD)" << std::endl;
 	}
@@ -715,6 +731,11 @@ void eae6320::MultiBody::RunUnitTest()
 	{
 		BallJointTest();
 		std::cout << "5 ball joints" << std::endl;
+	}
+	else if (testCaseNum == 15)
+	{
+		AnalyticalVsFD();
+		std::cout << "AnalyticalVsFD" << std::endl;
 	}
 
 	std::cout << std::endl;

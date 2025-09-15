@@ -203,20 +203,34 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 
-	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
-	AddRigidBody(0, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 1
-	//AddRigidBody(-1, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
-	//SetHingeJoint(0, _Vector3(0, 0, 1), 0);
-	//AddRigidBody(0, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 1
-	//SetHingeJoint(1, _Vector3(0, 0, 1), 0);
-	
+	int m_jointType = HINGE_JOINT;
+	if (m_jointType == HINGE_JOINT)
+	{
+		AddRigidBody(-1, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+		SetHingeJoint(0, _Vector3(0, 0, 1), 0);
+		AddRigidBody(0, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 1
+		SetHingeJoint(1, _Vector3(0, 0, 1), 0);
+	}
+	else if (m_jointType == BALL_JOINT_4D)
+	{
+		AddRigidBody(-1, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
+		AddRigidBody(0, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 1
+	}
+
 	MultiBodyInitialization();
-	const char* filePath = "key_press_save_ball.txt";
+	const char* filePath = "key_press_save.txt";
 	FILE* pFile = fopen(filePath, "rb");
 	int qDof = static_cast<int>(q.size());
 	for (int i = 0; i < qDof; i++)
 	{
 		fread(&q(i), sizeof(double), 1, pFile);
+	}
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		fread(&rel_ori[i].w(), sizeof(double), 1, pFile);
+		fread(&rel_ori[i].x(), sizeof(double), 1, pFile);
+		fread(&rel_ori[i].y(), sizeof(double), 1, pFile);
+		fread(&rel_ori[i].z(), sizeof(double), 1, pFile);
 	}
 	int vDof = static_cast<int>(qdot.size());
 	for (int i = 0; i < vDof; i++)
@@ -224,10 +238,15 @@ void eae6320::MultiBody::AnalyticalVsFD()
 		fread(&qdot(i), sizeof(double), 1, pFile);
 	}
 	fclose(pFile);
-	Populate_quat(q, rel_ori, false);
 	Forward();
-	//std::cout << q.transpose() << std::endl;
-	//std::cout << qdot.transpose() << std::endl;
+	
+	std::vector<int> jointTypeCopy(jointType);//save original joint type
+	std::vector<int> posStartIndexCopy(posStartIndex);//save original start index
+
+	CopyFromQ2X();
+	jointType = xJointType;
+	posStartIndex = xStartIndex;
+	UpdateXDot(xdot, x, qdot);
 
 	std::vector<_Matrix> HtDerivativeAnalytical;
 	HtDerivativeAnalytical.resize(numOfLinks);
@@ -249,16 +268,21 @@ void eae6320::MultiBody::AnalyticalVsFD()
 		bm[i] = vec;
 	}
 	
-	for (int i = 0; i < 8; i++)
+	/*for (int i = 0; i < 8; i++)
 	{
-		ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -2 - i));
+		ComputeJacobianAndInertiaDerivativeFDV2(x, qdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -2 - i));
 		LOG_TO_FILE << std::setprecision(std::numeric_limits<double>::max_digits10);
 		LOG_TO_FILE << HtDerivativeFD[0](0, 0) << std::endl;
-	}
-	//ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -6));
-	//std::cout << std::setprecision(16) << HtDerivativeFD[0](0, 0) << std::endl;
-	//ComputeJacobianAndInertiaDerivative(qdot, bm, HtDerivativeAnalytical, MassDerivativeAnalytical);
+	}*/
 	
+	ComputeJacobianAndInertiaDerivativeFDV2(x, qdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -6));
+	std::vector<_Matrix> Ht_x;
+	std::vector<_Matrix> H_x;
+	Ht_x.resize(numOfLinks);
+	H_x.resize(numOfLinks);
+	ComputeHt(Ht_x, H_x, x, rel_ori);
+	ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, Ht_x, H_x, HtDerivativeAnalytical, MassDerivativeAnalytical);
+
 	std::cout << std::setprecision(16) << HtDerivativeAnalytical[0] << std::endl << std::endl;
 	std::cout << HtDerivativeAnalytical[1] << std::endl;
 	std::cout << "============================" << std::endl;
@@ -266,4 +290,7 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	std::cout << std::setprecision(16) << HtDerivativeFD[1] << std::endl;
 	//LOG_TO_FILE << std::setprecision(std::numeric_limits<double>::max_digits10);
 	//LOG_TO_FILE << HtDerivativeFD[0](0, 0) << std::endl;
+
+	jointType = jointTypeCopy;
+	posStartIndex = posStartIndexCopy;
 }

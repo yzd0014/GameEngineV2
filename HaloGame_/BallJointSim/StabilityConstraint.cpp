@@ -494,6 +494,60 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	std::cout << "energy constraint iter: " << iter << std::endl;
 }
 
+void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta)
+{
+	_Scalar delta = i_delta;
+
+	_Matrix d0, d1;
+	d0.resize(6, 1);
+	d1.resize(6, 1);
+
+	_Vector old_x;
+	old_x = i_x;
+
+	int dof = static_cast<int>(x.size());
+	std::vector<_Vector> perturbed_x;
+	perturbed_x.resize(dof);
+	for (int i = 0; i < dof; i++)
+	{
+		perturbed_x[i].resize(dof);
+		perturbed_x[i] = x;
+		perturbed_x[i](i) = perturbed_x[i](i) + delta;
+	}
+
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		ComputeHt(Ht, H, old_x, rel_ori);
+		o_Jacobian[i].resize(6, dof);
+		d0 = Ht[i] * i_bj;
+		for (int k = 0; k < dof; k++)
+		{
+			ComputeHt(Ht, H, perturbed_x[k], rel_ori);
+			d1 = Ht[i] * i_bj;
+
+			//std::cout << std::endl << std::setprecision(16) << d1 << std::endl;
+			//std::cout << std::endl << std::setprecision(16) << d0 << std::endl;
+			o_Jacobian[i].block<6, 1>(0, k) = (d1 - d0) / delta;
+			//std::cout << std::endl << std::setprecision(16) << (d1 - d0) / delta << std::endl;
+		}
+	}
+
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		ForwardKinematics(old_x, rel_ori);
+		o_intertia[i].resize(6, dof);
+		d0 = Mbody[i] * i_bm[i];
+		for (int k = 0; k < dof; k++)
+		{
+			ForwardKinematics(perturbed_x[k], rel_ori);
+			d1 = Mbody[i] * i_bm[i];
+			o_intertia[i].block<6, 1>(0, k) = (d1 - d0) / delta;
+		}
+	}
+	Forward();
+}
+
+
 void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta)
 {
 	_Scalar delta = i_delta;
