@@ -924,6 +924,71 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	}
 }
 
+void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta)
+{
+	_Scalar delta = i_delta;
+
+	_Matrix d0, d1;
+	d0.resize(6, 1);
+	d1.resize(6, 1);
+
+	Populate_q(rel_ori, q);
+	_Vector old_q;
+	old_q = q;
+
+	int dof = static_cast<int>(q.size());
+	std::vector<_Vector> perturbed_q;
+	perturbed_q.resize(dof);
+	for (int i = 0; i < dof; i++)
+	{
+		perturbed_q[i].resize(dof);
+		perturbed_q[i] = q;
+		perturbed_q[i](i) = perturbed_q[i](i) + delta;
+	}
+
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		q = old_q;
+		Populate_quat(q, rel_ori, false);
+		ComputeHt(Ht, H, q, rel_ori);
+		o_Jacobian[i].resize(6, dof);
+		d0 = Ht[i] * i_bj;
+		for (int k = 0; k < dof; k++)
+		{
+			q = perturbed_q[k];
+			Populate_quat(q, rel_ori, false);
+			ComputeHt(Ht, H, q, rel_ori);
+			d1 = Ht[i] * i_bj;
+
+			std::cout << std::endl << std::setprecision(16) << d1 << std::endl;
+			std::cout << std::endl << std::setprecision(16) << d0 << std::endl;
+			o_Jacobian[i].block<6, 1>(0, k) = (d1 - d0) / delta;
+			std::cout << std::endl << std::setprecision(16) << (d1 - d0) / delta << std::endl;
+		}
+	}
+
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		q = old_q;
+		Populate_quat(q, rel_ori, false);
+		ForwardKinematics(q, rel_ori);
+		o_intertia[i].resize(6, dof);
+		d0 = Mbody[i] * i_bm[i];
+		for (int k = 0; k < dof; k++)
+		{
+			q = perturbed_q[k];
+			Populate_quat(q, rel_ori, false);
+			ForwardKinematics(q, rel_ori);
+			d1 = Mbody[i] * i_bm[i];
+			o_intertia[i].block<6, 1>(0, k) = (d1 - d0) / delta;
+		}
+	}
+
+	q = old_q;
+	Populate_quat(q, rel_ori, false);
+	Forward();
+}
+
 //***************************************************************************************************
 //void eae6320::MultiBody::EnergyConstraintPosition()
 //{

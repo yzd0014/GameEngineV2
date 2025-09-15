@@ -187,7 +187,7 @@ void eae6320::MultiBody::AnalyticalTest()
 		vec.segment(3, 3) = w_abs_world[i];
 		bm[i] = vec;
 	}
-	ComputeJacobianAndInertiaDerivative(totalPosDOF, qdot, bm, Ht, H, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+	ComputeJacobianAndInertiaDerivative(totalPosDOF, qdot, bm, q, Ht, H, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
 	//LOG_TO_FILE << HtDerivativeTimes_b[0](0, 0) << std::endl;
 	//std::cout << HtDerivativeTimes_b[i] << std::endl << std::endl;
 	//std::cout << MassMatrixDerivativeTimes_b[i] << std::endl << std::endl;
@@ -281,7 +281,7 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	Ht_x.resize(numOfLinks);
 	H_x.resize(numOfLinks);
 	ComputeHt(Ht_x, H_x, x, rel_ori);
-	ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, Ht_x, H_x, HtDerivativeAnalytical, MassDerivativeAnalytical);
+	ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, x, Ht_x, H_x, HtDerivativeAnalytical, MassDerivativeAnalytical);
 
 	std::cout << std::setprecision(16) << HtDerivativeAnalytical[0] << std::endl << std::endl;
 	std::cout << HtDerivativeAnalytical[1] << std::endl;
