@@ -408,7 +408,9 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 			vec.segment(3, 3) = w_abs_world[i];
 			bm[i] = vec;
 		}
-		//ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b, 1e-3);
+		//ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b, 1e-6);
+		jointType = xJointType;
+		posStartIndex = xStartIndex;
 		ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, x, Ht_x, H_x, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
 		std::vector<_Matrix> positionDerivative;
 		ComputeDxOverDp(positionDerivative, Ht_x, totalVelDOF);
@@ -596,7 +598,10 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Ve
 			mN.block(0, 0, 3, i_totalDOF) = i_Ht[j].block(3, 0, 3, i_totalDOF);
 		}
 		mN.block(3, 0, 3, i_totalDOF) = i_Ht[i].block(3, 0, 3, i_totalDOF);
-		mN(6, i) = 1;
+		for (int k = 0; k < velDOF[i]; k++)
+		{
+			mN(6 + k, posStartIndex[i] + k) = 1;
+		}
 
 		//ComputeB
 		mB.resize(6, sz);

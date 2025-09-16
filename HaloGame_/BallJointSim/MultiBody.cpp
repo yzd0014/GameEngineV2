@@ -270,7 +270,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 	Forward();
 	
-	//EnergyConstraintPositionVelocity();
+	EnergyConstraintPositionVelocity();
 	//EnergyConstraintPosition();
 	//AcceleratedEnergyConstraint();
 

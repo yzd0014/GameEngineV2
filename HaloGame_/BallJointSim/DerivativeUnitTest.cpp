@@ -275,7 +275,7 @@ void eae6320::MultiBody::AnalyticalVsFD()
 		LOG_TO_FILE << HtDerivativeFD[0](0, 0) << std::endl;
 	}*/
 	
-	ComputeJacobianAndInertiaDerivativeFDV2(x, qdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -9));
+	ComputeJacobianAndInertiaDerivativeFDV2(x, xdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -9));
 	std::vector<_Matrix> Ht_x;
 	std::vector<_Matrix> H_x;
 	Ht_x.resize(numOfLinks);
@@ -283,11 +283,19 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	ComputeHt(Ht_x, H_x, x, rel_ori);
 	ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, x, Ht_x, H_x, HtDerivativeAnalytical, MassDerivativeAnalytical);
 
+	std::cout << "Jacobain dervative" << std::endl;
 	std::cout << std::setprecision(16) << HtDerivativeAnalytical[0] << std::endl << std::endl;
 	std::cout << HtDerivativeAnalytical[1] << std::endl;
 	std::cout << "============================" << std::endl;
 	std::cout << std::setprecision(16) << HtDerivativeFD[0] << std::endl << std::endl;
-	std::cout << std::setprecision(16) << HtDerivativeFD[1] << std::endl;
+	std::cout << std::setprecision(16) << HtDerivativeFD[1] << std::endl << std::endl;
+	
+	std::cout << "mass dervative" << std::endl;
+	std::cout << std::setprecision(16) << MassDerivativeAnalytical[0] << std::endl << std::endl;
+	std::cout << MassDerivativeAnalytical[1] << std::endl;
+	std::cout << "============================" << std::endl;
+	std::cout << std::setprecision(16) << MassDerivativeFD[0] << std::endl << std::endl;
+	std::cout << std::setprecision(16) << MassDerivativeFD[1] << std::endl << std::endl;
 	//LOG_TO_FILE << std::setprecision(std::numeric_limits<double>::max_digits10);
 	//LOG_TO_FILE << HtDerivativeFD[0](0, 0) << std::endl;
 

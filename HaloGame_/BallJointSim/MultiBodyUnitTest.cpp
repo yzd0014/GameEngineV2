@@ -540,9 +540,9 @@ void eae6320::MultiBody::BallJointTest()
 
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
 	AddRigidBody(0, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 1
-	//AddRigidBody(1, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 2
-	//AddRigidBody(2, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 3
-	//AddRigidBody(3, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 4
+	AddRigidBody(1, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 2
+	AddRigidBody(2, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 3
+	AddRigidBody(3, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 4
 
 	MultiBodyInitialization();
 	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
@@ -551,7 +551,6 @@ void eae6320::MultiBody::BallJointTest()
 	m_keyPressSave = [this](FILE * i_pFile)
 	{
 		int qDof = static_cast<int>(q.size());
-		Populate_q(rel_ori, q);
 		for (int i = 0; i < qDof; i++)
 		{
 			fwrite(&q(i), sizeof(double), 1, i_pFile);
@@ -568,6 +567,40 @@ void eae6320::MultiBody::BallJointTest()
 		{
 			fwrite(&qdot(i), sizeof(double), 1, i_pFile);
 		}
+
+		std::vector<int> jointTypeCopy(jointType);//save original joint type
+		std::vector<int> posStartIndexCopy(posStartIndex);//save original start index
+		CopyFromQ2X();
+		jointType = xJointType;
+		posStartIndex = xStartIndex;
+		UpdateXDot(xdot, x, qdot);
+		int xDof = static_cast<int>(x.size());
+		for (int i = 0; i < xDof; i++)
+		{
+			LOG_TO_FILE << x(i);
+			if (i == xDof - 1)
+			{
+				LOG_TO_FILE << endl;
+			}
+			else
+			{
+				LOG_TO_FILE << " ";
+			}
+		}
+		for (int i = 0; i < xDof; i++)
+		{
+			LOG_TO_FILE << xdot(i);
+			if (i == xDof - 1)
+			{
+				LOG_TO_FILE << endl;
+			}
+			else
+			{
+				LOG_TO_FILE << " ";
+			}
+		}
+		jointType = jointTypeCopy;
+		posStartIndex = posStartIndexCopy;
 	};
 }
 
