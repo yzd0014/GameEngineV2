@@ -414,7 +414,6 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		ComputeDxOverDp(positionDerivative, Ht_x, totalVelDOF);
 		
 		_Matrix M0;
-		//M0.resize(1, totalPosDOF);
 		M0.resize(1, totalVelDOF);
 		M0.setZero();
 		for (int i = 0; i < numOfLinks; i++)
@@ -527,9 +526,53 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _
 	Forward();
 }
 
-_Matrix3 eae6320::MultiBody::Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vector i_bj)
+_Matrix eae6320::MultiBody::Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vector i_bj)
 {
+	_Matrix out;
+	int i = joint_id;
+	if (jointType[i] == BALL_JOINT_3D)
+	{
+		out.resize(3, 3);
 
+		_Vector3 r = i_x.segment(posStartIndex[i], 3);
+		_Scalar th = r.norm();
+		_Scalar th2 = th * th;
+
+		_Scalar beta, gamma, cbeta, cgamma;
+		if (th < 1e-4)
+		{
+			beta = 0.5 - th2 / 24.0;
+			gamma = 1.0 / 6.0 - th2 / 120.0;
+			cbeta = -1.0 / 12.0 + th2 / 180.0;
+			cgamma = -1.0 / 60.0 + th2 / 1260.0;
+		}
+		else
+		{
+			beta = (1 - cos(th)) / th2;
+			gamma = (th - sin(th)) / (th2 * th);
+			cbeta = (th * sin(th) - 2 + 2 * cos(th)) / (th2 * th2);
+			cgamma = (-th * cos(th) - 2 * th + 3 * sin(th)) / (th2 * th2 * th);
+		}
+
+		_Vector3 b = i_bj.segment(velStartIndex[i], 3);
+		_Matrix3 bx = Math::ToSkewSymmetricMatrix(b);           // [b]_x
+		_Matrix3 rx = Math::ToSkewSymmetricMatrix(r);           // [r]_x
+		_Vector3 rxb = r.cross(b);       // r × b
+		_Vector3 rx2b = r * (r.dot(b)) - b * th2; // [r]_x^2 b
+
+		_Matrix3 term1 = -beta * bx;
+		_Matrix3 term2 = rxb * r.transpose() * cbeta;
+		_Matrix3 term3 = gamma * (r * b.transpose() + r.dot(b) * _Matrix3::Identity() - 2.0 * b * r.transpose());
+		_Matrix3 term4 = rx2b * r.transpose() * cgamma;
+
+		out = term1 + term2 + term3 + term4;
+	}
+	else if (jointType[i] == HINGE_JOINT)
+	{
+		out.resize(3, 1);
+		out.setZero();
+	}
+	return out;
 }
 
 void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Vector& i_bj, std::vector<_Vector>& i_bm,
@@ -538,35 +581,42 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Ve
 	std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia)
 {
 	_Matrix mN;
-	mN.resize(7, i_totalDOF);
 	_Matrix mB;
-	mB.resize(6, 7);//for hinge joint only 7 = 6 + 1 (1 for a hinge)
 	_Matrix mE;
-	mE.resize(6, 7);
 	_Matrix mA;
-	mA.resize(6, 7);
 	for (int i = 0; i < numOfLinks; i++)
 	{
+		int sz = 6 + velDOF[i];	
 		int j = parentArr[i];
 		//ComputeN
+		mN.resize(sz, i_totalDOF);
 		mN.setZero();
 		if (i > 0)
 		{
-			//mN.block(0, 0, 3, totalPosDOF) = Gt[j].block(3, 0, 3, totalPosDOF);
 			mN.block(0, 0, 3, i_totalDOF) = i_Ht[j].block(3, 0, 3, i_totalDOF);
 		}
-		//mN.block(3, 0, 3, totalPosDOF) = Gt[i].block(3, 0, 3, totalPosDOF);
 		mN.block(3, 0, 3, i_totalDOF) = i_Ht[i].block(3, 0, 3, i_totalDOF);
 		mN(6, i) = 1;
 
 		//ComputeB
+		mB.resize(6, sz);
 		mB.setZero();
 		_Vector3 Vec3;
 		Vec3 = i_H[i].block(3, 0, 3, velDOF[i]) * i_bj.segment(velStartIndex[i], velDOF[i]); //qdot.segment(velStartIndex[i], velDOF[i]) is b
 		mB.block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * Math::ToSkewSymmetricMatrix(Vec3);
 		mB.block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(Vec3) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
 		mB.block<3, 3>(3, 0) = -Math::ToSkewSymmetricMatrix(Vec3);
-	
+		if (i == 0)
+		{
+			mB.block(0, 6, 3, velDOF[i]) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * Compute_dHOmega_dr(i, i_x, i_bj);
+			mB.block(3, 6, 3, velDOF[i]) = Compute_dHOmega_dr(i, i_x, i_bj);
+		}
+		else
+		{
+			mB.block(0, 6, 3, velDOF[i]) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * R_global[j] * Compute_dHOmega_dr(i, i_x, i_bj);
+			mB.block(3, 6, 3, velDOF[i]) = R_global[j] * Compute_dHOmega_dr(i, i_x, i_bj);
+		}
+		
 		//ComputeHtDerivativeTimes_b
 		if (i == 0)
 		{
@@ -577,6 +627,7 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Ve
 			//ComputeA
 			_Vector3 b2;
 			b2 = (i_Ht[j] * i_bj).segment(3, 3);
+			mA.resize(6, sz);
 			mA.setZero();
 			_Vector3 Vec3;
 			Vec3 = hingeMagnitude[i] * hingeDirGlobals[i];
@@ -587,6 +638,7 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Ve
 		}
 		//ComputeMassMatrixDerivativeTimes_b
 		//ComputeE
+		mE.resize(6, sz);
 		mE.setZero();
 		_Vector3 b1 = i_bm[i].segment(0, 3);
 		_Vector3 b2 = i_bm[i].segment(3, 3);

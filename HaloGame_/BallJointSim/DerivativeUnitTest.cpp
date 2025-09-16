@@ -203,7 +203,7 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 
-	int m_jointType = HINGE_JOINT;
+	int m_jointType = BALL_JOINT_4D;
 	if (m_jointType == HINGE_JOINT)
 	{
 		AddRigidBody(-1, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
@@ -275,7 +275,7 @@ void eae6320::MultiBody::AnalyticalVsFD()
 		LOG_TO_FILE << HtDerivativeFD[0](0, 0) << std::endl;
 	}*/
 	
-	ComputeJacobianAndInertiaDerivativeFDV2(x, qdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -6));
+	ComputeJacobianAndInertiaDerivativeFDV2(x, qdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -9));
 	std::vector<_Matrix> Ht_x;
 	std::vector<_Matrix> H_x;
 	Ht_x.resize(numOfLinks);

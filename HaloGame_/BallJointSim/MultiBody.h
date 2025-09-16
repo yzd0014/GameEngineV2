@@ -50,7 +50,7 @@ namespace eae6320
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void Forward();
 		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat);
-		_Matrix3 Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vector i_bj);
+		_Matrix Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vector i_bj);
 		void ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Vector& i_bj, std::vector<_Vector>& i_bm, _Vector& i_x, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
 		void ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
 		void ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
