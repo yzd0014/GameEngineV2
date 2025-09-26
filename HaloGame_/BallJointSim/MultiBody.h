@@ -113,7 +113,7 @@ namespace eae6320
 		void EnergyConstraintPosition();
 		void EnergyConstraintPositionVelocity();
 		void AcceleratedEnergyConstraint();//quasi-newton
-		//void AcceleratedEnergyConstraintV2();//add position
+		void AcceleratedEnergyConstraintV2();//add momentum constraint
 		
 			//unit tests
 		void UnitTest5_1();//section 5.1 in the paper

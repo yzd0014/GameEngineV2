@@ -315,6 +315,8 @@ void eae6320::MultiBody::EnergyConstraintV3()//energy constraint
 
 void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
 {
+	Forward();
+
 	int energeMomentumConstraintDim = 1;
 	int nq = totalVelDOF;
 	int n = nq + energeMomentumConstraintDim;
@@ -327,7 +329,7 @@ void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
 	grad_C.setZero();
 
 	_Matrix DInv;
-	DInv = Mr.inverse();
+	DInv = MrInverse;
 
 	_Scalar kineticEnergyExpected = totalEnergy0 - ComputePotentialEnergy();
 
@@ -348,6 +350,73 @@ void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
 	}
 	qdot = mq;
 	std::cout << "energy constraint iter: "<< iter << std::endl;
+}
+
+void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint
+{
+	Forward();
+	
+	int energeMomentumConstraintDim = 7;
+	int nq = totalVelDOF;
+	int n = nq + energeMomentumConstraintDim;
+
+	_Vector mq(nq);
+	mq.setZero();
+	mq.segment(0, totalVelDOF) = qdot;
+
+	_Matrix grad_C(energeMomentumConstraintDim, nq);
+	grad_C.setZero();
+
+	_Matrix DInv;
+	DInv = Mr.inverse();
+
+	_Matrix Kp(3, totalVelDOF);
+	Kp.setZero();
+	_Matrix Kl(3, totalVelDOF);
+	Kl.setZero();
+	_Matrix Sv(3, 6);
+	Sv.setZero();
+	Sv.block<3, 3>(0, 0) = _Matrix::Identity(3, 3);
+	_Matrix Sw(3, 6);
+	Sw.setZero();
+	Sw.block<3, 3>(0, 3) = _Matrix::Identity(3, 3);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Sv * Ht[i];
+		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Sw * Ht[i] + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Sv * Ht[i];
+	}
+	grad_C.block(1, 0, 3, totalVelDOF) = Kp;
+	grad_C.block(4, 0, 3, totalVelDOF) = Kl;
+	
+	_Matrix C_expected(energeMomentumConstraintDim, 1);
+	C_expected(0, 0) = totalEnergy0 - ComputePotentialEnergy();
+	C_expected.block<3, 1>(1, 0) = ComputeTranslationalMomentum();
+	C_expected.block<3, 1>(4, 0) = ComputeAngularMomentum();
+
+	_Scalar energyErr = 1.0;
+	_Matrix C(energeMomentumConstraintDim, 1);
+	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+	int iter = 0;
+	while (true)
+	{
+		ForwardAngularAndTranslationalVelocity(mq);
+		C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0);
+		C.block<3, 1>(1, 0) = Kp * mq.segment(0, totalVelDOF);
+		C.block<3, 1>(4, 0) = Kl * mq.segment(0, totalVelDOF);
+		C = C - C_expected;
+		_Scalar C_norm = C.norm();
+		std::cout << "C_norm " << C_norm << std::endl;
+		if (C_norm < 1e-2)
+		{
+			break;
+		}
+		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * mq.segment(0, totalVelDOF)).transpose();
+		lambdaNew = (grad_C * DInv * grad_C.transpose()).inverse() * C;
+		mq = mq - DInv * grad_C.transpose() * lambdaNew;
+		iter++;
+	}
+	qdot = mq;
+	std::cout << "energy constraint iter: " << iter << std::endl;
 }
 
 void eae6320::MultiBody::EnergyConstraintPositionVelocity()
