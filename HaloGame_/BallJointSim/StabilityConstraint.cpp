@@ -352,7 +352,7 @@ void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
 	std::cout << "energy constraint iter: "<< iter << std::endl;
 }
 
-void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint
+void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint, momentum constraint, velocity only, no alpha
 {
 	Forward();
 	
@@ -399,20 +399,33 @@ void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint
 	int iter = 0;
 	while (true)
 	{
-		ForwardAngularAndTranslationalVelocity(mq);
 		C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0);
 		C.block<3, 1>(1, 0) = Kp * mq.segment(0, totalVelDOF);
 		C.block<3, 1>(4, 0) = Kl * mq.segment(0, totalVelDOF);
 		C = C - C_expected;
 		_Scalar C_norm = C.norm();
 		std::cout << "C_norm " << C_norm << std::endl;
-		if (C_norm < 1e-2)
+		if (C_norm < 1e-2 || iter >= 20)
 		{
 			break;
 		}
 		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * mq.segment(0, totalVelDOF)).transpose();
-		lambdaNew = (grad_C * DInv * grad_C.transpose()).inverse() * C;
-		mq = mq - DInv * grad_C.transpose() * lambdaNew;
+		//std::cout << "DInv " << DInv.determinant() << std::endl;
+		_Matrix K = grad_C * DInv * grad_C.transpose();
+		//std::cout << "K det " << K.determinant() << std::endl;
+		if (K.determinant() < 1e-7)
+		{
+			_Matrix mI;
+			mI.resize(energeMomentumConstraintDim, energeMomentumConstraintDim);
+			mI.setIdentity();
+			K = K + 1e-7 * mI;
+		}
+		lambdaNew = K.inverse() * C;
+		_Vector delta_q;
+		delta_q = DInv * grad_C.transpose() * lambdaNew;
+		//std::cout << "delta_q " << delta_q.transpose() << std::endl;
+		mq = mq - delta_q;
+		ForwardAngularAndTranslationalVelocity(mq);
 		iter++;
 	}
 	qdot = mq;
@@ -594,7 +607,6 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _
 			o_intertia[i].block<6, 1>(0, k) = (d1 - d0) / delta;
 		}
 	}
-	Forward();
 }
 
 _Matrix eae6320::MultiBody::Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vector i_bj)
@@ -739,6 +751,39 @@ void eae6320::MultiBody::ComputeDxOverDp(std::vector<_Matrix>& o_derivative, std
 		else
 		{
 			o_derivative[i] = o_derivative[i - 1] - ComputeDuGlobalOverDp(i, uGlobalsChild[i], i_Ht, i_totalDOF) + ComputeDuGlobalOverDp(i, uGlobalsParent[i], i_Ht, i_totalDOF);
+		}
+	}
+}
+
+void eae6320::MultiBody::ComputeDxOverDpFD(std::vector<_Matrix>& o_derivative, _Vector& i_x, _Scalar i_delta)
+{
+	_Scalar delta = i_delta;
+
+	_Vector3 d0, d1;
+
+	_Vector old_x;
+	old_x = i_x;
+
+	int dof = static_cast<int>(x.size());
+	std::vector<_Vector> perturbed_x;
+	perturbed_x.resize(dof);
+	for (int i = 0; i < dof; i++)
+	{
+		perturbed_x[i].resize(dof);
+		perturbed_x[i] = x;
+		perturbed_x[i](i) = perturbed_x[i](i) + delta;
+	}
+
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		o_derivative[i].resize(3, dof);
+		ForwardKinematics(old_x, rel_ori);
+		d0 = pos[i];
+		for (int k = 0; k < dof; k++)
+		{
+			ForwardKinematics(perturbed_x[k], rel_ori);
+			d1 = pos[i];
+			o_derivative[i].block<3, 1>(0, k) = (d1 - d0) / delta;
 		}
 	}
 }

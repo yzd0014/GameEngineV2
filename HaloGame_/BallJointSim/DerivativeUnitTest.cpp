@@ -196,6 +196,8 @@ void eae6320::MultiBody::AnalyticalTest()
 
 void eae6320::MultiBody::AnalyticalVsFD()
 {
+	int m_jointType = BALL_JOINT_4D;
+	int m_mode = 2;//0 tests Jacobian derivative, 1 tests intertia derivative, 2 tests position dervative
 	constraintSolverMode = IMPULSE;
 	gravity = true;
 
@@ -203,7 +205,6 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 
-	int m_jointType = BALL_JOINT_4D;
 	if (m_jointType == HINGE_JOINT)
 	{
 		AddRigidBody(-1, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
@@ -237,6 +238,7 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	{
 		fread(&qdot(i), sizeof(double), 1, pFile);
 	}
+	//std::cout << rel_ori[0] << std::endl;
 	fclose(pFile);
 	Forward();
 	
@@ -256,7 +258,11 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	HtDerivativeFD.resize(numOfLinks);
 	std::vector<_Matrix> MassDerivativeFD;
 	MassDerivativeFD.resize(numOfLinks);
-	
+	std::vector<_Matrix> PosDerivative;
+	PosDerivative.resize(numOfLinks);
+	std::vector<_Matrix> PosDerivativeFD;
+	PosDerivativeFD.resize(numOfLinks);
+
 	std::vector<_Vector> bm;
 	bm.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
@@ -275,29 +281,51 @@ void eae6320::MultiBody::AnalyticalVsFD()
 		LOG_TO_FILE << HtDerivativeFD[0](0, 0) << std::endl;
 	}*/
 	
-	ComputeJacobianAndInertiaDerivativeFDV2(x, xdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -9));
 	std::vector<_Matrix> Ht_x;
 	std::vector<_Matrix> H_x;
 	Ht_x.resize(numOfLinks);
 	H_x.resize(numOfLinks);
 	ComputeHt(Ht_x, H_x, x, rel_ori);
-	ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, x, Ht_x, H_x, HtDerivativeAnalytical, MassDerivativeAnalytical);
-
-	std::cout << "Jacobain dervative" << std::endl;
-	std::cout << std::setprecision(16) << HtDerivativeAnalytical[0] << std::endl << std::endl;
-	std::cout << HtDerivativeAnalytical[1] << std::endl;
-	std::cout << "============================" << std::endl;
-	std::cout << std::setprecision(16) << HtDerivativeFD[0] << std::endl << std::endl;
-	std::cout << std::setprecision(16) << HtDerivativeFD[1] << std::endl << std::endl;
+	if (m_mode == 0 || m_mode == 1)
+	{
+		ComputeJacobianAndInertiaDerivativeFDV2(x, xdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -9));
+		ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, x, Ht_x, H_x, HtDerivativeAnalytical, MassDerivativeAnalytical);
+	}
+	else  if (m_mode == 2)
+	{
+		ComputeDxOverDpFD(PosDerivativeFD, x, pow(10, -9));
+		ComputeDxOverDp(PosDerivative, Ht_x, totalVelDOF);
+	}
 	
-	std::cout << "mass dervative" << std::endl;
-	std::cout << std::setprecision(16) << MassDerivativeAnalytical[0] << std::endl << std::endl;
-	std::cout << MassDerivativeAnalytical[1] << std::endl;
-	std::cout << "============================" << std::endl;
-	std::cout << std::setprecision(16) << MassDerivativeFD[0] << std::endl << std::endl;
-	std::cout << std::setprecision(16) << MassDerivativeFD[1] << std::endl << std::endl;
-	//LOG_TO_FILE << std::setprecision(std::numeric_limits<double>::max_digits10);
-	//LOG_TO_FILE << HtDerivativeFD[0](0, 0) << std::endl;
+	if (m_mode == 0)
+	{
+		std::cout << "Jacobain dervative" << std::endl;
+		std::cout << std::setprecision(16) << HtDerivativeAnalytical[0] << std::endl << std::endl;
+		std::cout << HtDerivativeAnalytical[1] << std::endl;
+		std::cout << "============================" << std::endl;
+		std::cout << std::setprecision(16) << HtDerivativeFD[0] << std::endl << std::endl;
+		std::cout << std::setprecision(16) << HtDerivativeFD[1] << std::endl << std::endl;
+	}
+	else if (m_mode == 1)
+	{
+		std::cout << "mass dervative" << std::endl;
+		std::cout << std::setprecision(16) << MassDerivativeAnalytical[0] << std::endl << std::endl;
+		std::cout << MassDerivativeAnalytical[1] << std::endl;
+		std::cout << "============================" << std::endl;
+		std::cout << std::setprecision(16) << MassDerivativeFD[0] << std::endl << std::endl;
+		std::cout << std::setprecision(16) << MassDerivativeFD[1] << std::endl << std::endl;
+		//LOG_TO_FILE << std::setprecision(std::numeric_limits<double>::max_digits10);
+		//LOG_TO_FILE << HtDerivativeFD[0](0, 0) << std::endl;
+	}
+	else if (m_mode == 2)
+	{
+		std::cout << "position dervative" << std::endl;
+		std::cout << std::setprecision(16) << PosDerivative[0] << std::endl << std::endl;
+		std::cout << PosDerivative[1] << std::endl;
+		std::cout << "============================" << std::endl;
+		std::cout << std::setprecision(16) << PosDerivativeFD[0] << std::endl << std::endl;
+		std::cout << std::setprecision(16) << PosDerivativeFD[1] << std::endl << std::endl;
+	}
 
 	jointType = jointTypeCopy;
 	posStartIndex = posStartIndexCopy;

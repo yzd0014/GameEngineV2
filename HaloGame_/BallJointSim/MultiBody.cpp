@@ -23,6 +23,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	std::cout << "initial total energy: " << totalEnergy0 << std::endl;
 	//std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
 	//std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
+	//std::cout << "Mr: " << Mr << std::endl;
 }
 
 void eae6320::MultiBody::MultiBodyInitialization()
@@ -271,7 +272,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 
 	//EnergyConstraintPositionVelocity();
 	//EnergyConstraintPosition();
-	AcceleratedEnergyConstraintV2();
+	//AcceleratedEnergyConstraint();
 	Forward();
 
 	//totalEnergy0 = ComputeTotalEnergy();
