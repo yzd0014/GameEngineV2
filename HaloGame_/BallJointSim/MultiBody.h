@@ -71,7 +71,7 @@ namespace eae6320
 		_Vector3 ComputeTranslationalMomentum();
 		_Vector3 ComputeAngularMomentum();
 
-		_Matrix ComputeDuGlobalOverDp(int i, _Vector3& uGlobal, std::vector<_Matrix>& i_Ht, int i_totalDOF);//currently only works for hinge joint and ball joint 3d
+		_Matrix ComputeDuGlobalOverDp(_Vector3& uGlobal, _Matrix& i_Ht, int i_totalDOF);//currently only works for hinge joint and ball joint 3d
 		_Matrix ComputeDhGlobalOverDp(int i);//currently only works for hinge joint
 		
 		void SwingLimitCheck();

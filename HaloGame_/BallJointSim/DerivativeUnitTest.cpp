@@ -238,9 +238,8 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	{
 		fread(&qdot(i), sizeof(double), 1, pFile);
 	}
-	//std::cout << rel_ori[0] << std::endl;
 	fclose(pFile);
-	Forward();
+	//Forward();
 	
 	std::vector<int> jointTypeCopy(jointType);//save original joint type
 	std::vector<int> posStartIndexCopy(posStartIndex);//save original start index
@@ -262,6 +261,7 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	PosDerivative.resize(numOfLinks);
 	std::vector<_Matrix> PosDerivativeFD;
 	PosDerivativeFD.resize(numOfLinks);
+	_Matrix PosDerivative3;
 
 	std::vector<_Vector> bm;
 	bm.resize(numOfLinks);
@@ -293,8 +293,23 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	}
 	else  if (m_mode == 2)
 	{
-		ComputeDxOverDpFD(PosDerivativeFD, x, pow(10, -9));
 		ComputeDxOverDp(PosDerivative, Ht_x, totalVelDOF);
+	
+		PosDerivative3.resize(3, 6);
+		PosDerivative3.block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(pos[1]) * H_x[0].block<3, 3>(3, 0);
+		_Vector3 localV = R_local[1] * uLocalsChild[1];
+		//Compute J1
+		_Matrix3 J1;
+		int j = parentArr[1];
+		_Vector3 r = x.segment(posStartIndex[1], 3);
+		_Scalar theta = r.norm();
+		_Scalar b = Compute_b(theta);
+		_Scalar a = Compute_a(theta);
+		_Scalar c = Compute_c(theta, a);
+		J1 = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
+		PosDerivative3.block<3, 3>(0, 3) = R_local[0] * Math::ToSkewSymmetricMatrix(localV) * J1;
+		
+		ComputeDxOverDpFD(PosDerivativeFD, x, pow(10, -9));
 	}
 	
 	if (m_mode == 0)
@@ -320,11 +335,14 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	else if (m_mode == 2)
 	{
 		std::cout << "position dervative" << std::endl;
-		std::cout << std::setprecision(16) << PosDerivative[0] << std::endl << std::endl;
-		std::cout << PosDerivative[1] << std::endl;
+		//std::cout << std::setprecision(16) << PosDerivative[0] << std::endl << std::endl;
+		std::cout << std::setprecision(16) << PosDerivative[1] << std::endl;
 		std::cout << "============================" << std::endl;
-		std::cout << std::setprecision(16) << PosDerivativeFD[0] << std::endl << std::endl;
+		//std::cout << std::setprecision(16) << PosDerivativeFD[0] << std::endl << std::endl;
 		std::cout << std::setprecision(16) << PosDerivativeFD[1] << std::endl << std::endl;
+		std::cout << "============================" << std::endl;
+		std::cout << std::setprecision(16) << PosDerivative3 << std::endl << std::endl;
+		
 	}
 
 	jointType = jointTypeCopy;

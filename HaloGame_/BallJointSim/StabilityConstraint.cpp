@@ -746,11 +746,11 @@ void eae6320::MultiBody::ComputeDxOverDp(std::vector<_Matrix>& o_derivative, std
 		o_derivative[i].resize(3, i_totalDOF);
 		if (i == 0)
 		{
-			o_derivative[i] = -ComputeDuGlobalOverDp(i, uGlobalsChild[i], i_Ht, i_totalDOF);
+			o_derivative[0] = -ComputeDuGlobalOverDp(uGlobalsChild[0], i_Ht[0], i_totalDOF);
 		}
 		else
 		{
-			o_derivative[i] = o_derivative[i - 1] - ComputeDuGlobalOverDp(i, uGlobalsChild[i], i_Ht, i_totalDOF) + ComputeDuGlobalOverDp(i, uGlobalsParent[i], i_Ht, i_totalDOF);
+			o_derivative[i] = o_derivative[i - 1] - ComputeDuGlobalOverDp(uGlobalsChild[i], i_Ht[i], i_totalDOF) + ComputeDuGlobalOverDp(uGlobalsParent[i], i_Ht[i - 1], i_totalDOF);
 		}
 	}
 }
@@ -788,12 +788,11 @@ void eae6320::MultiBody::ComputeDxOverDpFD(std::vector<_Matrix>& o_derivative, _
 	}
 }
 
-_Matrix eae6320::MultiBody::ComputeDuGlobalOverDp(int i, _Vector3& uGlobal, std::vector<_Matrix>& i_Ht, int i_totalDOF)
+_Matrix eae6320::MultiBody::ComputeDuGlobalOverDp(_Vector3& uGlobal, _Matrix& i_Ht, int i_totalDOF)
 {
 	_Matrix output;
 	output.resize(3, i_totalDOF);
-	//output = -Math::ToSkewSymmetricMatrix(uGlobal) * Gt[i].block(3, 0, 3, totalPosDOF);
-	output = -Math::ToSkewSymmetricMatrix(uGlobal) * i_Ht[i].block(3, 0, 3, i_totalDOF);
+	output = -Math::ToSkewSymmetricMatrix(uGlobal) * i_Ht.block(3, 0, 3, i_totalDOF);
 	return output;
 }
 
