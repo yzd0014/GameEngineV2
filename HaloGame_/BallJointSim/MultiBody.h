@@ -61,7 +61,8 @@ namespace eae6320
 		void UpdateConstraintJacobian();
 		void CopyFromQ2X();
 		void CopyFromX2Q();
-		void UpdateXDot(_Vector& o_xdot, _Vector& i_x, _Vector& i_qdot);
+		void UpdateXdot(_Vector& o_xdot, _Vector& i_qdot);
+		void UpdateQdot(_Vector& o_qdot, _Vector& i_qdot);
 		
 		void ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i);
 		_Scalar ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi);
@@ -100,6 +101,7 @@ namespace eae6320
 		void SwitchConstraint(int i);
 		void UpdateInitialPosition();//call this function whenever poistion is updated
 		void ComputeTwistDirectJacobian(int jointNum, int i_limitType, _Matrix& o_J);
+		void ComputeExponentialMapJacobian(_Vector& i_x);
 		
 
 		void PrePositionSolveProccessing();
@@ -113,6 +115,7 @@ namespace eae6320
 		void EnergyConstraintV3();//energy constraint only
 		void EnergyConstraintPosition();
 		void EnergyConstraintPositionVelocity();
+		void EnergyConstraintPositionVelocityV2();
 		void AcceleratedEnergyConstraint();//quasi-newton
 		void AcceleratedEnergyConstraintV2();//add momentum constraint
 		

@@ -86,6 +86,7 @@ void eae6320::MultiBody::MultiBodyInitialization()
 		rel_ori[i].setIdentity();
 		R_global[i].setIdentity();
 		R_local[i].setIdentity();
+		J_exp[i].setZero();
 
 		HtDerivativeTimes_b[i].resize(6, totalPosDOF);
 		MassMatrixDerivativeTimes_b[i].resize(6, totalPosDOF);
@@ -267,12 +268,11 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	qdot = qdot + qddot * h;
 	qdot = damping * qdot;
 	ConstraintSolve(h);
-	
+	//EnergyConstraintPositionVelocityV2();
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
 	//EnergyConstraintPositionVelocity();
-	//EnergyConstraintPosition();
-	//AcceleratedEnergyConstraint();
+	//AcceleratedEnergyConstraintV2();
 	Forward();
 
 	//totalEnergy0 = ComputeTotalEnergy();
@@ -1018,29 +1018,6 @@ void eae6320::MultiBody::CopyFromX2Q()
 		else
 		{
 			q.segment(posStartIndex[i], posDOF[i]) = x.segment(xStartIndex[i], xDOF[i]);
-		}
-	}
-}
-
-void eae6320::MultiBody::UpdateXDot(_Vector& o_xdot, _Vector& i_x, _Vector& i_qdot)
-{
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		if (jointType[i] == BALL_JOINT_3D)
-		{
-			_Matrix H_exp;
-			H_exp = ComputeExponentialMapJacobian(i_x, i);
-			_Matrix J_exp;
-			J_exp = H_exp.block<3, 3>(3, 0);
-			o_xdot.segment(xStartIndex[i], 3) = J_exp.inverse() * i_qdot.segment(velStartIndex[i], 3);
-		}
-		else if (jointType[i] == BALL_JOINT_4D)
-		{
-			EAE6320_ASSERTF(false, "wrong ball joint type!");
-		}
-		else
-		{
-			o_xdot.segment(xStartIndex[i], xDOF[i]) = i_qdot.segment(velStartIndex[i], velDOF[i]);
 		}
 	}
 }

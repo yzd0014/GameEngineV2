@@ -247,7 +247,8 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	CopyFromQ2X();
 	jointType = xJointType;
 	posStartIndex = xStartIndex;
-	UpdateXDot(xdot, x, qdot);
+	ComputeExponentialMapJacobian(x);
+	UpdateXdot(xdot, qdot);
 
 	std::vector<_Matrix> HtDerivativeAnalytical;
 	HtDerivativeAnalytical.resize(numOfLinks);

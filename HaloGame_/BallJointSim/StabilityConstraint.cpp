@@ -440,7 +440,8 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	CopyFromQ2X();
 	jointType = xJointType;
 	posStartIndex = xStartIndex;
-	UpdateXDot(xdot, x, qdot);
+	ComputeExponentialMapJacobian(x);
+	UpdateXdot(xdot, qdot);
 	
 	int nq = 2 * totalVelDOF;
 	int energeMomentumConstraintDim = 1;
@@ -455,6 +456,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	_Matrix Mr_x;
 	Mr_x.resize(totalVelDOF, totalVelDOF);
 	ComputeMr(Mr_x, Ht_x);
+	ForwardAngularAndTranslationalVelocity(xdot);
 	_Matrix D(nq, nq);
 	D.setZero();
 	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
@@ -529,6 +531,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		posStartIndex = xStartIndex;
 		ComputeHt(Ht_x, H_x, x, rel_ori);
 		ComputeMr(Mr_x, Ht_x);
+		ComputeExponentialMapJacobian(x);
 		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
 		
 		//update D's velocity part
@@ -546,7 +549,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		//update xdot
 		jointType = xJointType;
 		posStartIndex = xStartIndex;
-		UpdateXDot(xdot, x, qdot);
+		UpdateXdot(xdot, qdot);
 		jointType = jointTypeCopy;
 		posStartIndex = posStartIndexCopy;
 
@@ -554,6 +557,112 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		iter++;
 	}
 
+	std::cout << "energy constraint iter: " << iter << std::endl;
+}
+
+void eae6320::MultiBody::EnergyConstraintPositionVelocityV2()//position constraint converted into velocity constraint
+{
+	std::vector<int> jointTypeCopy(jointType);//save original joint type
+	std::vector<int> posStartIndexCopy(posStartIndex);//save original start index
+
+	CopyFromQ2X();
+	jointType = xJointType;
+	posStartIndex = xStartIndex;
+	ComputeExponentialMapJacobian(x);
+	UpdateXdot(xdot, qdot);
+	
+	int energeMomentumConstraintDim = 1;
+	int nq = totalXDOF;
+	int n = nq + energeMomentumConstraintDim;
+
+	std::vector<_Matrix> Ht_x;
+	std::vector<_Matrix> H_x;
+	Ht_x.resize(numOfLinks);
+	H_x.resize(numOfLinks);
+	ComputeHt(Ht_x, H_x, x, rel_ori);
+	_Matrix Mr_x;
+	Mr_x.resize(totalVelDOF, totalVelDOF);
+	ComputeMr(Mr_x, Ht_x);
+	ForwardAngularAndTranslationalVelocity(xdot);
+	_Matrix D(nq, nq);
+	D.setZero();
+	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
+	_Matrix DInv = D.inverse();
+
+	_Vector mq(nq);
+	mq.setZero();
+	mq.segment(0, totalVelDOF) = xdot;
+
+	_Matrix grad_C(energeMomentumConstraintDim, nq);
+	grad_C.setZero();
+
+	_Matrix C(energeMomentumConstraintDim, 1);
+	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
+
+	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+	int iter = 0;
+	while (abs(C(0, 0)) > 1e-4)
+	{
+		std::cout << "energy err: " << C(0, 0) << std::endl;
+		if (iter >= 10)
+		{
+			break;
+		}
+		
+		std::vector<_Vector> bm;
+		bm.resize(numOfLinks);
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			_Vector vec;
+			vec.resize(6);
+			vec.segment(0, 3) = vel[i];
+			vec.segment(3, 3) = w_abs_world[i];
+			bm[i] = vec;
+		}
+		ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, x, Ht_x, H_x, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		std::vector<_Matrix> positionDerivative;
+		ComputeDxOverDp(positionDerivative, Ht_x, totalVelDOF);
+
+		_Matrix M0;
+		M0.resize(1, totalVelDOF);
+		M0.setZero();
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			//***********************kinetic energy derivative*****************************
+			M0 = M0 + qdot.transpose() * Ht_x[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht_x[i].transpose() * MassMatrixDerivativeTimes_b[i];
+			//***********************potential energy derivative*****************************
+			_Vector3 g(0.0f, 9.81f, 0.0f);
+			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * positionDerivative[i];
+		}
+		
+		//C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0) - totalEnergy0;
+		grad_C.block(0, 0, 1, totalVelDOF) = dt * M0 + (Mr_x * mq.segment(0, totalVelDOF)).transpose();
+		_Matrix K = grad_C * DInv * grad_C.transpose();
+		if (K.determinant() < 1e-7)
+		{
+			_Matrix mI;
+			mI.resize(energeMomentumConstraintDim, energeMomentumConstraintDim);
+			mI.setIdentity();
+			K = K + 1e-7 * mI;
+		}
+		lambdaNew = K.inverse() * C;
+		_Vector correction = -DInv * grad_C.transpose() * lambdaNew;
+		std::cout << "correction" << correction.transpose() << std::endl;
+		mq = mq + correction;
+		x = x + mq * dt;
+		
+		ComputeHt(Ht_x, H_x, x, rel_ori);
+		ComputeMr(Mr_x, Ht_x);
+		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
+		DInv = D.inverse();
+
+		ForwardAngularAndTranslationalVelocity(mq);
+		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
+		iter++;
+	}
+	jointType = jointTypeCopy;
+	posStartIndex = posStartIndexCopy;
+	UpdateQdot(qdot, mq);
 	std::cout << "energy constraint iter: " << iter << std::endl;
 }
 
@@ -848,6 +957,55 @@ void eae6320::MultiBody::Populate_quat(_Vector& i_q, std::vector<_Quat>& o_quat,
 				o_quat[i].z() = z / norm;
 				i_q.segment(posStartIndex[i], 4) = i_q.segment(posStartIndex[i], 4) / norm;
 			}
+		}
+	}
+}
+
+void eae6320::MultiBody::ComputeExponentialMapJacobian(_Vector& i_x)
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (jointType[i] == BALL_JOINT_3D)
+		{
+			ComputeExponentialMapJacobian(i_x, i);
+		}
+	}
+}
+
+void eae6320::MultiBody::UpdateXdot(_Vector& o_xdot, _Vector& i_qdot)
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (jointType[i] == BALL_JOINT_3D)
+		{
+			o_xdot.segment(xStartIndex[i], 3) = J_exp[i].inverse() * i_qdot.segment(velStartIndex[i], 3);
+		}
+		else if (jointType[i] == BALL_JOINT_4D)
+		{
+			EAE6320_ASSERTF(false, "wrong ball joint type!");
+		}
+		else
+		{
+			o_xdot.segment(xStartIndex[i], xDOF[i]) = i_qdot.segment(velStartIndex[i], velDOF[i]);
+		}
+	}
+}
+
+void eae6320::MultiBody::UpdateQdot(_Vector& o_qdot, _Vector& i_xdot)
+{
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (jointType[i] == BALL_JOINT_4D)
+		{
+			o_qdot.segment(velStartIndex[i], 3) = J_exp[i] * i_xdot.segment(xStartIndex[i], 3);
+		}
+		else if (jointType[i] == BALL_JOINT_3D)
+		{
+			EAE6320_ASSERTF(false, "wrong ball joint type!");
+		}
+		else
+		{
+			o_qdot.segment(velStartIndex[i], velDOF[i]) = i_xdot.segment(xStartIndex[i], xDOF[i]);
 		}
 	}
 }
