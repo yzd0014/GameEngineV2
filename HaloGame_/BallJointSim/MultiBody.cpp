@@ -215,7 +215,7 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _
 	{
 		if (jointType[i] == BALL_JOINT_3D)
 		{
-			o_q.segment(posStartIndex[i], 3) = i_q.segment(posStartIndex[i], 3) + i_qdot.segment(velStartIndex[i], 3) * h;//TODO: add clamping
+			o_q.segment(posStartIndex[i], 3) = i_q.segment(posStartIndex[i], 3) + i_qdot.segment(velStartIndex[i], 3) * h;
 			ClampRotationVector(o_q, i_qdot, i);
 		}
 		else if (jointType[i] == BALL_JOINT_4D)
@@ -273,6 +273,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 
 	//EnergyConstraintPositionVelocity();
 	//AcceleratedEnergyConstraintV2();
+	//AcceleratedEnergyConstraint();
 	Forward();
 
 	//totalEnergy0 = ComputeTotalEnergy();
@@ -490,7 +491,7 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			}
 			gamma[i].block<3, 1>(3, 0) = gamma_theta;
 		}
-		else if (jointType[i] == BALL_JOINT_3D)//TODO
+		else if (jointType[i] == BALL_JOINT_3D)
 		{
 			_Vector3 r = q.segment(posStartIndex[i], 3);
 			_Vector3 r_dot = i_qdot.segment(velStartIndex[i], 3);
@@ -530,7 +531,7 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			gamma[i].resize(6);
 			gamma[i].setZero();
 		}
-		else if (jointType[i] == HINGE_JOINT)//TODO
+		else if (jointType[i] == HINGE_JOINT)
 		{
 			_Vector3 gamma_theta;
 			gamma_theta.setZero();
@@ -594,17 +595,16 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 		//update orientation
 		if (jointType[i] == BALL_JOINT_4D)
 		{
+			R_local[i] = i_quat[i].toRotationMatrix();
+			R_global[i] = obs_ori[i].toRotationMatrix();
 			if (i == 0)
 			{
-				obs_ori[i] = i_quat[i];
+				R_global[0] = R_local[0];
 			}
 			else
 			{
-				obs_ori[i] = obs_ori[j] * i_quat[i];
+				R_global[i] = R_global[j] * R_local[i];
 			}
-			R_local[i] = i_quat[i].toRotationMatrix();
-			R_global[i] = obs_ori[i].toRotationMatrix();
-			m_linkBodys[i]->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(obs_ori[i]);
 		}
 		else if (jointType[i] == BALL_JOINT_3D)
 		{
@@ -621,25 +621,14 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 			}
 			else
 			{
-				int j = parentArr[i];
 				R_global[i] = R_global[j] * R_local[i];
 			}
-
-#if defined (HIGH_PRECISION_MODE)
-			AngleAxisd angleAxis_global(R_global[i]);
-#else
-			AngleAxisf angleAxis_global(R_global[i]);
-#endif
-
-			m_linkBodys[i]->m_State.orientation = Math::cQuaternion((float)angleAxis_global.angle(), Math::EigenVector2nativeVector(angleAxis_global.axis()));
-			m_linkBodys[i]->m_State.orientation.Normalize();
 		}
 		else if (jointType[i] == FREE_JOINT)
 		{
 			obs_ori[i] = i_quat[i];
 			R_local[i] = obs_ori[i].toRotationMatrix();
 			R_global[i] = obs_ori[i].toRotationMatrix();
-			m_linkBodys[i]->m_State.orientation = Math::ConvertEigenQuatToNativeQuat(obs_ori[i]);
 		}
 		else if (jointType[i] == HINGE_JOINT)
 		{
@@ -661,15 +650,14 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 			}
 			
 			if (i > 0) hingeDirGlobals[i] = R_global[i] * hingeDirLocals[i];
-
-#if defined (HIGH_PRECISION_MODE)
-			AngleAxisd angleAxis_global(R_global[i]);
-#else
-			AngleAxisf angleAxis_global(R_global[i]);
-#endif
-			m_linkBodys[i]->m_State.orientation = Math::cQuaternion((float)angleAxis_global.angle(), Math::EigenVector2nativeVector(angleAxis_global.axis()));
-			m_linkBodys[i]->m_State.orientation.Normalize();
 		}
+#if defined (HIGH_PRECISION_MODE)
+		AngleAxisd angleAxis_global(R_global[i]);
+#else
+		AngleAxisf angleAxis_global(R_global[i]);
+#endif
+		m_linkBodys[i]->m_State.orientation = Math::cQuaternion((float)angleAxis_global.angle(), Math::EigenVector2nativeVector(angleAxis_global.axis()));
+		m_linkBodys[i]->m_State.orientation.Normalize();
 	}
 }
 
@@ -830,6 +818,17 @@ void eae6320::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 join
 		posDOF.push_back(4);
 		totalVelDOF += 3;
 		totalPosDOF += 4;
+
+		xDOF.push_back(3);
+		totalXDOF += 3;
+		xJointType.push_back(BALL_JOINT_3D);
+	}
+	else if (i_jointType == BALL_JOINT_3D)
+	{
+		velDOF.push_back(3);
+		posDOF.push_back(3);
+		totalVelDOF += 3;
+		totalPosDOF += 3;
 
 		xDOF.push_back(3);
 		totalXDOF += 3;

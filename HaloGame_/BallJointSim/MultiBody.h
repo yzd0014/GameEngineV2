@@ -134,6 +134,7 @@ namespace eae6320
 		void UnitTest0();
 		void HingeJointTest();
 		void BallJointTest();
+		void GeneralTest();
 		void RunUnitTest();
 		
 		void FDTest();

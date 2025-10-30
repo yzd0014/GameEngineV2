@@ -513,6 +513,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		
 		grad_C.block(0, 0, 1, totalVelDOF) = M0;
 		grad_C.block(0, totalVelDOF, 1, totalVelDOF) = (Mr * qdot).transpose();
+		std::cout << "grad_C " << grad_C << std::endl << std::endl;
 		_Matrix K = grad_C * DInv * grad_C.transpose();
 		if (K.determinant() < 1e-7)
 		{
@@ -637,6 +638,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocityV2()//position constrai
 		
 		//C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0) - totalEnergy0;
 		grad_C.block(0, 0, 1, totalVelDOF) = dt * M0 + (Mr_x * mq.segment(0, totalVelDOF)).transpose();
+		std::cout << "grad_C " << grad_C << std::endl << std::endl;
 		_Matrix K = grad_C * DInv * grad_C.transpose();
 		if (K.determinant() < 1e-7)
 		{
@@ -645,9 +647,12 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocityV2()//position constrai
 			mI.setIdentity();
 			K = K + 1e-7 * mI;
 		}
+		//std::cout << "K" << K << std::endl << std::endl;
 		lambdaNew = K.inverse() * C;
 		_Vector correction = -DInv * grad_C.transpose() * lambdaNew;
-		std::cout << "correction" << correction.transpose() << std::endl;
+		//std::cout << "grad_C" << grad_C.transpose() << std::endl << std::endl;
+		//std::cout << "DInv" << DInv << std::endl;
+		//std::cout << "correction" << correction.transpose() << std::endl;
 		mq = mq + correction;
 		x = x + mq * dt;
 		
