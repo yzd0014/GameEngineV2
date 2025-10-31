@@ -150,7 +150,7 @@ void eae6320::MultiBody::ManifoldProjection()
 		x = x - grad_f.inverse() * f;
 		//std::cout << std::endl << x << std::endl;
 		_Vector qdot_new = x.segment(0, totalVelDOF);
-		ForwardAngularAndTranslationalVelocity(qdot_new);
+		ForwardAngularAndTranslationalVelocity(Ht, qdot_new);
 		energyErr = fabs(ComputeTotalEnergy() - kineticEnergy0);
 		std::cout << energyErr << std::endl;
 		i++;
@@ -240,7 +240,7 @@ void eae6320::MultiBody::EnergyMomentumProjection()
 		}
 		x = x - grad_f.inverse() * f;
 		_Vector qdot_new = x.segment(0, totalVelDOF);
-		ForwardAngularAndTranslationalVelocity(qdot_new);
+		ForwardAngularAndTranslationalVelocity(Ht, qdot_new);
 		energyErr = fabs(ComputeTotalEnergy() - kineticEnergy0);
 		//std::cout << energyErr << std::endl;
 		i++;
@@ -426,7 +426,7 @@ void eae6320::MultiBody::ResolveSwingLimitPBD(_Vector& i_q, const _Scalar h)
 		}
 
 		{
-			UpdateBodyRotation(i_q, rel_ori);
+			UpdateBodyRotation(i_q, rel_ori, jointType, posStartIndex);
 			_Matrix3 R_swing;
 			_Matrix3 R_twist;
 			_Vector3 twistAxis(0, -1, 0);
@@ -556,7 +556,7 @@ void eae6320::MultiBody::ResolveTwistLimitPBD(_Vector& i_q, const _Scalar h)
 				if (posDOF[j] == velDOF[j]) i_q.segment(posStartIndex[j], posDOF[j]) = i_q.segment(posStartIndex[j], posDOF[j]) + R_correction.segment(velStartIndex[j], velDOF[j]);
 			}
 
-			ComputeHt(Ht, H, i_q, rel_ori);
+			ComputeHt(Ht, H, i_q, rel_ori, jointType, posStartIndex);
 		}
 
 	/*	{
@@ -950,14 +950,14 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, st
 	{
 		q = old_q;
 		Populate_quat(q, rel_ori, false);
-		ComputeHt(Ht, H, q, rel_ori);
+		ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
 		o_Jacobian[i].resize(6, dof);
 		d0 = Ht[i] * i_bj;
 		for (int k = 0; k < dof; k++)
 		{
 			q = perturbed_q[k];
 			Populate_quat(q, rel_ori, false);
-			ComputeHt(Ht, H, q, rel_ori);
+			ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
 			d1 = Ht[i] * i_bj;
 
 			std::cout << std::endl << std::setprecision(16) << d1 << std::endl;
@@ -971,14 +971,14 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, st
 	{
 		q = old_q;
 		Populate_quat(q, rel_ori, false);
-		ForwardKinematics(q, rel_ori);
+		ForwardKinematics(q, rel_ori, jointType, posStartIndex);
 		o_intertia[i].resize(6, dof);
 		d0 = Mbody[i] * i_bm[i];
 		for (int k = 0; k < dof; k++)
 		{
 			q = perturbed_q[k];
 			Populate_quat(q, rel_ori, false);
-			ForwardKinematics(q, rel_ori);
+			ForwardKinematics(q, rel_ori, jointType, posStartIndex);
 			d1 = Mbody[i] * i_bm[i];
 			o_intertia[i].block<6, 1>(0, k) = (d1 - d0) / delta;
 		}

@@ -97,7 +97,7 @@ void eae6320::MultiBody::EnergyConstraint()//energy conservation + momentum cons
 		//std::cout << y.segment(0, nq).transpose() << std::endl;
 		x.segment(nq, energeMomentumConstraintDim) = y.segment(nq, energeMomentumConstraintDim);
 		_Vector qdot_new = x.segment(0, totalVelDOF);
-		ForwardAngularAndTranslationalVelocity(qdot_new);
+		ForwardAngularAndTranslationalVelocity(Ht, qdot_new);
 		//energyErr = fabs(ComputeKineticEnergy() - kineticEnergy0);
 		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
 		//energyErr = ComputeTotalEnergy();
@@ -210,7 +210,7 @@ void eae6320::MultiBody::EnergyConstraintV2()//energy conservation + momentum co
 		x.segment(nq, energeMomentumConstraintDim) = y.segment(nq, energeMomentumConstraintDim);//update lagrange multiplier
 		_Vector qdot_new = x.segment(0, totalVelDOF);
 		//std::cout << qdot_new.transpose() << std::endl;
-		ForwardAngularAndTranslationalVelocity(qdot_new);
+		ForwardAngularAndTranslationalVelocity(Ht, qdot_new);
 		//energyErr = fabs(ComputeKineticEnergy() - kineticEnergy0);
 		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
 		//std::cout << energyErr << std::endl;
@@ -297,7 +297,7 @@ void eae6320::MultiBody::EnergyConstraintV3()//energy constraint
 		x.segment(nq, energeMomentumConstraintDim) = y.segment(nq, energeMomentumConstraintDim);//update lagrange multiplier
 		_Vector qdot_new = x.segment(0, totalVelDOF);
 		//std::cout << qdot_new.transpose() << std::endl;
-		ForwardAngularAndTranslationalVelocity(qdot_new);
+		ForwardAngularAndTranslationalVelocity(Ht, qdot_new);
 		//energyErr = fabs(ComputeKineticEnergy() - kineticEnergy0);
 		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
 		//std::cout << "iteration " << iter << " energyErr " << energyErr << std::endl;
@@ -344,7 +344,7 @@ void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
 		lambdaNew = (grad_C * DInv * grad_C.transpose()).inverse() * C;
 		mq = mq - DInv * grad_C.transpose() * lambdaNew;
 
-		ForwardAngularAndTranslationalVelocity(mq);
+		ForwardAngularAndTranslationalVelocity(Ht, mq);
 		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
 		iter++;
 	}
@@ -425,7 +425,7 @@ void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint, mom
 		delta_q = DInv * grad_C.transpose() * lambdaNew;
 		//std::cout << "delta_q " << delta_q.transpose() << std::endl;
 		mq = mq - delta_q;
-		ForwardAngularAndTranslationalVelocity(mq);
+		ForwardAngularAndTranslationalVelocity(Ht, mq);
 		iter++;
 	}
 	qdot = mq;
@@ -434,14 +434,11 @@ void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint, mom
 
 void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 {
-	std::vector<int> jointTypeCopy(jointType);//save original joint type
-	std::vector<int> posStartIndexCopy(posStartIndex);//save original start index
+	Forward();
 
-	CopyFromQ2X();
-	jointType = xJointType;
-	posStartIndex = xStartIndex;
-	ComputeExponentialMapJacobian(x);
-	UpdateXdot(xdot, qdot);
+	CopyFromQ2X(jointType);
+	ComputeExponentialMapJacobian(x, xJointType, xStartIndex);
+	UpdateXdot(xdot, qdot, jointType);
 	
 	int nq = 2 * totalVelDOF;
 	int energeMomentumConstraintDim = 1;
@@ -452,16 +449,18 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	std::vector<_Matrix> H_x;
 	Ht_x.resize(numOfLinks);
 	H_x.resize(numOfLinks);	
-	ComputeHt(Ht_x, H_x, x, rel_ori);
+	ComputeHt(Ht_x, H_x, x, rel_ori, xJointType, xStartIndex);
 	_Matrix Mr_x;
 	Mr_x.resize(totalVelDOF, totalVelDOF);
 	ComputeMr(Mr_x, Ht_x);
-	ForwardAngularAndTranslationalVelocity(xdot);
+	ForwardAngularAndTranslationalVelocity(Ht, qdot);
+
 	_Matrix D(nq, nq);
 	D.setZero();
 	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
 	D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
 	_Matrix DInv = D.inverse();
+	//std::cout << std::setprecision(16) << "Mr_x " << Mr_x << std::endl << std::endl;
 
 	_Vector mq(nq);
 	mq.setZero();
@@ -470,7 +469,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	
 	_Matrix C(energeMomentumConstraintDim, 1);
 	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
-	
+
 	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
 	
 	int iter = 0;
@@ -493,8 +492,6 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 			bm[i] = vec;
 		}
 		//ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b, 1e-6);
-		jointType = xJointType;
-		posStartIndex = xStartIndex;
 		ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, x, Ht_x, H_x, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
 		std::vector<_Matrix> positionDerivative;
 		ComputeDxOverDp(positionDerivative, Ht_x, totalVelDOF);
@@ -513,8 +510,8 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		
 		grad_C.block(0, 0, 1, totalVelDOF) = M0;
 		grad_C.block(0, totalVelDOF, 1, totalVelDOF) = (Mr * qdot).transpose();
-		std::cout << "grad_C " << grad_C << std::endl << std::endl;
 		_Matrix K = grad_C * DInv * grad_C.transpose();
+		//std::cout << std::setprecision(16) << "K " << K << std::endl << std::endl;
 		if (K.determinant() < 1e-7)
 		{
 			_Matrix mI;
@@ -528,49 +525,36 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 
 		//update D's position part
 		x = mq.segment(0, totalVelDOF);
-		jointType = xJointType;
-		posStartIndex = xStartIndex;
-		ComputeHt(Ht_x, H_x, x, rel_ori);
+		ComputeHt(Ht_x, H_x, x, rel_ori, xJointType, xStartIndex);
 		ComputeMr(Mr_x, Ht_x);
-		ComputeExponentialMapJacobian(x);
+		ComputeExponentialMapJacobian(x, xJointType, xStartIndex);
 		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
 		
 		//update D's velocity part
-		jointType = jointTypeCopy;
-		posStartIndex = posStartIndexCopy;
-		CopyFromX2Q();
-		ComputeHt(Ht, H, q, rel_ori);
+		CopyFromX2Q(jointType);
+		ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
 		ComputeMr(Mr, Ht);
 		D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
 		DInv = D.inverse();
 		
 		//update qdot
 		qdot = mq.segment(totalVelDOF, totalVelDOF);
-		ForwardAngularAndTranslationalVelocity(qdot);
+		ForwardAngularAndTranslationalVelocity(Ht, qdot);
 		//update xdot
-		jointType = xJointType;
-		posStartIndex = xStartIndex;
-		UpdateXdot(xdot, qdot);
-		jointType = jointTypeCopy;
-		posStartIndex = posStartIndexCopy;
+		UpdateXdot(xdot, qdot, jointType);
 
 		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
+		//std::cout << std::setprecision(16) << "C(0, 0) " << C(0, 0) << std::endl << std::endl;
 		iter++;
 	}
-
 	std::cout << "energy constraint iter: " << iter << std::endl;
 }
 
 void eae6320::MultiBody::EnergyConstraintPositionVelocityV2()//position constraint converted into velocity constraint
 {
-	std::vector<int> jointTypeCopy(jointType);//save original joint type
-	std::vector<int> posStartIndexCopy(posStartIndex);//save original start index
-
-	CopyFromQ2X();
-	jointType = xJointType;
-	posStartIndex = xStartIndex;
-	ComputeExponentialMapJacobian(x);
-	UpdateXdot(xdot, qdot);
+	CopyFromQ2X(jointType);
+	ComputeExponentialMapJacobian(x, xJointType, xStartIndex);
+	UpdateXdot(xdot, qdot, jointType);
 	
 	int energeMomentumConstraintDim = 1;
 	int nq = totalXDOF;
@@ -580,11 +564,11 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocityV2()//position constrai
 	std::vector<_Matrix> H_x;
 	Ht_x.resize(numOfLinks);
 	H_x.resize(numOfLinks);
-	ComputeHt(Ht_x, H_x, x, rel_ori);
+	ComputeHt(Ht_x, H_x, x, rel_ori, xJointType, xStartIndex);
 	_Matrix Mr_x;
 	Mr_x.resize(totalVelDOF, totalVelDOF);
 	ComputeMr(Mr_x, Ht_x);
-	ForwardAngularAndTranslationalVelocity(xdot);
+	ForwardAngularAndTranslationalVelocity(Ht_x, xdot);
 	_Matrix D(nq, nq);
 	D.setZero();
 	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
@@ -601,14 +585,15 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocityV2()//position constrai
 	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
 
 	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+	_Vector x0 = x;
 	int iter = 0;
 	while (abs(C(0, 0)) > 1e-4)
 	{
-		std::cout << "energy err: " << C(0, 0) << std::endl;
-		if (iter >= 10)
+		//std::cout << "energy err: " << C(0, 0) << std::endl;
+		/*if (iter >= 10)
 		{
 			break;
-		}
+		}*/
 		
 		std::vector<_Vector> bm;
 		bm.resize(numOfLinks);
@@ -638,8 +623,9 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocityV2()//position constrai
 		
 		//C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0) - totalEnergy0;
 		grad_C.block(0, 0, 1, totalVelDOF) = dt * M0 + (Mr_x * mq.segment(0, totalVelDOF)).transpose();
-		std::cout << "grad_C " << grad_C << std::endl << std::endl;
+		//std::cout << "grad_C " << grad_C << std::endl << std::endl;
 		_Matrix K = grad_C * DInv * grad_C.transpose();
+		//std::cout << "K " << K << std::endl << std::endl;
 		if (K.determinant() < 1e-7)
 		{
 			_Matrix mI;
@@ -647,27 +633,25 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocityV2()//position constrai
 			mI.setIdentity();
 			K = K + 1e-7 * mI;
 		}
-		//std::cout << "K" << K << std::endl << std::endl;
 		lambdaNew = K.inverse() * C;
+		//std::cout << "lambdaNew " << lambdaNew << std::endl << std::endl;
 		_Vector correction = -DInv * grad_C.transpose() * lambdaNew;
 		//std::cout << "grad_C" << grad_C.transpose() << std::endl << std::endl;
 		//std::cout << "DInv" << DInv << std::endl;
-		//std::cout << "correction" << correction.transpose() << std::endl;
+		//std::cout << "correction " << correction.transpose() << std::endl;
 		mq = mq + correction;
-		x = x + mq * dt;
+		x = x0 + mq * dt;
 		
-		ComputeHt(Ht_x, H_x, x, rel_ori);
+		ComputeHt(Ht_x, H_x, x, rel_ori, xJointType, xStartIndex);
 		ComputeMr(Mr_x, Ht_x);
 		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
 		DInv = D.inverse();
 
-		ForwardAngularAndTranslationalVelocity(mq);
+		ForwardAngularAndTranslationalVelocity(Ht_x, mq);
 		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
 		iter++;
 	}
-	jointType = jointTypeCopy;
-	posStartIndex = posStartIndexCopy;
-	UpdateQdot(qdot, mq);
+	UpdateQdot(qdot, mq, jointType);
 	std::cout << "energy constraint iter: " << iter << std::endl;
 }
 
@@ -694,12 +678,12 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _
 
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		ComputeHt(Ht, H, old_x, rel_ori);
+		ComputeHt(Ht, H, old_x, rel_ori, xJointType, xStartIndex);
 		o_Jacobian[i].resize(6, dof);
 		d0 = Ht[i] * i_bj;
 		for (int k = 0; k < dof; k++)
 		{
-			ComputeHt(Ht, H, perturbed_x[k], rel_ori);
+			ComputeHt(Ht, H, perturbed_x[k], rel_ori, xJointType, xStartIndex);
 			d1 = Ht[i] * i_bj;
 
 			//std::cout << std::endl << std::setprecision(16) << d1 << std::endl;
@@ -711,12 +695,12 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _
 
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		ForwardKinematics(old_x, rel_ori);
+		ForwardKinematics(old_x, rel_ori, xJointType, xStartIndex);
 		o_intertia[i].resize(6, dof);
 		d0 = Mbody[i] * i_bm[i];
 		for (int k = 0; k < dof; k++)
 		{
-			ForwardKinematics(perturbed_x[k], rel_ori);
+			ForwardKinematics(perturbed_x[k], rel_ori, xJointType, xStartIndex);
 			d1 = Mbody[i] * i_bm[i];
 			o_intertia[i].block<6, 1>(0, k) = (d1 - d0) / delta;
 		}
@@ -727,11 +711,11 @@ _Matrix eae6320::MultiBody::Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vect
 {
 	_Matrix out;
 	int i = joint_id;
-	if (jointType[i] == BALL_JOINT_3D)
+	if (xJointType[i] == BALL_JOINT_3D)
 	{
 		out.resize(3, 3);
 
-		_Vector3 r = i_x.segment(posStartIndex[i], 3);
+		_Vector3 r = i_x.segment(xStartIndex[i], 3);
 		_Scalar th = r.norm();
 		_Scalar th2 = th * th;
 
@@ -772,9 +756,8 @@ _Matrix eae6320::MultiBody::Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vect
 	return out;
 }
 
-void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Vector& i_bj, std::vector<_Vector>& i_bm,
-	_Vector& i_x,
-	std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H,
+
+void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Vector& i_bj, std::vector<_Vector>& i_bm, _Vector& i_x, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H,
 	std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia)
 {
 	_Matrix mN;
@@ -795,7 +778,11 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Ve
 		mN.block(3, 0, 3, i_totalDOF) = i_Ht[i].block(3, 0, 3, i_totalDOF);
 		for (int k = 0; k < velDOF[i]; k++)
 		{
-			mN(6 + k, posStartIndex[i] + k) = 1;
+/*
+This funciton will only be called when all ball joints are converted into exponential representation. If a hybrid of exponential and omega is used for ball
+joints, then velStartIndex need to be replaced by posStartIndex
+*/
+			mN(6 + k, velStartIndex[i] + k) = 1;
 		}
 
 		//ComputeB
@@ -891,11 +878,11 @@ void eae6320::MultiBody::ComputeDxOverDpFD(std::vector<_Matrix>& o_derivative, _
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		o_derivative[i].resize(3, dof);
-		ForwardKinematics(old_x, rel_ori);
+		ForwardKinematics(old_x, rel_ori, xJointType, xStartIndex);
 		d0 = pos[i];
 		for (int k = 0; k < dof; k++)
 		{
-			ForwardKinematics(perturbed_x[k], rel_ori);
+			ForwardKinematics(perturbed_x[k], rel_ori, xJointType, xStartIndex);
 			d1 = pos[i];
 			o_derivative[i].block<3, 1>(0, k) = (d1 - d0) / delta;
 		}
@@ -966,28 +953,24 @@ void eae6320::MultiBody::Populate_quat(_Vector& i_q, std::vector<_Quat>& o_quat,
 	}
 }
 
-void eae6320::MultiBody::ComputeExponentialMapJacobian(_Vector& i_x)
+void eae6320::MultiBody::ComputeExponentialMapJacobian(_Vector& i_x, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		if (jointType[i] == BALL_JOINT_3D)
+		if (i_jointType[i] == BALL_JOINT_3D)
 		{
-			ComputeExponentialMapJacobian(i_x, i);
+			ComputeExponentialMapJacobian(i_x, i, i_posStartIndex);
 		}
 	}
 }
 
-void eae6320::MultiBody::UpdateXdot(_Vector& o_xdot, _Vector& i_qdot)
+void eae6320::MultiBody::UpdateXdot(_Vector& o_xdot, _Vector& i_qdot, std::vector<int>& i_jointType)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		if (jointType[i] == BALL_JOINT_3D)
+		if (i_jointType[i] == BALL_JOINT_4D)
 		{
 			o_xdot.segment(xStartIndex[i], 3) = J_exp[i].inverse() * i_qdot.segment(velStartIndex[i], 3);
-		}
-		else if (jointType[i] == BALL_JOINT_4D)
-		{
-			EAE6320_ASSERTF(false, "wrong ball joint type!");
 		}
 		else
 		{
@@ -996,17 +979,13 @@ void eae6320::MultiBody::UpdateXdot(_Vector& o_xdot, _Vector& i_qdot)
 	}
 }
 
-void eae6320::MultiBody::UpdateQdot(_Vector& o_qdot, _Vector& i_xdot)
+void eae6320::MultiBody::UpdateQdot(_Vector& o_qdot, _Vector& i_xdot, std::vector<int>& i_jointType)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		if (jointType[i] == BALL_JOINT_4D)
+		if (i_jointType[i] == BALL_JOINT_4D)
 		{
 			o_qdot.segment(velStartIndex[i], 3) = J_exp[i] * i_xdot.segment(xStartIndex[i], 3);
-		}
-		else if (jointType[i] == BALL_JOINT_3D)
-		{
-			EAE6320_ASSERTF(false, "wrong ball joint type!");
 		}
 		else
 		{

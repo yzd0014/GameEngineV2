@@ -491,12 +491,12 @@ void eae6320::MultiBody::HingeJointTest()
 	SetHingeJoint(0, _Vector3(0, 0, 1), 0);
 	AddRigidBody(0, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 1
 	SetHingeJoint(1, _Vector3(0, 0, 1), 0);
-	//AddRigidBody(1, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 2
-	//SetHingeJoint(2, _Vector3(0, 0, 1), 0);
-	//AddRigidBody(2, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 3
-	//SetHingeJoint(3, _Vector3(0, 0, 1), 0);
-	//AddRigidBody(3, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 4
-	//SetHingeJoint(4, _Vector3(0, 0, 1), 0);
+	AddRigidBody(1, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 2
+	SetHingeJoint(2, _Vector3(0, 0, 1), 0);
+	AddRigidBody(2, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 3
+	SetHingeJoint(3, _Vector3(0, 0, 1), 0);
+	AddRigidBody(3, HINGE_JOINT, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 4
+	SetHingeJoint(4, _Vector3(0, 0, 1), 0);
 	//AddRigidBody(1, HINGE_JOINT, _Vector3(1.0f, 0.0f, 0.0f), _Vector3(-0.5f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 5
 	//SetHingeJoint(5, _Vector3(0, 0, 1), 0);
 	//AddRigidBody(5, HINGE_JOINT, _Vector3(1.0f, 0.0f, 0.0f), _Vector3(-1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 6
@@ -538,14 +538,17 @@ void eae6320::MultiBody::BallJointTest()
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 
-	AddRigidBody(-1, BALL_JOINT_3D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
-	AddRigidBody(0, BALL_JOINT_4D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 1
-	AddRigidBody(1, BALL_JOINT_3D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 2
-	AddRigidBody(2, BALL_JOINT_3D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 3
-	AddRigidBody(3, BALL_JOINT_3D, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 4
+	int ballJointType = BALL_JOINT_4D;
+
+	AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
+	AddRigidBody(0, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 1
+	AddRigidBody(1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 2
+	AddRigidBody(2, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 3
+	AddRigidBody(3, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 4
 
 	MultiBodyInitialization();
 	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
+	//q.segment(3, 3) = _Vector3(0, M_PI / 8, 0);
 	Forward();
 
 	m_keyPressSave = [this](FILE * i_pFile)
@@ -568,13 +571,9 @@ void eae6320::MultiBody::BallJointTest()
 			fwrite(&qdot(i), sizeof(double), 1, i_pFile);
 		}
 
-		std::vector<int> jointTypeCopy(jointType);//save original joint type
-		std::vector<int> posStartIndexCopy(posStartIndex);//save original start index
-		CopyFromQ2X();
-		jointType = xJointType;
-		posStartIndex = xStartIndex;
-		ComputeExponentialMapJacobian(x);
-		UpdateXdot(xdot, qdot);
+		CopyFromQ2X(jointType);
+		ComputeExponentialMapJacobian(x, xJointType, xStartIndex);
+		UpdateXdot(xdot, qdot, jointType);
 		int xDof = static_cast<int>(x.size());
 		//save data for matlab verfication
 		for (int i = 0; i < xDof; i++)
@@ -601,8 +600,6 @@ void eae6320::MultiBody::BallJointTest()
 				LOG_TO_FILE << " ";
 			}
 		}
-		jointType = jointTypeCopy;
-		posStartIndex = posStartIndexCopy;
 	};
 }
 

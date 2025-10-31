@@ -187,7 +187,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Vector3 momErr = angularMomentum - angularMomentum0;
 	/*std::cout << "linear " << momentum.norm() << std::endl;
 	std::cout << "angular " << angularMomentum.norm() << std::endl;*/
-	std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
@@ -249,9 +249,9 @@ void eae6320::MultiBody::ConstraintSolve(const _Scalar h)
 	}
 	if (enablePositionSolve == 2)
 	{
-		CopyFromQ2X();
+		CopyFromQ2X(jointType);
 		PBDStablization();
-		CopyFromX2Q();
+		CopyFromX2Q(jointType);
 	}
 	if (constraintSolverMode == IMPULSE)
 	{
@@ -271,7 +271,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//EnergyConstraintPositionVelocityV2();
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
-	//EnergyConstraintPositionVelocity();
+	EnergyConstraintPositionVelocity();
 	//AcceleratedEnergyConstraintV2();
 	//AcceleratedEnergyConstraint();
 	Forward();
@@ -309,13 +309,14 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 	Forward();
 }
 
-void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matrix>& o_H, _Vector& i_q, std::vector<_Quat>& i_quat)
+void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matrix>& o_H, _Vector& i_q, std::vector<_Quat>& i_quat, 
+	std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex)
 {
-	ForwardKinematics(i_q, i_quat);
+	ForwardKinematics(i_q, i_quat, i_jointType, i_posStartIndex);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		int j = parentArr[i];
-		if (jointType[i] == BALL_JOINT_4D)
+		if (i_jointType[i] == BALL_JOINT_4D)
 		{
 			//compute H
 			o_H[i].resize(6, 3);
@@ -351,10 +352,10 @@ void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matr
 				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) - Math::ToSkewSymmetricMatrix(uGlobalsParent[i]);
 			}
 		}
-		else if (jointType[i] == BALL_JOINT_3D)
+		else if (i_jointType[i] == BALL_JOINT_3D)
 		{
 			//compute H
-			o_H[i] = ComputeExponentialMapJacobian(i_q, i);
+			o_H[i] = ComputeExponentialMapJacobian(i_q, i, i_posStartIndex);
 			//G[i] = H[i];
 			//compute D
 			if (i > 0)
@@ -363,7 +364,7 @@ void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matr
 				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) - Math::ToSkewSymmetricMatrix(uGlobalsParent[i]);
 			}
 		}
-		else if (jointType[i] == FREE_JOINT)
+		else if (i_jointType[i] == FREE_JOINT)
 		{
 			//compute H
 			o_H[i].resize(6, 6);
@@ -372,7 +373,7 @@ void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matr
 			//compute D
 			D[i].setZero();
 		}
-		else if (jointType[i] == HINGE_JOINT)
+		else if (i_jointType[i] == HINGE_JOINT)
 		{
 			//compute H
 			o_H[i].resize(6, 1);
@@ -458,7 +459,7 @@ _Vector eae6320::MultiBody::ComputeQr_SikpVelocityUpdate(_Vector& i_qdot)
 
 _Vector eae6320::MultiBody::ComputeQr(_Vector i_qdot)
 {
-	ForwardAngularAndTranslationalVelocity(i_qdot);
+	ForwardAngularAndTranslationalVelocity(Ht, i_qdot);
 	return ComputeQr_SikpVelocityUpdate(i_qdot);
 }
 
@@ -575,25 +576,25 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 	}
 }
 
-void eae6320::MultiBody::ForwardAngularAndTranslationalVelocity(_Vector& i_qdot)
+void eae6320::MultiBody::ForwardAngularAndTranslationalVelocity(std::vector<_Matrix> i_Ht, _Vector& i_qdot)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		_Vector tran_rot_velocity;
-		tran_rot_velocity = Ht[i] * i_qdot;
+		tran_rot_velocity = i_Ht[i] * i_qdot;
 		vel[i] = tran_rot_velocity.segment(0, 3);
 		w_abs_world[i] = tran_rot_velocity.segment(3, 3);
 	}
 }
 
-void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat)
+void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		old_R_local[i] = R_local[i];
 		int j = parentArr[i];
 		//update orientation
-		if (jointType[i] == BALL_JOINT_4D)
+		if (i_jointType[i] == BALL_JOINT_4D)
 		{
 			R_local[i] = i_quat[i].toRotationMatrix();
 			R_global[i] = obs_ori[i].toRotationMatrix();
@@ -606,9 +607,9 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 				R_global[i] = R_global[j] * R_local[i];
 			}
 		}
-		else if (jointType[i] == BALL_JOINT_3D)
+		else if (i_jointType[i] == BALL_JOINT_3D)
 		{
-			_Vector3 r = i_q.segment(posStartIndex[i], 3);
+			_Vector3 r = i_q.segment(i_posStartIndex[i], 3);
 
 #if defined (HIGH_PRECISION_MODE)
 			R_local[i] = AngleAxisd(r.norm(), r.normalized());
@@ -624,17 +625,17 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 				R_global[i] = R_global[j] * R_local[i];
 			}
 		}
-		else if (jointType[i] == FREE_JOINT)
+		else if (i_jointType[i] == FREE_JOINT)
 		{
 			obs_ori[i] = i_quat[i];
 			R_local[i] = obs_ori[i].toRotationMatrix();
 			R_global[i] = obs_ori[i].toRotationMatrix();
 		}
-		else if (jointType[i] == HINGE_JOINT)
+		else if (i_jointType[i] == HINGE_JOINT)
 		{
 			int j = parentArr[i];
 			
-			_Scalar angle = i_q(posStartIndex[i]);
+			_Scalar angle = i_q(i_posStartIndex[i]);
 #if defined (HIGH_PRECISION_MODE)
 			R_local[i] = AngleAxisd(angle, hingeDirLocals[i]);
 #else
@@ -661,9 +662,9 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 	}
 }
 
-void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat)
+void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex)
 {
-	UpdateBodyRotation(i_q, i_quat);
+	UpdateBodyRotation(i_q, i_quat, i_jointType, i_posStartIndex);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		int j = parentArr[i];
@@ -674,15 +675,15 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 			uGlobalsParent[i] = R_global[j] * uLocalsParent[i];
 			jointPos[i] = pos[j] + uGlobalsParent[i];
 		}
-		if (jointType[i] == BALL_JOINT_3D || jointType[i] == BALL_JOINT_4D)
+		if (i_jointType[i] == BALL_JOINT_3D || jointType[i] == BALL_JOINT_4D)
 		{
 			pos[i] = jointPos[i] - uGlobalsChild[i];
 		}
-		else if (jointType[i] == FREE_JOINT)
+		else if (i_jointType[i] == FREE_JOINT)
 		{
-			pos[i] = i_q.segment(posStartIndex[i], 3);
+			pos[i] = i_q.segment(i_posStartIndex[i], 3);
 		}
-		else if (jointType[i] == HINGE_JOINT)
+		else if (i_jointType[i] == HINGE_JOINT)
 		{
 			pos[i] = jointPos[i] + hingeMagnitude[i] * hingeDirGlobals[i] - uGlobalsChild[i];
 		}
@@ -717,10 +718,10 @@ void eae6320::MultiBody::ResetExternalForces()
 
 void eae6320::MultiBody::Forward()
 {
-	ComputeHt(Ht, H, q, rel_ori);
+	ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
 	ComputeMr(Mr, Ht);
 	MrInverse = Mr.inverse();
-	ForwardAngularAndTranslationalVelocity(qdot);
+	ForwardAngularAndTranslationalVelocity(Ht, qdot);
 }
 
 _Vector3 eae6320::MultiBody::ComputeTranslationalMomentum()
@@ -988,11 +989,11 @@ void eae6320::MultiBody::SaveDataToHoudini(_Scalar totalDuration, _Scalar logInt
 	}
 }
 
-void eae6320::MultiBody::CopyFromQ2X()
+void eae6320::MultiBody::CopyFromQ2X(std::vector<int>& i_jointType)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		if (jointType[i] == BALL_JOINT_4D)
+		if (i_jointType[i] == BALL_JOINT_4D)
 		{
 			_Vector3 oriVec;
 			oriVec = Math::RotationConversion_QuatToVec(rel_ori[i]);
@@ -1005,11 +1006,11 @@ void eae6320::MultiBody::CopyFromQ2X()
 	}
 }
 
-void eae6320::MultiBody::CopyFromX2Q()
+void eae6320::MultiBody::CopyFromX2Q(std::vector<int>& i_jointType)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		if (jointType[i] == BALL_JOINT_4D)
+		if (i_jointType[i] == BALL_JOINT_4D)
 		{
 			_Vector3 oriVec = x.segment(xStartIndex[i], 3);
 			rel_ori[i] = Math::RotationConversion_VecToQuat(oriVec);	

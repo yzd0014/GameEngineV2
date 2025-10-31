@@ -34,12 +34,13 @@ namespace eae6320
 		void SetHingeJoint(int jointNum, _Vector3 hingeDirLocal, _Scalar hingeLength);
 
 		void ComputeMr(_Matrix& o_M, std::vector<_Matrix>& i_Ht);
-		void ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matrix>& o_H, _Vector& i_q, std::vector<_Quat>& i_quat);
+		void ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matrix>& o_H, _Vector& i_q, std::vector<_Quat>& i_quat, 
+			std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		_Vector ComputeQr(_Vector i_qdot);
 		_Vector ComputeQr_SikpVelocityUpdate(_Vector& i_qdot);
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot);
 		
-		void ForwardAngularAndTranslationalVelocity(_Vector& i_qdot);
+		void ForwardAngularAndTranslationalVelocity(std::vector<_Matrix> i_Ht, _Vector& i_qdot);
 		void ResetExternalForces();
 		
 		void EulerIntegration(const _Scalar h);
@@ -47,11 +48,12 @@ namespace eae6320
 		void RK3Integration(const _Scalar h);
 		void Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, _Scalar h);
 
-		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat);
+		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		void Forward();
-		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat);
+		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		_Matrix Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vector i_bj);
-		void ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Vector& i_bj, std::vector<_Vector>& i_bm, _Vector& i_x, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
+		void ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Vector& i_bj, std::vector<_Vector>& i_bm, _Vector& i_x, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H, 
+			std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
 		void ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
 		void ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
 		void ComputeDxOverDp(std::vector<_Matrix>& o_derivative, std::vector<_Matrix>& i_Ht, int i_totalDOF);
@@ -59,10 +61,10 @@ namespace eae6320
 		void Populate_q(std::vector<_Quat>& i_quat, _Vector& o_q);
 		void Populate_quat(_Vector& i_q, std::vector<_Quat>& o_quat, bool normalization);
 		void UpdateConstraintJacobian();
-		void CopyFromQ2X();
-		void CopyFromX2Q();
-		void UpdateXdot(_Vector& o_xdot, _Vector& i_qdot);
-		void UpdateQdot(_Vector& o_qdot, _Vector& i_qdot);
+		void CopyFromQ2X(std::vector<int>& i_jointType);
+		void CopyFromX2Q(std::vector<int>& i_jointType);
+		void UpdateXdot(_Vector& o_xdot, _Vector& i_qdot, std::vector<int>& i_jointType);
+		void UpdateQdot(_Vector& o_qdot, _Vector& i_qdot, std::vector<int>& i_jointType);
 		
 		void ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i);
 		_Scalar ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi);
@@ -101,7 +103,7 @@ namespace eae6320
 		void SwitchConstraint(int i);
 		void UpdateInitialPosition();//call this function whenever poistion is updated
 		void ComputeTwistDirectJacobian(int jointNum, int i_limitType, _Matrix& o_J);
-		void ComputeExponentialMapJacobian(_Vector& i_x);
+		void ComputeExponentialMapJacobian(_Vector& i_x, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		
 
 		void PrePositionSolveProccessing();
@@ -320,10 +322,10 @@ namespace eae6320
 			return zeta;
 		}
 		
-		inline _Matrix ComputeExponentialMapJacobian(_Vector& i_q, int i)
+		inline _Matrix ComputeExponentialMapJacobian(_Vector& i_q, int i, std::vector<int>& i_posStartIndex)
 		{
 			int j = parentArr[i];
-			_Vector3 r = i_q.segment(posStartIndex[i], 3);
+			_Vector3 r = i_q.segment(i_posStartIndex[i], 3);
 			_Scalar theta = r.norm();
 			_Scalar b = Compute_b(theta);
 			_Scalar a = Compute_a(theta);

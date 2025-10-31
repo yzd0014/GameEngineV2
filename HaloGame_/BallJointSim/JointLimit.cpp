@@ -491,11 +491,6 @@ void eae6320::MultiBody::PBDStablization()
 {
 	if (constraintNum > 0)
 	{
-		std::vector<int> jointTypeCopy(jointType);//save original joint type
-		jointType = xJointType;
-		std::vector<int> posStartIndexCopy(posStartIndex);//save original start index
-		posStartIndex = xStartIndex;
-		
 		_Matrix J_pbd;
 		J_pbd.resize(constraintNum, totalXDOF);
 		_Matrix C;
@@ -507,8 +502,8 @@ void eae6320::MultiBody::PBDStablization()
 		for (int solverIter = 0; solverIter < 1; solverIter++)
 		{
 			J_pbd.setZero();
-			ForwardKinematics(x, rel_ori);
-			ComputeHt(Ht, H, x, rel_ori);
+			ForwardKinematics(x, rel_ori, xJointType, xStartIndex);
+			ComputeHt(Ht, H, x, rel_ori, xJointType, xStartIndex);
 			ComputeMr(Mr, Ht);
 			UpdateConstraintJacobian();
 			for (size_t k = 0; k < constraintNum; k++)
@@ -538,7 +533,5 @@ void eae6320::MultiBody::PBDStablization()
 			x = x + xCorrection;
 		}
 		//std::cout << "after x " << x.transpose() << std::endl;
-		jointType = jointTypeCopy;
-		posStartIndex = posStartIndexCopy;
 	}
 }
