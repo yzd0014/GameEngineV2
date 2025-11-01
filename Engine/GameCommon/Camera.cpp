@@ -10,6 +10,7 @@ namespace eae6320
 {
 	GameCommon::Camera mainCamera;
 }
+bool eae6320::GameCommon::Camera::mousePressedLastFrame = false;
 
 eae6320::GameCommon::Camera::Camera(Math::sVector i_position, Math::sVector i_orientation, const float i_verticalFieldOfView_inRadians, const float i_aspectRatio, const float i_z_nearPlane, const float i_z_farPlane) {
 	position = i_position;
@@ -42,13 +43,19 @@ void eae6320::GameCommon::Camera::UpdateState(const float i_secondCountToIntegra
 		UpdateCameraOrientation(i_secondCountToIntegrate);
 	}
 	//upadte orientaion based on mouse input
-	int mouseX, mouseY;
-	UserInput::GetCursorDisplacementSinceLastCall(&mouseX, &mouseY);
+	int mouseX = 0, mouseY = 0;
+
 	axis_X_velocity = 0.0f;
 	axis_Y_velocity = 0.0f;
 	if (UserInput::KeyState::currFrameKeyState[UserInput::KeyCodes::RightMouseButton])
 	{
-		UserInput::ConfineCursorWithinWindow();
+		UserInput::GetCursorDisplacementSinceLastCall(&mouseX, &mouseY);
+		if (!mousePressedLastFrame)
+		{	
+			mouseX = 0;
+			mouseY = 0;	
+		}
+		
 		//update rotation velocity
 		float axis_X_velo = -1 * mouseY * mouseSensitvity / i_secondCountToIntegrate;
 		float axis_Y_velo = -1 * mouseX * mouseSensitvity / i_secondCountToIntegrate;
@@ -60,6 +67,11 @@ void eae6320::GameCommon::Camera::UpdateState(const float i_secondCountToIntegra
 		if (axis_X_velo < 0 && orientationEuler.x > -90) {
 			axis_X_velocity = axis_X_velo;
 		}
+		mousePressedLastFrame = true;
+	}
+	else
+	{
+		mousePressedLastFrame = false;
 	}
 
 	if (Graphics::renderThreadNoWait)

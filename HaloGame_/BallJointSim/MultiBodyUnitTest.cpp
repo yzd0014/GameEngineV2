@@ -607,16 +607,22 @@ void eae6320::MultiBody::BallJointTest()
 void eae6320::MultiBody::GeneralTest()
 {
 	constraintSolverMode = IMPULSE;
-	gravity = true;
+	gravity = false;
 
 	_Matrix3 localInertiaTensor;
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 
-	AddRigidBody(-1, BALL_JOINT_3D, _Vector3(-1.0f, 1.0f, 1.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
-	AddRigidBody(0, BALL_JOINT_4D, _Vector3(-1.0f, 1.0f, -1.0f), _Vector3(1.0f, -1.0f, 1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
+	//AddRigidBody(-1, BALL_JOINT_3D, _Vector3(-1.0f, 1.0f, 1.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	//AddRigidBody(0, BALL_JOINT_4D, _Vector3(-1.0f, 1.0f, -1.0f), _Vector3(1.0f, -1.0f, 1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
+
+	AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 1.5f, 0.0f), _Vector3(0.0f, -1.5f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
 	
 	MultiBodyInitialization();
+	q.segment(0, 3) = _Vector3(0.0, 1.5, 0.0);
+	qdot.segment(3, 3) = _Vector3(1.0, 2.0, 0.0);
+	qdot.segment(6, 3) = _Vector3(-2.0, -4.0, 0.0);
 	Forward();
 }
 

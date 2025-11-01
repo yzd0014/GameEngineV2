@@ -34,6 +34,7 @@ namespace eae6320 {
 			float m_z_farPlane;
 
 			uint64_t tickCount_keyIsDown;
+			static bool mousePressedLastFrame;
 		private:
 			void UpdateCameraOrientation(const float i_secondCountToIntegrate);
 		};

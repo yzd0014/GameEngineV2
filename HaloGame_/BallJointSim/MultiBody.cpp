@@ -187,7 +187,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Vector3 momErr = angularMomentum - angularMomentum0;
 	/*std::cout << "linear " << momentum.norm() << std::endl;
 	std::cout << "angular " << angularMomentum.norm() << std::endl;*/
-	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
@@ -271,7 +271,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//EnergyConstraintPositionVelocityV2();
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
-	EnergyConstraintPositionVelocity();
+	//EnergyConstraintPositionVelocity();
 	//AcceleratedEnergyConstraintV2();
 	//AcceleratedEnergyConstraint();
 	Forward();
@@ -682,6 +682,7 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 		else if (i_jointType[i] == FREE_JOINT)
 		{
 			pos[i] = i_q.segment(i_posStartIndex[i], 3);
+			jointPos[i] = pos[i];
 		}
 		else if (i_jointType[i] == HINGE_JOINT)
 		{
