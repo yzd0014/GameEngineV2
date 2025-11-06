@@ -16,6 +16,7 @@ namespace eae6320
 		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 
+		std::string integrationMode = "Euler";
 		_Scalar damping = 1.0;
 		int constraintSolverMode = IMPULSE;
 		int constraintType = SWING_C;//only used for testing
@@ -219,6 +220,7 @@ namespace eae6320
 		std::vector<uint16_t> vectorFieldNum;
 		std::vector<_Quat> eulerDecompositionOffset;
 		std::vector<_Matrix3> eulerDecompositionOffsetMat;
+		_Matrix3 localInertiaTensor;
 		_Matrix J_constraint;
 		_Matrix effectiveMass0;
 		_Matrix effectiveMass1;

@@ -278,6 +278,72 @@ LRESULT CALLBACK eae6320::Application::cbApplication::OnMessageReceivedFromWindo
 	return DefWindowProc( i_window, i_message, i_wParam, i_lParam );
 }
 
+std::string eae6320::Application::cbApplication::WStringToString(const std::wstring& wstr)
+{
+	if (wstr.empty()) return std::string();
+
+	int size_needed = WideCharToMultiByte(
+		CP_UTF8, 0, wstr.c_str(), (int)wstr.size(),
+		nullptr, 0, nullptr, nullptr
+	);
+
+	std::string str(size_needed, 0);
+
+	WideCharToMultiByte(
+		CP_UTF8, 0, wstr.c_str(), (int)wstr.size(),
+		&str[0], size_needed, nullptr, nullptr
+	);
+
+	return str;
+}
+
+void eae6320::Application::cbApplication::AddApplicationParameter(void* outputPtr, enum ApplicationParameterType type, const std::wstring& prefix)
+{
+	if (type == ApplicationParameterType::integer)
+	{
+		int mInteger = 0;
+		for (int i = 1; i < argc; i++)
+		{
+			std::wstring arg = argv[i];
+			if (arg == prefix && i + 1 < argc)
+			{
+				mInteger = std::stoi(argv[i + 1]);
+				int* m_outputPtr = reinterpret_cast<int*>(outputPtr);
+				*m_outputPtr = mInteger;
+			}
+		}
+	}
+	else if (type == ApplicationParameterType::float_point)
+	{
+		double mFloat = 0;
+		for (int i = 1; i < argc; i++)
+		{
+			std::wstring arg = argv[i];
+			if (arg == prefix && i + 1 < argc)
+			{
+				mFloat = std::stod(argv[i + 1]);
+				double* m_outputPtr = reinterpret_cast<double*>(outputPtr);
+				*m_outputPtr = mFloat;
+			}
+		}
+	}
+	else if (type == ApplicationParameterType::string)
+	{
+		std::string mString;
+		for (int i = 1; i < argc; i++)
+		{
+			std::wstring arg = argv[i];
+			if (arg == prefix && i + 1 < argc)
+			{
+				mString = WStringToString(argv[i + 1]);
+				std::string* m_outputPtr = reinterpret_cast<std::string*>(outputPtr);
+				*m_outputPtr = mString;
+			}
+		}
+	}
+
+}
+
 // Initialization / Clean Up
 //--------------------------
 

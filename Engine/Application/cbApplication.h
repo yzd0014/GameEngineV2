@@ -50,10 +50,10 @@ namespace eae6320
 	{
 		extern bool enableConsole;
 		extern int argc;
-		extern LPWSTR* argv;
-		enum ApplicationParameterType { integer, float_point };
+		
+		enum ApplicationParameterType { integer, float_point, string };
 
-		void AddApplicationParameter(void* outputPtr, enum ApplicationParameterType type, const std::wstring& prefix);
+		
 
 		// The only thing that a specific application project's main() entry point should do
 		// is to call the following function with the derived application class

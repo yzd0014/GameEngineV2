@@ -14,10 +14,6 @@ void eae6320::MultiBody::UnitTest5_6()
 	constraintSolverMode = IMPULSE;
 	gravity = false;
 
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 
 	MultiBodyInitialization();
@@ -35,10 +31,6 @@ void eae6320::MultiBody::UnitTest5_4a()
 {
 	constraintSolverMode = IMPULSE;
 
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 
 	MultiBodyInitialization();
@@ -55,10 +47,6 @@ void eae6320::MultiBody::UnitTest5_4a()
 void eae6320::MultiBody::UnitTest5_4b()
 {
 	constraintSolverMode = IMPULSE;
-
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 
@@ -104,10 +92,6 @@ void eae6320::MultiBody::UnitTest5_2()
 {
 	constraintSolverMode = IMPULSE;
 
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	MultiBodyInitialization();
 	_Vector3 local_w = _Vector3(-2.0, 0.0, 2.0);;
@@ -122,10 +106,6 @@ void eae6320::MultiBody::UnitTest5_5()
 	constraintSolverMode = IMPULSE;
 	gravity = false;
 
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 
 	MultiBodyInitialization();
@@ -139,10 +119,6 @@ void eae6320::MultiBody::UnitTest5_7()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 1
@@ -172,10 +148,6 @@ void eae6320::MultiBody::UnitTest5_8a()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 0.7f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(0.7, 0.7, 0.7), localInertiaTensor);//body 0 head
 	AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 1.1f, 0.0f), _Vector3(0.0f, -0.8f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 0.25), localInertiaTensor);//body 1 chest0
@@ -262,10 +234,6 @@ void eae6320::MultiBody::UnitTest5_8b()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 0.7f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(0.7, 0.7, 0.7), localInertiaTensor);//body 0 head
 	AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 1.1f, 0.0f), _Vector3(0.0f, -0.8f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 0.25), localInertiaTensor);//body 1 chest0
@@ -357,10 +325,6 @@ void eae6320::MultiBody::UnitTest5_3a()
 	constraintSolverMode = IMPULSE;
 	gravity = false;
 
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 
 	MultiBodyInitialization();
@@ -412,10 +376,6 @@ void eae6320::MultiBody::UnitTest5_3b()
 	constraintSolverMode = IMPULSE;
 	gravity = false;
 
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 
 	MultiBodyInitialization();
@@ -465,10 +425,6 @@ void eae6320::MultiBody::UnitTest5_1()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = false;
-
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 
@@ -533,12 +489,7 @@ void eae6320::MultiBody::BallJointTest()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
-
-	int ballJointType = BALL_JOINT_4D;
+	int ballJointType = BALL_JOINT_3D;
 
 	AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
 	AddRigidBody(0, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 1
@@ -547,8 +498,9 @@ void eae6320::MultiBody::BallJointTest()
 	AddRigidBody(3, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 4
 
 	MultiBodyInitialization();
-	rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
-	//q.segment(3, 3) = _Vector3(0, M_PI / 8, 0);
+	if (ballJointType == BALL_JOINT_3D)  q.segment(3, 3) = _Vector3(0, M_PI / 8, 0);
+	else if (ballJointType == BALL_JOINT_4D) rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
+	
 	Forward();
 
 	m_keyPressSave = [this](FILE * i_pFile)
@@ -609,30 +561,36 @@ void eae6320::MultiBody::GeneralTest()
 	constraintSolverMode = IMPULSE;
 	gravity = false;
 
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+	localInertiaTensor.setZero();
+	_Scalar x = 1;
+	_Scalar y = 2;
+	_Scalar z = 3;
+	localInertiaTensor(0, 0) = 1.0f / 12.0f * rigidBodyMass * (y * y + z * z);
+	localInertiaTensor(1, 1) = 1.0f / 12.0f * rigidBodyMass * (x * x + z * z);
+	localInertiaTensor(2, 2) = 1.0f / 12.0f * rigidBodyMass * (x * x + y * y);
 
 	//AddRigidBody(-1, BALL_JOINT_3D, _Vector3(-1.0f, 1.0f, 1.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	//AddRigidBody(0, BALL_JOINT_4D, _Vector3(-1.0f, 1.0f, -1.0f), _Vector3(1.0f, -1.0f, 1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
 
-	AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
-	AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 1.5f, 0.0f), _Vector3(0.0f, -1.5f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
+	//AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	//AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 1.5f, 0.0f), _Vector3(0.0f, -1.5f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
 	
+	AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	MultiBodyInitialization();
-	q.segment(0, 3) = _Vector3(0.0, 1.5, 0.0);
+	//q.segment(0, 3) = _Vector3(0.0, 1.5, 0.0);
 	qdot.segment(3, 3) = _Vector3(1.0, 2.0, 0.0);
-	qdot.segment(6, 3) = _Vector3(-2.0, -4.0, 0.0);
+	//qdot.segment(6, 3) = _Vector3(-2.0, -4.0, 0.0);
+	/*m_control = [this]()
+	{
+		externalForces[0].block<3, 1>(3, 0) = _Vector3(0.1, 0.2, 0);
+		externalForces[1].block<3, 1>(3, 0) = _Vector3(-0.1, -0.2, 0);
+	};*/
 	Forward();
 }
 
 void eae6320::MultiBody::UnitTest0()
 {
 	constraintSolverMode = IMPULSE;
-
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
 
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 
@@ -675,8 +633,11 @@ void eae6320::MultiBody::UnitTest0()
 
 void eae6320::MultiBody::RunUnitTest()
 {
-	Application::AddApplicationParameter(&damping, Application::ApplicationParameterType::float_point, L"-damping");
-	Application::AddApplicationParameter(&twistMode, Application::ApplicationParameterType::integer, L"-tm");
+	localInertiaTensor.setIdentity();
+	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+
+	pApp->AddApplicationParameter(&damping, Application::ApplicationParameterType::float_point, L"-damping");
+	pApp->AddApplicationParameter(&twistMode, Application::ApplicationParameterType::integer, L"-tm");
 	if (twistMode == EULER_V2 || twistMode == EULER)
 	{
 		std::cout << "Euler twist constraint is being used" << std::endl;
@@ -689,8 +650,21 @@ void eae6320::MultiBody::RunUnitTest()
 	{
 		std::cout << "direct swing-twist constraint is being used" << std::endl;
 	}
+	pApp->AddApplicationParameter(&integrationMode, Application::ApplicationParameterType::string, L"-integrator");
+	if (integrationMode == "Euler")
+	{
+		std::cout << "Euler" << std::endl;
+	}
+	else if (integrationMode == "RK4")
+	{
+		std::cout << "RK4" << std::endl;
+	}
+	else if (integrationMode == "RK3")
+	{
+		std::cout << "RK3" << std::endl;
+	}
 
-	Application::AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");
+	pApp->AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");
 	if (enablePositionSolve == 1)
 	{
 		std::cout << "position solve enabled (Baumgarte)" << std::endl;
@@ -705,7 +679,7 @@ void eae6320::MultiBody::RunUnitTest()
 	}
 
 	int testCaseNum = 0;
-	Application::AddApplicationParameter(&testCaseNum, Application::ApplicationParameterType::integer, L"-example");
+	pApp->AddApplicationParameter(&testCaseNum, Application::ApplicationParameterType::integer, L"-example");
 	if (testCaseNum == 1)
 	{
 		UnitTest5_1();

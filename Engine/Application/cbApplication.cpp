@@ -17,7 +17,6 @@
 // Interface
 //==========
 bool eae6320::Application::enableConsole = false;
-LPWSTR* eae6320::Application::argv = nullptr;
 int eae6320::Application::argc = 0;
 
 void eae6320::Application::cbApplication::UpdateSimulationBasedOnTime(const double i_elapsedSecondCount_sinceLastUpdate)
@@ -748,36 +747,4 @@ eae6320::cResult eae6320::Application::cbApplication::CleanUp_engine()
 	}
 	
 	return result;
-}
-
-void eae6320::Application::AddApplicationParameter(void* outputPtr, enum ApplicationParameterType type, const std::wstring& prefix)
-{
-	if (type == integer)
-	{
-		int mInteger = 0;
-		for (int i = 1; i < argc; i++)
-		{
-			std::wstring arg = argv[i];
-			if (arg == prefix && i + 1 < argc)
-			{
-				mInteger = std::stoi(argv[i + 1]);
-				int* m_outputPtr = reinterpret_cast<int*>(outputPtr);
-				*m_outputPtr = mInteger;
-			}
-		}
-	}
-	else if (type == float_point)
-	{
-		double mFloat = 0;
-		for (int i = 1; i < argc; i++)
-		{
-			std::wstring arg = argv[i];
-			if (arg == prefix && i + 1 < argc)
-			{
-				mFloat = std::stod(argv[i + 1]);
-				double* m_outputPtr = reinterpret_cast<double*>(outputPtr);
-				*m_outputPtr = mFloat;
-			}
-		}
-	}
 }

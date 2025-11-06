@@ -18,6 +18,7 @@ private:
 
 	uint16_t m_resolutionWidth = 0;
 	uint16_t m_resolutionHeight = 0;
+	LPWSTR* argv;
 
 	// Inherited Implementation
 	//=========================
@@ -53,5 +54,9 @@ private:
 	//----
 
 	static LRESULT CALLBACK OnMessageReceivedFromWindows( HWND i_window, UINT i_message, WPARAM i_wParam, LPARAM i_lParam );
+	static std::string WStringToString(const std::wstring& wstr);
+
+public: 
+	void AddApplicationParameter(void* outputPtr, enum ApplicationParameterType type, const std::wstring& prefix);
 
 #endif	// EAE6320_APPLICATION_CBAPPLICATION_WIN_H

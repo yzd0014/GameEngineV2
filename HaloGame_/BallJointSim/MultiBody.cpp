@@ -9,12 +9,12 @@
 #include <iomanip>
 
 eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, Physics::sRigidBodyState i_State, Application::cbApplication* i_application):
-	GameCommon::GameObject(i_pEffect, i_Mesh, i_State)
+	GameCommon::GameObject(i_pEffect, i_Mesh, i_State),
+	pApp(i_application)
 {
 	RunUnitTest();
 	
 	UpdateInitialPosition();
-	pApp = i_application;
 
 	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
@@ -178,16 +178,17 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	
 	ResetExternalForces();
 	if(m_control) m_control();
-	EulerIntegration(dt);
-	//RK3Integration(dt);
-	//RK4Integration(dt);
 
+	if (integrationMode == "Euler") EulerIntegration(dt);
+	else if (integrationMode == "RK4") RK4Integration(dt);
+	else if (integrationMode == "RK3") RK3Integration(dt);
+	
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
 	_Vector3 momErr = angularMomentum - angularMomentum0;
-	/*std::cout << "linear " << momentum.norm() << std::endl;
-	std::cout << "angular " << angularMomentum.norm() << std::endl;*/
-	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << "linear " << momentum.norm() << std::endl;
+	std::cout << "angular " << angularMomentum.norm() << std::endl;
+	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
@@ -700,7 +701,7 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 		m_linkBodys[i]->m_State.position = Math::sVector((float)pos[i](0), (float)pos[i](1), (float)pos[i](2));
 		
 		//update inertia tensor
-		if (geometry != BOX && geometry != BALL)
+		if (geometry != BALL)
 		{
 			_Matrix3 globalInertiaTensor;
 			globalInertiaTensor = R_global[i] * localInertiaTensors[i] * R_global[i].transpose();
