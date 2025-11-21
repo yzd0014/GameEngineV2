@@ -989,6 +989,42 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, st
 	Forward();
 }
 
+void eae6320::MultiBody::VariationalIntegration(const _Scalar h)
+{
+	_Vector _q, q_predicted;
+	_q = q - h * qdot;
+	q_predicted = q + h * qdot;
+	
+	_Matrix B;
+	ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
+	ComputeMr(Mr, Ht);
+	B = -Mr;
+	
+	ComputeHt(Ht, H, _q, rel_ori, jointType, posStartIndex);
+	_Matrix A;
+	ComputeMr(A, Ht);
+
+	std::vector<_Matrix> H_predicted;
+	H_predicted.resize(numOfLinks);
+	std::vector<_Matrix> Ht_predicted;
+	Ht_predicted.resize(numOfLinks);
+	ComputeHt(Ht_predicted, H_predicted, q_predicted, rel_ori, jointType, posStartIndex);
+	ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
+	_Matrix Ht_diff;
+	Ht_diff = Ht_predicted[0] - Ht[0];
+	_Matrix C;
+	C = h * Ht_diff.transpose() * Mbody[0] * Ht[0];
+	
+	_Matrix K = B + C;
+	_Vector q_new;
+	q_new = K.inverse() * ((K - A) * q + A * _q);
+	qdot = (q_new - q) / h;
+	q = q_new;
+
+	//ClampRotationVector(q, qdot, 0);
+	Forward();
+}
+
 //***************************************************************************************************
 //void eae6320::MultiBody::EnergyConstraintPosition()
 //{

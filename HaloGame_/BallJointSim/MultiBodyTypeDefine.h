@@ -37,6 +37,10 @@
 #ifndef HINGE_JOINT
 #define HINGE_JOINT 3
 #endif
+
+#ifndef FREE_JOINT_EXPO
+#define FREE_JOINT_EXPO 4
+#endif
 /*************************************/
 #ifndef TWIST_WITHOUT_SWING
 #define TWIST_WITHOUT_SWING 0

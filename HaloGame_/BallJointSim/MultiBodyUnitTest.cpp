@@ -575,10 +575,11 @@ void eae6320::MultiBody::GeneralTest()
 	//AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	//AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 1.5f, 0.0f), _Vector3(0.0f, -1.5f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
 	
-	AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	AddRigidBody(-1, FREE_JOINT_EXPO, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	MultiBodyInitialization();
 	//q.segment(0, 3) = _Vector3(0.0, 1.5, 0.0);
 	qdot.segment(3, 3) = _Vector3(1.0, 2.0, 0.0);
+	//qdot.segment(3, 3) = _Vector3(0.0, 2.0, 0.0);
 	//qdot.segment(6, 3) = _Vector3(-2.0, -4.0, 0.0);
 	/*m_control = [this]()
 	{
@@ -586,6 +587,12 @@ void eae6320::MultiBody::GeneralTest()
 		externalForces[1].block<3, 1>(3, 0) = _Vector3(-0.1, -0.2, 0);
 	};*/
 	Forward();
+	m_MatlabSave = [this]()
+	{
+		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+		_Vector3 angularMomentum = ComputeAngularMomentum();
+		LOG_TO_FILE << t << " " << ComputeTotalEnergy() << std::endl;
+	};
 }
 
 void eae6320::MultiBody::UnitTest0()
@@ -662,6 +669,10 @@ void eae6320::MultiBody::RunUnitTest()
 	else if (integrationMode == "RK3")
 	{
 		std::cout << "RK3" << std::endl;
+	}
+	else if (integrationMode == "VI")
+	{
+		std::cout << "VI" << std::endl;
 	}
 
 	pApp->AddApplicationParameter(&enablePositionSolve, Application::ApplicationParameterType::integer, L"-ps");

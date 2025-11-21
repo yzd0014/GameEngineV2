@@ -47,6 +47,7 @@ namespace eae6320
 		void EulerIntegration(const _Scalar h);
 		void RK4Integration(const _Scalar h);
 		void RK3Integration(const _Scalar h);
+		void VariationalIntegration(const _Scalar h);
 		void Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, _Scalar h);
 
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);

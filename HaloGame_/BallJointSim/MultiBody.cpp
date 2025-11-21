@@ -166,9 +166,9 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
 	tickCountSimulated++;
-	/*{
-		SaveDataToMatlab(10);
-	}*/
+	{
+		SaveDataToMatlab(20);
+	}
 	{
 		frameNum = 250;
 		animationDuration = (frameNum - 1) * (1.0 / 24.0);;
@@ -182,6 +182,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	if (integrationMode == "Euler") EulerIntegration(dt);
 	else if (integrationMode == "RK4") RK4Integration(dt);
 	else if (integrationMode == "RK3") RK3Integration(dt);
+	else if (integrationMode == "VI") VariationalIntegration(dt);
 	
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
@@ -193,7 +194,20 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 
 void eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
 {
-	_Vector3 r = io_q.segment(posStartIndex[i], 3);
+	int jointPosIndex = 0;
+	int jointVelIndex = 0;
+	if (jointType[i] == FREE_JOINT_EXPO)
+	{
+		jointPosIndex = posStartIndex[i] + 3;
+		jointVelIndex = velStartIndex[i] + 3;
+	}
+	else if (jointType[i] == BALL_JOINT_3D)
+	{
+		jointPosIndex = posStartIndex[i];
+		jointVelIndex = velStartIndex[i];
+	}
+	else std::cout << "Wrong joint type, no need to clamp!" << std::endl;
+	_Vector3 r = io_q.segment(jointPosIndex, 3);
 	_Scalar theta = r.norm();
 	if (theta > M_PI)
 	{
@@ -201,12 +215,12 @@ void eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, in
 
 		//reparameterize position
 		std::cout << "rotation vector clamped" << std::endl;
-		io_q.segment(posStartIndex[i], 3) = eta * r;
+		io_q.segment(jointPosIndex, 3) = eta * r;
 
 		//reparameterize velocity
-		_Vector3 r_dot = io_qdot.segment(velStartIndex[i], 3);
+		_Vector3 r_dot = io_qdot.segment(jointVelIndex, 3);
 		_Vector3 r_dot_new = eta * r_dot + 2 * M_PI * (r.dot(r_dot) / pow(theta, 3)) * r;
-		io_qdot.segment(velStartIndex[i], 3) = r_dot_new;
+		io_qdot.segment(jointVelIndex, 3) = r_dot_new;
 	}
 }
 
@@ -234,6 +248,11 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _
 
 			w_rel_local[i] = i_qdot.segment(velStartIndex[i] + 3, 3);
 			Math::QuatIntegrate(o_quat[i], i_quat[i], w_rel_local[i], h);
+		}
+		else if (jointType[i] == FREE_JOINT_EXPO)
+		{
+			o_q.segment(posStartIndex[i], 6) = i_q.segment(posStartIndex[i], 6) + i_qdot.segment(velStartIndex[i], 6) * h;
+			ClampRotationVector(o_q, i_qdot, i);
 		}
 		else if (jointType[i] == HINGE_JOINT)
 		{
@@ -374,6 +393,20 @@ void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matr
 			//compute D
 			D[i].setZero();
 		}
+		else if (i_jointType[i] == FREE_JOINT_EXPO)
+		{
+			o_H[i].resize(6, 6);
+			o_H[i].setIdentity();
+
+			_Vector3 r = i_q.segment(i_posStartIndex[i] + 3, 3);
+			_Scalar theta = r.norm();
+			_Scalar b = Compute_b(theta);
+			_Scalar a = Compute_a(theta);
+			_Scalar c = Compute_c(theta, a);
+			o_H[i].block<3, 3>(3, 3) = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
+
+			D[i].setZero();
+		}
 		else if (i_jointType[i] == HINGE_JOINT)
 		{
 			//compute H
@@ -416,6 +449,7 @@ void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matr
 
 void eae6320::MultiBody::ComputeMr(_Matrix& o_M, std::vector<_Matrix>& i_Ht)
 {
+	o_M.resize(totalVelDOF, totalVelDOF);
 	o_M.setZero();
 	for (int i = 0; i < numOfLinks; i++)
 	{
@@ -533,6 +567,23 @@ void eae6320::MultiBody::ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector
 			gamma[i].resize(6);
 			gamma[i].setZero();
 		}
+		else if (jointType[i] == FREE_JOINT_EXPO)
+		{
+			_Vector3 r = q.segment(posStartIndex[i] + 3, 3);
+			_Vector3 r_dot = i_qdot.segment(velStartIndex[i] + 3, 3);
+			_Scalar theta = r.norm();
+			_Scalar b = Compute_b(theta);
+			_Scalar a = Compute_a(theta);
+			_Scalar c = Compute_c(theta, a);
+			_Scalar a_dot = Compute_a_dot(c, b, r, r_dot);
+			_Scalar b_dot = Compute_b_dot(theta, a, b, r, r_dot);
+			_Scalar c_dot = Compute_c_dot(theta, b, c, r, r_dot);
+			_Vector3 Jdot_rdot;
+			Jdot_rdot = (c * r.dot(r_dot) + a_dot) * r_dot - (b_dot * r_dot).cross(r) + (c_dot * r.dot(r_dot) + c * r_dot.dot(r_dot)) * r;
+			gamma[i].resize(6);
+			gamma[i].setZero();
+			gamma[i].block<3, 1>(3, 0) = Jdot_rdot;
+		}
 		else if (jointType[i] == HINGE_JOINT)
 		{
 			_Vector3 gamma_theta;
@@ -632,6 +683,24 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 			R_local[i] = obs_ori[i].toRotationMatrix();
 			R_global[i] = obs_ori[i].toRotationMatrix();
 		}
+		else if (i_jointType[i] == FREE_JOINT_EXPO)
+		{
+			_Vector3 r = i_q.segment(i_posStartIndex[i] + 3, 3);
+
+#if defined (HIGH_PRECISION_MODE)
+			R_local[i] = AngleAxisd(r.norm(), r.normalized());
+#else
+			R_local[i] = AngleAxisf(r.norm(), r.normalized());
+#endif
+			if (i == 0)
+			{
+				R_global[i] = R_local[i];
+			}
+			else
+			{
+				R_global[i] = R_global[j] * R_local[i];
+			}
+		}
 		else if (i_jointType[i] == HINGE_JOINT)
 		{
 			int j = parentArr[i];
@@ -680,7 +749,7 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 		{
 			pos[i] = jointPos[i] - uGlobalsChild[i];
 		}
-		else if (i_jointType[i] == FREE_JOINT)
+		else if (i_jointType[i] == FREE_JOINT || i_jointType[i] == FREE_JOINT_EXPO)
 		{
 			pos[i] = i_q.segment(i_posStartIndex[i], 3);
 			jointPos[i] = pos[i];
@@ -843,6 +912,17 @@ void eae6320::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 join
 		posDOF.push_back(7);
 		totalVelDOF += 6;
 		totalPosDOF += 7;
+
+		xDOF.push_back(6);
+		totalXDOF += 6;
+		xJointType.push_back(FREE_JOINT);
+	}
+	else if (i_jointType == FREE_JOINT_EXPO)
+	{
+		velDOF.push_back(6);
+		posDOF.push_back(6);
+		totalVelDOF += 6;
+		totalPosDOF += 6;
 
 		xDOF.push_back(6);
 		totalXDOF += 6;
