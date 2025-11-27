@@ -5,6 +5,7 @@
 #include "Engine/UserInput/UserInput.h"
 #include "Engine/GameCommon/GameplayUtility.h"
 #include "Engine/GameCommon/Camera.h"
+#include "BallJointSim/BallJointSim.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <iomanip>
@@ -692,6 +693,11 @@ void eae6320::MultiBody::RunUnitTest()
 {
 	localInertiaTensor.setIdentity();
 	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+
+	_Scalar m_dt = 0.01;
+	pApp->AddApplicationParameter(&m_dt, Application::ApplicationParameterType::float_point, L"-dt");
+	std::cout << "dt is " << m_dt << std::endl;
+	reinterpret_cast<BallJointSim*>(pApp)->SetSimulationUpdatePeriod_inSeconds(m_dt);
 
 	pApp->AddApplicationParameter(&damping, Application::ApplicationParameterType::float_point, L"-damping");
 	pApp->AddApplicationParameter(&twistMode, Application::ApplicationParameterType::integer, L"-tm");
