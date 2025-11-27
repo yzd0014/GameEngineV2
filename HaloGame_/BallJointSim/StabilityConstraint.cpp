@@ -458,6 +458,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	_Matrix D(nq, nq);
 	D.setZero();
 	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
+	_Scalar dt = pApp->GetSimulationUpdatePeriod_inSeconds();
 	D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
 	_Matrix DInv = D.inverse();
 	//std::cout << std::setprecision(16) << "Mr_x " << Mr_x << std::endl << std::endl;
@@ -534,6 +535,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		CopyFromX2Q(jointType);
 		ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
 		ComputeMr(Mr, Ht);
+		_Scalar dt = pApp->GetSimulationUpdatePeriod_inSeconds();
 		D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
 		DInv = D.inverse();
 		
@@ -622,7 +624,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocityV2()//position constrai
 		}
 		
 		//C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0) - totalEnergy0;
-		grad_C.block(0, 0, 1, totalVelDOF) = dt * M0 + (Mr_x * mq.segment(0, totalVelDOF)).transpose();
+		grad_C.block(0, 0, 1, totalVelDOF) = pApp->GetSimulationUpdatePeriod_inSeconds() * M0 + (Mr_x * mq.segment(0, totalVelDOF)).transpose();
 		//std::cout << "grad_C " << grad_C << std::endl << std::endl;
 		_Matrix K = grad_C * DInv * grad_C.transpose();
 		//std::cout << "K " << K << std::endl << std::endl;
@@ -640,7 +642,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocityV2()//position constrai
 		//std::cout << "DInv" << DInv << std::endl;
 		//std::cout << "correction " << correction.transpose() << std::endl;
 		mq = mq + correction;
-		x = x0 + mq * dt;
+		x = x0 + mq * pApp->GetSimulationUpdatePeriod_inSeconds();
 		
 		ComputeHt(Ht_x, H_x, x, rel_ori, xJointType, xStartIndex);
 		ComputeMr(Mr_x, Ht_x);

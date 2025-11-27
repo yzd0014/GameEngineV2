@@ -85,7 +85,6 @@ namespace eae6320
 			//==========
 
 		public:
-			double m_dt;
 			bool render = true;
 			std::vector<Engine::Sound *> soundArray;
 
@@ -139,13 +138,7 @@ namespace eae6320
 			// The default value is a relatively large amount of time;
 			// you may want to experiement with smaller values in your application
 			// and observe the change in responsiveness or simulation accuracy.
-			virtual double GetSimulationUpdatePeriod_inSeconds() const { return 1.0 / 30 ; }
-			void UpdateDeltaTime(double i_dt)
-			{
-				m_dt = i_dt;
-				updateDeltaTime = true;
-			}
-
+			virtual double GetSimulationUpdatePeriod_inSeconds() const { return 1.0 / 100 ; }
 		private:
 
 			// Configuration
@@ -260,8 +253,7 @@ namespace eae6320
 
 			// Implementation
 			//===============
-			
-			bool updateDeltaTime = false;
+	
 			int CPU_FPS = 0;
 			int avg_GPU_FPS = 0;
 			int GPU_FPS_accumlation = 0;

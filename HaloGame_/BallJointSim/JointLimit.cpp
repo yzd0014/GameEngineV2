@@ -4,6 +4,7 @@
 #include "Engine/Math/EigenHelper.h"
 #include "Engine/UserInput/UserInput.h"
 #include "Engine/GameCommon/GameplayUtility.h"
+#include "BallJointSim/BallJointSim.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <iomanip>
@@ -133,7 +134,7 @@ _Scalar eae6320::MultiBody::ComputeTwistEulerError(int jointNum)
 		if (sNorm < dtEpsilon)
 		{
 			_Scalar newDt = 0.0001;
-			pApp->UpdateDeltaTime(newDt);
+			reinterpret_cast<BallJointSim*>(pApp)->SetSimulationUpdatePeriod_inSeconds(newDt);
 			std::cout << "Finner dt is used " << newDt << std::endl;
 		}
 	}
@@ -300,7 +301,7 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				_Vector3 p = R_local[i] * twistAxis[i];
 				_Vector3 omega = qdot.segment(velStartIndex[i], 3);
 				_Scalar projectedOmega = p.dot(omega);
-				_Scalar deltaTwist = projectedOmega * dt;
+				_Scalar deltaTwist = projectedOmega * pApp->GetSimulationUpdatePeriod_inSeconds();
 				totalTwist[i] += deltaTwist;
 				//std::cout << "Total incremental twist " << totalTwist[i] << " twist increase " << omega.transpose() << std::endl;
 				if (totalTwist[i] > jointRange[i].second || totalTwist[i] < -jointRange[i].second)

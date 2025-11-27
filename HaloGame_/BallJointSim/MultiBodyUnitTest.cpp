@@ -594,17 +594,54 @@ void eae6320::MultiBody::GeneralTest()
 	qdot.segment(3, 3) = _Vector3(1.0, 2.0, 0.0);
 	//qdot.segment(3, 3) = _Vector3(0.0, 2.0, 0.0);
 	//qdot.segment(6, 3) = _Vector3(-2.0, -4.0, 0.0);
+	
+	/*const char* filePath = "key_press_save.txt";
+	FILE* pFile = fopen(filePath, "rb");
+	int qDof = static_cast<int>(q.size());
+	for (int i = 0; i < qDof; i++)
+	{
+		fread(&q(i), sizeof(double), 1, pFile);
+	}
+	for (int i = 0; i < qDof; i++)
+	{
+		fread(&qOld(i), sizeof(double), 1, pFile);
+	}
+	int vDof = static_cast<int>(qdot.size());
+	for (int i = 0; i < vDof; i++)
+	{
+		fread(&qdot(i), sizeof(double), 1, pFile);
+	}
+	fclose(pFile);*/
+
 	/*m_control = [this]()
 	{
 		externalForces[0].block<3, 1>(3, 0) = _Vector3(0.1, 0.2, 0);
 		externalForces[1].block<3, 1>(3, 0) = _Vector3(-0.1, -0.2, 0);
 	};*/
 	Forward();
-	m_MatlabSave = [this]()
+	/*m_MatlabSave = [this]()
 	{
 		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
 		_Vector3 angularMomentum = ComputeAngularMomentum();
 		LOG_TO_FILE << t << " " << ComputeTotalEnergy() << std::endl;
+	};*/
+	m_keyPressSave = [this](FILE * i_pFile)
+	{
+		int qDof = static_cast<int>(q.size());
+		for (int i = 0; i < qDof; i++)
+		{
+			fwrite(&q(i), sizeof(double), 1, i_pFile);
+		}
+		for (int i = 0; i < qDof; i++)
+		{
+			fwrite(&qOld(i), sizeof(double), 1, i_pFile);
+		}
+		
+		int vDof = static_cast<int>(qdot.size());
+		for (int i = 0; i < vDof; i++)
+		{
+			fwrite(&qdot(i), sizeof(double), 1, i_pFile);
+		}
 	};
 }
 

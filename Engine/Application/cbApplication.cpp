@@ -363,12 +363,6 @@ void eae6320::Application::cbApplication::UpdateUntilExit()
 				tickCount_simulationTime_elapsedButNotYetSimulated -= tickCount_perSimulationUpdate;
 				Physics::nextSimStep = false;
 				play = !Physics::simPause || Physics::simPlay;
-				if (updateDeltaTime)
-				{
-					updateDeltaTime = false;
-					secondCount_perSimulationUpdate = m_dt;
-					tickCount_perSimulationUpdate = Time::ConvertSecondsToTicks(secondCount_perSimulationUpdate);
-				}
 			}
 			// If a time-based simulation update happened
 			// then update simulation state based on input.

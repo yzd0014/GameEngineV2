@@ -29,6 +29,7 @@ namespace eae6320
 		//=========================
 
 	private:
+		double dt = 1.0 / 30.0;
 
 		// Configuration
 		//--------------
@@ -84,6 +85,9 @@ namespace eae6320
 		virtual cResult CleanUp() override;
 
 	public:
+		virtual double GetSimulationUpdatePeriod_inSeconds() const { return dt; }
+		void SetSimulationUpdatePeriod_inSeconds(double i_dt) { dt = i_dt; }
+
 		GameCommon::GameObject * scoreboard[2];
 
 		bool isGameOver = false;

@@ -162,16 +162,14 @@ void eae6320::MultiBody::ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, 
 
 void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
-	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
-	dt = (_Scalar)i_secondCountToIntegrate;
-	if (isT0)
+	/*if (isT0)
 	{
-		qOld = q - dt * qdot;
+		qOld = q - pApp->GetSimulationUpdatePeriod_inSeconds() * qdot;
 		isT0 = false;
-	}
+	}*/
 	tickCountSimulated++;
 	{
-		SaveDataToMatlab(20);
+		//SaveDataToMatlab(20);
 	}
 	{
 		frameNum = 250;
@@ -183,10 +181,10 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	ResetExternalForces();
 	if(m_control) m_control();
 
-	if (integrationMode == "Euler") EulerIntegration(dt);
-	else if (integrationMode == "RK4") RK4Integration(dt);
-	else if (integrationMode == "RK3") RK3Integration(dt);
-	else if (integrationMode == "VI") VariationalIntegration(dt);
+	if (integrationMode == "Euler") EulerIntegration(i_secondCountToIntegrate);
+	else if (integrationMode == "RK4") RK4Integration(i_secondCountToIntegrate);
+	else if (integrationMode == "RK3") RK3Integration(i_secondCountToIntegrate);
+	else if (integrationMode == "VI") VariationalIntegration(i_secondCountToIntegrate);
 	
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();

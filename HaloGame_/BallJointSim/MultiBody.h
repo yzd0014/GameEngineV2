@@ -23,7 +23,7 @@ namespace eae6320
 		int twistMode = EULER_V2;
 		bool gravity = false ;
 		int enablePositionSolve = 0;//position solve currently doesn't support free joint
-		bool adaptiveTimestep = false;
+		bool adaptiveTimestep = false;//this feature is deprecated, it require update in the application class 
 		Application::cbApplication* pApp = nullptr;
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
@@ -246,7 +246,6 @@ namespace eae6320
 		_Scalar animationDuration = 5;*/
 		int frameNum = 120;
 		_Scalar animationDuration = 5;
-		_Scalar dt;
 		_Scalar totalJointError = 0;
 		bool isT0 = true;
 
