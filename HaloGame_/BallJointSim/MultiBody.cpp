@@ -23,7 +23,6 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	std::cout << "initial total energy: " << totalEnergy0 << std::endl;
 	//std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
 	//std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
-	//std::cout << "Mr: " << Mr << std::endl;
 }
 
 void eae6320::MultiBody::MultiBodyInitialization()
@@ -41,9 +40,7 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	J_exp.resize(numOfLinks);
 	D.resize(numOfLinks);
 	Ht.resize(numOfLinks);
-	Gt.resize(numOfLinks);
 	H.resize(numOfLinks);
-	G.resize(numOfLinks);
 	Mbody.resize(numOfLinks);
 	localInertiaTensors.resize(numOfLinks);
 	g.resize(numOfLinks);
@@ -66,7 +63,6 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	lastValidOri.resize(numOfLinks);
 	eulerDecompositionOffsetMat.resize(numOfLinks);
 	totalTwist.resize(numOfLinks);
-	old_R_local.resize(numOfLinks);
 	externalForces.resize(numOfLinks);
 	HtDerivativeTimes_b.resize(numOfLinks);
 	MassMatrixDerivativeTimes_b.resize(numOfLinks);
@@ -105,7 +101,6 @@ void eae6320::MultiBody::MultiBodyInitialization()
 		externalForces[i].setZero();
 
 		totalTwist[i] = 0;
-		old_R_local[i].setIdentity();
 		lastValidOri[i].setIdentity();
 
 		mAlpha[i] = 0;
@@ -123,6 +118,10 @@ void eae6320::MultiBody::MultiBodyInitialization()
 		eulerDecompositionOffsetMat[i] = deformationGradient;
 		eulerDecompositionOffset[i] = Math::RotationConversion_MatToQuat(deformationGradient);
 	}
+	
+	if (gravity) gravity_coeff = _Vector3(0.0, -9.81, 0.0);
+	else gravity_coeff.setZero();
+	
 	Math::NativeVector2EigenVector(m_State.position, jointPos[0]);
 	Mr.resize(totalVelDOF, totalVelDOF);
 	q.resize(totalPosDOF);
@@ -165,6 +164,11 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	if (adaptiveTimestep) pApp->UpdateDeltaTime(pApp->GetSimulationUpdatePeriod_inSeconds());
 	dt = (_Scalar)i_secondCountToIntegrate;
+	if (isT0)
+	{
+		qOld = q - dt * qdot;
+		isT0 = false;
+	}
 	tickCountSimulated++;
 	{
 		SaveDataToMatlab(20);
@@ -187,12 +191,12 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
 	_Vector3 momErr = angularMomentum - angularMomentum0;
-	std::cout << "linear " << momentum.norm() << std::endl;
-	std::cout << "angular " << angularMomentum.norm() << std::endl;
-	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	//std::cout << "linear " << momentum.norm() << std::endl;
+	//std::cout << "angular " << angularMomentum.norm() << std::endl;
+	std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
-void eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
+bool eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
 {
 	int jointPosIndex = 0;
 	int jointVelIndex = 0;
@@ -209,6 +213,7 @@ void eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, in
 	else std::cout << "Wrong joint type, no need to clamp!" << std::endl;
 	_Vector3 r = io_q.segment(jointPosIndex, 3);
 	_Scalar theta = r.norm();
+	bool clamped = false;
 	if (theta > M_PI)
 	{
 		_Scalar eta = (_Scalar)(1.0f - 2.0f * M_PI / theta);
@@ -221,7 +226,9 @@ void eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, in
 		_Vector3 r_dot = io_qdot.segment(jointVelIndex, 3);
 		_Vector3 r_dot_new = eta * r_dot + 2 * M_PI * (r.dot(r_dot) / pow(theta, 3)) * r;
 		io_qdot.segment(jointVelIndex, 3) = r_dot_new;
+		clamped = true;
 	}
+	return clamped;
 }
 
 void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, _Scalar h)
@@ -287,7 +294,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 
 	qdot = qdot + qddot * h;
 	qdot = damping * qdot;
-	ConstraintSolve(h);
+	//ConstraintSolve(h);
 	//EnergyConstraintPositionVelocityV2();
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
@@ -310,6 +317,7 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	_Vector k4 = MrInverse * ComputeQr(qdot + h * k3);
 
 	_Vector qddot = (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
+	
 	qdot = qdot + h * qddot;
 	ConstraintSolve(h);
 
@@ -341,29 +349,15 @@ void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matr
 			//compute H
 			o_H[i].resize(6, 3);
 			o_H[i].setZero();
-		/*	G[i].resize(6, 4);
-			G[i].setZero();
-			_Matrix J_quat;
-			J_quat.resize(3, 4);
-			J_quat(0, 0) = -rel_ori[i].x(); J_quat(0, 1) = rel_ori[i].w(); J_quat(0, 2) = -rel_ori[i].z(); J_quat(0, 3) = rel_ori[i].y();
-			J_quat(1, 0) = -rel_ori[i].y(); J_quat(1, 1) = rel_ori[i].z(); J_quat(1, 2) = rel_ori[i].w(); J_quat(1, 3) = -rel_ori[i].x();
-			J_quat(2, 0) = -rel_ori[i].z(); J_quat(2, 1) = -rel_ori[i].y(); J_quat(2, 2) = rel_ori[i].x(); J_quat(2, 3) = rel_ori[i].w();
-			J_quat = 2.0 / rel_ori[i].norm() * J_quat;*/
 			if (i == 0)
 			{
 				o_H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
 				o_H[i].block<3, 3>(3, 0) = _Matrix::Identity(3, 3);
-
-				/*G[i].block<3, 4>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * J_quat;
-				G[i].block<3, 4>(3, 0) = J_quat;*/
 			}
 			else
 			{
 				o_H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * R_global[j];
 				o_H[i].block<3, 3>(3, 0) = R_global[j];
-
-			/*	G[i].block<3, 4>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) *  R_global[j] * J_quat;
-				G[i].block<3, 4>(3, 0) = R_global[j] * J_quat;*/
 			}
 			//compute D
 			if (i > 0)
@@ -376,7 +370,6 @@ void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matr
 		{
 			//compute H
 			o_H[i] = ComputeExponentialMapJacobian(i_q, i, i_posStartIndex);
-			//G[i] = H[i];
 			//compute D
 			if (i > 0)
 			{
@@ -389,7 +382,6 @@ void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matr
 			//compute H
 			o_H[i].resize(6, 6);
 			o_H[i].setIdentity();
-			//G[i] = o_H[i];
 			//compute D
 			D[i].setZero();
 		}
@@ -426,8 +418,6 @@ void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matr
 		//compose Ht
 		o_Ht[i].resize(6, totalVelDOF);
 		o_Ht[i].setZero();
-		/*Gt[i].resize(6, totalPosDOF);
-		Gt[i].setZero();*/
 		int k = i;
 		while (k != -1)
 		{
@@ -441,7 +431,6 @@ void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matr
 				j = parentArr[j];
 			}
 			o_Ht[i].block(0, velStartIndex[k], 6, velDOF[k]) = D_temp * o_H[k];
-			//Gt[i].block(0, posStartIndex[k], 6, posDOF[k]) = D_temp * G[k];
 			k = parentArr[k];
 		}
 	}
@@ -472,20 +461,18 @@ _Vector eae6320::MultiBody::ComputeQr_SikpVelocityUpdate(_Vector& i_qdot)
 	Qr.setZero();
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		if (gravity)
-		{
-			//_Scalar g = -0.8;
-			_Scalar g = -9.8;
-			externalForces[i].block<3, 1>(0, 0) = externalForces[i].block<3, 1>(0, 0) + _Vector3(0.0f, g, 0.0f);
-		}
 		_Vector Fv;
 		Fv.resize(6);
 		Fv.setZero();
 		Fv.block<3, 1>(3, 0) = -w_abs_world[i].cross(Mbody[i].block<3, 3>(3, 3) * w_abs_world[i]);
+		_Vector Fe;
+		Fe.resize(6);
+		Fe.setZero();
+		Fe.block<3, 1>(0, 0) = externalForces[i].block<3, 1>(0, 0) + gravity_coeff;
 		_Vector Q_temp;
 		Q_temp.resize(totalVelDOF);
 		Q_temp.setZero();
-		Q_temp = Ht[i].transpose() * (externalForces[i] + Fv - Mbody[i] * gamma_t[i]);
+		Q_temp = Ht[i].transpose() * (Fe + Fv - Mbody[i] * gamma_t[i]);
 		Qr = Qr + Q_temp;
 	}
 
@@ -643,7 +630,6 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		old_R_local[i] = R_local[i];
 		int j = parentArr[i];
 		//update orientation
 		if (i_jointType[i] == BALL_JOINT_4D)

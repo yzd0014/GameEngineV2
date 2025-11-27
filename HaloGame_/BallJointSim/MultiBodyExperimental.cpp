@@ -869,7 +869,6 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	lastValidOri.resize(numOfLinks);
 	eulerDecompositionOffsetMat.resize(numOfLinks);
 	totalTwist.resize(numOfLinks);
-	old_R_local.resize(numOfLinks);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
@@ -904,7 +903,6 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 		uGlobals.push_back(uPairs);*/
 
 		totalTwist[i] = 0;
-		old_R_local[i].setIdentity();
 		lastValidOri[i].setIdentity();
 
 		mAlpha[i] = 0;
@@ -991,38 +989,80 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, st
 
 void eae6320::MultiBody::VariationalIntegration(const _Scalar h)
 {
-	_Vector _q, q_predicted;
-	_q = q - h * qdot;
+	std::vector<_Matrix> H_predicted, H_old;
+	H_predicted.resize(numOfLinks);
+	H_old.resize(numOfLinks);
+	std::vector<_Matrix> Ht_predicted, Ht_old;
+	Ht_predicted.resize(numOfLinks);
+	Ht_old.resize(numOfLinks);
+	
+	_Vector q_predicted;
 	q_predicted = q + h * qdot;
 	
 	_Matrix B;
 	ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
 	ComputeMr(Mr, Ht);
+	_Matrix3 R_current;
+	R_current = R_global[0];
 	B = -Mr;
 	
-	ComputeHt(Ht, H, _q, rel_ori, jointType, posStartIndex);
+	ComputeHt(Ht_old, H_old, qOld, rel_ori, jointType, posStartIndex);
 	_Matrix A;
-	ComputeMr(A, Ht);
+	ComputeMr(A, Ht_old);
+	//A = Mr;
 
-	std::vector<_Matrix> H_predicted;
-	H_predicted.resize(numOfLinks);
-	std::vector<_Matrix> Ht_predicted;
-	Ht_predicted.resize(numOfLinks);
 	ComputeHt(Ht_predicted, H_predicted, q_predicted, rel_ori, jointType, posStartIndex);
-	ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
 	_Matrix Ht_diff;
-	Ht_diff = Ht_predicted[0] - Ht[0];
+	_Matrix T_predicted, T_current;
+	T_predicted.resize(6, 6);
+	T_predicted.setIdentity();
+	T_predicted.block<3, 3>(3, 3) = R_global[0];
+	T_current.resize(6, 6);
+	T_current.setIdentity();
+	T_current.block<3, 3>(3, 3) = R_current;
+
+	Ht_diff = T_predicted.transpose() * Ht_predicted[0] - T_current.transpose() * Ht[0];
+	_Matrix M_d;
+	M_d.resize(6, 6);
+	M_d.setZero();
+	M_d(0, 0) = rigidBodyMass;
+	M_d(1, 1) = rigidBodyMass;
+	M_d(2, 2) = rigidBodyMass;
+	M_d.block<3, 3>(3, 3) = localInertiaTensors[0];
 	_Matrix C;
-	C = h * Ht_diff.transpose() * Mbody[0] * Ht[0];
+	C = h * Ht_diff.transpose() * M_d * T_current.transpose() * Ht[0];
 	
 	_Matrix K = B + C;
-	_Vector q_new;
-	q_new = K.inverse() * ((K - A) * q + A * _q);
-	qdot = (q_new - q) / h;
+	_Vector q_new = K.inverse() * ((K - A) * q + A * qOld);
+	qOld = q;
 	q = q_new;
+	qdot = (q - qOld) / h;
+	//std::cout << q.transpose() << std::endl;
+	_Vector qBefore = q;
+	bool clamped = false;
+	clamped = ClampRotationVector(q, qdot, 0);
+	//q = qBefore;
+	if (clamped)
+	{	
+		//std::cout << Math::RotationConversion_VecToQuat(qBefore) << std::endl;
+		_Vector3 temp = q.segment(3, 3);
+		//std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
+		
+		_Vector3 r = qOld.segment(3, 3);
+		_Scalar theta = r.norm();
+		_Scalar eta = (_Scalar)(1.0f - 2.0f * M_PI / theta);
 
-	//ClampRotationVector(q, qdot, 0);
+		//temp = qOld.segment(3, 3);
+		//std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
+		qOld.segment(3, 3) = eta * r;
+		//temp = qOld.segment(3, 3);
+		//std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
+		//qdot = (q - qOld) / h;
+		
+		//Physics::simPause = true;
+	}
 	Forward();
+	//std::cout << "w_abs_world " << w_abs_world[0].transpose() << std::endl;
 }
 
 //***************************************************************************************************

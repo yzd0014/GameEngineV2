@@ -68,7 +68,7 @@ namespace eae6320
 		void UpdateXdot(_Vector& o_xdot, _Vector& i_qdot, std::vector<int>& i_jointType);
 		void UpdateQdot(_Vector& o_qdot, _Vector& i_qdot, std::vector<int>& i_jointType);
 		
-		void ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i);
+		bool ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i);
 		_Scalar ComputeAngularVelocityConstraint(_Vector3& w, _Vector3& p, _Matrix3& Rot, int i_limitType, _Scalar phi);
 		_Scalar ComputeKineticEnergy();
 		_Scalar ComputePotentialEnergy();
@@ -139,6 +139,7 @@ namespace eae6320
 		void HingeJointTest();
 		void BallJointTest();
 		void GeneralTest();
+		void DoubleCubeTest();
 		void RunUnitTest();
 		
 		void FDTest();
@@ -153,6 +154,7 @@ namespace eae6320
 		_Vector qdot;
 		_Vector x;//used for position solve
 		_Vector xdot;
+		_Vector qOld;
 		std::vector<int> jointType;
 		std::vector<int> posDOF;
 		std::vector<int> xDOF;//used for position solve
@@ -187,8 +189,6 @@ namespace eae6320
 		std::vector<_Matrix> D;
 		std::vector<_Matrix> Ht;
 		std::vector<_Matrix> H;
-		std::vector<_Matrix> Gt;//Gt is the same as Ht when there is no ball joint.
-		std::vector<_Matrix> G;//G is the same as H when there is no ball joint.
 		std::vector<_Matrix> HtDerivativeTimes_b;
 		std::vector<_Matrix> MassMatrixDerivativeTimes_b;
 		std::vector<_Matrix> mA;
@@ -228,12 +228,12 @@ namespace eae6320
 		_Scalar swingEpsilon = 1e-6;//0.000001;
 		
 		std::vector<_Scalar> totalTwist;
-		std::vector<_Matrix3> old_R_local;
 
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;
 		_Vector3 angularMomentum0;
 		_Vector3 linearMomentum0;
+		_Vector3 gravity_coeff;
 		//_Vector conservedQuantity;
 
 		int tickCountSimulated = 0;
@@ -248,6 +248,7 @@ namespace eae6320
 		_Scalar animationDuration = 5;
 		_Scalar dt;
 		_Scalar totalJointError = 0;
+		bool isT0 = true;
 
 		std::function<void()> m_control;
 		std::function<void()> m_MatlabSave;
