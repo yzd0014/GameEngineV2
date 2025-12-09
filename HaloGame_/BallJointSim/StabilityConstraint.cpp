@@ -354,10 +354,10 @@ void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
 
 void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint, momentum constraint, velocity only, no alpha
 {
-	Forward();
+	ForwardAngularAndTranslationalVelocity(Ht, qdot);
 	
 	int energeMomentumConstraintDim = 7;
-	int nq = totalVelDOF;
+	int nq = totalVelDOF + 2;
 	int n = nq + energeMomentumConstraintDim;
 
 	_Vector mq(nq);
@@ -368,7 +368,13 @@ void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint, mom
 	grad_C.setZero();
 
 	_Matrix DInv;
-	DInv = Mr.inverse();
+	DInv.resize(nq, nq);
+	DInv.setZero();
+	DInv.block(0, 0, totalVelDOF, totalVelDOF) = MrInverse;
+	_Scalar coeff_s_t = 100;
+	DInv(totalVelDOF, totalVelDOF) = 1.0 / coeff_s_t;
+	DInv(totalVelDOF + 1, totalVelDOF + 1) = 1.0 / coeff_s_t;
+	//std::cout << "DInv " << DInv.row(totalVelDOF) << std::endl;
 
 	_Matrix Kp(3, totalVelDOF);
 	Kp.setZero();
@@ -388,10 +394,9 @@ void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint, mom
 	grad_C.block(1, 0, 3, totalVelDOF) = Kp;
 	grad_C.block(4, 0, 3, totalVelDOF) = Kl;
 	
-	_Matrix C_expected(energeMomentumConstraintDim, 1);
-	C_expected(0, 0) = totalEnergy0 - ComputePotentialEnergy();
-	C_expected.block<3, 1>(1, 0) = ComputeTranslationalMomentum();
-	C_expected.block<3, 1>(4, 0) = ComputeAngularMomentum();
+	_Scalar kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
+	_Vector3 linearMomentum1 = ComputeTranslationalMomentum();
+	_Vector3 angularMomentum1 = ComputeAngularMomentum();
 
 	_Scalar energyErr = 1.0;
 	_Matrix C(energeMomentumConstraintDim, 1);
@@ -399,20 +404,28 @@ void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint, mom
 	int iter = 0;
 	while (true)
 	{
-		C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0);
-		C.block<3, 1>(1, 0) = Kp * mq.segment(0, totalVelDOF);
-		C.block<3, 1>(4, 0) = Kl * mq.segment(0, totalVelDOF);
-		C = C - C_expected;
+		C(0, 0) = ComputeKineticEnergy() - kineticEnergy0;
+		C.block<3, 1>(1, 0) = Kp * mq.segment(0, totalVelDOF) - linearMomentum1 - mq(totalVelDOF) * (linearMomentum0 - linearMomentum1);
+		C.block<3, 1>(4, 0) = Kl * mq.segment(0, totalVelDOF) - angularMomentum1 - mq(totalVelDOF + 1) * (angularMomentum0 - angularMomentum1);
+		//std::cout << C.transpose() << std::endl;
+	
 		_Scalar C_norm = C.norm();
-		std::cout << "C_norm " << C_norm << std::endl;
-		if (C_norm < 1e-2 || iter >= 20)
+		//std::cout << "C_norm " << C_norm << std::endl;
+		
+		if (C_norm < 1e-6 || iter >= 20)
 		{
+			std::cout << "s " << mq(totalVelDOF) << " t " << mq(totalVelDOF + 1) << std::endl;
+			std::cout << "C_norm " << C_norm << " iter " << iter << std::endl;
 			break;
 		}
 		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * mq.segment(0, totalVelDOF)).transpose();
-		//std::cout << "DInv " << DInv.determinant() << std::endl;
+		grad_C.block(1, totalVelDOF, 3, 1) = linearMomentum1 - linearMomentum0;
+		grad_C.block(4, totalVelDOF + 1, 3, 1) = angularMomentum1 - angularMomentum0;
+		//std::cout << "grad_C " << grad_C.transpose() << std::endl;
+		//std::cout << "DInv " << DInv << std::endl;
 		_Matrix K = grad_C * DInv * grad_C.transpose();
 		//std::cout << "K det " << K.determinant() << std::endl;
+		//std::cout << "K " << K << std::endl;
 		if (K.determinant() < 1e-7)
 		{
 			_Matrix mI;
@@ -421,15 +434,16 @@ void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint, mom
 			K = K + 1e-7 * mI;
 		}
 		lambdaNew = K.inverse() * C;
+		//std::cout << "lambdaNew " << lambdaNew << std::endl;
 		_Vector delta_q;
 		delta_q = DInv * grad_C.transpose() * lambdaNew;
-		//std::cout << "delta_q " << delta_q.transpose() << std::endl;
+		//std::cout << "delta_q " << grad_C.transpose() * lambdaNew << std::endl;
+		//std::cout << "DInv " << DInv.row(totalVelDOF) << std::endl;
 		mq = mq - delta_q;
-		ForwardAngularAndTranslationalVelocity(Ht, mq);
+		qdot = mq.segment(0, totalVelDOF);
+		ForwardAngularAndTranslationalVelocity(Ht, qdot);
 		iter++;
 	}
-	qdot = mq;
-	std::cout << "energy constraint iter: " << iter << std::endl;
 }
 
 void eae6320::MultiBody::EnergyConstraintPositionVelocity()
@@ -549,111 +563,6 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		//std::cout << std::setprecision(16) << "C(0, 0) " << C(0, 0) << std::endl << std::endl;
 		iter++;
 	}
-	std::cout << "energy constraint iter: " << iter << std::endl;
-}
-
-void eae6320::MultiBody::EnergyConstraintPositionVelocityV2()//position constraint converted into velocity constraint
-{
-	CopyFromQ2X(jointType);
-	ComputeExponentialMapJacobian(x, xJointType, xStartIndex);
-	UpdateXdot(xdot, qdot, jointType);
-	
-	int energeMomentumConstraintDim = 1;
-	int nq = totalXDOF;
-	int n = nq + energeMomentumConstraintDim;
-
-	std::vector<_Matrix> Ht_x;
-	std::vector<_Matrix> H_x;
-	Ht_x.resize(numOfLinks);
-	H_x.resize(numOfLinks);
-	ComputeHt(Ht_x, H_x, x, rel_ori, xJointType, xStartIndex);
-	_Matrix Mr_x;
-	Mr_x.resize(totalVelDOF, totalVelDOF);
-	ComputeMr(Mr_x, Ht_x);
-	ForwardAngularAndTranslationalVelocity(Ht_x, xdot);
-	_Matrix D(nq, nq);
-	D.setZero();
-	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
-	_Matrix DInv = D.inverse();
-
-	_Vector mq(nq);
-	mq.setZero();
-	mq.segment(0, totalVelDOF) = xdot;
-
-	_Matrix grad_C(energeMomentumConstraintDim, nq);
-	grad_C.setZero();
-
-	_Matrix C(energeMomentumConstraintDim, 1);
-	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
-
-	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
-	_Vector x0 = x;
-	int iter = 0;
-	while (abs(C(0, 0)) > 1e-4)
-	{
-		//std::cout << "energy err: " << C(0, 0) << std::endl;
-		/*if (iter >= 10)
-		{
-			break;
-		}*/
-		
-		std::vector<_Vector> bm;
-		bm.resize(numOfLinks);
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			_Vector vec;
-			vec.resize(6);
-			vec.segment(0, 3) = vel[i];
-			vec.segment(3, 3) = w_abs_world[i];
-			bm[i] = vec;
-		}
-		ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, x, Ht_x, H_x, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
-		std::vector<_Matrix> positionDerivative;
-		ComputeDxOverDp(positionDerivative, Ht_x, totalVelDOF);
-
-		_Matrix M0;
-		M0.resize(1, totalVelDOF);
-		M0.setZero();
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			//***********************kinetic energy derivative*****************************
-			M0 = M0 + qdot.transpose() * Ht_x[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht_x[i].transpose() * MassMatrixDerivativeTimes_b[i];
-			//***********************potential energy derivative*****************************
-			_Vector3 g(0.0f, 9.81f, 0.0f);
-			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * positionDerivative[i];
-		}
-		
-		//C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0) - totalEnergy0;
-		grad_C.block(0, 0, 1, totalVelDOF) = pApp->GetSimulationUpdatePeriod_inSeconds() * M0 + (Mr_x * mq.segment(0, totalVelDOF)).transpose();
-		//std::cout << "grad_C " << grad_C << std::endl << std::endl;
-		_Matrix K = grad_C * DInv * grad_C.transpose();
-		//std::cout << "K " << K << std::endl << std::endl;
-		if (K.determinant() < 1e-7)
-		{
-			_Matrix mI;
-			mI.resize(energeMomentumConstraintDim, energeMomentumConstraintDim);
-			mI.setIdentity();
-			K = K + 1e-7 * mI;
-		}
-		lambdaNew = K.inverse() * C;
-		//std::cout << "lambdaNew " << lambdaNew << std::endl << std::endl;
-		_Vector correction = -DInv * grad_C.transpose() * lambdaNew;
-		//std::cout << "grad_C" << grad_C.transpose() << std::endl << std::endl;
-		//std::cout << "DInv" << DInv << std::endl;
-		//std::cout << "correction " << correction.transpose() << std::endl;
-		mq = mq + correction;
-		x = x0 + mq * pApp->GetSimulationUpdatePeriod_inSeconds();
-		
-		ComputeHt(Ht_x, H_x, x, rel_ori, xJointType, xStartIndex);
-		ComputeMr(Mr_x, Ht_x);
-		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
-		DInv = D.inverse();
-
-		ForwardAngularAndTranslationalVelocity(Ht_x, mq);
-		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
-		iter++;
-	}
-	UpdateQdot(qdot, mq, jointType);
 	std::cout << "energy constraint iter: " << iter << std::endl;
 }
 

@@ -155,6 +155,7 @@ namespace eae6320
 		_Vector x;//used for position solve
 		_Vector xdot;
 		_Vector qOld;
+		_Vector qPre;
 		std::vector<int> jointType;
 		std::vector<int> posDOF;
 		std::vector<int> xDOF;//used for position solve

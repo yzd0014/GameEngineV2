@@ -20,7 +20,7 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	totalEnergy0 = ComputeTotalEnergy();
 	angularMomentum0 = ComputeAngularMomentum();
 	linearMomentum0 = ComputeTranslationalMomentum();
-	std::cout << "initial total energy: " << totalEnergy0 << std::endl;
+	std::cout << std::setprecision(16) << "initial total energy: " << totalEnergy0 << std::endl;
 	//std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
 	//std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
 }
@@ -164,13 +164,12 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
 	/*if (isT0)
 	{
-		qOld = q - pApp->GetSimulationUpdatePeriod_inSeconds() * qdot;
+		qOld = q - i_secondCountToIntegrate * qdot;
 		isT0 = false;
 	}*/
 	tickCountSimulated++;
-	{
-		//SaveDataToMatlab(20);
-	}
+	if (m_MatlabSave) SaveDataToMatlab(2.8);
+	if (m_HoudiniSave)
 	{
 		frameNum = 250;
 		animationDuration = (frameNum - 1) * (1.0 / 24.0);;
@@ -191,7 +190,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Vector3 momErr = angularMomentum - angularMomentum0;
 	//std::cout << "linear " << momentum.norm() << std::endl;
 	//std::cout << "angular " << angularMomentum.norm() << std::endl;
-	std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
 bool eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
@@ -292,8 +291,11 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 
 	qdot = qdot + qddot * h;
 	qdot = damping * qdot;
+
+	//AcceleratedEnergyConstraintV2();
+	//AcceleratedEnergyConstraint();
 	//ConstraintSolve(h);
-	//EnergyConstraintPositionVelocityV2();
+	
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
 	//EnergyConstraintPositionVelocity();
@@ -966,36 +968,6 @@ void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
 		};
 		fclose(pFile);
 		std::cout << "data saved to file" << std::endl;
-	}
-	if (UserInput::IsKeyFromReleasedToPressed('K'))
-	{
-		//Save data to Houdini
-		static int frames_saved = 1;
-		LOG_TO_FILE << frames_saved << ",";
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			_Vector3 vecRot = Math::RotationConversion_QuatToVec(obs_ori[i]);
-			_Scalar rotAngle = vecRot.norm();
-			if (abs(rotAngle) < 1e-8)
-			{
-				vecRot = _Vector3(1, 0, 0);
-			}
-			else
-			{
-				vecRot = vecRot / rotAngle;
-			}
-			LOG_TO_FILE << pos[i](0) << "," << pos[i](1) << "," << pos[i](2) << "," << vecRot(0) << "," << vecRot(1) << "," << vecRot(2) << "," << rotAngle;
-			if (i != numOfLinks - 1)
-			{
-				LOG_TO_FILE << ",";
-			}
-			else
-			{
-				LOG_TO_FILE << std::endl;
-			}
-		}
-		frames_saved++;
-		std::cout << "a frame saved!" << std::endl;
 	}
 }
 

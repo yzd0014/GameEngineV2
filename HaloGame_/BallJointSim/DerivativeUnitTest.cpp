@@ -112,7 +112,7 @@ void eae6320::MultiBody::AnalyticalVsFD()
 		//Compute J1
 		_Matrix3 J1;
 		int j = parentArr[1];
-		_Vector3 r = x.segment(posStartIndex[1], 3);
+		_Vector3 r = x.segment(xStartIndex[1], 3);
 		_Scalar theta = r.norm();
 		_Scalar b = Compute_b(theta);
 		_Scalar a = Compute_a(theta);
@@ -149,10 +149,13 @@ void eae6320::MultiBody::AnalyticalVsFD()
 		//std::cout << std::setprecision(16) << PosDerivative[0] << std::endl << std::endl;
 		std::cout << std::setprecision(16) << PosDerivative[1] << std::endl;
 		std::cout << "============================" << std::endl;
+		std::cout << std::setprecision(16) << PosDerivative3 << std::endl << std::endl;
+		std::cout << "============================" << std::endl;
+		//std::cout << std::setprecision(16) << PosDerivativeFD[0] << std::endl << std::endl;
+		std::cout << std::setprecision(16) << Ht_x[1].block<3, 6>(0, 0) << std::endl << std::endl;
+		std::cout << "============================" << std::endl;
 		//std::cout << std::setprecision(16) << PosDerivativeFD[0] << std::endl << std::endl;
 		std::cout << std::setprecision(16) << PosDerivativeFD[1] << std::endl << std::endl;
-		std::cout << "============================" << std::endl;
-		std::cout << std::setprecision(16) << PosDerivative3 << std::endl << std::endl;
 		
 	}
 }

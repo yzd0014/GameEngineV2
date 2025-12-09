@@ -987,6 +987,111 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, st
 	Forward();
 }
 
+void eae6320::MultiBody::EnergyConstraintPositionVelocityV2()//position constraint converted into velocity constraint
+{
+	CopyFromQ2X(jointType);
+	ComputeExponentialMapJacobian(x, xJointType, xStartIndex);
+	UpdateXdot(xdot, qdot, jointType);
+
+	int energeMomentumConstraintDim = 1;
+	int nq = totalXDOF;
+	int n = nq + energeMomentumConstraintDim;
+
+	std::vector<_Matrix> Ht_x;
+	std::vector<_Matrix> H_x;
+	Ht_x.resize(numOfLinks);
+	H_x.resize(numOfLinks);
+	ComputeHt(Ht_x, H_x, x, rel_ori, xJointType, xStartIndex);
+	_Matrix Mr_x;
+	Mr_x.resize(totalVelDOF, totalVelDOF);
+	ComputeMr(Mr_x, Ht_x);
+	ForwardAngularAndTranslationalVelocity(Ht_x, xdot);
+	_Matrix D(nq, nq);
+	D.setZero();
+	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
+	_Matrix DInv = D.inverse();
+
+	_Vector mq(nq);
+	mq.setZero();
+	mq.segment(0, totalVelDOF) = xdot;
+
+	_Matrix grad_C(energeMomentumConstraintDim, nq);
+	grad_C.setZero();
+
+	_Matrix C(energeMomentumConstraintDim, 1);
+	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
+
+	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+	_Vector x0 = x;
+	int iter = 0;
+	while (abs(C(0, 0)) > 1e-4)
+	{
+		//std::cout << "energy err: " << C(0, 0) << std::endl;
+		/*if (iter >= 10)
+		{
+			break;
+		}*/
+
+		std::vector<_Vector> bm;
+		bm.resize(numOfLinks);
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			_Vector vec;
+			vec.resize(6);
+			vec.segment(0, 3) = vel[i];
+			vec.segment(3, 3) = w_abs_world[i];
+			bm[i] = vec;
+		}
+		ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, x, Ht_x, H_x, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		std::vector<_Matrix> positionDerivative;
+		ComputeDxOverDp(positionDerivative, Ht_x, totalVelDOF);
+
+		_Matrix M0;
+		M0.resize(1, totalVelDOF);
+		M0.setZero();
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			//***********************kinetic energy derivative*****************************
+			M0 = M0 + qdot.transpose() * Ht_x[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht_x[i].transpose() * MassMatrixDerivativeTimes_b[i];
+			//***********************potential energy derivative*****************************
+			_Vector3 g(0.0f, 9.81f, 0.0f);
+			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * positionDerivative[i];
+		}
+
+		//C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0) - totalEnergy0;
+		grad_C.block(0, 0, 1, totalVelDOF) = pApp->GetSimulationUpdatePeriod_inSeconds() * M0 + (Mr_x * mq.segment(0, totalVelDOF)).transpose();
+		//std::cout << "grad_C " << grad_C << std::endl << std::endl;
+		_Matrix K = grad_C * DInv * grad_C.transpose();
+		//std::cout << "K " << K << std::endl << std::endl;
+		if (K.determinant() < 1e-7)
+		{
+			_Matrix mI;
+			mI.resize(energeMomentumConstraintDim, energeMomentumConstraintDim);
+			mI.setIdentity();
+			K = K + 1e-7 * mI;
+		}
+		lambdaNew = K.inverse() * C;
+		//std::cout << "lambdaNew " << lambdaNew << std::endl << std::endl;
+		_Vector correction = -DInv * grad_C.transpose() * lambdaNew;
+		//std::cout << "grad_C" << grad_C.transpose() << std::endl << std::endl;
+		//std::cout << "DInv" << DInv << std::endl;
+		//std::cout << "correction " << correction.transpose() << std::endl;
+		mq = mq + correction;
+		x = x0 + mq * pApp->GetSimulationUpdatePeriod_inSeconds();
+
+		ComputeHt(Ht_x, H_x, x, rel_ori, xJointType, xStartIndex);
+		ComputeMr(Mr_x, Ht_x);
+		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
+		DInv = D.inverse();
+
+		ForwardAngularAndTranslationalVelocity(Ht_x, mq);
+		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
+		iter++;
+	}
+	UpdateQdot(qdot, mq, jointType);
+	std::cout << "energy constraint iter: " << iter << std::endl;
+}
+
 void eae6320::MultiBody::VariationalIntegration(const _Scalar h)
 {
 	std::vector<_Matrix> H_predicted, H_old;
@@ -1037,32 +1142,43 @@ void eae6320::MultiBody::VariationalIntegration(const _Scalar h)
 	qOld = q;
 	q = q_new;
 	qdot = (q - qOld) / h;
+	//std::cout << qOld.transpose() << std::endl;
 	//std::cout << q.transpose() << std::endl;
-	_Vector qBefore = q;
-	bool clamped = false;
-	clamped = ClampRotationVector(q, qdot, 0);
-	//q = qBefore;
-	if (clamped)
-	{	
-		//std::cout << Math::RotationConversion_VecToQuat(qBefore) << std::endl;
-		_Vector3 temp = q.segment(3, 3);
-		//std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
-		
-		_Vector3 r = qOld.segment(3, 3);
-		_Scalar theta = r.norm();
-		_Scalar eta = (_Scalar)(1.0f - 2.0f * M_PI / theta);
 
-		//temp = qOld.segment(3, 3);
-		//std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
-		qOld.segment(3, 3) = eta * r;
-		//temp = qOld.segment(3, 3);
-		//std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
-		//qdot = (q - qOld) / h;
-		
-		//Physics::simPause = true;
-	}
+	//_Vector qBefore = q;
+	//_Vector qdotBefore = qdot;
+	//bool clamped = false;
+	//clamped = ClampRotationVector(q, qdot, 0);
+	////q = qBefore;
+	////qdot = qdotBefore;
+	//
+	//if (clamped)
+	//{
+	//	ComputeHt(Ht, H, qBefore, rel_ori, jointType, posStartIndex);
+	//	_Vector oldOmega = Ht[0] * qdotBefore;
+	//	ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
+	//	qdot = Ht[0].inverse() * oldOmega;
+	//
+	//	//std::cout << Math::RotationConversion_VecToQuat(qBefore) << std::endl;
+	//	//_Vector3 temp = q.segmegnt(3, 3);
+	//	//std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
+
+	//	_Vector3 r = qOld.segment(3, 3);
+	//	_Scalar theta = r.norm();
+	//	_Scalar eta = (_Scalar)(1.0f - 2.0f * M_PI / theta);
+
+	//	//temp = qOld.segment(3, 3);
+	//	//std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
+	//	qOld.segment(3, 3) = eta * r;
+	//	////temp = qOld.segment(3, 3);
+	//	////std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
+	//	////qdot = (q - qOld) / h;
+
+	//	//Physics::simPause = true;
+	//}
 	Forward();
 	//std::cout << "w_abs_world " << w_abs_world[0].transpose() << std::endl;
+	//std::cout << "vel[0] " << vel[0].transpose() << std::endl;
 }
 
 //***************************************************************************************************
