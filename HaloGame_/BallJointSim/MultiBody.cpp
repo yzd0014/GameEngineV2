@@ -298,12 +298,12 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
-	//EnergyConstraintPositionVelocity();
+	EnergyConstraintPositionVelocity();
 	//AcceleratedEnergyConstraintV2();
 	//AcceleratedEnergyConstraint();
-	Forward();
+	//Forward();
 
-	//totalEnergy0 = ComputeTotalEnergy();
+	totalEnergy0 = ComputeTotalEnergy();
 	kineticEnergy0 = ComputeKineticEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum();
 	angularMomentum0 = ComputeAngularMomentum();

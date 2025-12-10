@@ -12,13 +12,19 @@
 void eae6320::MultiBody::AnalyticalVsFD()
 {
 	int m_jointType = BALL_JOINT_4D;
-	int m_mode = 2;//0 tests Jacobian derivative, 1 tests intertia derivative, 2 tests position dervative
+	int m_mode = 1;//0 tests Jacobian derivative, 1 tests intertia derivative, 2 tests position dervative
 	constraintSolverMode = IMPULSE;
 	gravity = true;
 
-	_Matrix3 localInertiaTensor;
-	localInertiaTensor.setIdentity();
-	if (geometry == BOX) localInertiaTensor = localInertiaTensor * (1.0f / 12.0f)* rigidBodyMass * 8;
+	localInertiaTensor.setZero();
+	{
+		_Scalar x = 1;
+		_Scalar y = 2;
+		_Scalar z = 3;
+		localInertiaTensor(0, 0) = 1.0f / 12.0f * rigidBodyMass * (y * y + z * z);
+		localInertiaTensor(1, 1) = 1.0f / 12.0f * rigidBodyMass * (x * x + z * z);
+		localInertiaTensor(2, 2) = 1.0f / 12.0f * rigidBodyMass * (x * x + y * y);
+	}
 
 	if (m_jointType == HINGE_JOINT)
 	{
@@ -54,7 +60,7 @@ void eae6320::MultiBody::AnalyticalVsFD()
 		fread(&qdot(i), sizeof(double), 1, pFile);
 	}
 	fclose(pFile);
-	//Forward();
+	Forward();
 	
 	CopyFromQ2X(jointType);
 	ComputeExponentialMapJacobian(x, xJointType, xStartIndex);
@@ -84,6 +90,8 @@ void eae6320::MultiBody::AnalyticalVsFD()
 		vec.segment(3, 3) = w_abs_world[i];
 		bm[i] = vec;
 	}
+	std::cout << std::setprecision(16) << bm[0].transpose() << std::endl;
+	std::cout << std::setprecision(16) << bm[1].transpose() << std::endl;
 	
 	/*for (int i = 0; i < 8; i++)
 	{

@@ -450,52 +450,41 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 {
 	Forward();
 
-	CopyFromQ2X(jointType);
-	ComputeExponentialMapJacobian(x, xJointType, xStartIndex);
-	UpdateXdot(xdot, qdot, jointType);
-	
-	int nq = 2 * totalVelDOF;
-	int energeMomentumConstraintDim = 1;
-	_Matrix grad_C(energeMomentumConstraintDim, nq);
+	int posVelDof = 2 * totalVelDOF;
+	int totalDof = posVelDof + 2;
+	int energeMomentumConstraintDim = 7;
+	_Matrix grad_C(energeMomentumConstraintDim, totalDof);
 	grad_C.setZero();
 
-	std::vector<_Matrix> Ht_x;
-	std::vector<_Matrix> H_x;
-	Ht_x.resize(numOfLinks);
-	H_x.resize(numOfLinks);	
-	ComputeHt(Ht_x, H_x, x, rel_ori, xJointType, xStartIndex);
-	_Matrix Mr_x;
-	Mr_x.resize(totalVelDOF, totalVelDOF);
-	ComputeMr(Mr_x, Ht_x);
-	ForwardAngularAndTranslationalVelocity(Ht, qdot);
-
-	_Matrix D(nq, nq);
+	_Matrix D(totalDof, totalDof);
 	D.setZero();
-	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
+	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
 	_Scalar dt = pApp->GetSimulationUpdatePeriod_inSeconds();
 	D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
+	_Scalar coeff_s_t = 1e-3;
+	D(posVelDof, posVelDof) = coeff_s_t;
+	D(posVelDof + 1, posVelDof + 1) = coeff_s_t;
 	_Matrix DInv = D.inverse();
-	//std::cout << std::setprecision(16) << "Mr_x " << Mr_x << std::endl << std::endl;
 
-	_Vector mq(nq);
+	_Vector mq(totalDof);
 	mq.setZero();
-	mq.segment(0, totalVelDOF) = x;
+	mq.segment(0, totalVelDOF) = q;
 	mq.segment(totalVelDOF, totalVelDOF) = qdot;
 	
-	_Matrix C(energeMomentumConstraintDim, 1);
-	C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
-
-	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+	_Vector3 linearMomentum1 = ComputeTranslationalMomentum();
+	_Vector3 angularMomentum1 = ComputeAngularMomentum();
 	
+	_Matrix M0(1, totalVelDOF);
+	_Matrix M1(3, totalVelDOF);
+	_Matrix M2(3, totalVelDOF);
+	_Matrix Kp(3, totalVelDOF);
+	_Matrix Kl(3, totalVelDOF);
+
+	_Matrix C(energeMomentumConstraintDim, 1);
+	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
 	int iter = 0;
-	_Vector mq_old = mq;//for debug
-	while (abs(C(0, 0)) > 1e-3)
+	while (true)
 	{
-		//if (iter >= 10)
-		//{
-		//	//std::cout << "limit reached!" << std::endl;
-		//	break;
-		//}
 		std::vector<_Vector> bm;
 		bm.resize(numOfLinks);
 		for (int i = 0; i < numOfLinks; i++)
@@ -506,25 +495,54 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 			vec.segment(3, 3) = w_abs_world[i];
 			bm[i] = vec;
 		}
-		//ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b, 1e-6);
-		ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, x, Ht_x, H_x, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
-		std::vector<_Matrix> positionDerivative;
-		ComputeDxOverDp(positionDerivative, Ht_x, totalVelDOF);
 		
-		_Matrix M0;
-		M0.resize(1, totalVelDOF);
+		//ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b, 1e-6);
+		ComputeJacobianAndInertiaDerivative(totalVelDOF, qdot, bm, q, Ht, H, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
 		M0.setZero();
+		M1.setZero();
+		M2.setZero();
+		Kp.setZero();
+		Kl.setZero();
 		for (int i = 0; i < numOfLinks; i++)
 		{
 			//***********************kinetic energy derivative*****************************
-			M0 = M0 + qdot.transpose() * Ht_x[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht_x[i].transpose() * MassMatrixDerivativeTimes_b[i];
+			M0 = M0 + qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
 			//***********************potential energy derivative*****************************
 			_Vector3 g(0.0f, 9.81f, 0.0f);
-			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * positionDerivative[i];
+			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
+
+			//***********************linear monentum derivative*****************************
+			M1 = M1 + Mbody[i].block<3, 3>(0, 0) * HtDerivativeTimes_b[i].block(0, 0, 3, totalVelDOF);
+			Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
+			//***********************angular monentum derivative*****************************
+			M2 = M2 + MassMatrixDerivativeTimes_b[i].block(3, 0, 3, totalVelDOF) + Mbody[i].block<3, 3>(3, 3) * HtDerivativeTimes_b[i].block(3, 0, 3, totalVelDOF)
+				+ rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * HtDerivativeTimes_b[i].block(0, 0, 3, totalVelDOF) - rigidBodyMass * Math::ToSkewSymmetricMatrix(vel[i]) * Ht[i].block(0, 0, 3, totalVelDOF);
+			Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Ht[i].block(0, 0, 3, totalVelDOF);
+		}
+		
+		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
+		C.block<3, 1>(1, 0) = Kp * mq.segment(totalVelDOF, totalVelDOF) - linearMomentum1 - mq(posVelDof) * (linearMomentum0 - linearMomentum1);
+		C.block<3, 1>(4, 0) = Kl * mq.segment(totalVelDOF, totalVelDOF) - angularMomentum1 - mq(posVelDof + 1) * (angularMomentum0 - angularMomentum1);
+		_Scalar C_norm = C.norm();
+		if (C_norm < 1e-6 || iter >= 20)
+		{
+			break;
 		}
 		
 		grad_C.block(0, 0, 1, totalVelDOF) = M0;
 		grad_C.block(0, totalVelDOF, 1, totalVelDOF) = (Mr * qdot).transpose();
+		
+		grad_C.block(1, 0, 3, totalVelDOF) = M1;
+		grad_C.block(1, totalVelDOF, 3, totalVelDOF) = Kp;
+		grad_C.block(1, posVelDof, 3, 1) = linearMomentum1 - linearMomentum0;
+
+		grad_C.block(4, 0, 3, totalVelDOF) = M2;
+		grad_C.block(4, totalVelDOF, 3, totalVelDOF) = Kl;
+		grad_C.block(4, posVelDof + 1, 3, 1) = angularMomentum1 - angularMomentum0;
+
+		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
+		D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
+		DInv = D.inverse();
 		_Matrix K = grad_C * DInv * grad_C.transpose();
 		//std::cout << std::setprecision(16) << "K " << K << std::endl << std::endl;
 		if (K.determinant() < 1e-7)
@@ -539,31 +557,12 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		mq = mq + delta_q;
 
 		//update D's position part
-		x = mq.segment(0, totalVelDOF);
-		ComputeHt(Ht_x, H_x, x, rel_ori, xJointType, xStartIndex);
-		ComputeMr(Mr_x, Ht_x);
-		ComputeExponentialMapJacobian(x, xJointType, xStartIndex);
-		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr_x;
-		
-		//update D's velocity part
-		CopyFromX2Q(jointType);
-		ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
-		ComputeMr(Mr, Ht);
-		_Scalar dt = pApp->GetSimulationUpdatePeriod_inSeconds();
-		D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
-		DInv = D.inverse();
-		
-		//update qdot
+		q = mq.segment(0, totalVelDOF);
 		qdot = mq.segment(totalVelDOF, totalVelDOF);
-		ForwardAngularAndTranslationalVelocity(Ht, qdot);
-		//update xdot
-		UpdateXdot(xdot, qdot, jointType);
-
-		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
-		//std::cout << std::setprecision(16) << "C(0, 0) " << C(0, 0) << std::endl << std::endl;
+		Forward();
 		iter++;
 	}
-	std::cout << "energy constraint iter: " << iter << std::endl;
+	std::cout << "energy constraint iter: " << iter << " s " << mq(posVelDof) << " t " << mq(posVelDof + 1) << std::endl;
 }
 
 void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta)
@@ -596,11 +595,7 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _
 		{
 			ComputeHt(Ht, H, perturbed_x[k], rel_ori, xJointType, xStartIndex);
 			d1 = Ht[i] * i_bj;
-
-			//std::cout << std::endl << std::setprecision(16) << d1 << std::endl;
-			//std::cout << std::endl << std::setprecision(16) << d0 << std::endl;
 			o_Jacobian[i].block<6, 1>(0, k) = (d1 - d0) / delta;
-			//std::cout << std::endl << std::setprecision(16) << (d1 - d0) / delta << std::endl;
 		}
 	}
 
