@@ -300,17 +300,19 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 
 	qdot = qdot + qddot * h;
 	qdot = damping * qdot;
-
+	
+	//ForwardAngularAndTranslationalVelocity(Ht, qdot);
 	//AcceleratedEnergyConstraintV2();
-	//AcceleratedEnergyConstraint();
+	
 	//ConstraintSolve(h);
 	
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
 	//EnergyConstraintPositionVelocity();
-	//AcceleratedEnergyConstraintV2();
-	//AcceleratedEnergyConstraint();
+	
 	Forward();
+	AcceleratedEnergyConstraintV2();
+	//AcceleratedEnergyConstraint();
 
 	totalEnergy0 = ComputeTotalEnergy();
 	kineticEnergy0 = ComputeKineticEnergy();
