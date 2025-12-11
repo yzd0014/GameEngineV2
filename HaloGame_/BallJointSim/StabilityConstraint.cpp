@@ -16,18 +16,22 @@ void eae6320::MultiBody::SQP()//energy conservation + momentum conservation and 
 	_Matrix b(n, 1);
 	_Matrix grad_F(n, n);
 
+	_Matrix regularization(n, n);
+	regularization.setIdentity();
+	regularization = 1e-6 * regularization;
+	
+	_Vector q0(nq);
+	q0.setZero();
+	q0.segment(0, totalVelDOF) = qdot;
+	
 	_Vector x(n);
 	x.setZero();
-	x.segment(0, totalVelDOF) = qdot;
-
-	_Vector qt(nq);
-	qt.setZero();
-	qt.segment(0, totalVelDOF) = qdot;
+	x.segment(0, nq) = q0;
 
 	_Matrix D(nq, nq);
 	D.setZero();
-	D.block(0, 0, totalVelDOF, totalVelDOF) = _Matrix::Identity(totalVelDOF, totalVelDOF);
-	_Scalar m_coeff = 10;
+	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
+	_Scalar m_coeff = 1e-3;
 	D(totalVelDOF, totalVelDOF) = m_coeff;
 	D(totalVelDOF + 1, totalVelDOF + 1) = m_coeff;
 
@@ -35,47 +39,41 @@ void eae6320::MultiBody::SQP()//energy conservation + momentum conservation and 
 	Kp.setZero();
 	_Matrix Kl(3, totalVelDOF);
 	Kl.setZero();
-	_Matrix Sv(3, 6);
-	Sv.setZero();
-	Sv.block<3, 3>(0, 0) = _Matrix::Identity(3, 3);
-	_Matrix Sw(3, 6);
-	Sw.setZero();
-	Sw.block<3, 3>(0, 3) = _Matrix::Identity(3, 3);
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Sv * Ht[i];
-		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Sw * Ht[i] + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Sv * Ht[i];
+		Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
+		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Ht[i].block(0, 0, 3, totalVelDOF);
 	}
 
-	_Scalar kineticEnergyExpected = totalEnergy0 - ComputePotentialEnergy();
-	_Vector3 linearMomentumNew = ComputeTranslationalMomentum();
-	_Vector3 angularMomentumNew = ComputeAngularMomentum();
-	_Matrix grad_C(7, nq);
+	_Scalar kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
+	_Vector3 linearMomentum1 = ComputeTranslationalMomentum();
+	_Vector3 angularMomentum1 = ComputeAngularMomentum();
+	_Matrix grad_C(energeMomentumConstraintDim, nq);
 	grad_C.setZero();
 	grad_C.block(1, 0, 3, totalVelDOF) = Kp;
 	grad_C.block(4, 0, 3, totalVelDOF) = Kl;
-	grad_C.block<3, 1>(1, totalVelDOF) = linearMomentumNew - linearMomentum0;
-	grad_C.block<3, 1>(4, totalVelDOF + 1) = angularMomentumNew - angularMomentum0;
+	grad_C.block<3, 1>(1, totalVelDOF) = linearMomentum1 - linearMomentum0;
+	grad_C.block<3, 1>(4, totalVelDOF + 1) = angularMomentum1 - angularMomentum0;
 
 	_Scalar energyErr = 1.0;
-	_Matrix C(7, 1);
+	_Matrix C(energeMomentumConstraintDim, 1);
 	int iter = 0;
-	while (energyErr > 1e-3)
+	while (true)
 	{
-		if (iter >= 5)
+		C(0, 0) = ComputeKineticEnergy() - kineticEnergy0;
+		C.block<3, 1>(1, 0) = Kp * x.segment(0, totalVelDOF) - linearMomentum1 - x(totalVelDOF) * (linearMomentum0 - linearMomentum1);
+		C.block<3, 1>(4, 0) = Kl * x.segment(0, totalVelDOF) - angularMomentum1 - x(totalVelDOF + 1) * (angularMomentum0 - angularMomentum1);
+		_Scalar C_norm = C.norm();
+		if (C_norm < 1e-6 || iter >= 20)
 		{
-			std::cout << "limit reached!" << std::endl;
+			std::cout << "s " << x(totalVelDOF) << " t " << x(totalVelDOF + 1) << std::endl;
+			std::cout << "C_norm " << C_norm << " iter " << iter << std::endl;
 			break;
 		}
-			
-		//C(0, 0) = 0.5 * (x.segment(0, totalVelDOF).transpose() * Mr * x.segment(0, totalVelDOF))(0, 0) - kineticEnergy0;
-		C(0, 0) = 0.5 * (x.segment(0, totalVelDOF).transpose() * Mr * x.segment(0, totalVelDOF))(0, 0) - kineticEnergyExpected;
-		//std::cout << C(0, 0) << std::endl;
-		C.block<3, 1>(1, 0) = Kp * x.segment(0, totalVelDOF) - (1 - x(totalVelDOF)) * linearMomentumNew - x(totalVelDOF) * linearMomentum0;
-		C.block<3, 1>(4, 0) = Kl * x.segment(0, totalVelDOF) - (1 - x(totalVelDOF + 1)) * angularMomentumNew - x(totalVelDOF + 1) * angularMomentum0;
+		
 		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * x.segment(0, totalVelDOF)).transpose();
 
-		b.block(0, 0, nq, 1) = -D * (x.segment(0, nq) - qt);
+		b.block(0, 0, nq, 1) = -D * (x.segment(0, nq) - q0);
 		b.block<7, 1>(nq, 0) = -C;
 
 		_Matrix HessianC_lambda(nq, nq);
@@ -83,32 +81,25 @@ void eae6320::MultiBody::SQP()//energy conservation + momentum conservation and 
 		HessianC_lambda.block(0, 0, totalVelDOF, totalVelDOF) = x(nq) * Mr;
 
 		grad_F.setZero();
-		grad_F.block(0, 0, nq, nq) = D - HessianC_lambda;
-		grad_F.block(0, nq, nq, 7) = -grad_C.transpose();
+		grad_F.block(0, 0, nq, nq) = D + HessianC_lambda;
+		grad_F.block(0, nq, nq, 7) = grad_C.transpose();
 		grad_F.block(nq, 0, 7, nq) = grad_C;
 		if (grad_F.determinant() < 1e-6)
 		{
-			EAE6320_ASSERTF(false, "grad_f is not invertable");
+			//EAE6320_ASSERTF(false, "grad_f is not invertable");
+			grad_F = grad_F + regularization;
 		}
-		_Vector y(n);
-		y.setZero();
-		y = grad_F.inverse() * b;
-		x.segment(0, nq) = x.segment(0, nq) + y.segment(0, nq);
-		//std::cout << y.segment(0, nq).transpose() << std::endl;
-		x.segment(nq, energeMomentumConstraintDim) = y.segment(nq, energeMomentumConstraintDim);
-		_Vector qdot_new = x.segment(0, totalVelDOF);
-		ForwardAngularAndTranslationalVelocity(Ht, qdot_new);
-		//energyErr = fabs(ComputeKineticEnergy() - kineticEnergy0);
-		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
-		//energyErr = ComputeTotalEnergy();
-		//std::cout << "expected momentum " << linearMomentumNew.transpose() << " actual momentum " << ComputeTranslationalMomentum().transpose() << std::endl;
-		//std::cout << "expected momentum " << angularMomentum0.transpose() << " actual momentum " << ComputeAngularMomentum().transpose() << std::endl;
-		//std::cout << ComputeTotalEnergy() << std::endl;
+		_Vector p(n);
+		p.setZero();
+		p = grad_F.inverse() * b;
+		x.segment(0, nq) = x.segment(0, nq) + p.segment(0, nq);
+		x.segment(nq, energeMomentumConstraintDim) = p.segment(nq, energeMomentumConstraintDim);
+		
+		qdot = x.segment(0, totalVelDOF);
+		ForwardAngularAndTranslationalVelocity(Ht, qdot);
+		
 		iter++;
 	}
-	qdot = x.segment(0, totalVelDOF);
-	//std::cout << endl;
-	//std::cout << "Energy at end of solve " << ComputeTotalEnergy() << std::endl;
 }
 
 void eae6320::MultiBody::EnergyConstraintV2()//energy conservation + momentum conservation and energy interpolation
@@ -388,6 +379,8 @@ void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint, mom
 	_Scalar kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
 	_Vector3 linearMomentum1 = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum1 = ComputeAngularMomentum();
+	grad_C.block(1, totalVelDOF, 3, 1) = linearMomentum1 - linearMomentum0;
+	grad_C.block(4, totalVelDOF + 1, 3, 1) = angularMomentum1 - angularMomentum0;
 
 	_Scalar energyErr = 1.0;
 	_Matrix C(energeMomentumConstraintDim, 1);
@@ -407,8 +400,6 @@ void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint, mom
 			break;
 		}
 		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * mq.segment(0, totalVelDOF)).transpose();
-		grad_C.block(1, totalVelDOF, 3, 1) = linearMomentum1 - linearMomentum0;
-		grad_C.block(4, totalVelDOF + 1, 3, 1) = angularMomentum1 - angularMomentum0;
 	
 		_Matrix K = grad_C * DInv * grad_C.transpose();
 		if (K.determinant() < 1e-7)

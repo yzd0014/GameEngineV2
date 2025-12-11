@@ -303,6 +303,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	
 	//ForwardAngularAndTranslationalVelocity(Ht, qdot);
 	//AcceleratedEnergyConstraintV2();
+	//SQP();
 	
 	//ConstraintSolve(h);
 	
@@ -311,8 +312,9 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//EnergyConstraintPositionVelocity();
 	
 	Forward();
-	AcceleratedEnergyConstraintV2();
+	//AcceleratedEnergyConstraintV2();
 	//AcceleratedEnergyConstraint();
+	SQP();
 
 	totalEnergy0 = ComputeTotalEnergy();
 	kineticEnergy0 = ComputeKineticEnergy();
