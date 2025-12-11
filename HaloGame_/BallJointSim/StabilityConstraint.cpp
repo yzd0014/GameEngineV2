@@ -865,7 +865,8 @@ void eae6320::MultiBody::ComputeExponentialMapJacobian(_Vector& i_x, std::vector
 	{
 		if (i_jointType[i] == BALL_JOINT_3D)
 		{
-			ComputeExponentialMapJacobian(i_x, i, i_posStartIndex);
+			_Vector3 r = i_x.segment(i_posStartIndex[i], 3);
+			ComputeExponentialMapJacobian(J_exp[i], r, i);
 		}
 	}
 }

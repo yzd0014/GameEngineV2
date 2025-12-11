@@ -326,18 +326,17 @@ namespace eae6320
 			return zeta;
 		}
 		
-		inline _Matrix ComputeExponentialMapJacobian(_Vector& i_q, int i, std::vector<int>& i_posStartIndex)
+		inline _Matrix ComputeExponentialMapJacobian(_Matrix3& o_J, _Vector3 r, int i)
 		{
 			int j = parentArr[i];
-			_Vector3 r = i_q.segment(i_posStartIndex[i], 3);
 			_Scalar theta = r.norm();
 			_Scalar b = Compute_b(theta);
 			_Scalar a = Compute_a(theta);
 			_Scalar c = Compute_c(theta, a);
-			J_exp[i] = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
+			o_J = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
 			_Matrix3 A;
-			if (i == 0) A = J_exp[i];
-			else A = R_global[j] * J_exp[i];
+			if (i == 0) A = o_J;
+			else A = R_global[j] * o_J;
 
 			_Matrix out;
 			out.resize(6, 3);

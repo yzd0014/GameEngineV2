@@ -213,16 +213,25 @@ bool eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, in
 	bool clamped = false;
 	if (theta > M_PI)
 	{
+		/*_Matrix3 H_before; 
+		ComputeExponentialMapJacobian(H_before, r, i);
+		_Vector3 rdot = io_qdot.segment(jointVelIndex, 3);
+		_Vector3 omega = H_before * rdot;*/
+
 		_Scalar eta = (_Scalar)(1.0f - 2.0f * M_PI / theta);
 
 		//reparameterize position
 		std::cout << "rotation vector clamped" << std::endl;
-		io_q.segment(jointPosIndex, 3) = eta * r;
+		_Vector r_new = eta * r;
+		io_q.segment(jointPosIndex, 3) = r_new;
 
 		//reparameterize velocity
 		_Vector3 r_dot = io_qdot.segment(jointVelIndex, 3);
 		_Vector3 r_dot_new = eta * r_dot + 2 * M_PI * (r.dot(r_dot) / pow(theta, 3)) * r;
 		io_qdot.segment(jointVelIndex, 3) = r_dot_new;
+	/*	_Matrix3 H_after;
+		ComputeExponentialMapJacobian(H_after, r_new, i);
+		io_qdot.segment(jointVelIndex, 3) = H_after.inverse() * omega;*/
 		clamped = true;
 	}
 	return clamped;
@@ -298,10 +307,10 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
-	EnergyConstraintPositionVelocity();
+	//EnergyConstraintPositionVelocity();
 	//AcceleratedEnergyConstraintV2();
 	//AcceleratedEnergyConstraint();
-	//Forward();
+	Forward();
 
 	totalEnergy0 = ComputeTotalEnergy();
 	kineticEnergy0 = ComputeKineticEnergy();
@@ -369,7 +378,8 @@ void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matr
 		else if (i_jointType[i] == BALL_JOINT_3D)
 		{
 			//compute H
-			o_H[i] = ComputeExponentialMapJacobian(i_q, i, i_posStartIndex);
+			_Vector3 r = i_q.segment(i_posStartIndex[i], 3);
+			o_H[i] = ComputeExponentialMapJacobian(J_exp[i], r, i);
 			//compute D
 			if (i > 0)
 			{
