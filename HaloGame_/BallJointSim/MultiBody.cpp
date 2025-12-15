@@ -162,11 +162,13 @@ void eae6320::MultiBody::ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, 
 
 void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 {	
-	/*if (isT0)
+	if (isT0)
 	{
+		std::cout << q.transpose() << std::endl;
+		std::cout << qdot.transpose() << std::endl;
 		qOld = q - i_secondCountToIntegrate * qdot;
 		isT0 = false;
-	}*/
+	}
 	tickCountSimulated++;
 	if (m_MatlabSave) SaveDataToMatlab(2.8);
 	if (m_HoudiniSave)

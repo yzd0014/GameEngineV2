@@ -720,23 +720,6 @@ joints, then velStartIndex need to be replaced by posStartIndex
 	}
 }
 
-void eae6320::MultiBody::ComputeDxOverDp(std::vector<_Matrix>& o_derivative, std::vector<_Matrix>& i_Ht, int i_totalDOF)
-{
-	o_derivative.resize(numOfLinks);
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		o_derivative[i].resize(3, i_totalDOF);
-		if (i == 0)
-		{
-			o_derivative[0] = -ComputeDuGlobalOverDp(uGlobalsChild[0], i_Ht[0], i_totalDOF);
-		}
-		else
-		{
-			o_derivative[i] = o_derivative[i - 1] - ComputeDuGlobalOverDp(uGlobalsChild[i], i_Ht[i], i_totalDOF) + ComputeDuGlobalOverDp(uGlobalsParent[i], i_Ht[i - 1], i_totalDOF);
-		}
-	}
-}
-
 void eae6320::MultiBody::ComputeDxOverDpFD(std::vector<_Matrix>& o_derivative, _Vector& i_x, _Scalar i_delta)
 {
 	_Scalar delta = i_delta;
@@ -770,13 +753,6 @@ void eae6320::MultiBody::ComputeDxOverDpFD(std::vector<_Matrix>& o_derivative, _
 	}
 }
 
-_Matrix eae6320::MultiBody::ComputeDuGlobalOverDp(_Vector3& uGlobal, _Matrix& i_Ht, int i_totalDOF)
-{
-	_Matrix output;
-	output.resize(3, i_totalDOF);
-	output = -Math::ToSkewSymmetricMatrix(uGlobal) * i_Ht.block(3, 0, 3, i_totalDOF);
-	return output;
-}
 
 //_Matrix eae6320::MultiBody::ComputeDhGlobalOverDp(int i)
 //{

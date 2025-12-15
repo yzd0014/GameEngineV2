@@ -1145,37 +1145,39 @@ void eae6320::MultiBody::VariationalIntegration(const _Scalar h)
 	//std::cout << qOld.transpose() << std::endl;
 	//std::cout << q.transpose() << std::endl;
 
-	//_Vector qBefore = q;
-	//_Vector qdotBefore = qdot;
-	//bool clamped = false;
-	//clamped = ClampRotationVector(q, qdot, 0);
-	////q = qBefore;
-	////qdot = qdotBefore;
-	//
-	//if (clamped)
-	//{
-	//	ComputeHt(Ht, H, qBefore, rel_ori, jointType, posStartIndex);
-	//	_Vector oldOmega = Ht[0] * qdotBefore;
-	//	ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
-	//	qdot = Ht[0].inverse() * oldOmega;
-	//
-	//	//std::cout << Math::RotationConversion_VecToQuat(qBefore) << std::endl;
-	//	//_Vector3 temp = q.segmegnt(3, 3);
-	//	//std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
+	_Vector qBefore = q;
+	_Vector qdotBefore = qdot;
+	bool clamped = false;
+	clamped = ClampRotationVector(q, qdot, 0);
+	//q = qBefore;
+	//qdot = qdotBefore;
+	
+	if (clamped)
+	{
+		ComputeHt(Ht, H, qBefore, rel_ori, jointType, posStartIndex);
+		_Vector oldOmega = Ht[0] * qdotBefore;
+		ComputeHt(Ht, H, q, rel_ori, jointType, posStartIndex);
+		qdot = Ht[0].inverse() * oldOmega;
+	
+		//std::cout << Math::RotationConversion_VecToQuat(qBefore) << std::endl;
+		//_Vector3 temp = q.segmegnt(3, 3);
+		//std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
 
-	//	_Vector3 r = qOld.segment(3, 3);
-	//	_Scalar theta = r.norm();
-	//	_Scalar eta = (_Scalar)(1.0f - 2.0f * M_PI / theta);
+		_Vector3 r = qOld.segment(3, 3);
+		_Scalar theta = r.norm();
+		_Scalar eta = (_Scalar)(1.0f - 2.0f * M_PI / theta);
 
-	//	//temp = qOld.segment(3, 3);
-	//	//std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
-	//	qOld.segment(3, 3) = eta * r;
-	//	////temp = qOld.segment(3, 3);
-	//	////std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
-	//	////qdot = (q - qOld) / h;
+		//temp = qOld.segment(3, 3);
+		//std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
+		
+		//qOld.segment(3, 3) = eta * r;
+		
+		////temp = qOld.segment(3, 3);
+		////std::cout << Math::RotationConversion_VecToQuat(temp) << std::endl;
+		////qdot = (q - qOld) / h;
 
-	//	//Physics::simPause = true;
-	//}
+		Physics::simPause = true;
+	}
 	Forward();
 	//std::cout << "w_abs_world " << w_abs_world[0].transpose() << std::endl;
 	//std::cout << "vel[0] " << vel[0].transpose() << std::endl;

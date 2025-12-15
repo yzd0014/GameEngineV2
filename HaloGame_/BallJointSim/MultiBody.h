@@ -58,7 +58,6 @@ namespace eae6320
 			std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
 		void ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
 		void ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
-		void ComputeDxOverDp(std::vector<_Matrix>& o_derivative, std::vector<_Matrix>& i_Ht, int i_totalDOF);
 		void ComputeDxOverDpFD(std::vector<_Matrix>& o_derivative, _Vector& i_x, _Scalar i_delta);
 		void Populate_q(std::vector<_Quat>& i_quat, _Vector& o_q);
 		void Populate_quat(_Vector& i_q, std::vector<_Quat>& o_quat, bool normalization);
@@ -75,9 +74,6 @@ namespace eae6320
 		_Scalar ComputeTotalEnergy();
 		_Vector3 ComputeTranslationalMomentum();
 		_Vector3 ComputeAngularMomentum();
-
-		_Matrix ComputeDuGlobalOverDp(_Vector3& uGlobal, _Matrix& i_Ht, int i_totalDOF);//currently only works for hinge joint and ball joint 3d
-		_Matrix ComputeDhGlobalOverDp(int i);//currently only works for hinge joint
 		
 		void SwingLimitCheck();
 		void ResolveSwingLimit(const _Scalar h);
