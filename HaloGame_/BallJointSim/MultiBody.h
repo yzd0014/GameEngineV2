@@ -54,10 +54,10 @@ namespace eae6320
 		void Forward();
 		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		_Matrix Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vector i_bj);
-		void ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Vector& i_bj, std::vector<_Vector>& i_bm, _Vector& i_x, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H, 
+		void ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Vector& i_bj, _Vector& i_x, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H, 
 			std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
 		void ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
-		void ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
+		void ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _Vector& i_bj, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
 		void ComputeDxOverDpFD(std::vector<_Matrix>& o_derivative, _Vector& i_x, _Scalar i_delta);
 		void Populate_q(std::vector<_Quat>& i_quat, _Vector& o_q);
 		void Populate_quat(_Vector& i_q, std::vector<_Quat>& o_quat, bool normalization);

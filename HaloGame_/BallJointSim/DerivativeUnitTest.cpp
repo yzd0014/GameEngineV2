@@ -40,7 +40,7 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	}
 
 	MultiBodyInitialization();
-	const char* filePath = "key_press_save.txt";
+	const char* filePath = "derivative_test_data.txt";
 	FILE* pFile = fopen(filePath, "rb");
 	int qDof = static_cast<int>(q.size());
 	for (int i = 0; i < qDof; i++)
@@ -80,26 +80,6 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	PosDerivativeFD.resize(numOfLinks);
 	_Matrix PosDerivative3;
 
-	std::vector<_Vector> bm;
-	bm.resize(numOfLinks);
-	for (int i = 0; i < numOfLinks; i++)
-	{
-		_Vector vec;
-		vec.resize(6);
-		vec.segment(0, 3) = vel[i];
-		vec.segment(3, 3) = w_abs_world[i];
-		bm[i] = vec;
-	}
-	std::cout << std::setprecision(16) << bm[0].transpose() << std::endl;
-	std::cout << std::setprecision(16) << bm[1].transpose() << std::endl;
-	
-	/*for (int i = 0; i < 8; i++)
-	{
-		ComputeJacobianAndInertiaDerivativeFDV2(x, qdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -2 - i));
-		LOG_TO_FILE << std::setprecision(std::numeric_limits<double>::max_digits10);
-		LOG_TO_FILE << HtDerivativeFD[0](0, 0) << std::endl;
-	}*/
-	
 	std::vector<_Matrix> Ht_x;
 	std::vector<_Matrix> H_x;
 	Ht_x.resize(numOfLinks);
@@ -107,13 +87,11 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	ComputeHt(Ht_x, H_x, x, rel_ori, xJointType, xStartIndex);
 	if (m_mode == 0 || m_mode == 1)
 	{
-		ComputeJacobianAndInertiaDerivativeFDV2(x, xdot, bm, HtDerivativeFD, MassDerivativeFD, pow(10, -9));
-		ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, bm, x, Ht_x, H_x, HtDerivativeAnalytical, MassDerivativeAnalytical);
+		ComputeJacobianAndInertiaDerivativeFDV2(x, xdot, HtDerivativeFD, MassDerivativeFD, pow(10, -9));
+		ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, x, Ht_x, H_x, HtDerivativeAnalytical, MassDerivativeAnalytical);
 	}
 	else  if (m_mode == 2)
 	{
-		ComputeDxOverDp(PosDerivative, Ht_x, totalVelDOF);
-	
 		PosDerivative3.resize(3, 6);
 		PosDerivative3.block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(pos[1]) * H_x[0].block<3, 3>(3, 0);
 		_Vector3 localV = R_local[1] * uLocalsChild[1];

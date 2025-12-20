@@ -499,17 +499,46 @@ void eae6320::MultiBody::BallJointTest()
 	AddRigidBody(3, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 4
 
 	MultiBodyInitialization();
-	if (ballJointType == BALL_JOINT_3D)  q.segment(3, 3) = _Vector3(0, M_PI / 8, 0);
-	else if (ballJointType == BALL_JOINT_4D) rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
-	
+	{
+		if (ballJointType == BALL_JOINT_3D)  q.segment(3, 3) = _Vector3(0, M_PI / 8, 0);
+		else if (ballJointType == BALL_JOINT_4D) rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
+	}
+	/*{
+		const char* filePath = "key_press_save.txt";
+		FILE* pFile = fopen(filePath, "rb");
+		int qDof = static_cast<int>(q.size());
+		for (int i = 0; i < qDof; i++)
+		{
+			fread(&q(i), sizeof(double), 1, pFile);
+		}
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			fread(&rel_ori[i].w(), sizeof(double), 1, pFile);
+			fread(&rel_ori[i].x(), sizeof(double), 1, pFile);
+			fread(&rel_ori[i].y(), sizeof(double), 1, pFile);
+			fread(&rel_ori[i].z(), sizeof(double), 1, pFile);
+		}
+		int vDof = static_cast<int>(qdot.size());
+		for (int i = 0; i < vDof; i++)
+		{
+			fread(&qdot(i), sizeof(double), 1, pFile);
+		}
+		fclose(pFile);
+	}*/
 	Forward();
 
+	m_control = [this]()
+	{
+		qOld = q;
+		xdot = qdot;
+	};
+	
 	m_keyPressSave = [this](FILE * i_pFile)
 	{
 		int qDof = static_cast<int>(q.size());
 		for (int i = 0; i < qDof; i++)
 		{
-			fwrite(&q(i), sizeof(double), 1, i_pFile);
+			fwrite(&qOld(i), sizeof(double), 1, i_pFile);
 		}
 		for (int i = 0; i < numOfLinks; i++)
 		{
@@ -521,37 +550,7 @@ void eae6320::MultiBody::BallJointTest()
 		int vDof = static_cast<int>(qdot.size());
 		for (int i = 0; i < vDof; i++)
 		{
-			fwrite(&qdot(i), sizeof(double), 1, i_pFile);
-		}
-
-		CopyFromQ2X(jointType);
-		ComputeExponentialMapJacobian(x, xJointType, xStartIndex);
-		UpdateXdot(xdot, qdot, jointType);
-		int xDof = static_cast<int>(x.size());
-		//save data for matlab verfication
-		for (int i = 0; i < xDof; i++)
-		{
-			LOG_TO_FILE << x(i);
-			if (i == xDof - 1)
-			{
-				LOG_TO_FILE << endl;
-			}
-			else
-			{
-				LOG_TO_FILE << " ";
-			}
-		}
-		for (int i = 0; i < xDof; i++)
-		{
-			LOG_TO_FILE << xdot(i);
-			if (i == xDof - 1)
-			{
-				LOG_TO_FILE << endl;
-			}
-			else
-			{
-				LOG_TO_FILE << " ";
-			}
+			fwrite(&xdot(i), sizeof(double), 1, i_pFile);
 		}
 	};
 }
