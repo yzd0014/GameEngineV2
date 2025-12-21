@@ -12,7 +12,7 @@
 void eae6320::MultiBody::AnalyticalVsFD()
 {
 	int m_jointType = BALL_JOINT_4D;
-	int m_mode = 0;//0 tests Jacobian derivative, 1 tests intertia derivative, 2 tests position dervative
+	int m_mode = 2;//0 tests Jacobian derivative, 1 tests intertia derivative, 2 tests position dervative
 	constraintSolverMode = IMPULSE;
 	gravity = true;
 
@@ -112,36 +112,36 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	if (m_mode == 0)
 	{
 		std::cout << "Jacobain dervative" << std::endl;
-		std::cout << std::setprecision(16) << HtDerivativeAnalytical[0] << std::endl << std::endl;
-		std::cout << HtDerivativeAnalytical[1] << std::endl;
+		std::cout << std::setprecision(16) << HtDerivativeAnalytical[0]- HtDerivativeFD[0] << std::endl << std::endl;
+		std::cout << HtDerivativeAnalytical[1]- HtDerivativeFD[1] << std::endl;
 		std::cout << "============================" << std::endl;
-		std::cout << std::setprecision(16) << HtDerivativeFD[0] << std::endl << std::endl;
-		std::cout << std::setprecision(16) << HtDerivativeFD[1] << std::endl << std::endl;
+		//std::cout << std::setprecision(16) << HtDerivativeFD[0] << std::endl << std::endl;
+		//std::cout << std::setprecision(16) << HtDerivativeFD[1] << std::endl << std::endl;
 	}
 	else if (m_mode == 1)
 	{
 		std::cout << "mass dervative" << std::endl;
-		std::cout << std::setprecision(16) << MassDerivativeAnalytical[0] << std::endl << std::endl;
-		std::cout << MassDerivativeAnalytical[1] << std::endl;
+		std::cout << std::setprecision(16) << MassDerivativeAnalytical[0] - MassDerivativeFD[0] << std::endl << std::endl;
+		std::cout << MassDerivativeAnalytical[1] - MassDerivativeFD[1] << std::endl;
 		std::cout << "============================" << std::endl;
-		std::cout << std::setprecision(16) << MassDerivativeFD[0] << std::endl << std::endl;
-		std::cout << std::setprecision(16) << MassDerivativeFD[1] << std::endl << std::endl;
+		//std::cout << std::setprecision(16) << MassDerivativeFD[0] << std::endl << std::endl;
+		//std::cout << std::setprecision(16) << MassDerivativeFD[1] << std::endl << std::endl;
 		//LOG_TO_FILE << std::setprecision(std::numeric_limits<double>::max_digits10);
 		//LOG_TO_FILE << HtDerivativeFD[0](0, 0) << std::endl;
 	}
 	else if (m_mode == 2)
 	{
 		std::cout << "position dervative" << std::endl;
-		//std::cout << std::setprecision(16) << PosDerivative[0] << std::endl << std::endl;
-		std::cout << std::setprecision(16) << PosDerivative[1] << std::endl;
+		std::cout << std::setprecision(16) << Ht_x[0].block<3, 6>(0, 0) - PosDerivativeFD[0] << std::endl << std::endl;
+		std::cout << std::setprecision(16) << Ht_x[1].block<3, 6>(0, 0) - PosDerivativeFD[1] << std::endl;
 		std::cout << "============================" << std::endl;
-		std::cout << std::setprecision(16) << PosDerivative3 << std::endl << std::endl;
-		std::cout << "============================" << std::endl;
-		//std::cout << std::setprecision(16) << PosDerivativeFD[0] << std::endl << std::endl;
-		std::cout << std::setprecision(16) << Ht_x[1].block<3, 6>(0, 0) << std::endl << std::endl;
-		std::cout << "============================" << std::endl;
-		//std::cout << std::setprecision(16) << PosDerivativeFD[0] << std::endl << std::endl;
-		std::cout << std::setprecision(16) << PosDerivativeFD[1] << std::endl << std::endl;
 		
+		//std::cout << std::setprecision(16) << PosDerivative3 << std::endl << std::endl;
+		//std::cout << "============================" << std::endl;
+		////std::cout << std::setprecision(16) << PosDerivativeFD[0] << std::endl << std::endl;
+		//std::cout << std::setprecision(16) << PosDerivativeFD[1] << std::endl << std::endl;
+		//std::cout << "============================" << std::endl;
+		////std::cout << std::setprecision(16) << PosDerivativeFD[0] << std::endl << std::endl;
+		//std::cout << std::setprecision(16) << PosDerivativeFD[1] << std::endl << std::endl;
 	}
 }
