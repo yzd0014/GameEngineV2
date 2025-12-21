@@ -499,11 +499,11 @@ void eae6320::MultiBody::BallJointTest()
 	AddRigidBody(3, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 4
 
 	MultiBodyInitialization();
-	{
+	/*{
 		if (ballJointType == BALL_JOINT_3D)  q.segment(3, 3) = _Vector3(0, M_PI / 8, 0);
 		else if (ballJointType == BALL_JOINT_4D) rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
-	}
-	/*{
+	}*/
+	{
 		const char* filePath = "key_press_save.txt";
 		FILE* pFile = fopen(filePath, "rb");
 		int qDof = static_cast<int>(q.size());
@@ -524,7 +524,7 @@ void eae6320::MultiBody::BallJointTest()
 			fread(&qdot(i), sizeof(double), 1, pFile);
 		}
 		fclose(pFile);
-	}*/
+	}
 	Forward();
 
 	m_control = [this]()

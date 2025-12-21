@@ -393,6 +393,7 @@ void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint, mom
 		C.block<3, 1>(4, 0) = Kl * mq.segment(0, totalVelDOF) - angularMomentum1 - mq(totalVelDOF + 1) * (angularMomentum0 - angularMomentum1);
 	
 		_Scalar C_norm = C.norm();
+		std::cout << "C_norm " << C_norm << std::endl;
 		if (C_norm < 1e-4 || iter >= 20)
 		{
 			std::cout << "s " << mq(totalVelDOF) << " t " << mq(totalVelDOF + 1) << std::endl;
@@ -437,6 +438,7 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
 	_Scalar dt = pApp->GetSimulationUpdatePeriod_inSeconds();
 	D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
+	//D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = Mr;
 	_Scalar coeff_s_t = 1e-3;
 	D(posVelDof, posVelDof) = coeff_s_t;
 	D(posVelDof + 1, posVelDof + 1) = coeff_s_t;
@@ -489,10 +491,10 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		C.block<3, 1>(1, 0) = Kp * mq.segment(totalVelDOF, totalVelDOF) - linearMomentum1 - mq(posVelDof) * (linearMomentum0 - linearMomentum1);
 		C.block<3, 1>(4, 0) = Kl * mq.segment(totalVelDOF, totalVelDOF) - angularMomentum1 - mq(posVelDof + 1) * (angularMomentum0 - angularMomentum1);
 		_Scalar C_norm = C.norm();
-		//std::cout << "C_norm " << C_norm << std::endl;
+		std::cout << "C_norm " << C_norm << std::endl;
 		if (C_norm < 1e-4 || iter >= 20)
 		{
-			if (iter >= 20) Physics::simPause = true;
+			//if (iter >= 20) Physics::simPause = true;
 			break;
 		}
 		
@@ -508,10 +510,20 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		grad_C.block(4, posVelDof + 1, 3, 1) = angularMomentum1 - angularMomentum0;
 
 		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
-		D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
+		//D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
+		D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = Mr;
 		DInv = D.inverse();
+		
 		_Matrix K = grad_C * DInv * grad_C.transpose();
-		//std::cout << std::setprecision(16) << "K " << K << std::endl << std::endl;
+	
+		/*	Eigen::JacobiSVD<Eigen::MatrixXd> svd(K, Eigen::ComputeThinU | Eigen::ComputeThinV);
+		double sigma_max = svd.singularValues()(0);
+		double sigma_min = svd.singularValues().tail(1)(0);
+		double cond = sigma_max / sigma_min;
+		std::cout << "K Condition number: " << cond << std::endl;
+		std::cout << "D determinant: " << D.determinant() << std::endl;
+		std::cout << "K determinant: " << K.determinant() << std::endl;*/
+
 		if (K.determinant() < 1e-7)
 		{
 			_Matrix mI;
@@ -524,6 +536,11 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		mq = mq + delta_q;
 
 		//update D's position part
+	/*	mq.segment(0, totalVelDOF) = qOld;
+		mq.segment(totalVelDOF, totalVelDOF) = xdot;
+		mq(posVelDof) = 1;
+		mq(posVelDof + 1) = 1;*/
+
 		q = mq.segment(0, totalVelDOF);
 		qdot = mq.segment(totalVelDOF, totalVelDOF);
 		Forward();
