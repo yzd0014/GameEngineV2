@@ -464,7 +464,10 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 	while (true)
 	{
 		//ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b, 1e-6);
-		ComputeJacobianAndInertiaDerivative(totalVelDOF, qdot, q, Ht, H, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b);
+		std::vector<_Matrix> mN;
+		ComputeAuxiliaryJacobian(mN, Ht);
+		ComputeJacobianDerivative(HtDerivativeTimes_b, qdot, Ht, H, mN, q, R_global, uGlobalsChild, uGlobalsParent, xJointType);
+		ComputeIntertiaDerivative(MassMatrixDerivativeTimes_b, qdot, Ht, mN, Mbody);
 		M0.setZero();
 		M1.setZero();
 		M2.setZero();
@@ -598,17 +601,17 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _
 	}
 }
 
-_Matrix eae6320::MultiBody::Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vector i_bj)
+_Matrix eae6320::MultiBody::ComputeLocalRotationJacobianDerivative(int joint_id, _Vector& i_q, _Vector& i_b, std::vector<int>& i_jointType)
 {
 	_Matrix out;
 	int i = joint_id;
-	if (xJointType[i] == BALL_JOINT_3D || xJointType[i] == FREE_JOINT_EXPO)
+	if (i_jointType[i] == BALL_JOINT_3D || i_jointType[i] == FREE_JOINT_EXPO)
 	{
 		out.resize(3, 3);
 
 		_Vector3 r;
-		if (xJointType[i] == BALL_JOINT_3D) r = i_x.segment(xStartIndex[i], 3);
-		else r = i_x.segment(posStartIndex[i] + 3, 3);
+		if (i_jointType[i] == BALL_JOINT_3D) r = i_q.segment(velStartIndex[i], 3);
+		else r = i_q.segment(posStartIndex[i] + 3, 3);
 		_Scalar th = r.norm();
 		_Scalar th2 = th * th;
 
@@ -629,8 +632,8 @@ _Matrix eae6320::MultiBody::Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vect
 		}
 
 		_Vector3 b;
-		if (xJointType[i] == BALL_JOINT_3D) b = i_bj.segment(velStartIndex[i], 3);
-		else b = i_bj.segment(velStartIndex[i] + 3, 3);
+		if (i_jointType[i] == BALL_JOINT_3D) b = i_b.segment(velStartIndex[i], 3);
+		else b = i_b.segment(velStartIndex[i] + 3, 3);
 		_Matrix3 bx = Math::ToSkewSymmetricMatrix(b);           // [b]_x
 		_Matrix3 rx = Math::ToSkewSymmetricMatrix(r);           // [r]_x
 		_Vector3 rxb = r.cross(b);       // r × b
@@ -643,19 +646,19 @@ _Matrix eae6320::MultiBody::Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vect
 
 		_Matrix3 sum;
 		sum = term1 + term2 + term3 + term4;
-		if (xJointType[i] == BALL_JOINT_3D)
+		if (i_jointType[i] == BALL_JOINT_3D)
 		{
 			out.resize(3, 3);
 			out = sum;
 		}
-		else if (xJointType[i] == FREE_JOINT_EXPO)
+		else if (i_jointType[i] == FREE_JOINT_EXPO)
 		{
 			out.resize(3, 6);
 			out.setZero();
 			out.block<3, 3>(0, 3) = sum;
 		}
 	}
-	else if (jointType[i] == HINGE_JOINT)
+	else if (i_jointType[i] == HINGE_JOINT)
 	{
 		out.resize(3, 1);
 		out.setZero();
@@ -663,88 +666,107 @@ _Matrix eae6320::MultiBody::Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vect
 	return out;
 }
 
-
-void eae6320::MultiBody::ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Vector& i_bj, _Vector& i_x, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H,
-	std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia)
+void eae6320::MultiBody::ComputeAuxiliaryJacobian(std::vector<_Matrix>& o_Ns, std::vector<_Matrix>& i_Ht)
 {
-	_Matrix mN;
+	o_Ns.resize(numOfLinks);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		int sz = 6 + velDOF[i];
+		int j = parentArr[i];
+		//ComputeN
+		o_Ns[i].resize(sz, totalVelDOF);
+		o_Ns[i].setZero();
+		if (i > 0)
+		{
+			o_Ns[i].block(0, 0, 3, totalVelDOF) = i_Ht[j].block(3, 0, 3, totalVelDOF);
+		}
+		o_Ns[i].block(3, 0, 3, totalVelDOF) = i_Ht[i].block(3, 0, 3, totalVelDOF);
+		for (int k = 0; k < velDOF[i]; k++)
+		{
+			/*
+			This funciton will only be called when all ball joints are converted into exponential representation. If a hybrid of exponential and omega is used for ball
+			joints, then velStartIndex need to be replaced by posStartIndex
+			*/
+			o_Ns[i](6 + k, velStartIndex[i] + k) = 1;
+		}
+	}
+}
+
+void  eae6320::MultiBody::ComputeJacobianDerivative(std::vector<_Matrix>& o_Jacobian, _Vector& i_b,
+	std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H, std::vector<_Matrix>& i_Ns, _Vector& i_q,
+	std::vector<_Matrix3> i_R_global, std::vector<_Vector3>& i_uGlobalsChild, std::vector<_Vector3>& uGlobalsParent, std::vector<int>& i_jointType)
+{
+	o_Jacobian.resize(numOfLinks);
 	_Matrix mB;
-	_Matrix mE;
 	_Matrix mA;
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		int sz = 6 + velDOF[i];	
 		int j = parentArr[i];
-		//ComputeN
-		mN.resize(sz, i_totalDOF);
-		mN.setZero();
-		if (i > 0)
-		{
-			mN.block(0, 0, 3, i_totalDOF) = i_Ht[j].block(3, 0, 3, i_totalDOF);
-		}
-		mN.block(3, 0, 3, i_totalDOF) = i_Ht[i].block(3, 0, 3, i_totalDOF);
-		for (int k = 0; k < velDOF[i]; k++)
-		{
-/*
-This funciton will only be called when all ball joints are converted into exponential representation. If a hybrid of exponential and omega is used for ball
-joints, then velStartIndex need to be replaced by posStartIndex
-*/
-			mN(6 + k, velStartIndex[i] + k) = 1;
-		}
-
+		int sz = 6 + velDOF[i];
 		//ComputeB
 		mB.resize(6, sz);
 		mB.setZero();
-		_Vector3 Vec3;
-		Vec3 = i_H[i].block(3, 0, 3, velDOF[i]) * i_bj.segment(velStartIndex[i], velDOF[i]); //qdot.segment(velStartIndex[i], velDOF[i]) is b
-		mB.block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * Math::ToSkewSymmetricMatrix(Vec3);
-		mB.block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(Vec3) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
-		mB.block<3, 3>(3, 0) = -Math::ToSkewSymmetricMatrix(Vec3);
-		_Matrix dHOmega_dr = Compute_dHOmega_dr(i, i_x, i_bj);
+		{
+			_Vector3 Vec3;
+			Vec3 = i_H[i].block(3, 0, 3, velDOF[i]) * i_b.segment(velStartIndex[i], velDOF[i]); //qdot.segment(velStartIndex[i], velDOF[i]) is b
+			mB.block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(i_uGlobalsChild[i]) * Math::ToSkewSymmetricMatrix(Vec3);
+			mB.block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(Vec3) * Math::ToSkewSymmetricMatrix(i_uGlobalsChild[i]);
+			mB.block<3, 3>(3, 0) = -Math::ToSkewSymmetricMatrix(Vec3);
+		}
+		_Matrix localRotationJacobianDerivative = ComputeLocalRotationJacobianDerivative(i, i_q, i_b, i_jointType);
 		if (i == 0)
 		{
-			mB.block(0, 6, 3, velDOF[i]) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * dHOmega_dr;
-			mB.block(3, 6, 3, velDOF[i]) = dHOmega_dr;
+			mB.block(0, 6, 3, velDOF[i]) = Math::ToSkewSymmetricMatrix(i_uGlobalsChild[i]) * localRotationJacobianDerivative;
+			mB.block(3, 6, 3, velDOF[i]) = localRotationJacobianDerivative;
 		}
 		else
 		{
-			mB.block(0, 6, 3, velDOF[i]) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * R_global[j] * dHOmega_dr;
-			mB.block(3, 6, 3, velDOF[i]) = R_global[j] * dHOmega_dr;
+			mB.block(0, 6, 3, velDOF[i]) = Math::ToSkewSymmetricMatrix(i_uGlobalsChild[i]) * i_R_global[j] * localRotationJacobianDerivative;
+			mB.block(3, 6, 3, velDOF[i]) = i_R_global[j] * localRotationJacobianDerivative;
 		}
-		
-		//ComputeHtDerivativeTimes_b
+
 		if (i == 0)
 		{
-			o_Jacobian[0] = mB * mN;
+			o_Jacobian[0] = mB * i_Ns[0];
 		}
 		else
 		{
 			//ComputeA
 			_Vector3 b2;
-			b2 = (i_Ht[j] * i_bj).segment(3, 3);
+			b2 = (i_Ht[j] * i_b).segment(3, 3);
 			mA.resize(6, sz);
 			mA.setZero();
-			_Vector3 Vec3;
-			Vec3 = hingeMagnitude[i] * hingeDirGlobals[i];
-			mA.block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(b2) * (Math::ToSkewSymmetricMatrix(uGlobalsParent[i]) + Math::ToSkewSymmetricMatrix(Vec3));
+			mA.block<3, 3>(0, 0) = -Math::ToSkewSymmetricMatrix(b2) * Math::ToSkewSymmetricMatrix(uGlobalsParent[i]);
 			mA.block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(b2) * Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
 
-			o_Jacobian[i] = D[i] * o_Jacobian[j] + mA * mN + mB * mN;
+			o_Jacobian[i] = D[i] * o_Jacobian[j] + mA * i_Ns[i] + mB * i_Ns[i];
 		}
-		//ComputeMassMatrixDerivativeTimes_b
-		//ComputeE
+	}
+}
+
+void eae6320::MultiBody::ComputeIntertiaDerivative(std::vector<_Matrix>& o_intertia, _Vector& i_b, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_Ns, std::vector<_Matrix>& i_Mbody)
+{
+	o_intertia.resize(numOfLinks);
+	_Matrix mE;
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		int sz = 6 + velDOF[i];
 		mE.resize(6, sz);
 		mE.setZero();
-		_Vector bm = i_Ht[i] * i_bj;
+		_Vector bm = i_Ht[i] * i_b;
 		_Vector3 b1 = bm.segment(0, 3);
 		_Vector3 b2 = bm.segment(3, 3);
-		_Vector3 V0 = Mbody[i].block<3, 3>(0, 3) * b2;
-		mE.block<3, 3>(0, 3) = -Math::ToSkewSymmetricMatrix(V0) + Mbody[i].block<3, 3>(0, 3) * Math::ToSkewSymmetricMatrix(b2);
-		_Vector3 V1 = Mbody[i].block<3, 3>(3, 0) * b1;
-		_Vector3 V2 = Mbody[i].block<3, 3>(3, 3) * b2;
-		mE.block<3, 3>(3, 3) = -Math::ToSkewSymmetricMatrix(V1) + Mbody[i].block<3, 3>(3, 0) * Math::ToSkewSymmetricMatrix(b1)
-			- Math::ToSkewSymmetricMatrix(V2) + Mbody[i].block<3, 3>(3, 3) * Math::ToSkewSymmetricMatrix(b2);
-		o_intertia[i] = mE * mN;
+		{
+			_Vector3 V0 = i_Mbody[i].block<3, 3>(0, 3) * b2;
+			mE.block<3, 3>(0, 3) = -Math::ToSkewSymmetricMatrix(V0) + i_Mbody[i].block<3, 3>(0, 3) * Math::ToSkewSymmetricMatrix(b2);
+		}
+		{
+			_Vector3 V1 = i_Mbody[i].block<3, 3>(3, 0) * b1;
+			_Vector3 V2 = i_Mbody[i].block<3, 3>(3, 3) * b2;
+			mE.block<3, 3>(3, 3) = -Math::ToSkewSymmetricMatrix(V1) + i_Mbody[i].block<3, 3>(3, 0) * Math::ToSkewSymmetricMatrix(b1)
+				- Math::ToSkewSymmetricMatrix(V2) + i_Mbody[i].block<3, 3>(3, 3) * Math::ToSkewSymmetricMatrix(b2);
+		}
+		o_intertia[i] = mE * i_Ns[i];
 	}
 }
 
@@ -780,19 +802,6 @@ void eae6320::MultiBody::ComputeDxOverDpFD(std::vector<_Matrix>& o_derivative, _
 		}
 	}
 }
-
-
-//_Matrix eae6320::MultiBody::ComputeDhGlobalOverDp(int i)
-//{
-//	_Matrix output;
-//	output.resize(3, totalPosDOF);
-//	_Vector3 h;
-//	h = hingeMagnitude[i] * hingeDirGlobals[i];
-//	int j = parentArr[i];
-//	//output = -Math::ToSkewSymmetricMatrix(h) * Gt[j].block(3, 0, 3, totalPosDOF);
-//	output = -Math::ToSkewSymmetricMatrix(h) * Ht[j].block(3, 0, 3, totalPosDOF);//TODO: replace Ht with the input of the function
-//	return output;
-//}
 
 void eae6320::MultiBody::Populate_q(std::vector<_Quat>& i_quat, _Vector& o_q)
 {

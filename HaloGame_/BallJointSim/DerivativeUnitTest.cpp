@@ -12,7 +12,7 @@
 void eae6320::MultiBody::AnalyticalVsFD()
 {
 	int m_jointType = BALL_JOINT_4D;
-	int m_mode = 2;//0 tests Jacobian derivative, 1 tests intertia derivative, 2 tests position dervative
+	int m_mode = 1;//0 tests Jacobian derivative, 1 tests intertia derivative, 2 tests position dervative
 	constraintSolverMode = IMPULSE;
 	gravity = true;
 
@@ -88,7 +88,10 @@ void eae6320::MultiBody::AnalyticalVsFD()
 	if (m_mode == 0 || m_mode == 1)
 	{
 		ComputeJacobianAndInertiaDerivativeFDV2(x, xdot, HtDerivativeFD, MassDerivativeFD, pow(10, -9));
-		ComputeJacobianAndInertiaDerivative(totalVelDOF, xdot, x, Ht_x, H_x, HtDerivativeAnalytical, MassDerivativeAnalytical);
+		std::vector<_Matrix> mN;
+		ComputeAuxiliaryJacobian(mN, Ht_x);
+		ComputeJacobianDerivative(HtDerivativeAnalytical, xdot, Ht_x, H_x, mN, x, R_global, uGlobalsChild, uGlobalsParent, xJointType);
+		ComputeIntertiaDerivative(MassDerivativeAnalytical, xdot, Ht_x, mN, Mbody);
 	}
 	else  if (m_mode == 2)
 	{

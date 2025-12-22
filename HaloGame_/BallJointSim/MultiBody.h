@@ -53,11 +53,14 @@ namespace eae6320
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		void Forward();
 		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
-		_Matrix Compute_dHOmega_dr(int joint_id, _Vector& i_x, _Vector i_bj);
-		void ComputeJacobianAndInertiaDerivative(int i_totalDOF, _Vector& i_bj, _Vector& i_x, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H, 
-			std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia);
+		_Matrix ComputeLocalRotationJacobianDerivative(int joint_id, _Vector& i_q, _Vector& i_b, std::vector<int>& i_jointType);
 		void ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
 		void ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _Vector& i_bj, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
+		void ComputeAuxiliaryJacobian(std::vector<_Matrix>& o_Ns, std::vector<_Matrix>& i_Ht);
+		void ComputeJacobianDerivative(std::vector<_Matrix>& o_Jacobian, _Vector& i_b,
+			std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H, std::vector<_Matrix>& i_Ns, _Vector& i_q, 
+			std::vector<_Matrix3> i_R_global, std::vector<_Vector3>& i_uGlobalsChild, std::vector<_Vector3>& uGlobalsParent, std::vector<int>& i_jointType);
+		void ComputeIntertiaDerivative(std::vector<_Matrix>& o_intertia, _Vector& i_b, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_Ns, std::vector<_Matrix>& i_Mbody);
 		void ComputeDxOverDpFD(std::vector<_Matrix>& o_derivative, _Vector& i_x, _Scalar i_delta);
 		void Populate_q(std::vector<_Quat>& i_quat, _Vector& o_q);
 		void Populate_quat(_Vector& i_q, std::vector<_Quat>& o_quat, bool normalization);
@@ -135,9 +138,7 @@ namespace eae6320
 		void GeneralTest();
 		void DoubleCubeTest();
 		void RunUnitTest();
-		
-		void FDTest();
-		void AnalyticalTest();
+
 		void AnalyticalVsFD();
 		void HingeJointUnitTest0();
 
