@@ -770,6 +770,21 @@ void eae6320::MultiBody::ComputeIntertiaDerivative(std::vector<_Matrix>& o_inter
 	}
 }
 
+//void  eae6320::MultiBody::ComputeJacobianTransposeDerivative(std::vector<_Matrix>& o_Jacobian, _Vector& i_b,
+//	std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H, std::vector<_Matrix>& i_Ns, _Vector& i_q,
+//	std::vector<_Matrix3> i_R_global, std::vector<_Vector3>& i_uGlobalsChild, std::vector<_Vector3>& uGlobalsParent, std::vector<int>& i_jointType)
+//{
+//	o_Jacobian.resize(numOfLinks);
+//	for (int i = 0; i < numOfLinks; i++)
+//	{
+//		o_Jacobian[i].resize(totalVelDOF, totalVelDOF);
+//		for (int k = 0; k < totalVelDOF; k++)
+//		{
+//
+//		}
+//	}
+//}
+
 void eae6320::MultiBody::ComputeDxOverDpFD(std::vector<_Matrix>& o_derivative, _Vector& i_x, _Scalar i_delta)
 {
 	_Scalar delta = i_delta;

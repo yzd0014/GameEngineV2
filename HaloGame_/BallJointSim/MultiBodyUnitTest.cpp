@@ -435,6 +435,49 @@ void eae6320::MultiBody::UnitTest5_1()
 	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 3.089, 1.5708);
 }
 
+void eae6320::MultiBody::UnitTest0()
+{
+	constraintSolverMode = IMPULSE;
+
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+
+	MultiBodyInitialization();
+	_Vector3 rot_vec(-0.5 * M_PI, 0.0, 0);
+	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
+	Forward();
+	_Vector3 world_w = _Vector3(0.0, -2.0, 0.0);
+	qdot.segment(0, 3) = world_w;
+	Forward();
+	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.5 * M_PI, 1e-6);
+
+	m_HoudiniSave = [this](int frames_number)
+	{
+		LOG_TO_FILE << frames_number << ",";
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			_Vector3 vecRot = Math::RotationConversion_QuatToVec(obs_ori[i]);
+			_Scalar rotAngle = vecRot.norm();
+			if (abs(rotAngle) < 1e-8)
+			{
+				vecRot = _Vector3(1, 0, 0);
+			}
+			else
+			{
+				vecRot = vecRot / rotAngle;
+			}
+			LOG_TO_FILE << pos[i](0) << "," << pos[i](1) << "," << pos[i](2) << "," << vecRot(0) << "," << vecRot(1) << "," << vecRot(2) << "," << rotAngle;
+			if (i != numOfLinks - 1)
+			{
+				LOG_TO_FILE << ",";
+			}
+			else
+			{
+				LOG_TO_FILE << std::endl;
+			}
+		}
+	};
+}
+
 void eae6320::MultiBody::HingeJointTest()
 {
 	constraintSolverMode = IMPULSE;
@@ -568,6 +611,42 @@ void eae6320::MultiBody::DoubleCubeTest()
 	Forward();
 }
 
+void eae6320::MultiBody::CloseLoopTest()
+{
+	constraintSolverMode = IMPULSE;
+	gravity = true;
+	int ballJointType = BALL_JOINT_4D;
+	AddRigidBody(-1, ballJointType, _Vector3(0, 1, 0), _Vector3(0, 0, 0), masterMeshArray[3], Vector3d(0.1, 1, 0.1), localInertiaTensor);//body 0
+	AddRigidBody(0, ballJointType, _Vector3(0, sqrt(2.0), 0), _Vector3(0, -1, 0), masterMeshArray[3], Vector3d(0.1, sqrt(2.0), 0.1), localInertiaTensor);//body 1
+	AddRigidBody(1, ballJointType, _Vector3(0, 1, 0), _Vector3(0, -sqrt(2.0), 0), masterMeshArray[3], Vector3d(0.1, 1, 0.1), localInertiaTensor);//body 2
+
+	MultiBodyInitialization();
+	{
+		if (jointType[1] == BALL_JOINT_4D)
+		{
+			rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, 0, 0.75 * M_PI));
+			rel_ori[2] = Math::RotationConversion_VecToQuat(_Vector3(0, 0, 0.75 * M_PI));
+		}
+		else if (jointType[2] == BALL_JOINT_3D)
+		{
+			q.segment(3, 3) = _Vector3(0, 0, 0.75 * M_PI);
+			q.segment(6, 3) = _Vector3(0, 0, 0.75 * M_PI);
+		}
+		else if (jointType[2] == HINGE_JOINT)
+		{
+			q(1) = 0.75 * M_PI;
+			q(2) = 0.75 * M_PI;
+		}
+		else
+		{
+			EAE6320_ASSERTF(false, "Wrong joint Type");
+			std::cout << "Wrong joint type" << std::endl;
+		}
+	}
+	Forward();
+
+	AddCloseLoop(0, _Vector3(0, 0, 0), _Vector3(0, -2, 0), _Vector3(0, 2, 0));
+}
 
 void eae6320::MultiBody::GeneralTest()
 {
@@ -644,49 +723,6 @@ void eae6320::MultiBody::GeneralTest()
 			fwrite(&qdot(i), sizeof(double), 1, i_pFile);
 		}
 	};*/
-}
-
-void eae6320::MultiBody::UnitTest0()
-{
-	constraintSolverMode = IMPULSE;
-
-	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[4], Vector3d(1, 1, 1), localInertiaTensor);//body 0
-
-	MultiBodyInitialization();
-	_Vector3 rot_vec(-0.5 * M_PI, 0.0, 0);
-	rel_ori[0] = Math::RotationConversion_VecToQuat(rot_vec);
-	Forward();
-	_Vector3 world_w = _Vector3(0.0, -2.0, 0.0);
-	qdot.segment(0, 3) = world_w;
-	Forward();
-	ConfigureSingleBallJoint(0, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), 0.5 * M_PI, 1e-6);
-
-	m_HoudiniSave = [this](int frames_number)
-	{
-		LOG_TO_FILE << frames_number << ",";
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			_Vector3 vecRot = Math::RotationConversion_QuatToVec(obs_ori[i]);
-			_Scalar rotAngle = vecRot.norm();
-			if (abs(rotAngle) < 1e-8)
-			{
-				vecRot = _Vector3(1, 0, 0);
-			}
-			else
-			{
-				vecRot = vecRot / rotAngle;
-			}
-			LOG_TO_FILE << pos[i](0) << "," << pos[i](1) << "," << pos[i](2) << "," << vecRot(0) << "," << vecRot(1) << "," << vecRot(2) << "," << rotAngle;
-			if (i != numOfLinks - 1)
-			{
-				LOG_TO_FILE << ",";
-			}
-			else
-			{
-				LOG_TO_FILE << std::endl;
-			}
-		}
-	};
 }
 
 void eae6320::MultiBody::RunUnitTest()
@@ -841,6 +877,11 @@ void eae6320::MultiBody::RunUnitTest()
 	{
 		DoubleCubeTest();
 		std::cout << "DoubleCubeTest" << std::endl;
+	}
+	else if (testCaseNum == 18)
+	{
+		CloseLoopTest();
+		std::cout << "CloseLoopTest" << std::endl;
 	}
 
 	std::cout << std::endl;

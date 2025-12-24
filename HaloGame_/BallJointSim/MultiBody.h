@@ -60,6 +60,9 @@ namespace eae6320
 		void ComputeJacobianDerivative(std::vector<_Matrix>& o_Jacobian, _Vector& i_b,
 			std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H, std::vector<_Matrix>& i_Ns, _Vector& i_q, 
 			std::vector<_Matrix3> i_R_global, std::vector<_Vector3>& i_uGlobalsChild, std::vector<_Vector3>& uGlobalsParent, std::vector<int>& i_jointType);
+		void ComputeJacobianTransposeDerivative(std::vector<_Matrix>& o_Jacobian, _Vector& i_b,
+			std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_H, std::vector<_Matrix>& i_Ns, _Vector& i_q,
+			std::vector<_Matrix3> i_R_global, std::vector<_Vector3>& i_uGlobalsChild, std::vector<_Vector3>& uGlobalsParent, std::vector<int>& i_jointType);
 		void ComputeIntertiaDerivative(std::vector<_Matrix>& o_intertia, _Vector& i_b, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_Ns, std::vector<_Matrix>& i_Mbody);
 		void ComputeDxOverDpFD(std::vector<_Matrix>& o_derivative, _Vector& i_x, _Scalar i_delta);
 		void Populate_q(std::vector<_Quat>& i_quat, _Vector& o_q);
@@ -105,7 +108,13 @@ namespace eae6320
 		void UpdateInitialPosition();//call this function whenever poistion is updated
 		void ComputeTwistDirectJacobian(int jointNum, int i_limitType, _Matrix& o_J);
 		void ComputeExponentialMapJacobian(_Vector& i_x, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
-		
+
+
+		void SolveCloseLoop();
+		void SolvePositionError();
+		void ComputeCloseLoopAnchorPositions(_Vector3& o_pos0, _Vector3& o_pos1, _Vector i_rootPos, std::vector<_Matrix3>& i_R);
+		void ComputeCloseLoopJacobian(_Matrix& o_J);
+		void AddCloseLoop(int i_linkID, _Vector3 i_uPre, _Vector3 i_uNext, _Vector3 i_uEnd);
 
 		void PrePositionSolveProccessing();
 		void PostPositionSolveProccessing();
@@ -137,6 +146,7 @@ namespace eae6320
 		void BallJointTest();
 		void GeneralTest();
 		void DoubleCubeTest();
+		void CloseLoopTest();
 		void RunUnitTest();
 
 		void AnalyticalVsFD();
@@ -202,7 +212,11 @@ namespace eae6320
 		std::vector<_Scalar> constraintValue;
 		std::vector<int> jointsID;
 		std::vector<int> limitType;
+		_Vector3 uPre;
+		_Vector3 uNext;
+		_Vector3 uEnd;
 		size_t constraintNum = 0;
+		int closeLoopLinkID;
 		
 		std::vector<_Scalar> jointLimit;
 		std::vector<std::pair<_Scalar, _Scalar>> jointRange;//first is swing, second is twist
@@ -222,7 +236,7 @@ namespace eae6320
 		_Matrix effectiveMass0;
 		_Matrix effectiveMass1;
 		_Scalar swingEpsilon = 1e-6;//0.000001;
-		
+
 		std::vector<_Scalar> totalTwist;
 
 		_Scalar kineticEnergy0 = 0;

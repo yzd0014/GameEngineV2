@@ -192,7 +192,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Vector3 momErr = angularMomentum - angularMomentum0;
 	//std::cout << "linear " << momentum.norm() << std::endl;
 	//std::cout << "angular " << angularMomentum.norm() << std::endl;
-	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	//std::cout << std::setprecision(16) << "Time " << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
 bool eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
@@ -308,15 +308,16 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//SQP();
 	
 	//ConstraintSolve(h);
-	
+	SolveCloseLoop();
+
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
-	EnergyConstraintPositionVelocity();
+	//EnergyConstraintPositionVelocity();
 	
-	/*Forward();
-	AcceleratedEnergyConstraintV2();*/
-	//AcceleratedEnergyConstraint();
-	//SQP();
+	Forward();
+	/*AcceleratedEnergyConstraintV2();
+	AcceleratedEnergyConstraint();
+	SQP();*/
 
 	totalEnergy0 = ComputeTotalEnergy();
 	kineticEnergy0 = ComputeKineticEnergy();
@@ -463,7 +464,7 @@ void eae6320::MultiBody::ComputeMr(_Matrix& o_M, std::vector<_Matrix>& i_Ht)
 	}
 	if (o_M.determinant() < 0.0000001)
 	{
-		EAE6320_ASSERTF(false, "mass matrix singluarity reached!");
+		EAE6320_ASSERTF(false, "Mass matrix singluarity reached!");
 	}
 }
 
