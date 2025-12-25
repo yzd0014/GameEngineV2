@@ -586,8 +586,7 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_engine()
 		}
 		//initialize rendering primitive
 		{
-			LOAD_MESH("data/meshes/arrow.mesh", mesh_arrow)
-			eae6320::GameplayUtility::arrowMesh = mesh_arrow;
+			LOAD_MESH("data/meshes/arrow.mesh", eae6320::GameplayUtility::arrowMesh)
 			LOAD_EFFECT("data/effects/default.effect", pDefaultEffect)
 			defaultEffect = pDefaultEffect;
 		}

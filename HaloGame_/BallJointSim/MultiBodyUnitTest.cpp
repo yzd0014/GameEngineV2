@@ -616,9 +616,10 @@ void eae6320::MultiBody::CloseLoopTest()
 	constraintSolverMode = IMPULSE;
 	gravity = true;
 	int ballJointType = BALL_JOINT_4D;
-	AddRigidBody(-1, ballJointType, _Vector3(0, 1, 0), _Vector3(0, 0, 0), masterMeshArray[3], Vector3d(0.1, 1, 0.1), localInertiaTensor);//body 0
-	AddRigidBody(0, ballJointType, _Vector3(0, sqrt(2.0), 0), _Vector3(0, -1, 0), masterMeshArray[3], Vector3d(0.1, sqrt(2.0), 0.1), localInertiaTensor);//body 1
-	AddRigidBody(1, ballJointType, _Vector3(0, 1, 0), _Vector3(0, -sqrt(2.0), 0), masterMeshArray[3], Vector3d(0.1, 1, 0.1), localInertiaTensor);//body 2
+	BallJointSim* pSim = reinterpret_cast<BallJointSim*>(pApp);
+	AddRigidBody(-1, ballJointType, _Vector3(0, 1, 0), _Vector3(0, 0, 0), pSim->mesh_cube, Vector3d(0.1, 1, 0.1), localInertiaTensor);//body 0
+	AddRigidBody(0, ballJointType, _Vector3(0, sqrt(2.0), 0), _Vector3(0, -1, 0), pSim->mesh_cube, Vector3d(0.1, sqrt(2.0), 0.1), localInertiaTensor);//body 1
+	AddRigidBody(1, ballJointType, _Vector3(0, 1, 0), _Vector3(0, -sqrt(2.0), 0), pSim->mesh_cube, Vector3d(0.1, 1, 0.1), localInertiaTensor);//body 2
 
 	MultiBodyInitialization();
 	{

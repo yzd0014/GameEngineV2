@@ -88,6 +88,11 @@ namespace eae6320
 		virtual double GetSimulationUpdatePeriod_inSeconds() const { return dt; }
 		void SetSimulationUpdatePeriod_inSeconds(double i_dt) { dt = i_dt; }
 
+		eae6320::Assets::cHandle<Mesh> mesh_plane;
+		eae6320::Assets::cHandle<Mesh> mesh_anchor;
+		eae6320::Assets::cHandle<Mesh> mesh_cube;
+		eae6320::Assets::cHandle<Mesh> mesh_capsule;
+
 		GameCommon::GameObject * scoreboard[2];
 
 		bool isGameOver = false;

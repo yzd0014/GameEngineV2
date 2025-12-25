@@ -143,7 +143,6 @@ namespace eae6320
 }
 
 #define LOAD_MESH(meshPath, meshName)\
-eae6320::Assets::cHandle<Mesh> meshName;\
 if(cbApplication::render)\
 {\
 	auto result = eae6320::Results::Success;\

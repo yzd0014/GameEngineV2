@@ -189,6 +189,7 @@ namespace eae6320
 				m_Mesh->m_pVertexDataInRAM[i].y = newPos.y;
 				m_Mesh->m_pVertexDataInRAM[i].z = newPos.z;
 			}
+			m_Mesh->UpdateMeshNormals();
 			m_Mesh->updateVertexBuffer = true;
 		}
 

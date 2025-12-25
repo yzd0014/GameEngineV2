@@ -79,6 +79,7 @@ void eae6320::Cloth::InitializeCloth()
 			x = initial_x2;
 		}
 	}
+	clothMesh->UpdateMeshNormals();		
 	clothMesh->updateVertexBuffer = true;
 
 	//initialize velocity

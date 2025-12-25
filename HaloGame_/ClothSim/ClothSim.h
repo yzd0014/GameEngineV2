@@ -84,6 +84,10 @@ namespace eae6320
 		virtual cResult CleanUp() override;
 
 	public:
+		eae6320::Assets::cHandle<Mesh> mesh_plane;
+		eae6320::Assets::cHandle<Mesh> mesh_cloth;
+		eae6320::Assets::cHandle<Mesh> mesh_sphere;
+
 		GameCommon::GameObject * scoreboard[2];
 
 		bool isGameOver = false;
