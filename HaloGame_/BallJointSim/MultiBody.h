@@ -22,6 +22,7 @@ namespace eae6320
 		int constraintType = SWING_C;//only used for testing
 		int twistMode = EULER_V2;
 		bool gravity = false ;
+		bool hasCloseLoop = false;
 		int enablePositionSolve = 0;//position solve currently doesn't support free joint
 		bool adaptiveTimestep = false;//this feature is deprecated, it require update in the application class 
 		Application::cbApplication* pApp = nullptr;
