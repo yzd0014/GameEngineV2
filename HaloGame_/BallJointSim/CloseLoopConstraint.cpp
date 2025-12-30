@@ -194,7 +194,7 @@ void eae6320::MultiBody::ComputeCloseLoopAnchorPositions(_Vector3& o_pos0, _Vect
 		}
 
 		o_pos1 = o_pos1 + m_uGlobalParent - m_uGlobalChild;//for hinge joints, assume that hingeMagnitude[i] * hingeDirGlobals[i] = 0
-		if (i == closeLoopLinkID) o_pos0 = o_pos1;
+		if (i == closeLoopLinkID) o_pos0 = o_pos1;//this line only works when there is no branches. If there are branches, TODO is required
 	}
 }
 
