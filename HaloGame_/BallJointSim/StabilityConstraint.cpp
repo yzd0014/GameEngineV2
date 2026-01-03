@@ -306,8 +306,6 @@ void eae6320::MultiBody::EnergyConstraintV3()//energy constraint
 
 void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
 {
-	Forward();
-
 	int energeMomentumConstraintDim = 1;
 	int nq = totalVelDOF;
 	int n = nq + energeMomentumConstraintDim;

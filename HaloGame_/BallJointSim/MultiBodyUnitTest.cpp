@@ -533,20 +533,21 @@ void eae6320::MultiBody::BallJointTest()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-	int ballJointType = BALL_JOINT_3D;
+	int ballJointType = BALL_JOINT_4D;
 
 	AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
+	//AddRigidBody(-1, FREE_JOINT_EXPO, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
 	AddRigidBody(0, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 1
 	AddRigidBody(1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 2
 	AddRigidBody(2, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 3
 	AddRigidBody(3, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 4
 
 	MultiBodyInitialization();
-	/*{
+	{
 		if (ballJointType == BALL_JOINT_3D)  q.segment(3, 3) = _Vector3(0, M_PI / 8, 0);
 		else if (ballJointType == BALL_JOINT_4D) rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
-	}*/
-	{
+	}
+	/*{
 		const char* filePath = "key_press_save.txt";
 		FILE* pFile = fopen(filePath, "rb");
 		int qDof = static_cast<int>(q.size());
@@ -567,14 +568,20 @@ void eae6320::MultiBody::BallJointTest()
 			fread(&qdot(i), sizeof(double), 1, pFile);
 		}
 		fclose(pFile);
-	}
+	}*/
 	Forward();
 
-	m_control = [this]()
-	{
-		qOld = q;
-		xdot = qdot;
-	};
+	//m_control = [this]()
+	//{
+	//	//qOld = q;
+	//	//xdot = qdot;
+	//	_Vector3 mForce = _Vector3(0.5, 1, 0);
+	//	externalForces[3].block<3, 1>(0, 0) = mForce;
+	//	externalForces[4].block<3, 1>(0, 0) = -mForce;
+	//	
+	//	externalForces[3].block<3, 1>(3, 0) = uGlobalsParent[4].cross(mForce);
+	//	externalForces[4].block<3, 1>(3, 0) = uGlobalsChild[4].cross(-mForce);
+	//};
 	
 	m_keyPressSave = [this](FILE * i_pFile)
 	{
@@ -616,7 +623,6 @@ void eae6320::MultiBody::CloseLoopTest()
 	constraintSolverMode = IMPULSE;
 	gravity = true;
 	int ballJointType = BALL_JOINT_4D;
-	BallJointSim* pSim = reinterpret_cast<BallJointSim*>(pApp);
 	AddRigidBody(-1, ballJointType, _Vector3(0, 1, 0), _Vector3(0, 0, 0), pSim->mesh_cube, Vector3d(0.1, 1, 0.1), localInertiaTensor);//body 0
 	AddRigidBody(0, ballJointType, _Vector3(0, sqrt(2.0), 0), _Vector3(0, -1, 0), pSim->mesh_cube, Vector3d(0.1, sqrt(2.0), 0.1), localInertiaTensor);//body 1
 	AddRigidBody(1, ballJointType, _Vector3(0, 1, 0), _Vector3(0, -sqrt(2.0), 0), pSim->mesh_cube, Vector3d(0.1, 1, 0.1), localInertiaTensor);//body 2
@@ -647,6 +653,20 @@ void eae6320::MultiBody::CloseLoopTest()
 	Forward();
 
 	AddCloseLoop(0, _Vector3(0, 0, 0), _Vector3(0, -2, 0), _Vector3(0, 2, 0));
+}
+
+void eae6320::MultiBody::TwoCapsules()
+{
+	constraintSolverMode = IMPULSE;
+
+	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), pSim->mesh_capsule, Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), pSim->mesh_capsule, Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	MultiBodyInitialization();
+	_Vector3 local_w = _Vector3(0, 2, 0);;
+	qdot.segment(3, 3) = local_w;
+	Forward();
+
+	ConfigureSingleBallJoint(1, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), -1, 0.5 * M_PI);//head
 }
 
 void eae6320::MultiBody::GeneralTest()
@@ -883,6 +903,11 @@ void eae6320::MultiBody::RunUnitTest()
 	{
 		CloseLoopTest();
 		std::cout << "CloseLoopTest" << std::endl;
+	}
+	else if (testCaseNum == 19)
+	{
+		TwoCapsules();
+		std::cout << "TwoCapsules" << std::endl;
 	}
 
 	std::cout << std::endl;

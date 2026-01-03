@@ -9,6 +9,7 @@
 
 namespace eae6320
 {
+	class BallJointSim;
 	class MultiBody : public eae6320::GameCommon::GameObject
 	{
 	public:
@@ -26,6 +27,7 @@ namespace eae6320
 		int enablePositionSolve = 0;//position solve currently doesn't support free joint
 		bool adaptiveTimestep = false;//this feature is deprecated, it require update in the application class 
 		Application::cbApplication* pApp = nullptr;
+		BallJointSim* pSim = nullptr;
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void MultiBodyInitialization();
@@ -145,10 +147,11 @@ namespace eae6320
 		void UnitTest0();
 		void HingeJointTest();
 		void BallJointTest();
-		void GeneralTest();
 		void DoubleCubeTest();
 		void CloseLoopTest();
+		void TwoCapsules();
 		void RunUnitTest();
+		void GeneralTest();
 
 		void AnalyticalVsFD();
 		void HingeJointUnitTest0();
@@ -244,7 +247,7 @@ namespace eae6320
 		_Scalar totalEnergy0 = 0;
 		_Vector3 angularMomentum0;
 		_Vector3 linearMomentum0;
-		_Vector3 gravity_coeff;
+		_Vector gravityVec;
 		//_Vector conservedQuantity;
 
 		int tickCountSimulated = 0;

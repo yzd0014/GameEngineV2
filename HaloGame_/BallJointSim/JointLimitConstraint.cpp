@@ -162,17 +162,12 @@ void eae6320::MultiBody::BallJointLimitCheck()
 				Math::SwingTwistDecomposition(quat, p, swingComponent, twistComponent);
 				_Vector3 twistVec = Math::RotationConversion_QuatToVec(twistComponent);
 				twistAngle = twistVec.norm();
-			/*	if (p.dot(twistVec) < 0)
-				{
-					twistAngle = -twistAngle;
-				}*/
 				_Vector3 swingVec = Math::RotationConversion_QuatToVec(swingComponent);
 				swingAngle = swingVec.norm();
 			}
 			if (jointRange[i].first > 0)//check swing constraint
 			{
 				_Scalar swingConstraint = ComputeSwingError(i);
-				//std::cout << "---Swing error " << swingConstraint << std::endl;
 				if (swingConstraint < 0)
 				{
 					jointsID.push_back(i);

@@ -4,6 +4,7 @@
 #include "Engine/Math/EigenHelper.h"
 #include "Engine/UserInput/UserInput.h"
 #include "Engine/GameCommon/GameplayUtility.h"
+#include "BallJointSim/BallJointSim.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <iomanip>
@@ -12,6 +13,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	GameCommon::GameObject(i_pEffect, i_Mesh, i_State),
 	pApp(i_application)
 {
+	pSim = reinterpret_cast<BallJointSim*>(pApp);
+
 	RunUnitTest();
 	
 	UpdateInitialPosition();
@@ -119,8 +122,9 @@ void eae6320::MultiBody::MultiBodyInitialization()
 		eulerDecompositionOffset[i] = Math::RotationConversion_MatToQuat(deformationGradient);
 	}
 	
-	if (gravity) gravity_coeff = _Vector3(0.0, -9.81, 0.0);
-	else gravity_coeff.setZero();
+	gravityVec.resize(6);
+	gravityVec.setZero();
+	if (gravity) gravityVec(1) = -9.81;
 	
 	Math::NativeVector2EigenVector(m_State.position, jointPos[0]);
 	Mr.resize(totalVelDOF, totalVelDOF);
@@ -190,9 +194,9 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	_Vector3 momentum = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum = ComputeAngularMomentum();
 	_Vector3 momErr = angularMomentum - angularMomentum0;
-	//std::cout << "linear " << momentum.norm() << std::endl;
-	//std::cout << "angular " << angularMomentum.norm() << std::endl;
-	//std::cout << std::setprecision(16) << "Time " << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << "linear " << momentum.norm() << std::endl;
+	std::cout << "angular " << angularMomentum.norm() << std::endl;
+	std::cout << std::setprecision(16) << "Time " << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
 bool eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
@@ -315,11 +319,15 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//EnergyConstraintPositionVelocity();
 	
 	Forward();
-	/*AcceleratedEnergyConstraintV2();
-	AcceleratedEnergyConstraint();
-	SQP();*/
+	//AcceleratedEnergyConstraintV2();
+	/*std::cout << "before P " << ComputeTranslationalMomentum().transpose() << std::endl;
+	std::cout << "before L " << ComputeAngularMomentum().transpose() << std::endl;*/
+	//AcceleratedEnergyConstraint();
+	//SQP();
+	/*std::cout << "after P " << ComputeTranslationalMomentum().transpose() << std::endl;
+	std::cout << "after L " << ComputeAngularMomentum().transpose() << std::endl << std::endl;*/
 
-	totalEnergy0 = ComputeTotalEnergy();
+	//totalEnergy0 = ComputeTotalEnergy();
 	kineticEnergy0 = ComputeKineticEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum();
 	angularMomentum0 = ComputeAngularMomentum();
@@ -484,8 +492,7 @@ _Vector eae6320::MultiBody::ComputeQr_SikpVelocityUpdate(_Vector& i_qdot)
 		Fv.block<3, 1>(3, 0) = -w_abs_world[i].cross(Mbody[i].block<3, 3>(3, 3) * w_abs_world[i]);
 		_Vector Fe;
 		Fe.resize(6);
-		Fe.setZero();
-		Fe.block<3, 1>(0, 0) = externalForces[i].block<3, 1>(0, 0) + gravity_coeff;
+		Fe = externalForces[i] + gravityVec;
 		_Vector Q_temp;
 		Q_temp.resize(totalVelDOF);
 		Q_temp.setZero();
