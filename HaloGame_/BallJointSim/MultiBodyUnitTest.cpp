@@ -662,8 +662,13 @@ void eae6320::MultiBody::TwoCapsules()
 	AddRigidBody(-1, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), pSim->mesh_capsule, Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), pSim->mesh_capsule, Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	MultiBodyInitialization();
-	_Vector3 local_w = _Vector3(0, 2, 0);;
-	qdot.segment(3, 3) = local_w;
+	_Vector3 rot_vec(-0.4 * M_PI, 0.0, 0.0);
+	//_Vector3 rot_vec(0.0, 0.0, 0.0);
+	rel_ori[1] = Math::RotationConversion_VecToQuat(rot_vec);
+	_Vector3 local_w = _Vector3(0, 2, 0);
+	_Matrix3 rotMatrix = Math::RotationConversion_VecToMatrix(rot_vec);
+	_Vector3 world_w = rotMatrix * local_w;
+	qdot.segment(3, 3) = world_w;
 	Forward();
 
 	ConfigureSingleBallJoint(1, _Vector3(0, -1, 0), _Vector3(-1, 0, 0), -1, 0.5 * M_PI);//head
