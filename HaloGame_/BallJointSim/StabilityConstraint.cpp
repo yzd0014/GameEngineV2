@@ -326,7 +326,7 @@ void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
 	_Matrix C(energeMomentumConstraintDim, 1);
 	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
 	int iter = 0;
-	while (energyErr > 1e-3)
+	while (energyErr > 1e-6)
 	{
 		C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0) - kineticEnergyExpected;
 		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * mq.segment(0, totalVelDOF)).transpose();
@@ -339,9 +339,10 @@ void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
 	}
 	qdot = mq;
 	std::cout << "energy constraint iter: "<< iter << std::endl;
+	std::cout << std::setprecision(16) << "Time " << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
-void eae6320::MultiBody::AcceleratedEnergyConstraintV2()//energy constraint, momentum constraint, velocity only, no alpha
+void eae6320::MultiBody::AcceleratedEnergyConstraintV2()
 {
 	int energeMomentumConstraintDim = 7;
 	int nq = totalVelDOF + 2;
@@ -493,10 +494,11 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		C.block<3, 1>(4, 0) = Kl * mq.segment(totalVelDOF, totalVelDOF) - angularMomentum1 - mq(posVelDof + 1) * (angularMomentum0 - angularMomentum1);
 		_Scalar C_norm = C.norm();
 		std::cout << "C_norm " << C_norm << std::endl;
-		if (C_norm < 1e-4 || iter >= 20)
+		if (C_norm < 1e-4) break;
+		if (iter >= 20)
 		{
-			//if (iter >= 20) Physics::simPause = true;
 			break;
+			std::cout << "doesn't converge" << std::endl;
 		}
 		
 		grad_C.block(0, 0, 1, totalVelDOF) = M0;
@@ -511,8 +513,8 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		grad_C.block(4, posVelDof + 1, 3, 1) = angularMomentum1 - angularMomentum0;
 
 		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
-		//D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
-		D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = Mr;
+		D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
+		//D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = Mr;
 		DInv = D.inverse();
 		
 		_Matrix K = grad_C * DInv * grad_C.transpose();

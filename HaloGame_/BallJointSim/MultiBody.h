@@ -125,12 +125,15 @@ namespace eae6320
 		void KineticEnergyProjection();
 		void EnergyMomentumProjection();
 		void ManifoldProjection();
-		void SQP();//defualt FEPR
-		void EnergyConstraintV2();//using energy at E0
-		void EnergyConstraintV3();//energy constraint only
-		void EnergyConstraintPositionVelocity();
-		void AcceleratedEnergyConstraint();//quasi-newton
-		void AcceleratedEnergyConstraintV2();//add momentum constraint
+		void SQP();//default SQP
+		void EnergyConstraintV2();//SQP->velocity->energy/momentum
+		void EnergyConstraintV3();//SQP->velocity->energy
+		void EnergyConstraintPositionVelocity();//FEPR->velocity/position->energy/momentum (completely the same as the paper)
+		void AcceleratedEnergyConstraint();//FEPR->velocity->energy
+		void AcceleratedEnergyConstraintV2();//FEPR->velocity->energy/momentum
+		void EnergyNullSpaceCorrection();//SQP->velocity->energy
+		void ComputeMomentumMatrix(_Matrix& o_M, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_inertiaGlobal, std::vector<_Vector3>& i_positionOfCOM);
+		void GetNullSpace(_Matrix& o_nullSpace, _Matrix& i_M);
 		
 			//unit tests
 		void UnitTest5_1();//section 5.1 in the paper

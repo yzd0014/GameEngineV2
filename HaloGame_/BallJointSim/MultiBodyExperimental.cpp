@@ -987,6 +987,111 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, st
 	Forward();
 }
 
+void eae6320::MultiBody::GetNullSpace(_Matrix& o_nullSpace, _Matrix& i_M)
+{
+	FullPivLU<_Matrix> lu(i_M);
+	int rank = static_cast<int>(lu.rank());
+	int m = static_cast<int>(i_M.rows());
+	if (rank != m)
+	{
+		EAE6320_ASSERTF(false, "matrix is not full rank");
+	}
+	
+	JacobiSVD<_Matrix> svd(i_M, ComputeFullV);
+	//_Vector S = svd.singularValues();
+	_Matrix V = svd.matrixV();
+	
+	int n = static_cast<int>(i_M.cols());
+	o_nullSpace = V.block(0, rank, n, n - rank);
+}
+
+void eae6320::MultiBody::ComputeMomentumMatrix(_Matrix& o_M, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_inertiaGlobal, std::vector<_Vector3>& i_positionOfCOM)
+{
+	o_M.resize(6, totalVelDOF);
+	o_M.setZero();
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		o_M.block(0, 0, 3, totalVelDOF) = o_M.block(0, 0, 3, totalVelDOF) + i_inertiaGlobal[i].block<3, 3>(0, 0) * i_Ht[i].block(0, 0, 3, totalVelDOF);
+		o_M.block(3, 0, 3, totalVelDOF) = o_M.block(3, 0, 3, totalVelDOF) + i_inertiaGlobal[i].block<3, 3>(3, 3) * i_Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(i_positionOfCOM[i]) * i_Ht[i].block(0, 0, 3, totalVelDOF);
+	}
+}
+
+void eae6320::MultiBody::EnergyNullSpaceCorrection()
+{
+	_Matrix momentumMatrix;
+	ComputeMomentumMatrix(momentumMatrix, Ht, Mbody, pos);
+
+	//compute the null space of the momentum matrix
+	_Matrix Z;
+	GetNullSpace(Z, momentumMatrix);
+	//std::cout << (momentumMatrix * Z).transpose() << std::endl;
+
+	int constraintDim = 1;
+	int nullSpaceDim = static_cast<int>(Z.cols());
+	int n = nullSpaceDim + constraintDim;
+	_Matrix b(n, 1);
+	_Matrix grad_F(n, n);
+	
+	_Matrix regularization(n, n);
+	regularization.setIdentity();
+	regularization = 1e-6 * regularization;
+
+	_Vector x(n);
+	x.setZero();
+
+	_Scalar kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
+	_Matrix grad_C(constraintDim, nullSpaceDim);
+	grad_C.setZero();
+
+	_Scalar energyErr = 1.0;
+	_Matrix C(constraintDim, 1);
+	int iter = 0;
+	while (true)
+	{
+		_Vector v = qdot + Z * x.segment(0, nullSpaceDim);
+		C(0, 0) = 0.5 * v.transpose() * Mr * v - kineticEnergy0;
+		_Scalar C_norm = C.norm();
+		std::cout << "C_norm " << C_norm << std::endl;
+		if (C_norm < 1e-6) break;
+		if (iter >= 10)
+		{
+			std::cout << "doesn't converge" << std::endl;
+		}
+
+		grad_C.block(0, 0, constraintDim, nullSpaceDim) = (Z.transpose() * Mr * v).transpose();
+		//std::cout << "grad_C " << grad_C << std::endl;
+
+		b.block(0, 0, nullSpaceDim, 1) = -Z.transpose() * Mr * Z * x.segment(0, nullSpaceDim);
+		b.block(nullSpaceDim, 0, constraintDim, constraintDim) = -C;
+		//std::cout << "b " << b << std::endl;
+		
+		grad_F.setZero();
+		grad_F.block(0, 0, nullSpaceDim, nullSpaceDim) = (1 + x(nullSpaceDim)) * Z.transpose() * Mr * Z;
+		grad_F.block(0, nullSpaceDim, nullSpaceDim, constraintDim) = grad_C.transpose();
+		grad_F.block(nullSpaceDim, 0, constraintDim, nullSpaceDim) = grad_C;
+		//std::cout << grad_F << std::endl;
+		if (abs(grad_F.determinant()) < 1e-7)
+		{
+			grad_F = grad_F + regularization;
+			std::cout << "grad_F is not invertable" << std::endl;
+			//EAE6320_ASSERTF(false, "grad_f is not invertable");
+		}
+		
+		_Vector p(n);
+		p.setZero();
+		p = grad_F.inverse() * b;
+		
+		x.segment(0, nullSpaceDim) = x.segment(0, nullSpaceDim) + p.segment(0, nullSpaceDim);
+		x(nullSpaceDim) = p(nullSpaceDim);//update lagrange multiplier
+		iter++;
+	}
+	qdot = qdot + Z * x.segment(0, nullSpaceDim);
+	ForwardAngularAndTranslationalVelocity(Ht, qdot);
+	
+	std::cout << "energy constraint iter: " << iter << std::endl;
+	std::cout << std::setprecision(16) << "Time " << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+}
+
 
 void eae6320::MultiBody::VariationalIntegration(const _Scalar h)
 {

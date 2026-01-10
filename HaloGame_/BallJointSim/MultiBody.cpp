@@ -19,7 +19,6 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	
 	UpdateInitialPosition();
 
-	kineticEnergy0 = ComputeKineticEnergy();
 	totalEnergy0 = ComputeTotalEnergy();
 	angularMomentum0 = ComputeAngularMomentum();
 	linearMomentum0 = ComputeTranslationalMomentum();
@@ -190,13 +189,6 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	else if (integrationMode == "RK4") RK4Integration(i_secondCountToIntegrate);
 	else if (integrationMode == "RK3") RK3Integration(i_secondCountToIntegrate);
 	else if (integrationMode == "VI") VariationalIntegration(i_secondCountToIntegrate);
-	
-	_Vector3 momentum = ComputeTranslationalMomentum();
-	_Vector3 angularMomentum = ComputeAngularMomentum();
-	_Vector3 momErr = angularMomentum - angularMomentum0;
-	std::cout << "linear " << momentum.norm() << std::endl;
-	std::cout << "angular " << angularMomentum.norm() << std::endl;
-	std::cout << std::setprecision(16) << "Time " << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
 bool eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
@@ -310,27 +302,29 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//ForwardAngularAndTranslationalVelocity(Ht, qdot);
 	//AcceleratedEnergyConstraintV2();
 	//SQP();
-	
+	//AcceleratedEnergyConstraint();
+
 	//ConstraintSolve(h);
 	SolveCloseLoop();
 
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
-	//EnergyConstraintPositionVelocity();
+	EnergyConstraintPositionVelocity();
 	
-	Forward();
+	//Forward();
 	//AcceleratedEnergyConstraintV2();
 	/*std::cout << "before P " << ComputeTranslationalMomentum().transpose() << std::endl;
 	std::cout << "before L " << ComputeAngularMomentum().transpose() << std::endl;*/
 	//AcceleratedEnergyConstraint();
+	//EnergyNullSpaceCorrection();
 	//SQP();
 	/*std::cout << "after P " << ComputeTranslationalMomentum().transpose() << std::endl;
 	std::cout << "after L " << ComputeAngularMomentum().transpose() << std::endl << std::endl;*/
 
-	//totalEnergy0 = ComputeTotalEnergy();
-	kineticEnergy0 = ComputeKineticEnergy();
+	totalEnergy0 = ComputeTotalEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum();
 	angularMomentum0 = ComputeAngularMomentum();
+	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << totalEnergy0 << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
