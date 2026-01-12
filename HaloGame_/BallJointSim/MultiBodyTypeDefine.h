@@ -41,6 +41,10 @@
 #ifndef FREE_JOINT_EXPO
 #define FREE_JOINT_EXPO 4
 #endif
+
+#ifndef BALL_JOINT
+#define BALL_JOINT 5
+#endif
 /*************************************/
 #ifndef TWIST_WITHOUT_SWING
 #define TWIST_WITHOUT_SWING 0

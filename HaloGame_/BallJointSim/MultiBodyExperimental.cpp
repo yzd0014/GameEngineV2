@@ -833,7 +833,6 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 	vel.resize(numOfLinks);
 	pos.resize(numOfLinks);
 	jointPos.resize(numOfLinks);
-	obs_ori.resize(numOfLinks);
 	rel_ori.resize(numOfLinks);
 	R_global.resize(numOfLinks);
 	R_local.resize(numOfLinks);
@@ -877,7 +876,6 @@ void eae6320::MultiBody::InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d
 		vel[i].setZero();
 		jointPos[i].setZero();
 		pos[i].setZero();
-		obs_ori[i].setIdentity();
 		rel_ori[i].setIdentity();
 		R_global[i].setIdentity();
 		R_local[i].setIdentity();

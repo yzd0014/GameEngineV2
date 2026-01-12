@@ -209,8 +209,6 @@ namespace eae6320
 		std::vector<_Matrix> mE;
 		std::vector<_Matrix> mN;
 		
-		
-		std::vector<_Quat> obs_ori;
 		std::vector<_Quat> rel_ori;//relative rotation to parent for each body
 		std::vector<GameCommon::GameObject *> m_linkBodys;
 		_Scalar rigidBodyMass = 1.0f;

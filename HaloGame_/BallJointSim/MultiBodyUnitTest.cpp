@@ -66,7 +66,7 @@ void eae6320::MultiBody::UnitTest5_4b()
 		LOG_TO_FILE << frames_number << ",";
 		for (int i = 0; i < numOfLinks; i++)
 		{
-			_Vector3 vecRot = Math::RotationConversion_QuatToVec(obs_ori[i]);
+			_Vector3 vecRot = Math::RotationConversion_MatrixToVec(R_global[i]);
 			_Scalar rotAngle = vecRot.norm();
 			if (abs(rotAngle) < 1e-8)
 			{
@@ -208,7 +208,7 @@ void eae6320::MultiBody::UnitTest5_8a()
 		LOG_TO_FILE << frames_number << ",";
 		for (int i = 0; i < numOfLinks; i++)
 		{
-			_Vector3 vecRot = Math::RotationConversion_QuatToVec(obs_ori[i]);
+			_Vector3 vecRot = Math::RotationConversion_MatrixToVec(R_global[i]);
 			_Scalar rotAngle = vecRot.norm();
 			if (abs(rotAngle) < 1e-8)
 			{
@@ -294,7 +294,7 @@ void eae6320::MultiBody::UnitTest5_8b()
 		LOG_TO_FILE << frames_number << ",";
 		for (int i = 0; i < numOfLinks; i++)
 		{
-			_Vector3 vecRot = Math::RotationConversion_QuatToVec(obs_ori[i]);
+			_Vector3 vecRot = Math::RotationConversion_MatrixToVec(R_global[i]);
 			_Scalar rotAngle = vecRot.norm();
 			if (abs(rotAngle) < 1e-8)
 			{
@@ -455,7 +455,7 @@ void eae6320::MultiBody::UnitTest0()
 		LOG_TO_FILE << frames_number << ",";
 		for (int i = 0; i < numOfLinks; i++)
 		{
-			_Vector3 vecRot = Math::RotationConversion_QuatToVec(obs_ori[i]);
+			_Vector3 vecRot = Math::RotationConversion_MatrixToVec(R_global[i]);
 			_Scalar rotAngle = vecRot.norm();
 			if (abs(rotAngle) < 1e-8)
 			{
@@ -533,7 +533,7 @@ void eae6320::MultiBody::BallJointTest()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-	int ballJointType = BALL_JOINT_3D;
+	int ballJointType = BALL_JOINT;
 
 	AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
 	//AddRigidBody(-1, FREE_JOINT_EXPO, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
@@ -545,7 +545,7 @@ void eae6320::MultiBody::BallJointTest()
 	MultiBodyInitialization();
 	{
 		if (ballJointType == BALL_JOINT_3D)  q.segment(3, 3) = _Vector3(0, M_PI / 8, 0);
-		else if (ballJointType == BALL_JOINT_4D) rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
+		else if (ballJointType == BALL_JOINT_4D || ballJointType == BALL_JOINT) rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
 	}
 	/*{
 		const char* filePath = "key_press_save.txt";
@@ -583,7 +583,7 @@ void eae6320::MultiBody::BallJointTest()
 	//	externalForces[4].block<3, 1>(3, 0) = uGlobalsChild[4].cross(-mForce);
 	//};
 	
-	m_keyPressSave = [this](FILE * i_pFile)
+	/*m_keyPressSave = [this](FILE * i_pFile)
 	{
 		int qDof = static_cast<int>(q.size());
 		for (int i = 0; i < qDof; i++)
@@ -602,20 +602,27 @@ void eae6320::MultiBody::BallJointTest()
 		{
 			fwrite(&xdot(i), sizeof(double), 1, i_pFile);
 		}
-	};
+	};*/
 }
 
 void eae6320::MultiBody::DoubleCubeTest()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-	int ballJointType = BALL_JOINT_3D;
+	int ballJointType = BALL_JOINT;
 
 	AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 1.0f, 1.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	AddRigidBody(0, ballJointType, _Vector3(-1.0f, 1.0f, -1.0f), _Vector3(1.0f, -1.0f, 1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
+	AddRigidBody(1, ballJointType, _Vector3(1.0f, 1.0f, 1.0f), _Vector3(-1.0f, -1.0f, -1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 2
 	
 	MultiBodyInitialization();
 	Forward();
+
+	m_MatlabSave = [this]()
+	{
+		_Vector3 vecRot = Math::RotationConversion_MatrixToVec(R_global[2]);
+		LOG_TO_FILE << eae6320::Physics::totalSimulationTime << "," << pos[2](0) << "," << pos[2](1) << "," << pos[2](2) << "," << vecRot(0) << "," << vecRot(1) << "," << vecRot(2) << std::endl;
+	};
 }
 
 void eae6320::MultiBody::CloseLoopTest()
