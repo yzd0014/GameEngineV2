@@ -462,7 +462,9 @@ void eae6320::Application::cbApplication::SimulationLoopWithoutRendering()
 		{
 			UpdateSimulationBasedOnTime(h);
 		}
+		UserInput::TrackKeyState();
 		UpdateSimulationBasedOnInput();
+		UserInput::UpdateLastFrameKeyState();
 	}
 }
 

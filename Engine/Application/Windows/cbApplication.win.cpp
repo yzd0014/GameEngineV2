@@ -350,6 +350,39 @@ void eae6320::Application::cbApplication::AddApplicationParameter(void* outputPt
 eae6320::cResult eae6320::Application::cbApplication::Initialize_base( const sEntryPointParameters& i_entryPointParameters )
 {
 	auto result = Results::Success;
+	//Extract command line parameters
+	{
+		argv = CommandLineToArgvW(GetCommandLine(), &argc);
+
+		int argConsole = -1;
+		AddApplicationParameter(&argConsole, integer, L"-console");
+		if (argConsole == 1)
+		{
+			EnableConsolePrinting(true);
+			std::cout << "====console enabled" << std::endl;
+		}
+		int argRenderMode = 0;
+		AddApplicationParameter(&argRenderMode, integer, L"-rm");
+		if (argRenderMode == 0)
+		{
+			Graphics::renderThreadNoWait = false;
+			std::cout << "====gpu and cpu thread are synced" << std::endl;
+		}
+		else if (argRenderMode == 1)
+		{
+			//render thread won't wait for simulation thread to submit its data
+			Graphics::renderThreadNoWait = true;
+			std::cout << "====gpu and cpu thread are not synced" << std::endl;
+		}
+		else if (argRenderMode == 2)
+		{
+			EnableConsolePrinting(true);
+			Graphics::renderThreadNoWait = true;
+			render = false;
+			std::cout << "====rendering is turned off" << std::endl;
+		}
+		std::cout << std::endl;
+	}
 
 	if (!render)
 	{
@@ -400,39 +433,7 @@ eae6320::cResult eae6320::Application::cbApplication::Initialize_base( const sEn
 	{
 		const auto wasWindowPreviouslyVisible = ShowWindow( m_mainWindow, i_entryPointParameters.initialWindowDisplayState );
 	}
-	//Extract command line parameters
-	{
-		argv = CommandLineToArgvW(GetCommandLine(), &argc);
-		
-		int argConsole = -1;
-		AddApplicationParameter(&argConsole, integer, L"-console");
-		if (argConsole == 1)
-		{
-			EnableConsolePrinting(true);
-			std::cout << "====console enabled" << std::endl;
-		}
-		int argRenderMode = 0;
-		AddApplicationParameter(&argRenderMode, integer, L"-rm");
-		if (argRenderMode == 0)
-		{
-			Graphics::renderThreadNoWait = false;
-			std::cout << "====gpu and cpu thread are synced" << std::endl;
-		}
-		else if (argRenderMode == 1)
-		{
-			//render thread won't wait for simulation thread to submit its data
-			Graphics::renderThreadNoWait = true;
-			std::cout << "====gpu and cpu thread are not synced" << std::endl;
-		}
-		else if (argRenderMode == 2)
-		{
-			EnableConsolePrinting(true);
-			Graphics::renderThreadNoWait = true;
-			render = false;
-			std::cout << "====rendering is turned off" << std::endl;
-		}
-		std::cout << std::endl;
-	}
+	
 
 OnExit:
 

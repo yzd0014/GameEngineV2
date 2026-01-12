@@ -1020,6 +1020,14 @@ void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
 		fclose(pFile);
 		std::cout << "data saved to file" << std::endl;
 	}
+	if (UserInput::IsKeyFromReleasedToPressed(' ') && !Physics::simPlay)
+	{
+		Physics::simPause = !Physics::simPause;
+		if (Physics::simPause)
+		{
+			Physics::nextSimStep = false;
+		}
+	}
 }
 
 void eae6320::MultiBody::SaveDataToMatlab(_Scalar totalDuration)

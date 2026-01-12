@@ -149,9 +149,9 @@ if(cbApplication::render)\
 	if (!(result = Mesh::s_manager.Load(meshPath, meshName))) {\
 		EAE6320_ASSERT(false);\
 	}\
-	masterMeshArray.push_back(meshName);\
 }\
 else\
 {\
 	meshName = eae6320::Assets::cHandle<Mesh>();\
-}
+}\
+masterMeshArray.push_back(meshName);
