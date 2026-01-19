@@ -311,9 +311,9 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
-	EnergyConstraintPositionVelocity();
+	//EnergyConstraintPositionVelocity();
 	
-	//Forward();
+	Forward();
 	//AcceleratedEnergyConstraintV2();
 	/*std::cout << "before P " << ComputeTranslationalMomentum().transpose() << std::endl;
 	std::cout << "before L " << ComputeAngularMomentum().transpose() << std::endl;*/
@@ -322,11 +322,11 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//SQP();
 	/*std::cout << "after P " << ComputeTranslationalMomentum().transpose() << std::endl;
 	std::cout << "after L " << ComputeAngularMomentum().transpose() << std::endl << std::endl;*/
-
-	totalEnergy0 = ComputeTotalEnergy();
+	
+	//totalEnergy0 = ComputeTotalEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum();
 	angularMomentum0 = ComputeAngularMomentum();
-	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << totalEnergy0 << std::endl << std::endl;
+	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
@@ -1020,14 +1020,14 @@ void eae6320::MultiBody::UpdateGameObjectBasedOnInput()
 		fclose(pFile);
 		std::cout << "data saved to file" << std::endl;
 	}
-	if (UserInput::IsKeyFromReleasedToPressed(' ') && !Physics::simPlay)
+	/*if (UserInput::IsKeyFromReleasedToPressed(' ') && !Physics::simPlay)
 	{
 		Physics::simPause = !Physics::simPause;
 		if (Physics::simPause)
 		{
 			Physics::nextSimStep = false;
 		}
-	}
+	}*/
 }
 
 void eae6320::MultiBody::SaveDataToMatlab(_Scalar totalDuration)

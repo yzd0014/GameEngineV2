@@ -102,7 +102,7 @@ void eae6320::MultiBody::SQP()//energy conservation + momentum conservation and 
 	}
 }
 
-void eae6320::MultiBody::EnergyConstraintV2()//energy conservation + momentum conservation and energy interpolation
+void eae6320::MultiBody::SQPV2()//energy conservation + momentum conservation and energy interpolation
 {
 	int energeMomentumConstraintDim = 7;
 	int nq = totalVelDOF + 1;
@@ -217,7 +217,7 @@ void eae6320::MultiBody::EnergyConstraintV2()//energy conservation + momentum co
 	//std::cout << iter << std::endl;
 }
 
-void eae6320::MultiBody::EnergyConstraintV3()//energy constraint
+void eae6320::MultiBody::SQPV3()//energy constraint
 {
 	int energeMomentumConstraintDim = 1;
 	int nq = totalVelDOF;
@@ -304,7 +304,7 @@ void eae6320::MultiBody::EnergyConstraintV3()//energy constraint
 	//std::cout << iter << std::endl;
 }
 
-void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
+void eae6320::MultiBody::PBDEnergyCorrection(_Vector& io_qdot)//energy constraint
 {
 	int energeMomentumConstraintDim = 1;
 	int nq = totalVelDOF;
@@ -312,7 +312,7 @@ void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
 	
 	_Vector mq(nq);
 	mq.setZero();
-	mq.segment(0, totalVelDOF) = qdot;
+	mq.segment(0, totalVelDOF) = io_qdot;
 	
 	_Matrix grad_C(energeMomentumConstraintDim, nq);
 	grad_C.setZero();
@@ -337,12 +337,12 @@ void eae6320::MultiBody::AcceleratedEnergyConstraint()//energy constraint
 		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
 		iter++;
 	}
-	qdot = mq;
-	std::cout << "energy constraint iter: "<< iter << std::endl;
-	std::cout << std::setprecision(16) << "Time " << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	io_qdot = mq;
+	//std::cout << "energy constraint iter: "<< iter << std::endl;
+	//std::cout << std::setprecision(16) << "Time " << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
-void eae6320::MultiBody::AcceleratedEnergyConstraintV2()
+void eae6320::MultiBody::PBDEnergyMomentumCorrection(_Vector& io_qdot)
 {
 	int energeMomentumConstraintDim = 7;
 	int nq = totalVelDOF + 2;
@@ -350,7 +350,7 @@ void eae6320::MultiBody::AcceleratedEnergyConstraintV2()
 
 	_Vector mq(nq);
 	mq.setZero();
-	mq.segment(0, totalVelDOF) = qdot;
+	mq.segment(0, totalVelDOF) = io_qdot;
 
 	_Matrix grad_C(energeMomentumConstraintDim, nq);
 	grad_C.setZero();
@@ -415,14 +415,14 @@ void eae6320::MultiBody::AcceleratedEnergyConstraintV2()
 		delta_q = DInv * grad_C.transpose() * lambdaNew;
 		mq = mq - delta_q;
 		
-		qdot = mq.segment(0, totalVelDOF);
-		ForwardAngularAndTranslationalVelocity(Ht, qdot);
+		io_qdot = mq.segment(0, totalVelDOF);
+		ForwardAngularAndTranslationalVelocity(Ht, io_qdot);
 		
 		iter++;
 	}
 }
 
-void eae6320::MultiBody::EnergyConstraintPositionVelocity()
+void eae6320::MultiBody::PBDEnergyMomentumCorrection(_Vector& io_q, _Vector& io_qdot)
 {
 	Forward();
 
@@ -445,8 +445,8 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 
 	_Vector mq(totalDof);
 	mq.setZero();
-	mq.segment(0, totalVelDOF) = q;
-	mq.segment(totalVelDOF, totalVelDOF) = qdot;
+	mq.segment(0, totalVelDOF) = io_q;
+	mq.segment(totalVelDOF, totalVelDOF) = io_qdot;
 	
 	_Vector3 linearMomentum1 = ComputeTranslationalMomentum();
 	_Vector3 angularMomentum1 = ComputeAngularMomentum();
@@ -493,13 +493,13 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		C.block<3, 1>(1, 0) = Kp * mq.segment(totalVelDOF, totalVelDOF) - linearMomentum1 - mq(posVelDof) * (linearMomentum0 - linearMomentum1);
 		C.block<3, 1>(4, 0) = Kl * mq.segment(totalVelDOF, totalVelDOF) - angularMomentum1 - mq(posVelDof + 1) * (angularMomentum0 - angularMomentum1);
 		_Scalar C_norm = C.norm();
-		std::cout << "C_norm " << C_norm << std::endl;
+		//std::cout << "C_norm " << C_norm << std::endl;
 		if (C_norm < 1e-4) break;
-		if (iter >= 20)
+		/*if (iter >= 20)
 		{
 			break;
 			std::cout << "doesn't converge" << std::endl;
-		}
+		}*/
 		
 		grad_C.block(0, 0, 1, totalVelDOF) = M0;
 		grad_C.block(0, totalVelDOF, 1, totalVelDOF) = (Mr * qdot).transpose();
@@ -544,12 +544,14 @@ void eae6320::MultiBody::EnergyConstraintPositionVelocity()
 		mq(posVelDof) = 1;
 		mq(posVelDof + 1) = 1;*/
 
-		q = mq.segment(0, totalVelDOF);
-		qdot = mq.segment(totalVelDOF, totalVelDOF);
+		io_q = mq.segment(0, totalVelDOF);
+		io_qdot = mq.segment(totalVelDOF, totalVelDOF);
 		Forward();
 		iter++;
 	}
+
 	std::cout << "energy constraint iter: " << iter << " s " << mq(posVelDof) << " t " << mq(posVelDof + 1) << std::endl;
+	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << totalEnergy0 << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _Vector& i_bj, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta)

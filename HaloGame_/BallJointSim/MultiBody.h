@@ -126,11 +126,11 @@ namespace eae6320
 		void EnergyMomentumProjection();
 		void ManifoldProjection();
 		void SQP();//default SQP
-		void EnergyConstraintV2();//SQP->velocity->energy/momentum
-		void EnergyConstraintV3();//SQP->velocity->energy
-		void EnergyConstraintPositionVelocity();//FEPR->velocity/position->energy/momentum (completely the same as the paper)
-		void AcceleratedEnergyConstraint();//FEPR->velocity->energy
-		void AcceleratedEnergyConstraintV2();//FEPR->velocity->energy/momentum
+		void SQPV2();//SQP->velocity->energy/momentum
+		void SQPV3();//SQP->velocity->energy
+		void PBDEnergyMomentumCorrection(_Vector& io_q, _Vector& io_qdot);//FEPR->velocity/position->energy/momentum (completely the same as the paper)
+		void PBDEnergyCorrection(_Vector& io_qdot);//FEPR->velocity->energy
+		void PBDEnergyMomentumCorrection(_Vector& io_qdot);//FEPR->velocity->energy/momentum
 		void EnergyNullSpaceCorrection();//SQP->velocity->energy
 		void ComputeMomentumMatrix(_Matrix& o_M, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_inertiaGlobal, std::vector<_Vector3>& i_positionOfCOM);
 		void GetNullSpace(_Matrix& o_nullSpace, _Matrix& i_M);
