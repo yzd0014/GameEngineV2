@@ -7,6 +7,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <iomanip>
+#include <algorithm>
 
 /***************************************momentum-energy correction*************************************************************/
 void eae6320::MultiBody::KineticEnergyProjection()
@@ -1090,6 +1091,234 @@ void eae6320::MultiBody::EnergyNullSpaceCorrection()
 	std::cout << std::setprecision(16) << "Time " << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
+void eae6320::MultiBody::PBDEnergyCorrectionV2(_Vector& i_q, _Vector& io_qdot)
+{
+	_Vector q_predicted = i_q + io_qdot * pApp->GetSimulationUpdatePeriod_inSeconds();
+	//_Vector q_predicted = i_q;
+	int energeMomentumConstraintDim = 1;
+
+	_Matrix M0(1, totalVelDOF);
+
+	_Matrix grad_C(energeMomentumConstraintDim, totalVelDOF);
+	grad_C.setZero();
+
+	_Matrix C(energeMomentumConstraintDim, 1);
+	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+	int iter = 0;
+	while (true)
+	{
+		ComputeHt(Ht, H, q_predicted, rel_ori, jointType, posStartIndex);
+		ComputeMr(Mr, Ht);
+		MrInverse = Mr.inverse();
+		ForwardAngularAndTranslationalVelocity(Ht, io_qdot);
+		
+		std::vector<_Matrix> mN;
+		ComputeAuxiliaryJacobian(mN, Ht);   
+		ComputeJacobianDerivative(HtDerivativeTimes_b, io_qdot, Ht, H, mN, q_predicted, R_global, uGlobalsChild, uGlobalsParent, xJointType);
+		ComputeIntertiaDerivative(MassMatrixDerivativeTimes_b, io_qdot, Ht, mN, Mbody);
+		M0.setZero();
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			//***********************kinetic energy derivative*****************************
+			M0 = M0 + io_qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * io_qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
+			//***********************potential energy derivative*****************************
+			_Vector3 g(0.0f, 9.81f, 0.0f);
+			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
+		}
+
+		C(0, 0) = ComputeKineticEnergy() + ComputePotentialEnergy() - totalEnergy0;
+		std::cout << "kinetic energy " << ComputeKineticEnergy() << std::endl;
+		std::cout << "ComputePotentialEnergy() " << ComputePotentialEnergy() << std::endl;
+		std::cout << "(abs(C(0, 0)) " << abs(C(0, 0)) << std::endl;
+		if (abs(C(0, 0)) < 1e-4)
+		{
+			std::cout << "energy constraint iter: " << iter << " error " << abs(C(0, 0)) << std::endl;
+			break;
+		}
+
+		grad_C.block(0, 0, 1, totalVelDOF) = pApp->GetSimulationUpdatePeriod_inSeconds() * M0 + (Mr * io_qdot).transpose();
+		std::cout << "M0 " << M0 << std::endl;
+		//std::cout << "grad_C " << grad_C.norm() << std::endl;
+
+		_Matrix K = grad_C * MrInverse * grad_C.transpose();
+
+		if (K.determinant() < 1e-7)
+		{
+			_Matrix mI;
+			mI.resize(energeMomentumConstraintDim, energeMomentumConstraintDim);
+			mI.setIdentity();
+			K = K + 1e-7 * mI;
+		}
+
+		lambdaNew = K.inverse() * C;
+		
+		_Vector delta_qdot = -MrInverse * grad_C.transpose() * lambdaNew;
+		//std::cout << delta_qdot.transpose() << std::endl;
+		io_qdot = io_qdot + delta_qdot;
+		q_predicted = i_q + io_qdot * pApp->GetSimulationUpdatePeriod_inSeconds();
+		//std::cout << q_predicted.transpose() << std::endl;
+		//std::cout << i_q.transpose() << std::endl;
+
+		iter++;
+	}
+}
+
+void eae6320::MultiBody::PBDEnergyCorrection(_Vector& io_q, _Vector& io_qdot)
+{
+	Forward();
+
+	int posVelDof = 2 * totalVelDOF;
+	int totalDof = posVelDof;
+	int energeMomentumConstraintDim = 1;
+	_Matrix grad_C(energeMomentumConstraintDim, totalDof);
+	grad_C.setZero();
+
+	_Scalar dt = pApp->GetSimulationUpdatePeriod_inSeconds();
+	_Matrix D(totalDof, totalDof);
+	D.setZero();
+
+	_Vector mq(totalDof);
+	mq.setZero();
+	mq.segment(0, totalVelDOF) = io_q;
+	mq.segment(totalVelDOF, totalVelDOF) = io_qdot;
+
+	_Matrix M0(1, totalVelDOF);
+
+	_Matrix C(energeMomentumConstraintDim, 1);
+	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+	int iter = 0;
+	while (true)
+	{
+		
+		std::vector<_Matrix> mN;
+		ComputeAuxiliaryJacobian(mN, Ht);
+		ComputeJacobianDerivative(HtDerivativeTimes_b, io_qdot, Ht, H, mN, io_q, R_global, uGlobalsChild, uGlobalsParent, xJointType);
+		ComputeIntertiaDerivative(MassMatrixDerivativeTimes_b, io_qdot, Ht, mN, Mbody);
+		M0.setZero();
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			//***********************kinetic energy derivative*****************************
+			M0 = M0 + io_qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * io_qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
+			//***********************potential energy derivative*****************************
+			_Vector3 g(0.0f, 9.81f, 0.0f);
+			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
+		}
+
+		C(0, 0) = ComputeTotalEnergy() - totalEnergy0;
+		_Scalar C_norm = C.norm();
+		//std::cout << "C_norm " << C_norm << std::endl;
+		//if (C_norm < 1e-4 || iter >= 20)
+		if (C_norm < 1e-4)
+		{
+			std::cout << "iter: " << iter << " error " << C_norm << std::endl;
+			break;
+		}
+
+		grad_C.block(0, 0, 1, totalVelDOF) = M0;
+		grad_C.block(0, totalVelDOF, 1, totalVelDOF) = (Mr * io_qdot).transpose();
+		//std::cout << "M0 " << M0 << std::endl;
+
+		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
+		D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
+		_Matrix DInv = D.inverse();
+
+		_Matrix K = grad_C * DInv * grad_C.transpose();
+		//std::cout << "K " << K << std::endl;
+		if (K.determinant() < 1e-7)
+		{
+			_Matrix mI;
+			mI.resize(energeMomentumConstraintDim, energeMomentumConstraintDim);
+			mI.setIdentity();
+			K = K + 1e-7 * mI;
+		}
+		lambdaNew = K.inverse() * C;
+		_Vector delta_q = -DInv * grad_C.transpose() * lambdaNew;
+		mq = mq + delta_q;
+
+		io_q = mq.segment(0, totalVelDOF);
+		io_qdot = mq.segment(totalVelDOF, totalVelDOF);
+		Forward();
+		iter++;
+	}
+}
+
+void eae6320::MultiBody::ExplicitForceIntegration()
+{
+	_Matrix K(totalVelDOF, totalVelDOF);
+	K.setZero();
+	for (int i = 1; i < numOfLinks; i++)
+	{
+		_Matrix S(3, totalVelDOF);
+		S.setZero();
+		S.block<3, 3>(0, velStartIndex[i]) = _Matrix::Identity(3, 3);
+		K = K + (Ht[i - 1].block(3, 0, 3, totalVelDOF).transpose() - Ht[i].block(3, 0, 3, totalVelDOF).transpose()) * R_global[i - 1] * S;
+	}
+	_Scalar dampingCoeff = 1;
+	qdot = (_Matrix::Identity(totalVelDOF, totalVelDOF) + pApp->GetSimulationUpdatePeriod_inSeconds() * dampingCoeff * MrInverse * K) * qdot;
+}
+
+void eae6320::MultiBody::ImplicitForceIntegration()
+{
+	_Matrix K(totalVelDOF, totalVelDOF);
+	K.setZero();
+	for (int i = 1; i < numOfLinks; i++)
+	{
+		_Matrix S(3, totalVelDOF);
+		S.setZero();
+		S.block<3, 3>(0, velStartIndex[i]) = _Matrix::Identity(3, 3);
+		K = K + (Ht[i - 1].block(3, 0, 3, totalVelDOF).transpose() - Ht[i].block(3, 0, 3, totalVelDOF).transpose()) * R_global[i - 1] * S;
+	}
+	//_Vector q_predicted = q + qdot * pApp->GetSimulationUpdatePeriod_inSeconds();
+	//ComputeHt(Ht, H, q_predicted, rel_ori, jointType, posStartIndex);
+	//ComputeMr(Mr, Ht);
+	//MrInverse = Mr.inverse();
+	//ForwardAngularAndTranslationalVelocity(Ht, qdot);
+	
+	//_Scalar energyError = ComputeTotalEnergy() - totalEnergy0;
+	/*static _Scalar dampingCoeff = 0;
+	_Scalar dampingCoeffDot = 0l;
+	if (energyError > 0)
+	{
+		dampingCoeffDot = 1 * energyError;
+	}
+	else if (energyError < 0)
+	{
+		dampingCoeffDot = 0.1 * energyError;
+	}
+	
+	dampingCoeff = dampingCoeff + dampingCoeffDot * pApp->GetSimulationUpdatePeriod_inSeconds();*/
+	
+	//dampingCoeff = std::max(dampingCoeff, (_Scalar)-0.2);
+	//dampingCoeff = std::min(dampingCoeff, (_Scalar)1.0);
+	
+	_Vector totalRelativeVelocity = qdot.segment(velDOF[0], totalVelDOF - velDOF[0]);
+	_Scalar relativeKineticEnergy = totalRelativeVelocity.dot(totalRelativeVelocity);
+	
+	_Scalar dampingCoeff = 1;
+	/*_Scalar kineticEnergyTarget = totalEnergy0 - ComputePotentialEnergy();
+	_Scalar kineticEnergyError = ComputeKineticEnergy() - kineticEnergyTarget;
+	if (kineticEnergyError > 0)
+	{
+		dampingCoeff = 1;
+	}
+	
+	int externalModeIter = 0;
+	if (relativeKineticEnergy < 0.1)
+	{
+		while (kineticEnergyError > 1e-5 && externalModeIter < 5)
+		{
+			qdot = 0.99 * qdot;
+			ForwardAngularAndTranslationalVelocity(Ht, qdot);
+			kineticEnergyError = ComputeKineticEnergy() - kineticEnergyTarget;
+			std::cout << "kineticEnergyError " << kineticEnergyError << std::endl;
+			externalModeIter++;
+		}
+	}*/
+
+	//std::cout << "dampingCoeff " << dampingCoeff << " energy error " << energyError << std::endl;
+	//std::cout << "dampingCoeff " << dampingCoeff << " relativeKineticEnergy " << relativeKineticEnergy << " externalModeIter " << externalModeIter <<std::endl;
+	qdot = (_Matrix::Identity(totalVelDOF, totalVelDOF) - pApp->GetSimulationUpdatePeriod_inSeconds() * dampingCoeff * MrInverse * K).inverse() * qdot;
+}
 
 void eae6320::MultiBody::VariationalIntegration(const _Scalar h)
 {
@@ -1180,4 +1409,26 @@ void eae6320::MultiBody::VariationalIntegration(const _Scalar h)
 	Forward();
 	//std::cout << "w_abs_world " << w_abs_world[0].transpose() << std::endl;
 	//std::cout << "vel[0] " << vel[0].transpose() << std::endl;
+}
+
+_Vector3 eae6320::MultiBody::ComputeTranslationalMomentum()
+{
+	_Vector3 translationalMomentum;
+	translationalMomentum.setZero();
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		translationalMomentum += Mbody[i].block<3, 3>(0, 0) * vel[i];
+	}
+	return translationalMomentum;
+}
+
+_Vector3 eae6320::MultiBody::ComputeAngularMomentum()
+{
+	_Vector3 angularMomentum;
+	angularMomentum.setZero();
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		angularMomentum += Mbody[i].block<3, 3>(3, 3) * w_abs_world[i] + rigidBodyMass * pos[i].cross(vel[i]);
+	}
+	return angularMomentum;
 }

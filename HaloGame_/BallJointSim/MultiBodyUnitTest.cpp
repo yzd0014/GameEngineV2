@@ -541,7 +541,7 @@ void eae6320::MultiBody::BallJointTest()
 	AddRigidBody(1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 2
 	AddRigidBody(2, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 3
 	AddRigidBody(3, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 4
-
+	
 	MultiBodyInitialization();
 	{
 		if (ballJointType == BALL_JOINT_3D)  q.segment(3, 3) = _Vector3(0, M_PI / 8, 0);
@@ -571,6 +571,7 @@ void eae6320::MultiBody::BallJointTest()
 	}*/
 	Forward();
 
+	//scaling damping
 	/*m_control = [this]()
 	{
 		_Scalar kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
@@ -581,6 +582,21 @@ void eae6320::MultiBody::BallJointTest()
 			qdot = qdot * sqrt(s);
 		}
 		ForwardAngularAndTranslationalVelocity(Ht, qdot);
+	};*/
+	
+	//real damping
+	/*m_control = [this]()
+	{
+		for (int i = 1; i < numOfLinks; i++)
+		{
+			_Vector3 omegaWorld = R_global[i - 1] * qdot.segment(velStartIndex[i], 3);
+			_Scalar dampingCoeff = 1;
+
+			_Vector3 friction = -dampingCoeff * omegaWorld;
+			externalForces[i].block<3, 1>(3, 0) = friction;
+			externalForces[i - 1].block<3, 1>(3, 0) = -friction;
+		}
+		
 	};*/
 	
 	/*m_keyPressSave = [this](FILE * i_pFile)

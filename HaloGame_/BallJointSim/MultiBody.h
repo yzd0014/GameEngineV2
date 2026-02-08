@@ -83,6 +83,8 @@ namespace eae6320
 		_Scalar ComputeTotalEnergy();
 		_Vector3 ComputeTranslationalMomentum();
 		_Vector3 ComputeAngularMomentum();
+		_Vector3 ComputeTranslationalMomentum(_Vector& i_qdot);
+		_Vector3 ComputeAngularMomentum(_Vector& i_qdot);
 		
 		void SwingLimitCheck();
 		void ResolveSwingLimit(const _Scalar h);
@@ -130,10 +132,14 @@ namespace eae6320
 		void SQPV3();//SQP->velocity->energy
 		void PBDEnergyMomentumCorrection(_Vector& io_q, _Vector& io_qdot);//FEPR->velocity/position->energy/momentum (completely the same as the paper)
 		void PBDEnergyCorrection(_Vector& io_qdot);//FEPR->velocity->energy
+		void PBDEnergyCorrection(_Vector& io_q, _Vector& io_qdot);//FEPR->velocity/position->energy
+		void PBDEnergyCorrectionV2(_Vector& i_q, _Vector& io_qdot);//FEPR->velocity->energy
 		void PBDEnergyMomentumCorrection(_Vector& io_qdot);//FEPR->velocity->energy/momentum
 		void EnergyNullSpaceCorrection();//SQP->velocity->energy
 		void ComputeMomentumMatrix(_Matrix& o_M, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_inertiaGlobal, std::vector<_Vector3>& i_positionOfCOM);
 		void GetNullSpace(_Matrix& o_nullSpace, _Matrix& i_M);
+		void ImplicitForceIntegration();
+		void ExplicitForceIntegration();
 		
 			//unit tests
 		void UnitTest5_1();//section 5.1 in the paper

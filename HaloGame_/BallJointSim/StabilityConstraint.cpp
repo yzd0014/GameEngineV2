@@ -322,24 +322,24 @@ void eae6320::MultiBody::PBDEnergyCorrection(_Vector& io_qdot)//energy constrain
 
 	_Scalar kineticEnergyExpected = totalEnergy0 - ComputePotentialEnergy();
 
-	_Scalar energyErr = 1.0;
 	_Matrix C(energeMomentumConstraintDim, 1);
 	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
 	int iter = 0;
-	while (energyErr > 1e-6)
+	while (true)
 	{
 		C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0) - kineticEnergyExpected;
+		if (abs(C(0, 0)) < 1e-6)
+		{
+			std::cout << "energy constraint iter: " << iter << " error " << abs(C(0, 0)) << std::endl;
+			break;
+		}
 		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * mq.segment(0, totalVelDOF)).transpose();
 		lambdaNew = (grad_C * DInv * grad_C.transpose()).inverse() * C;
 		mq = mq - DInv * grad_C.transpose() * lambdaNew;
-
-		ForwardAngularAndTranslationalVelocity(Ht, mq);
-		energyErr = fabs(ComputeKineticEnergy() - kineticEnergyExpected);
 		iter++;
 	}
+	ForwardAngularAndTranslationalVelocity(Ht, mq);
 	io_qdot = mq;
-	//std::cout << "energy constraint iter: "<< iter << std::endl;
-	//std::cout << std::setprecision(16) << "Time " << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::PBDEnergyMomentumCorrection(_Vector& io_qdot)
@@ -432,16 +432,12 @@ void eae6320::MultiBody::PBDEnergyMomentumCorrection(_Vector& io_q, _Vector& io_
 	_Matrix grad_C(energeMomentumConstraintDim, totalDof);
 	grad_C.setZero();
 
+	_Scalar dt = pApp->GetSimulationUpdatePeriod_inSeconds();
 	_Matrix D(totalDof, totalDof);
 	D.setZero();
-	D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
-	_Scalar dt = pApp->GetSimulationUpdatePeriod_inSeconds();
-	D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
-	//D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = Mr;
 	_Scalar coeff_s_t = 1e-3;
 	D(posVelDof, posVelDof) = coeff_s_t;
 	D(posVelDof + 1, posVelDof + 1) = coeff_s_t;
-	_Matrix DInv = D.inverse();
 
 	_Vector mq(totalDof);
 	mq.setZero();
@@ -465,8 +461,8 @@ void eae6320::MultiBody::PBDEnergyMomentumCorrection(_Vector& io_q, _Vector& io_
 		//ComputeJacobianAndInertiaDerivativeFD(qdot, bm, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b, 1e-6);
 		std::vector<_Matrix> mN;
 		ComputeAuxiliaryJacobian(mN, Ht);
-		ComputeJacobianDerivative(HtDerivativeTimes_b, qdot, Ht, H, mN, q, R_global, uGlobalsChild, uGlobalsParent, xJointType);
-		ComputeIntertiaDerivative(MassMatrixDerivativeTimes_b, qdot, Ht, mN, Mbody);
+		ComputeJacobianDerivative(HtDerivativeTimes_b, io_qdot, Ht, H, mN, io_q, R_global, uGlobalsChild, uGlobalsParent, xJointType);
+		ComputeIntertiaDerivative(MassMatrixDerivativeTimes_b, io_qdot, Ht, mN, Mbody);
 		M0.setZero();
 		M1.setZero();
 		M2.setZero();
@@ -475,7 +471,7 @@ void eae6320::MultiBody::PBDEnergyMomentumCorrection(_Vector& io_q, _Vector& io_
 		for (int i = 0; i < numOfLinks; i++)
 		{
 			//***********************kinetic energy derivative*****************************
-			M0 = M0 + qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
+			M0 = M0 + io_qdot.transpose() * Ht[i].transpose() * Mbody[i] * HtDerivativeTimes_b[i] + 0.5 * io_qdot.transpose() * Ht[i].transpose() * MassMatrixDerivativeTimes_b[i];
 			//***********************potential energy derivative*****************************
 			_Vector3 g(0.0f, 9.81f, 0.0f);
 			M0 = M0 + g.transpose() * Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
@@ -493,17 +489,17 @@ void eae6320::MultiBody::PBDEnergyMomentumCorrection(_Vector& io_q, _Vector& io_
 		C.block<3, 1>(1, 0) = Kp * mq.segment(totalVelDOF, totalVelDOF) - linearMomentum1 - mq(posVelDof) * (linearMomentum0 - linearMomentum1);
 		C.block<3, 1>(4, 0) = Kl * mq.segment(totalVelDOF, totalVelDOF) - angularMomentum1 - mq(posVelDof + 1) * (angularMomentum0 - angularMomentum1);
 		_Scalar C_norm = C.norm();
-		//std::cout << "C_norm " << C_norm << std::endl;
-		if (C_norm < 1e-4) break;
-		/*if (iter >= 20)
+		//if (C_norm < 1e-4 || iter >= 20)
+		if (C_norm < 1e-4)
 		{
+			std::cout << "iter: " << iter << " error " << C_norm << std::endl;
 			break;
-			std::cout << "doesn't converge" << std::endl;
-		}*/
-		
+		}
+
+		//std::cout << "M0 " << M0 << std::endl;
 		grad_C.block(0, 0, 1, totalVelDOF) = M0;
-		grad_C.block(0, totalVelDOF, 1, totalVelDOF) = (Mr * qdot).transpose();
-		
+		grad_C.block(0, totalVelDOF, 1, totalVelDOF) = (Mr * io_qdot).transpose();
+
 		grad_C.block(1, 0, 3, totalVelDOF) = M1;
 		grad_C.block(1, totalVelDOF, 3, totalVelDOF) = Kp;
 		grad_C.block(1, posVelDof, 3, 1) = linearMomentum1 - linearMomentum0;
@@ -515,7 +511,7 @@ void eae6320::MultiBody::PBDEnergyMomentumCorrection(_Vector& io_q, _Vector& io_
 		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
 		D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
 		//D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = Mr;
-		DInv = D.inverse();
+		_Matrix DInv = D.inverse();
 		
 		_Matrix K = grad_C * DInv * grad_C.transpose();
 	

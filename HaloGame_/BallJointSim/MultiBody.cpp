@@ -181,7 +181,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	}
 	
 	ResetExternalForces();
-	if(m_control) m_control();
+	if (m_control) m_control();
 
 	if (integrationMode == "Euler") EulerIntegration(i_secondCountToIntegrate);
 	else if (integrationMode == "RK4") RK4Integration(i_secondCountToIntegrate);
@@ -295,38 +295,35 @@ void eae6320::MultiBody::ConstraintSolve(const _Scalar h)
 
 void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 {
+	std::cout << "before P " << ComputeTranslationalMomentum(qdot).transpose() << std::endl;
+	std::cout << "before L " << ComputeAngularMomentum(qdot).transpose() << std::endl;
+	//ImplicitForceIntegration();
+	ExplicitForceIntegration();
+	std::cout << "after P " << ComputeTranslationalMomentum(qdot).transpose() << std::endl;
+	std::cout << "after L " << ComputeAngularMomentum(qdot).transpose() << std::endl << std::endl;
+
 	_Vector Qr = ComputeQr_SikpVelocityUpdate(qdot);
 	_Vector qddot = MrInverse * Qr;
 
 	qdot = qdot + qddot * h;
 	qdot = damping * qdot;
-	
-	//ForwardAngularAndTranslationalVelocity(Ht, qdot);
-	//AcceleratedEnergyConstraintV2();
-	//SQP();
-	//AcceleratedEnergyConstraint();
 
+	//PBDEnergyCorrectionV2(q, qdot);
+	//PBDEnergyCorrection(qdot);
 	//ConstraintSolve(h);
 	SolveCloseLoop();
 
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
-	//EnergyConstraintPositionVelocity();
-	
+	//PBDEnergyMomentumCorrection(q, qdot);
+	//PBDEnergyCorrection(q, qdot);
 	Forward();
-	//AcceleratedEnergyConstraintV2();
-	/*std::cout << "before P " << ComputeTranslationalMomentum().transpose() << std::endl;
-	std::cout << "before L " << ComputeAngularMomentum().transpose() << std::endl;*/
-	//AcceleratedEnergyConstraint();
-	//EnergyNullSpaceCorrection();
-	//SQP();
-	/*std::cout << "after P " << ComputeTranslationalMomentum().transpose() << std::endl;
-	std::cout << "after L " << ComputeAngularMomentum().transpose() << std::endl << std::endl;*/
 	
 	//totalEnergy0 = ComputeTotalEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum();
 	angularMomentum0 = ComputeAngularMomentum();
 	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeKineticEnergy() << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
@@ -832,26 +829,28 @@ void eae6320::MultiBody::Forward()
 	ForwardAngularAndTranslationalVelocity(Ht, qdot);
 }
 
-_Vector3 eae6320::MultiBody::ComputeTranslationalMomentum()
+_Vector3 eae6320::MultiBody::ComputeTranslationalMomentum(_Vector& i_qdot)
 {
-	_Vector3 translationalMomentum;
-	translationalMomentum.setZero();
+	_Matrix Kp(3, totalVelDOF);
+	Kp.setZero();
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		translationalMomentum += Mbody[i].block<3, 3>(0, 0) * vel[i];
+		Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
 	}
-	return translationalMomentum;
+	_Vector3 out = Kp * i_qdot;
+	return out;
 }
 
-_Vector3 eae6320::MultiBody::ComputeAngularMomentum()
+_Vector3 eae6320::MultiBody::ComputeAngularMomentum(_Vector& i_qdot)
 {
-	_Vector3 angularMomentum;
-	angularMomentum.setZero();
+	_Matrix Kl(3, totalVelDOF);
+	Kl.setZero();
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		angularMomentum += Mbody[i].block<3, 3>(3, 3) * w_abs_world[i] + rigidBodyMass * pos[i].cross(vel[i]);
+		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Ht[i].block(0, 0, 3, totalVelDOF);
 	}
-	return angularMomentum;
+	_Vector3 out = Kl * i_qdot;
+	return out;
 }
 
 _Scalar eae6320::MultiBody::ComputeKineticEnergy()
