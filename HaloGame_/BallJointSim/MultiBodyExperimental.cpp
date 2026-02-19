@@ -1276,7 +1276,7 @@ void eae6320::MultiBody::ImplicitForceIntegration()
 	
 	//_Scalar energyError = ComputeTotalEnergy() - totalEnergy0;
 	/*static _Scalar dampingCoeff = 0;
-	_Scalar dampingCoeffDot = 0l;
+	_Scalar dampingCoeffDot = l;
 	if (energyError > 0)
 	{
 		dampingCoeffDot = 1 * energyError;
@@ -1294,15 +1294,15 @@ void eae6320::MultiBody::ImplicitForceIntegration()
 	_Vector totalRelativeVelocity = qdot.segment(velDOF[0], totalVelDOF - velDOF[0]);
 	_Scalar relativeKineticEnergy = totalRelativeVelocity.dot(totalRelativeVelocity);
 	
-	_Scalar dampingCoeff = 1;
-	/*_Scalar kineticEnergyTarget = totalEnergy0 - ComputePotentialEnergy();
+	_Scalar dampingCoeff = 0;
+	_Scalar kineticEnergyTarget = totalEnergy0 - ComputePotentialEnergy();
 	_Scalar kineticEnergyError = ComputeKineticEnergy() - kineticEnergyTarget;
 	if (kineticEnergyError > 0)
 	{
-		dampingCoeff = 1;
+		dampingCoeff = 30;
 	}
 	
-	int externalModeIter = 0;
+	/*int externalModeIter = 0;
 	if (relativeKineticEnergy < 0.1)
 	{
 		while (kineticEnergyError > 1e-5 && externalModeIter < 5)
@@ -1315,9 +1315,101 @@ void eae6320::MultiBody::ImplicitForceIntegration()
 		}
 	}*/
 
-	//std::cout << "dampingCoeff " << dampingCoeff << " energy error " << energyError << std::endl;
+	std::cout << "dampingCoeff " << dampingCoeff << " energy error " << kineticEnergyError << std::endl;
 	//std::cout << "dampingCoeff " << dampingCoeff << " relativeKineticEnergy " << relativeKineticEnergy << " externalModeIter " << externalModeIter <<std::endl;
 	qdot = (_Matrix::Identity(totalVelDOF, totalVelDOF) - pApp->GetSimulationUpdatePeriod_inSeconds() * dampingCoeff * MrInverse * K).inverse() * qdot;
+}
+
+void eae6320::MultiBody::InternalEnergyProjection(_Vector& io_qdot)
+{
+	_Scalar Kp = 0.5 * linearMomentum0.dot(linearMomentum0) / kinematicTreeTotalMass;
+	//_Vector3 referencePoint(0, 0, 0);
+	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+	//std::cout << "COM " << referencePoint.transpose() << std::endl;
+	angularMomentum0 = ComputeAngularMomentum(referencePoint, io_qdot);
+	_Matrix3 kinematicTreeInertia = ComputeKinematicTreeInertiaTensor(referencePoint, pos, Mbody);
+	_Scalar Kl = 0.5 * (angularMomentum0.transpose() * kinematicTreeInertia.inverse() * angularMomentum0)(0, 0);
+	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " Kl " << Kl << std::endl << std::endl;
+
+	int constraintDim = 1;
+	int worldImpulseDim = 3 * numOfLinks;
+	int n = worldImpulseDim + constraintDim;
+	_Matrix b(n, 1);
+	_Matrix grad_F(n, n);
+	
+	_Matrix K(totalVelDOF, worldImpulseDim);
+	K.setZero();
+	for (int i = 1; i < numOfLinks; i++)
+	{
+		_Matrix S(3, worldImpulseDim);
+		S.setZero();
+		S.block<3, 3>(0, 3 * i) = _Matrix::Identity(3, 3);
+		K = K + (Ht[i - 1].block(3, 0, 3, totalVelDOF).transpose() - Ht[i].block(3, 0, 3, totalVelDOF).transpose()) * S;
+	}
+	K = MrInverse * K;
+
+	_Vector x(n);
+	x.setZero();
+
+	_Matrix regularization(n, n);
+	regularization.setIdentity();
+	regularization = 1e-6 * regularization;
+
+	//_Scalar kineticEnergy0 = std::max(totalEnergy0 - ComputePotentialEnergy(), Kp + Kl);
+	_Scalar kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
+	if (Kp + Kl > kineticEnergy0)
+	{
+		std::cout << "external damping is needed at time " << Physics::totalSimulationTime << std::endl;
+		return;
+	}
+
+	_Matrix grad_C(constraintDim, worldImpulseDim);
+	grad_C.setZero();
+
+	_Scalar energyErr = 1.0;
+	_Matrix C(constraintDim, 1);
+	int iter = 0;
+	while (true)
+	{
+		_Vector v = io_qdot + K * x.segment(0, worldImpulseDim);
+		C(0, 0) = 0.5 * v.transpose() * Mr * v - kineticEnergy0;
+		_Scalar C_norm = C.norm();
+		if (C_norm < 1e-6) break;
+		if (iter >= 10)
+		{
+			std::cout << "doesn't converge" << std::endl;
+			break;
+		}
+		
+		grad_C.block(0, 0, constraintDim, worldImpulseDim) = (K.transpose() * Mr * v).transpose();
+		
+		b.block(0, 0, worldImpulseDim, 1) = -K.transpose() * Mr * K * x.segment(0, worldImpulseDim);
+		b.block(worldImpulseDim, 0, constraintDim, 1) = -C;
+
+		grad_F.setZero();
+		grad_F.block(0, 0, worldImpulseDim, worldImpulseDim) = (1 + x(worldImpulseDim)) * K.transpose() * Mr * K;
+		grad_F.block(0, worldImpulseDim, worldImpulseDim, constraintDim) = grad_C.transpose();
+		grad_F.block(worldImpulseDim, 0, constraintDim, worldImpulseDim) = grad_C;
+
+		if (abs(grad_F.determinant()) < 1e-7)
+		{
+			grad_F = grad_F + regularization;
+			std::cout << "grad_F is not invertable" << std::endl;
+			//EAE6320_ASSERTF(false, "grad_f is not invertable");
+		}
+
+		_Vector p(n);
+		p.setZero();
+		p = grad_F.inverse() * b;
+
+		x.segment(0, worldImpulseDim) = x.segment(0, worldImpulseDim) + p.segment(0, worldImpulseDim);
+		x(worldImpulseDim) = p(worldImpulseDim);//update lagrange multiplier
+		iter++;
+	}
+	io_qdot = io_qdot + K * x.segment(0, worldImpulseDim);
+	ForwardAngularAndTranslationalVelocity(Ht, io_qdot);
+
+	std::cout << "C " << C(0, 0) << " energy constraint iter: " << iter << std::endl;
 }
 
 void eae6320::MultiBody::VariationalIntegration(const _Scalar h)

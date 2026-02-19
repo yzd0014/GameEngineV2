@@ -84,7 +84,9 @@ namespace eae6320
 		_Vector3 ComputeTranslationalMomentum();
 		_Vector3 ComputeAngularMomentum();
 		_Vector3 ComputeTranslationalMomentum(_Vector& i_qdot);
-		_Vector3 ComputeAngularMomentum(_Vector& i_qdot);
+		_Vector3 ComputeAngularMomentum(_Vector3 i_referencePoint, _Vector& i_qdot);
+		_Vector3 ComputeKinematicTreeCOM(std::vector<_Vector3>& i_pos, std::vector<_Matrix>& i_inertia);
+		_Matrix3 ComputeKinematicTreeInertiaTensor(_Vector3 i_referencePoint, std::vector<_Vector3>& i_pos, std::vector<_Matrix>& i_inertia);
 		
 		void SwingLimitCheck();
 		void ResolveSwingLimit(const _Scalar h);
@@ -136,6 +138,7 @@ namespace eae6320
 		void PBDEnergyCorrectionV2(_Vector& i_q, _Vector& io_qdot);//FEPR->velocity->energy
 		void PBDEnergyMomentumCorrection(_Vector& io_qdot);//FEPR->velocity->energy/momentum
 		void EnergyNullSpaceCorrection();//SQP->velocity->energy
+		void InternalEnergyProjection(_Vector& io_qdot);
 		void ComputeMomentumMatrix(_Matrix& o_M, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_inertiaGlobal, std::vector<_Vector3>& i_positionOfCOM);
 		void GetNullSpace(_Matrix& o_nullSpace, _Matrix& i_M);
 		void ImplicitForceIntegration();
@@ -201,7 +204,7 @@ namespace eae6320
 		std::vector<_Vector3> hingeDirGlobals;
 		std::vector<_Scalar> hingeMagnitude;//distance between the point from each body that defines the position of the hinge joint
 		std::vector<_Vector> externalForces;//extern force in maximal coordinate
-		
+	
 		std::vector<_Matrix3> R_global;//rigidbody rotation
 		std::vector<_Matrix3> R_local;
 		std::vector<_Matrix3> J_exp;//rotation jabobian matrix
@@ -252,6 +255,7 @@ namespace eae6320
 
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;
+		_Scalar kinematicTreeTotalMass = 0;
 		_Vector3 angularMomentum0;
 		_Vector3 linearMomentum0;
 		_Vector gravityVec;

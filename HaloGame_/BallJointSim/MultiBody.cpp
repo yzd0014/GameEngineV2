@@ -117,6 +117,15 @@ void eae6320::MultiBody::MultiBodyInitialization()
 		Math::ComputeDeformationGradient(eulerY[i], eulerZ[i], eulerX[i], _Vector3(0, 1, 0), _Vector3(0, 0, 1), _Vector3(1, 0, 0), deformationGradient);
 		eulerDecompositionOffsetMat[i] = deformationGradient;
 		eulerDecompositionOffset[i] = Math::RotationConversion_MatToQuat(deformationGradient);
+
+		if (Mbody[i](0, 0) > 0)
+		{
+			kinematicTreeTotalMass += Mbody[i](0, 0);
+		}
+		else
+		{
+			std::cout << "Rigid body mass can't be zero!" << std::endl;
+		}
 	}
 	
 	gravityVec.resize(6);
@@ -295,12 +304,13 @@ void eae6320::MultiBody::ConstraintSolve(const _Scalar h)
 
 void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 {
-	std::cout << "before P " << ComputeTranslationalMomentum(qdot).transpose() << std::endl;
-	std::cout << "before L " << ComputeAngularMomentum(qdot).transpose() << std::endl;
+	/*std::cout << "before P " << ComputeTranslationalMomentum(qdot).transpose() << std::endl;
+	std::cout << "before L " << ComputeAngularMomentum(qdot).transpose() << std::endl;*/
 	//ImplicitForceIntegration();
-	ExplicitForceIntegration();
-	std::cout << "after P " << ComputeTranslationalMomentum(qdot).transpose() << std::endl;
-	std::cout << "after L " << ComputeAngularMomentum(qdot).transpose() << std::endl << std::endl;
+	//ExplicitForceIntegration();
+	/*std::cout << "after P " << ComputeTranslationalMomentum(qdot).transpose() << std::endl;
+	std::cout << "after L " << ComputeAngularMomentum(qdot).transpose() << std::endl << std::endl;*/
+	InternalEnergyProjection(qdot);
 
 	_Vector Qr = ComputeQr_SikpVelocityUpdate(qdot);
 	_Vector qddot = MrInverse * Qr;
@@ -322,7 +332,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//totalEnergy0 = ComputeTotalEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum();
 	angularMomentum0 = ComputeAngularMomentum();
-	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeKineticEnergy() << std::endl << std::endl;
 }
 
@@ -841,13 +851,14 @@ _Vector3 eae6320::MultiBody::ComputeTranslationalMomentum(_Vector& i_qdot)
 	return out;
 }
 
-_Vector3 eae6320::MultiBody::ComputeAngularMomentum(_Vector& i_qdot)
+_Vector3 eae6320::MultiBody::ComputeAngularMomentum(_Vector3 i_referencePoint, _Vector& i_qdot)
 {
 	_Matrix Kl(3, totalVelDOF);
 	Kl.setZero();
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(pos[i]) * Ht[i].block(0, 0, 3, totalVelDOF);
+		_Vector3 r = pos[i] - i_referencePoint;
+		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * Ht[i].block(0, 0, 3, totalVelDOF);
 	}
 	_Vector3 out = Kl * i_qdot;
 	return out;
@@ -1116,4 +1127,33 @@ void eae6320::MultiBody::CopyFromX2Q(std::vector<int>& i_jointType)
 			q.segment(posStartIndex[i], posDOF[i]) = x.segment(xStartIndex[i], xDOF[i]);
 		}
 	}
+}
+
+_Vector3 eae6320::MultiBody::ComputeKinematicTreeCOM(std::vector<_Vector3>& i_pos, std::vector<_Matrix>& i_inertia)
+{
+	_Vector3 COM;
+	COM.setZero();
+	_Scalar totalMass = 0;
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (i_inertia[i](0, 0) <= 0) EAE6320_ASSERTF(false, "Rigid body mass can't be zero!");
+		COM = COM + i_inertia[i](0, 0) * i_pos[i];
+		totalMass += i_inertia[i](0, 0);
+	}
+	COM = COM / totalMass;
+
+	return COM;
+}
+
+_Matrix3 eae6320::MultiBody::ComputeKinematicTreeInertiaTensor(_Vector3 i_referencePoint, std::vector<_Vector3>& i_pos, std::vector<_Matrix>& i_inertia)
+{
+	_Matrix3 totalInertia;
+	totalInertia.setZero();
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		_Vector3 r = i_pos[i] - i_referencePoint;
+		if (i_inertia[i](0, 0) <= 0) EAE6320_ASSERTF(false, "Rigid body mass can't be zero!");
+		totalInertia = totalInertia + i_inertia[i].block<3, 3>(3, 3) + i_inertia[i](0, 0) * (r.squaredNorm() * _Matrix::Identity(3, 3) - r * r.transpose());
+	}
+	return totalInertia;
 }
