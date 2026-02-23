@@ -307,18 +307,12 @@ void eae6320::MultiBody::SQPV3()//energy constraint
 void eae6320::MultiBody::PBDEnergyCorrection(_Vector& io_qdot)//energy constraint
 {
 	int energeMomentumConstraintDim = 1;
-	int nq = totalVelDOF;
-	int n = nq + energeMomentumConstraintDim;
 	
-	_Vector mq(nq);
-	mq.setZero();
-	mq.segment(0, totalVelDOF) = io_qdot;
-	
-	_Matrix grad_C(energeMomentumConstraintDim, nq);
+	_Matrix grad_C(energeMomentumConstraintDim, totalVelDOF);
 	grad_C.setZero();
 
-	_Matrix DInv;
-	DInv = MrInverse;
+	//_Matrix DInv;
+	//DInv = MrInverse;
 
 	_Scalar kineticEnergyExpected = totalEnergy0 - ComputePotentialEnergy();
 
@@ -327,19 +321,18 @@ void eae6320::MultiBody::PBDEnergyCorrection(_Vector& io_qdot)//energy constrain
 	int iter = 0;
 	while (true)
 	{
-		C(0, 0) = 0.5 * (mq.segment(0, totalVelDOF).transpose() * Mr * mq.segment(0, totalVelDOF))(0, 0) - kineticEnergyExpected;
+		C(0, 0) = 0.5 * (io_qdot.transpose() * Mr * io_qdot)(0, 0) - kineticEnergyExpected;
 		if (abs(C(0, 0)) < 1e-6)
 		{
 			std::cout << "energy constraint iter: " << iter << " error " << abs(C(0, 0)) << std::endl;
 			break;
 		}
-		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * mq.segment(0, totalVelDOF)).transpose();
-		lambdaNew = (grad_C * DInv * grad_C.transpose()).inverse() * C;
-		mq = mq - DInv * grad_C.transpose() * lambdaNew;
+		grad_C.block(0, 0, 1, totalVelDOF) = (Mr * io_qdot).transpose();
+		lambdaNew = (grad_C * MrInverse * grad_C.transpose()).inverse() * C;
+		io_qdot = io_qdot - MrInverse * grad_C.transpose() * lambdaNew;
 		iter++;
 	}
-	ForwardAngularAndTranslationalVelocity(Ht, mq);
-	io_qdot = mq;
+	ForwardAngularAndTranslationalVelocity(Ht, io_qdot);
 }
 
 void eae6320::MultiBody::PBDEnergyMomentumCorrection(_Vector& io_qdot)
@@ -433,11 +426,11 @@ void eae6320::MultiBody::PBDEnergyMomentumCorrection(_Vector& io_q, _Vector& io_
 	grad_C.setZero();
 
 	_Scalar dt = pApp->GetSimulationUpdatePeriod_inSeconds();
-	_Matrix D(totalDof, totalDof);
-	D.setZero();
+	_Matrix DInv(totalDof, totalDof);
+	DInv.setZero();
 	_Scalar coeff_s_t = 1e-3;
-	D(posVelDof, posVelDof) = coeff_s_t;
-	D(posVelDof + 1, posVelDof + 1) = coeff_s_t;
+	DInv(posVelDof, posVelDof) = 1 / coeff_s_t;
+	DInv(posVelDof + 1, posVelDof + 1) = 1 / coeff_s_t;
 
 	_Vector mq(totalDof);
 	mq.setZero();
@@ -508,10 +501,10 @@ void eae6320::MultiBody::PBDEnergyMomentumCorrection(_Vector& io_q, _Vector& io_
 		grad_C.block(4, totalVelDOF, 3, totalVelDOF) = Kl;
 		grad_C.block(4, posVelDof + 1, 3, 1) = angularMomentum1 - angularMomentum0;
 
-		D.block(0, 0, totalVelDOF, totalVelDOF) = Mr;
-		D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = dt * dt * Mr;
+		DInv.block(0, 0, totalVelDOF, totalVelDOF) = MrInverse;
+		DInv.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = 1.0 / (dt * dt) * MrInverse;
 		//D.block(totalVelDOF, totalVelDOF, totalVelDOF, totalVelDOF) = Mr;
-		_Matrix DInv = D.inverse();
+		//_Matrix DInv = D.inverse();
 		
 		_Matrix K = grad_C * DInv * grad_C.transpose();
 	
@@ -867,7 +860,7 @@ void eae6320::MultiBody::ComputeExponentialMapJacobian(_Vector& i_x, std::vector
 		if (i_jointType[i] == BALL_JOINT_3D)
 		{
 			_Vector3 r = i_x.segment(i_posStartIndex[i], 3);
-			ComputeExponentialMapJacobian(J_exp[i], r, i);
+			ComputeExponentialMapJacobian(J_exp[i], uGlobalsChild[i], r, i);
 		}
 	}
 }

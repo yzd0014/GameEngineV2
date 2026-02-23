@@ -218,11 +218,6 @@ bool eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, in
 	bool clamped = false;
 	if (theta > M_PI)
 	{
-		/*_Matrix3 H_before; 
-		ComputeExponentialMapJacobian(H_before, r, i);
-		_Vector3 rdot = io_qdot.segment(jointVelIndex, 3);
-		_Vector3 omega = H_before * rdot;*/
-
 		_Scalar eta = (_Scalar)(1.0f - 2.0f * M_PI / theta);
 
 		//reparameterize position
@@ -234,9 +229,7 @@ bool eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, in
 		_Vector3 r_dot = io_qdot.segment(jointVelIndex, 3);
 		_Vector3 r_dot_new = eta * r_dot + 2 * M_PI * (r.dot(r_dot) / pow(theta, 3)) * r;
 		io_qdot.segment(jointVelIndex, 3) = r_dot_new;
-	/*	_Matrix3 H_after;
-		ComputeExponentialMapJacobian(H_after, r_new, i);
-		io_qdot.segment(jointVelIndex, 3) = H_after.inverse() * omega;*/
+
 		clamped = true;
 	}
 	return clamped;
@@ -310,7 +303,8 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//ExplicitForceIntegration();
 	/*std::cout << "after P " << ComputeTranslationalMomentum(qdot).transpose() << std::endl;
 	std::cout << "after L " << ComputeAngularMomentum(qdot).transpose() << std::endl << std::endl;*/
-	InternalEnergyProjection(qdot);
+	HybridEnergyProjection(qdot);
+	//InternalEnergyProjection(qdot, 0);
 
 	_Vector Qr = ComputeQr_SikpVelocityUpdate(qdot);
 	_Vector qddot = MrInverse * Qr;
@@ -325,9 +319,10 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
-	//PBDEnergyMomentumCorrection(q, qdot);
-	//PBDEnergyCorrection(q, qdot);
 	Forward();
+	//PBDEnergyMomentumCorrection(q, qdot);
+	//PBDEnergyCorrection(qdot, Mr, MrInverse);
+	
 	
 	//totalEnergy0 = ComputeTotalEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum();
@@ -410,8 +405,7 @@ void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matr
 		else if (i_jointType[i] == BALL_JOINT_3D)
 		{
 			//compute H
-			_Vector3 r = i_q.segment(i_posStartIndex[i], 3);
-			o_H[i] = ComputeExponentialMapJacobian(J_exp[i], r, i);
+			o_H[i] = ComputeExponentialMapJacobian(J_exp[i], uGlobalsChild[i], i_q.segment(i_posStartIndex[i], 3), i);
 			//compute D
 			if (i > 0)
 			{
@@ -883,23 +877,27 @@ _Scalar eae6320::MultiBody::ComputeKineticEnergy()
 _Scalar eae6320::MultiBody::ComputePotentialEnergy()
 {
 	_Scalar out = 0;
-	for (int i = 0; i < numOfLinks; i++)
+	if (gravity)
 	{
-		_Scalar potentialEnergy = 0;
-		_Vector3 g(0.0f, 9.81f, 0.0f);
-		_Vector3 x;
-		Math::NativeVector2EigenVector(m_linkBodys[i]->m_State.position, x);
-		potentialEnergy = g.transpose() * Mbody[i].block<3, 3>(0, 0) * x;
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			_Scalar potentialEnergy = 0;
+			_Vector3 g(0.0f, 9.81f, 0.0f);
+			_Vector3 x;
+			Math::NativeVector2EigenVector(m_linkBodys[i]->m_State.position, x);
+			potentialEnergy = g.transpose() * Mbody[i].block<3, 3>(0, 0) * x;
 
-		out += potentialEnergy;
+			out += potentialEnergy;
+		}
 	}
+	
 	return out;
 }
 
 _Scalar eae6320::MultiBody::ComputeTotalEnergy()
 {
 	_Scalar energy = ComputeKineticEnergy();
-	if (gravity) energy += ComputePotentialEnergy();
+	energy += ComputePotentialEnergy();
 	return energy;
 }
 

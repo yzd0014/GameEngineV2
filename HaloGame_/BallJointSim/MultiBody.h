@@ -138,7 +138,9 @@ namespace eae6320
 		void PBDEnergyCorrectionV2(_Vector& i_q, _Vector& io_qdot);//FEPR->velocity->energy
 		void PBDEnergyMomentumCorrection(_Vector& io_qdot);//FEPR->velocity->energy/momentum
 		void EnergyNullSpaceCorrection();//SQP->velocity->energy
-		void InternalEnergyProjection(_Vector& io_qdot);
+		void InternalEnergyProjection(_Vector& io_qdot, _Scalar kineticEnergyTarget);
+		void ExternalEnergyProjection(_Vector& o_qdot, _Vector i_qdotRoot, _Scalar kineticEnergyTarget, _Matrix& i_Mr0);//FEPR->velocity->energy
+		void HybridEnergyProjection(_Vector& io_qdot);
 		void ComputeMomentumMatrix(_Matrix& o_M, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_inertiaGlobal, std::vector<_Vector3>& i_positionOfCOM);
 		void GetNullSpace(_Matrix& o_nullSpace, _Matrix& i_M);
 		void ImplicitForceIntegration();
@@ -350,7 +352,7 @@ namespace eae6320
 			return zeta;
 		}
 		
-		inline _Matrix ComputeExponentialMapJacobian(_Matrix3& o_J, _Vector3 r, int i)
+		inline _Matrix ComputeExponentialMapJacobian(_Matrix3& o_J, _Vector3 jointPosition, _Vector3 r, int i)
 		{
 			int j = parentArr[i];
 			_Scalar theta = r.norm();
@@ -365,7 +367,7 @@ namespace eae6320
 			_Matrix out;
 			out.resize(6, 3);
 			out.setZero();
-			out.block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * A;
+			out.block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(jointPosition) * A;
 			out.block<3, 3>(3, 0) = A;
 
 			return out;

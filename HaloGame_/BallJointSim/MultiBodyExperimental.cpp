@@ -1320,7 +1320,115 @@ void eae6320::MultiBody::ImplicitForceIntegration()
 	qdot = (_Matrix::Identity(totalVelDOF, totalVelDOF) - pApp->GetSimulationUpdatePeriod_inSeconds() * dampingCoeff * MrInverse * K).inverse() * qdot;
 }
 
-void eae6320::MultiBody::InternalEnergyProjection(_Vector& io_qdot)
+
+void eae6320::MultiBody::HybridEnergyProjection(_Vector& io_qdot)
+{
+	_Scalar Kp = 0.5 * linearMomentum0.dot(linearMomentum0) / kinematicTreeTotalMass;
+	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+	angularMomentum0 = ComputeAngularMomentum(referencePoint, io_qdot);
+	_Matrix3 kinematicTreeInertia = ComputeKinematicTreeInertiaTensor(referencePoint, pos, Mbody);
+	_Scalar Kl = 0.5 * (angularMomentum0.transpose() * kinematicTreeInertia.inverse() * angularMomentum0)(0, 0);
+
+	//_Matrix systemInertia;
+	//systemInertia.resize(6, 6);
+	//systemInertia.setIdentity();
+	//systemInertia = systemInertia * kinematicTreeTotalMass;
+	//systemInertia.block<3, 3>(3, 3) = kinematicTreeInertia;
+
+	//_Matrix H0;
+	//_Vector3 jointPosition = jointPos[0] - referencePoint;
+	//if (jointType[0] == BALL_JOINT_4D)
+	//{
+	//	//compute H
+	//	H0.resize(6, 3);
+	//	H0.setZero();
+	//	H0.block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(jointPosition);
+	//	H0.block<3, 3>(3, 0) = _Matrix::Identity(3, 3);
+	//}
+	//else if (jointType[0] == BALL_JOINT)
+	//{
+	//	//compute H
+	//	H0.resize(6, 3);
+	//	H0.block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(jointPosition) * R_global[0];
+	//	H0.block<3, 3>(3, 0) = R_global[0];
+	//}
+	//else if (jointType[0] == BALL_JOINT_3D)
+	//{
+	//	//compute H
+	//	_Matrix3 Jt;
+	//	H0 = ComputeExponentialMapJacobian(Jt, jointPosition, q.segment(0, 3), 0);
+	//}
+	//else if (jointType[0] == FREE_JOINT)
+	//{
+	//	//compute H
+	//	H0.resize(6, 6);
+	//	H0.setIdentity();
+	//}
+	//else if (jointType[0] == FREE_JOINT_EXPO)
+	//{
+	//	H0.resize(6, 6);
+	//	H0.setIdentity();
+
+	//	_Vector3 r = q.segment(3, 3);
+	//	_Scalar theta = r.norm();
+	//	_Scalar b = Compute_b(theta);
+	//	_Scalar a = Compute_a(theta);
+	//	_Scalar c = Compute_c(theta, a);
+	//	H0.block<3, 3>(3, 3) = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
+	//}
+	//else if (jointType[0] == HINGE_JOINT)
+	//{
+	//	//compute H
+	//	H0.resize(6, 1);
+	//	H0.block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(jointPosition) * hingeDirGlobals[0];
+	//	H0.block<3, 1>(3, 0) = hingeDirGlobals[0];
+	//}
+	//_Matrix Mr0 = H0.transpose() * systemInertia * H0;
+
+	_Scalar kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
+	//ExternalEnergyProjection(qdot, qdot.segment(0, velDOF[0]), kineticEnergy0, Mr0);
+	//ExternalEnergyProjection(qdot, qdot, kineticEnergy0, Mr);
+	if (Kp + Kl > kineticEnergy0)
+	{
+		ExternalEnergyProjection(qdot, qdot, Kp + Kl, Mr);
+	}
+	else
+	{
+		InternalEnergyProjection(qdot, kineticEnergy0);
+	}
+}
+
+void eae6320::MultiBody::ExternalEnergyProjection(_Vector& o_qdot, _Vector i_qdotRoot, _Scalar kineticEnergyTarget, _Matrix& i_Mr0)//energy constraint
+{
+	int energeMomentumConstraintDim = 1;
+
+	int dof = static_cast<int>(i_qdotRoot.size());
+	_Matrix grad_C(energeMomentumConstraintDim, dof);
+	grad_C.setZero();
+
+	_Matrix MrInv0 = i_Mr0.inverse();
+	
+	_Matrix C(energeMomentumConstraintDim, 1);
+	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+	int iter = 0;
+	while (true)
+	{
+		C(0, 0) = 0.5 * (i_qdotRoot.transpose() * i_Mr0 * i_qdotRoot)(0, 0) - kineticEnergyTarget;
+		if (abs(C(0, 0)) < 1e-6 || iter > 10)
+		{
+			std::cout << "ExternalEnergyProjection constraint iter: " << iter << " error " << abs(C(0, 0)) << std::endl;
+			break;
+		}
+		grad_C.block(0, 0, 1, dof) = (i_Mr0 * i_qdotRoot).transpose();
+		lambdaNew = (grad_C * MrInv0 * grad_C.transpose()).inverse() * C;
+		i_qdotRoot = i_qdotRoot - MrInv0 * grad_C.transpose() * lambdaNew;
+		iter++;
+	}
+	o_qdot.segment(0, dof) = i_qdotRoot;
+	ForwardAngularAndTranslationalVelocity(Ht, o_qdot);
+}
+
+void eae6320::MultiBody::InternalEnergyProjection(_Vector& io_qdot, _Scalar kineticEnergyTarget)
 {
 	_Scalar Kp = 0.5 * linearMomentum0.dot(linearMomentum0) / kinematicTreeTotalMass;
 	//_Vector3 referencePoint(0, 0, 0);
@@ -1330,6 +1438,8 @@ void eae6320::MultiBody::InternalEnergyProjection(_Vector& io_qdot)
 	_Matrix3 kinematicTreeInertia = ComputeKinematicTreeInertiaTensor(referencePoint, pos, Mbody);
 	_Scalar Kl = 0.5 * (angularMomentum0.transpose() * kinematicTreeInertia.inverse() * angularMomentum0)(0, 0);
 	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " Kl " << Kl << std::endl << std::endl;
+
+	//_Scalar kineticEnergy0 = std::max(totalEnergy0 - ComputePotentialEnergy(), Kp + Kl);
 
 	int constraintDim = 1;
 	int worldImpulseDim = 3 * numOfLinks;
@@ -1355,14 +1465,6 @@ void eae6320::MultiBody::InternalEnergyProjection(_Vector& io_qdot)
 	regularization.setIdentity();
 	regularization = 1e-6 * regularization;
 
-	//_Scalar kineticEnergy0 = std::max(totalEnergy0 - ComputePotentialEnergy(), Kp + Kl);
-	_Scalar kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
-	if (Kp + Kl > kineticEnergy0)
-	{
-		std::cout << "external damping is needed at time " << Physics::totalSimulationTime << std::endl;
-		return;
-	}
-
 	_Matrix grad_C(constraintDim, worldImpulseDim);
 	grad_C.setZero();
 
@@ -1372,7 +1474,8 @@ void eae6320::MultiBody::InternalEnergyProjection(_Vector& io_qdot)
 	while (true)
 	{
 		_Vector v = io_qdot + K * x.segment(0, worldImpulseDim);
-		C(0, 0) = 0.5 * v.transpose() * Mr * v - kineticEnergy0;
+		C(0, 0) = 0.5 * v.transpose() * Mr * v - kineticEnergyTarget;
+		//C(0, 0) = 0.5 * v.transpose() * Mr * v - kineticEnergy0;
 		_Scalar C_norm = C.norm();
 		if (C_norm < 1e-6) break;
 		if (iter >= 10)

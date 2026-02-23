@@ -52,7 +52,7 @@ void eae6320::MultiBody::ComputeCloseLoopJacobian(_Matrix& o_J)
 		{
 			//compute H
 			_Vector3 r = q.segment(posStartIndex[i], 3);
-			mH[i] = ComputeExponentialMapJacobian(J_exp[i], r, i);
+			mH[i] = ComputeExponentialMapJacobian(J_exp[i], m_uGlobalChild, r, i);
 			//compute D
 			if (i > 0)
 			{
