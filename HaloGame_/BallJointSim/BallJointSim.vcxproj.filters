@@ -65,10 +65,10 @@
     <ClCompile Include="DerivativeUnitTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CloseLoopConstraint.cpp">
+    <ClCompile Include="JointLimitConstraint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="JointLimitConstraint.cpp">
+    <ClCompile Include="ConstraintSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

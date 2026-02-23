@@ -1,5 +1,14 @@
 #include "MultiBody.h"
 
+void eae6320::MultiBody::ComputePointJointJacobian(_Matrix& o_J)
+{
+	o_J.resize(3, totalVelDOF);
+	o_J.setZero();
+	o_J.block<3, 3>(0, 0) = _Matrix::Identity(3, 3);
+	pointJointWorldPos = R_global[0] * pointJointLocalPos;
+	o_J.block<3, 3>(0, 3) = -Math::ToSkewSymmetricMatrix(pointJointWorldPos);
+}
+
 void eae6320::MultiBody::ComputeCloseLoopJacobian(_Matrix& o_J)
 {
 	std::vector<_Matrix> mH;
@@ -8,6 +17,7 @@ void eae6320::MultiBody::ComputeCloseLoopJacobian(_Matrix& o_J)
 	mD.resize(numOfLinks);
 	_Vector3 m_uGlobalChild;
 	_Vector3 m_uGlobalParent;
+
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		int j = parentArr[i];
@@ -126,11 +136,12 @@ void eae6320::MultiBody::ComputeCloseLoopJacobian(_Matrix& o_J)
 	o_J.block(0, 0, 3, totalVelDOF) = J_temp[0].block(0, 0, 3, totalVelDOF) - J_temp[1].block(0, 0, 3, totalVelDOF);
 }
 
-void eae6320::MultiBody::SolveCloseLoop()
+void eae6320::MultiBody::ImpulseConstraintSolver()
 {
-	if (hasCloseLoop)
+	if (hasCloseLoop || hasPointJoint)
 	{
-		ComputeCloseLoopJacobian(J_constraint);
+		if (hasCloseLoop) ComputeCloseLoopJacobian(J_constraint);
+		else if (hasPointJoint) ComputePointJointJacobian(J_constraint);
 
 		_Matrix lambda;
 		_Matrix K;
@@ -149,12 +160,22 @@ void eae6320::MultiBody::SolveCloseLoop()
 
 void eae6320::MultiBody::SolvePositionError()
 {
-	_Vector3 closeLoopLinkPos, endFactorPos;
-	ComputeCloseLoopAnchorPositions(closeLoopLinkPos, endFactorPos, jointPos[0], R_global);
-
 	_Vector3 error;
 	error.setZero();
-	_Vector3 positionViolation = closeLoopLinkPos - endFactorPos;
+	_Vector3 positionViolation;
+
+	if (hasCloseLoop)
+	{
+		_Vector3 closeLoopLinkPos, endFactorPos;
+		ComputeCloseLoopAnchorPositions(closeLoopLinkPos, endFactorPos, jointPos[0], R_global);
+		positionViolation = closeLoopLinkPos - endFactorPos;
+	}
+	else if (hasPointJoint)
+	{
+		_Vector3 freeBodyPos = q.segment(0, 3);
+		positionViolation = freeBodyPos + pointJointWorldPos - pointJointAnchor;
+	}
+
 	_Scalar beta = 0.1;
 	error = beta * -positionViolation;
 	_Matrix lambda;
@@ -198,13 +219,32 @@ void eae6320::MultiBody::ComputeCloseLoopAnchorPositions(_Vector3& o_pos0, _Vect
 	}
 }
 
-void eae6320::MultiBody::AddCloseLoop(int i_linkID, _Vector3 i_uPre, _Vector3 i_uNext, _Vector3 i_uEnd)
+void eae6320::MultiBody::AddPointJoint(_Vector3 i_pointJointLocalPos, _Vector3 i_anchorPos)
+{
+	hasPointJoint = true;
+	pointJointLocalPos = i_pointJointLocalPos;
+	pointJointAnchor = i_anchorPos;
+
+	_Vector3 freeBodyPos = q.segment(0, 3);
+	pointJointWorldPos = R_global[0] * pointJointLocalPos;
+	//std::cout << freeBodyPos.transpose() << std::endl;
+	//std::cout << pointJointWorldPos.transpose() << std::endl;
+	_Vector3 initialError = freeBodyPos + pointJointWorldPos - pointJointAnchor;
+	if (initialError.norm() > 1e-3)
+	{
+		EAE6320_ASSERTF(false, "Initial point joint error is too large");
+		std::cout << "Initial point joint error is too large" << std::endl;
+	}
+}
+
+void eae6320::MultiBody::AddCloseLoop(int i_linkID, _Vector3 i_uPre, _Vector3 i_uEnd)
 {
 	hasCloseLoop = true;
 	
 	closeLoopLinkID = i_linkID;
 	uPre = i_uPre;
-	uNext = i_uNext;
+	//uNext = i_uNext;
+	uNext = uPre - uLocalsChild[closeLoopLinkID] + uLocalsParent[closeLoopLinkID + 1];
 	uEnd = i_uEnd;
 
 	_Vector3 closeLoopLinkPos, endFactorPos;

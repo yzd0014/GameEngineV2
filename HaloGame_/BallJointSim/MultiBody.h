@@ -17,17 +17,6 @@ namespace eae6320
 		void Tick(const double i_secondCountToIntegrate) override;
 		void UpdateGameObjectBasedOnInput() override;
 
-		std::string integrationMode = "Euler";
-		_Scalar damping = 1.0;
-		int constraintSolverMode = IMPULSE;
-		int constraintType = SWING_C;//only used for testing
-		int twistMode = EULER_V2;
-		bool gravity = false ;
-		bool hasCloseLoop = false;
-		int enablePositionSolve = 0;//position solve currently doesn't support free joint
-		bool adaptiveTimestep = false;//this feature is deprecated, it require update in the application class 
-		Application::cbApplication* pApp = nullptr;
-		BallJointSim* pSim = nullptr;
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void MultiBodyInitialization();
@@ -117,11 +106,13 @@ namespace eae6320
 		void ComputeExponentialMapJacobian(_Vector& i_x, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 
 
-		void SolveCloseLoop();
+		void ImpulseConstraintSolver();
 		void SolvePositionError();
 		void ComputeCloseLoopAnchorPositions(_Vector3& o_pos0, _Vector3& o_pos1, _Vector i_rootPos, std::vector<_Matrix3>& i_R);
 		void ComputeCloseLoopJacobian(_Matrix& o_J);
-		void AddCloseLoop(int i_linkID, _Vector3 i_uPre, _Vector3 i_uNext, _Vector3 i_uEnd);
+		void ComputePointJointJacobian(_Matrix& o_J);
+		void AddCloseLoop(int i_linkID, _Vector3 i_uPre, _Vector3 i_uEnd);
+		void AddPointJoint(_Vector3 i_pointJointLocalPos, _Vector3 i_anchorPos);
 
 		void PrePositionSolveProccessing();
 		void PostPositionSolveProccessing();
@@ -231,6 +222,9 @@ namespace eae6320
 		_Vector3 uPre;
 		_Vector3 uNext;
 		_Vector3 uEnd;
+		_Vector3 pointJointLocalPos;
+		_Vector3 pointJointWorldPos;
+		_Vector3 pointJointAnchor;
 		size_t constraintNum = 0;
 		int closeLoopLinkID;
 		
@@ -287,6 +281,19 @@ namespace eae6320
 		GameObject* xArrow = nullptr;
 		GameObject* yArrow = nullptr;
 		GameObject* zArrow = nullptr;
+
+		std::string integrationMode = "Euler";
+		_Scalar damping = 1.0;
+		int constraintSolverMode = IMPULSE;
+		int constraintType = SWING_C;//only used for testing
+		int twistMode = EULER_V2;
+		bool gravity = false;
+		bool hasCloseLoop = false;
+		bool hasPointJoint = false;
+		int enablePositionSolve = 0;//position solve currently doesn't support free joint
+		bool adaptiveTimestep = false;//this feature is deprecated, it require update in the application class 
+		Application::cbApplication* pApp = nullptr;
+		BallJointSim* pSim = nullptr;
 /*******************************************************************************************/
 		void GetEulerAngles(int jointNum, _Quat i_quat, _Scalar o_eulerAngles[])
 		{

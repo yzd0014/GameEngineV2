@@ -303,7 +303,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//ExplicitForceIntegration();
 	/*std::cout << "after P " << ComputeTranslationalMomentum(qdot).transpose() << std::endl;
 	std::cout << "after L " << ComputeAngularMomentum(qdot).transpose() << std::endl << std::endl;*/
-	HybridEnergyProjection(qdot);
+	//HybridEnergyProjection(qdot);
 	//InternalEnergyProjection(qdot, 0);
 
 	_Vector Qr = ComputeQr_SikpVelocityUpdate(qdot);
@@ -315,7 +315,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//PBDEnergyCorrectionV2(q, qdot);
 	//PBDEnergyCorrection(qdot);
 	//ConstraintSolve(h);
-	SolveCloseLoop();
+	ImpulseConstraintSolver();
 
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 
