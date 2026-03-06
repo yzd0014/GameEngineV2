@@ -31,6 +31,8 @@ namespace eae6320
 			std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		_Vector ComputeQr(_Vector i_qdot);
 		_Vector ComputeQr_SikpVelocityUpdate(_Vector& i_qdot);
+		_Vector ComputeInternalQr(_Vector& i_qdot);
+		_Vector ComputeExternalQr();
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot);
 		
 		void ForwardAngularAndTranslationalVelocity(std::vector<_Matrix> i_Ht, _Vector& i_qdot);
@@ -75,6 +77,7 @@ namespace eae6320
 		_Vector3 ComputeTranslationalMomentum(_Vector& i_qdot);
 		_Vector3 ComputeAngularMomentum(_Vector3 i_referencePoint, _Vector& i_qdot);
 		_Vector3 ComputeKinematicTreeCOM(std::vector<_Vector3>& i_pos, std::vector<_Matrix>& i_inertia);
+		void PrintMomentum(_Vector i_qdot);
 		_Matrix3 ComputeKinematicTreeInertiaTensor(_Vector3 i_referencePoint, std::vector<_Vector3>& i_pos, std::vector<_Matrix>& i_inertia);
 		
 		void SwingLimitCheck();
@@ -129,9 +132,7 @@ namespace eae6320
 		void PBDEnergyCorrectionV2(_Vector& i_q, _Vector& io_qdot);//FEPR->velocity->energy
 		void PBDEnergyMomentumCorrection(_Vector& io_qdot);//FEPR->velocity->energy/momentum
 		void EnergyNullSpaceCorrection();//SQP->velocity->energy
-		void InternalEnergyProjection(_Vector& io_qdot, _Scalar kineticEnergyTarget);
-		void ExternalEnergyProjection(_Vector& o_qdot, _Vector i_qdotRoot, _Scalar kineticEnergyTarget, _Matrix& i_Mr0);//FEPR->velocity->energy
-		void HybridEnergyProjection(_Vector& io_qdot);
+		void MomentumEnergyProjection(_Vector& io_qdot);
 		void ComputeMomentumMatrix(_Matrix& o_M, std::vector<_Matrix>& i_Ht, std::vector<_Matrix>& i_inertiaGlobal, std::vector<_Vector3>& i_positionOfCOM);
 		void GetNullSpace(_Matrix& o_nullSpace, _Matrix& i_M);
 		void ImplicitForceIntegration();

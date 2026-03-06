@@ -153,7 +153,7 @@ void eae6320::MultiBody::ImpulseConstraintSolver()
 		lambda = effectiveMass0 * (-J_constraint * qdot);
 		_Vector qdotCorrection = MrInverse * J_constraint.transpose() * lambda;
 		qdot = qdot + qdotCorrection;
-
+		//std::cout << "generalized impulse" << J_constraint.transpose() * lambda << std::endl;
 		SolvePositionError();
 	}
 }

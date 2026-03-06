@@ -20,8 +20,10 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	UpdateInitialPosition();
 
 	totalEnergy0 = ComputeTotalEnergy();
-	angularMomentum0 = ComputeAngularMomentum();
-	linearMomentum0 = ComputeTranslationalMomentum();
+	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+	angularMomentum0 = ComputeAngularMomentum(referencePoint, qdot);
+	linearMomentum0 = ComputeTranslationalMomentum(qdot);
+	kineticEnergy0 = ComputeKineticEnergy();
 	std::cout << std::setprecision(16) << "initial total energy: " << totalEnergy0 << std::endl;
 	//std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
 	//std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
@@ -297,19 +299,19 @@ void eae6320::MultiBody::ConstraintSolve(const _Scalar h)
 
 void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 {
-	/*std::cout << "before P " << ComputeTranslationalMomentum(qdot).transpose() << std::endl;
-	std::cout << "before L " << ComputeAngularMomentum(qdot).transpose() << std::endl;*/
-	//ImplicitForceIntegration();
-	//ExplicitForceIntegration();
-	/*std::cout << "after P " << ComputeTranslationalMomentum(qdot).transpose() << std::endl;
-	std::cout << "after L " << ComputeAngularMomentum(qdot).transpose() << std::endl << std::endl;*/
-	//HybridEnergyProjection(qdot);
-	//InternalEnergyProjection(qdot, 0);
-
-	_Vector Qr = ComputeQr_SikpVelocityUpdate(qdot);
+	//_Vector Qr = ComputeQr_SikpVelocityUpdate(qdot);
+	//_Vector qddot = MrInverse * Qr;
+	//PrintMomentum(qdot);
+	_Vector Qr = ComputeInternalQr(qdot);
 	_Vector qddot = MrInverse * Qr;
-
 	qdot = qdot + qddot * h;
+	//PrintMomentum(qdot);
+	MomentumEnergyProjection(qdot);
+
+	Qr = ComputeExternalQr();
+	qddot = MrInverse * Qr;
+	qdot = qdot + qddot * h;
+	
 	qdot = damping * qdot;
 
 	//PBDEnergyCorrectionV2(q, qdot);
@@ -322,13 +324,15 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	Forward();
 	//PBDEnergyMomentumCorrection(q, qdot);
 	//PBDEnergyCorrection(qdot, Mr, MrInverse);
-	
-	
+
 	//totalEnergy0 = ComputeTotalEnergy();
-	linearMomentum0 = ComputeTranslationalMomentum();
-	angularMomentum0 = ComputeAngularMomentum();
+	//if there is non-workless exrternal force, update totalEnergy0, otherwise do the following
+	kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
+	linearMomentum0 = ComputeTranslationalMomentum(qdot);
+	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+	angularMomentum0 = ComputeAngularMomentum(referencePoint, qdot);
+	
 	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
-	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeKineticEnergy() << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
@@ -1134,7 +1138,10 @@ _Vector3 eae6320::MultiBody::ComputeKinematicTreeCOM(std::vector<_Vector3>& i_po
 	_Scalar totalMass = 0;
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		if (i_inertia[i](0, 0) <= 0) EAE6320_ASSERTF(false, "Rigid body mass can't be zero!");
+		if (i_inertia[i](0, 0) <= 0)
+		{
+			EAE6320_ASSERTF(false, "Rigid body mass can't be zero!");
+		}
 		COM = COM + i_inertia[i](0, 0) * i_pos[i];
 		totalMass += i_inertia[i](0, 0);
 	}
@@ -1150,7 +1157,10 @@ _Matrix3 eae6320::MultiBody::ComputeKinematicTreeInertiaTensor(_Vector3 i_refere
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		_Vector3 r = i_pos[i] - i_referencePoint;
-		if (i_inertia[i](0, 0) <= 0) EAE6320_ASSERTF(false, "Rigid body mass can't be zero!");
+		if (i_inertia[i](0, 0) <= 0) 
+		{ 
+			EAE6320_ASSERTF(false, "Rigid body mass can't be zero!");
+		}
 		totalInertia = totalInertia + i_inertia[i].block<3, 3>(3, 3) + i_inertia[i](0, 0) * (r.squaredNorm() * _Matrix::Identity(3, 3) - r * r.transpose());
 	}
 	return totalInertia;

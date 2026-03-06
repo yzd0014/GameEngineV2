@@ -533,7 +533,7 @@ void eae6320::MultiBody::BallJointTest()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-	int ballJointType = BALL_JOINT_4D;
+	int ballJointType = BALL_JOINT_3D;
 
 	//AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
 	AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
@@ -544,7 +544,7 @@ void eae6320::MultiBody::BallJointTest()
 	
 	MultiBodyInitialization();
 	{
-		if (ballJointType == BALL_JOINT_3D)  q.segment(3, 3) = _Vector3(0, M_PI / 8, 0);
+		if (ballJointType == BALL_JOINT_3D)  q.segment(posStartIndex[1], 3) = _Vector3(0, M_PI / 8, 0);
 		else if (ballJointType == BALL_JOINT_4D || ballJointType == BALL_JOINT) rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
 		if (jointType[0] == FREE_JOINT)
 		{
