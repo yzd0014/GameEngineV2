@@ -533,7 +533,7 @@ void eae6320::MultiBody::BallJointTest()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-	int ballJointType = BALL_JOINT_3D;
+	int ballJointType = BALL_JOINT_4D;
 
 	//AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
 	AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
@@ -550,79 +550,44 @@ void eae6320::MultiBody::BallJointTest()
 		{
 			q(0) = 1;
 		}
+		//std::cout << "rel_ori[1] " << rel_ori[1] << std::endl;
 	}
 	
 	/*{
-		const char* filePath = "key_press_save.txt";
-		FILE* pFile = fopen(filePath, "rb");
-		int qDof = static_cast<int>(q.size());
-		for (int i = 0; i < qDof; i++)
-		{
-			fread(&q(i), sizeof(double), 1, pFile);
-		}
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			fread(&rel_ori[i].w(), sizeof(double), 1, pFile);
-			fread(&rel_ori[i].x(), sizeof(double), 1, pFile);
-			fread(&rel_ori[i].y(), sizeof(double), 1, pFile);
-			fread(&rel_ori[i].z(), sizeof(double), 1, pFile);
-		}
-		int vDof = static_cast<int>(qdot.size());
-		for (int i = 0; i < vDof; i++)
-		{
-			fread(&qdot(i), sizeof(double), 1, pFile);
-		}
-		fclose(pFile);
-	}*/
+			const char* filePath = "key_press_save.txt";
+			FILE* pFile = fopen(filePath, "rb");
+			int qDof = static_cast<int>(q.size());
+			for (int i = 0; i < qDof; i++)
+			{
+				fread(&q(i), sizeof(double), 1, pFile);
+			}
+			for (int i = 0; i < numOfLinks; i++)
+			{
+				fread(&rel_ori[i].w(), sizeof(double), 1, pFile);
+				fread(&rel_ori[i].x(), sizeof(double), 1, pFile);
+				fread(&rel_ori[i].y(), sizeof(double), 1, pFile);
+				fread(&rel_ori[i].z(), sizeof(double), 1, pFile);
+			}
+			int vDof = static_cast<int>(qdot.size());
+			for (int i = 0; i < vDof; i++)
+			{
+				fread(&qdot(i), sizeof(double), 1, pFile);
+			}
+			fclose(pFile);
+		}*/
 	Forward();
 	AddPointJoint(_Vector3(-1, 0, 0), _Vector3(0, 0, 0));
-	//scaling damping
-	/*m_control = [this]()
+	/*m_MatlabSave = [this]()
 	{
-		_Scalar kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
-		_Scalar kineticEnergy = ComputeKineticEnergy();
-		if (kineticEnergy > 0)
-		{
-			_Scalar s = kineticEnergy0 / kineticEnergy;
-			qdot = qdot * sqrt(s);
-		}
-		ForwardAngularAndTranslationalVelocity(Ht, qdot);
-	};*/
-	
-	//real damping
-	/*m_control = [this]()
-	{
-		for (int i = 1; i < numOfLinks; i++)
-		{
-			_Vector3 omegaWorld = R_global[i - 1] * qdot.segment(velStartIndex[i], 3);
-			_Scalar dampingCoeff = 1;
+		_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+		_Vector3 L = ComputeAngularMomentum(referencePoint, qdot);
+		_Vector3 P = ComputeTranslationalMomentum(qdot);
 
-			_Vector3 friction = -dampingCoeff * omegaWorld;
-			externalForces[i].block<3, 1>(3, 0) = friction;
-			externalForces[i - 1].block<3, 1>(3, 0) = -friction;
-		}
-		
-	};*/
-	
-	/*m_keyPressSave = [this](FILE * i_pFile)
-	{
-		int qDof = static_cast<int>(q.size());
-		for (int i = 0; i < qDof; i++)
-		{
-			fwrite(&qOld(i), sizeof(double), 1, i_pFile);
-		}
-		for (int i = 0; i < numOfLinks; i++)
-		{
-			fwrite(&rel_ori[i].w(), sizeof(double), 1, i_pFile);
-			fwrite(&rel_ori[i].x(), sizeof(double), 1, i_pFile);
-			fwrite(&rel_ori[i].y(), sizeof(double), 1, i_pFile);
-			fwrite(&rel_ori[i].z(), sizeof(double), 1, i_pFile);
-		}
-		int vDof = static_cast<int>(qdot.size());
-		for (int i = 0; i < vDof; i++)
-		{
-			fwrite(&xdot(i), sizeof(double), 1, i_pFile);
-		}
+		_Scalar totalKineticEnergy = ComputeKineticEnergy();
+		_Matrix3 kinematicTreeInertia = ComputeKinematicTreeInertiaTensor(referencePoint, pos, Mbody);
+		_Scalar extenralKineticEnergy = 0.5 * P.dot(P) / kinematicTreeTotalMass + 0.5 * (L.transpose() * kinematicTreeInertia.inverse() * L)(0, 0);
+		_Scalar potential = ComputePotentialEnergy();
+		LOG_TO_FILE << eae6320::Physics::totalSimulationTime << " " << potential + totalKineticEnergy << " " << totalKineticEnergy << " " << extenralKineticEnergy << std::endl;
 	};*/
 }
 
@@ -630,11 +595,11 @@ void eae6320::MultiBody::DoubleCubeTest()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-	int ballJointType = BALL_JOINT_3D;
+	int ballJointType = BALL_JOINT;
 
 	AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 1.0f, 1.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	AddRigidBody(0, ballJointType, _Vector3(-1.0f, 1.0f, -1.0f), _Vector3(1.0f, -1.0f, 1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
-	//AddRigidBody(1, ballJointType, _Vector3(1.0f, 1.0f, 1.0f), _Vector3(-1.0f, -1.0f, -1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 2
+	AddRigidBody(1, ballJointType, _Vector3(1.0f, 1.0f, 1.0f), _Vector3(-1.0f, -1.0f, -1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 2
 	
 	MultiBodyInitialization();
 	Forward();

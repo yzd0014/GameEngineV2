@@ -253,6 +253,7 @@ namespace eae6320
 		_Scalar kineticEnergy0 = 0;
 		_Scalar totalEnergy0 = 0;
 		_Scalar kinematicTreeTotalMass = 0;
+		_Scalar kinematicTreeTotalMassInverse = 1;
 		_Vector3 angularMomentum0;
 		_Vector3 linearMomentum0;
 		_Vector gravityVec;

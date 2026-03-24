@@ -129,6 +129,7 @@ void eae6320::MultiBody::MultiBodyInitialization()
 			std::cout << "Rigid body mass can't be zero!" << std::endl;
 		}
 	}
+	kinematicTreeTotalMassInverse = 1 / kinematicTreeTotalMass;
 	
 	gravityVec.resize(6);
 	gravityVec.setZero();
@@ -327,11 +328,13 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 
 	//totalEnergy0 = ComputeTotalEnergy();
 	//if there is non-workless exrternal force, update totalEnergy0, otherwise do the following
-	kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
+	//kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
+	kineticEnergy0 = ComputeKineticEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum(qdot);
 	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
 	angularMomentum0 = ComputeAngularMomentum(referencePoint, qdot);
 	
+	std::cout << "Kinetic " << kineticEnergy0 << " Potential " << ComputePotentialEnergy() << std::endl << std::endl;
 	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
@@ -349,7 +352,7 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
 	Forward();
-	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::RK3Integration(const _Scalar h)

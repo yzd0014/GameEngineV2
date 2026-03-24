@@ -1336,7 +1336,7 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 	}
 
 	//momentum projection
-	{
+	/*{
 		int momentumConstraintDim = 6;
 		
 		_Matrix grad_C(momentumConstraintDim, totalVelDOF);
@@ -1372,11 +1372,37 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 			io_qdot = io_qdot - qdotCorrection;
 			iter++;
 		}
-	}
+	}*/
+	
+	_Matrix3 kinematicTreeInertia = ComputeKinematicTreeInertiaTensor(referencePoint, pos, Mbody);
+	//external energy projection
+	/*{
+		int energeMomentumConstraintDim = 1;
+		_Matrix grad_C(energeMomentumConstraintDim, totalVelDOF);
+		grad_C.setZero();
+
+		_Scalar externalKineticEnergyTarget = 0.5 * kinematicTreeTotalMassInverse * linearMomentum0.dot(linearMomentum0) + 0.5 * (angularMomentum0.transpose() * kinematicTreeInertia.inverse() * angularMomentum0)(0, 0);
+		_Matrix Me = kinematicTreeTotalMassInverse * Kp.transpose() * Kp + Kl.transpose() * kinematicTreeInertia.inverse() * Kl;
+		_Matrix C(energeMomentumConstraintDim, 1);
+		_Matrix lambdaNew(energeMomentumConstraintDim, 1);
+		int iter = 0;
+		while (true)
+		{
+			C(0, 0) = 0.5 * (io_qdot.transpose() * Me * io_qdot)(0, 0) - externalKineticEnergyTarget;
+			if (abs(C(0, 0)) < 1e-5 || iter >= 50)
+			{
+				std::cout << "energy constraint iter: " << iter << " error " << abs(C(0, 0)) << std::endl;
+				break;
+			}
+			grad_C.block(0, 0, 1, totalVelDOF) = (Me * io_qdot).transpose();
+			lambdaNew = (grad_C * MrInverse * grad_C.transpose()).inverse() * C;
+			io_qdot = io_qdot - MrInverse * grad_C.transpose() * lambdaNew;
+			iter++;
+		}
+	}*/
 
 	_Vector3 linearMomentumCurr = Kp * io_qdot;
 	_Vector3 angularMomentumCurr = Kl * io_qdot;
-	_Matrix3 kinematicTreeInertia = ComputeKinematicTreeInertiaTensor(referencePoint, pos, Mbody);
 	_Scalar externalKineticEnergyCurr = 0.5 * linearMomentumCurr.dot(linearMomentumCurr) / kinematicTreeTotalMass + 0.5 * (angularMomentumCurr.transpose() * kinematicTreeInertia.inverse() * angularMomentumCurr)(0, 0);
 
 	//internal kinetic energy projection
@@ -1449,9 +1475,9 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 			iter++;
 		}
 		io_qdot = io_qdot + K * x.segment(0, worldImpulseDim);
-		ForwardAngularAndTranslationalVelocity(Ht, io_qdot);
-		std::cout << "Energy error " << C(0, 0) << " iter " << iter << std::endl << std::endl;
+		//std::cout << "Energy error " << C(0, 0) << " iter " << iter << std::endl << std::endl;
 	}
+	ForwardAngularAndTranslationalVelocity(Ht, io_qdot);
 }
 
 _Vector eae6320::MultiBody::ComputeInternalQr(_Vector& i_qdot)
