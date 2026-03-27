@@ -307,7 +307,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	_Vector qddot = MrInverse * Qr;
 	qdot = qdot + qddot * h;
 	//PrintMomentum(qdot);
-	MomentumEnergyProjection(qdot);
+	//MomentumEnergyProjection(qdot);
 
 	Qr = ComputeExternalQr();
 	qddot = MrInverse * Qr;
@@ -328,13 +328,13 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 
 	//totalEnergy0 = ComputeTotalEnergy();
 	//if there is non-workless exrternal force, update totalEnergy0, otherwise do the following
-	//kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
-	kineticEnergy0 = ComputeKineticEnergy();
+	kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
+	//kineticEnergy0 = ComputeKineticEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum(qdot);
 	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
 	angularMomentum0 = ComputeAngularMomentum(referencePoint, qdot);
 	
-	std::cout << "Kinetic " << kineticEnergy0 << " Potential " << ComputePotentialEnergy() << std::endl << std::endl;
+	//std::cout << "Kinetic " << kineticEnergy0 << " Potential " << ComputePotentialEnergy() << std::endl << std::endl;
 	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 

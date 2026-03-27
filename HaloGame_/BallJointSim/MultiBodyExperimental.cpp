@@ -1410,26 +1410,20 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 		_Scalar kineticEnergyTarget = std::max(kineticEnergy0, externalKineticEnergyCurr);
 		
 		int constraintDim = 1;
-		int worldImpulseDim = 3 * (numOfLinks - 1);
-		int n = worldImpulseDim + constraintDim;
+		int dofInternal = totalVelDOF - velDOF[0];
+		int n = dofInternal + constraintDim;
 		_Matrix b(n, 1);
 		_Matrix grad_F(n, n);
 
-		_Matrix K(totalVelDOF, worldImpulseDim);
+		_Matrix K(totalVelDOF, dofInternal);
 		K.setZero();
-		for (int i = 1; i < numOfLinks; i++)
-		{
-			_Matrix S(3, worldImpulseDim);
-			S.setZero();
-			S.block<3, 3>(0, 3 * (i - 1)) = _Matrix::Identity(3, 3);
-			K = K + (Ht[i].block(3, 0, 3, totalVelDOF).transpose() - Ht[i - 1].block(3, 0, 3, totalVelDOF).transpose()) * S;
-		}
+		K.block(velDOF[0], 0, dofInternal, dofInternal) = _Matrix::Identity(dofInternal, dofInternal);
 		K = MrInverse * K;
 
 		_Vector x(n);
 		x.setZero();
 
-		_Matrix grad_C(constraintDim, worldImpulseDim);
+		_Matrix grad_C(constraintDim, dofInternal);
 		grad_C.setZero();
 
 		_Scalar energyErr = 1.0;
@@ -1437,10 +1431,10 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 		int iter = 0;
 		while (true)
 		{
-			_Vector v = io_qdot + K * x.segment(0, worldImpulseDim);
+			_Vector v = io_qdot + K * x.segment(0, dofInternal);
 			C(0, 0) = 0.5 * v.transpose() * Mr * v - kineticEnergyTarget;
 			_Scalar C_norm = C.norm();
-			std::cout << "C_norm " << C_norm << std::endl;
+			//std::cout << "C_norm " << C_norm << std::endl;
 			if (C_norm < 1e-4) break;
 			if (iter >= 50)
 			{
@@ -1448,15 +1442,15 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 				break;
 			}
 
-			grad_C.block(0, 0, constraintDim, worldImpulseDim) = (K.transpose() * Mr * v).transpose();
+			grad_C.block(0, 0, constraintDim, dofInternal) = (K.transpose() * Mr * v).transpose();
 
-			b.block(0, 0, worldImpulseDim, 1) = -K.transpose() * Mr * K * x.segment(0, worldImpulseDim);
-			b.block(worldImpulseDim, 0, constraintDim, 1) = -C;
+			b.block(0, 0, dofInternal, 1) = -K.transpose() * Mr * K * x.segment(0, dofInternal);
+			b.block(dofInternal, 0, constraintDim, 1) = -C;
 
 			grad_F.setZero();
-			grad_F.block(0, 0, worldImpulseDim, worldImpulseDim) = (1 + x(worldImpulseDim)) * K.transpose() * Mr * K;
-			grad_F.block(0, worldImpulseDim, worldImpulseDim, constraintDim) = grad_C.transpose();
-			grad_F.block(worldImpulseDim, 0, constraintDim, worldImpulseDim) = grad_C;
+			grad_F.block(0, 0, dofInternal, dofInternal) = (1 + x(dofInternal)) * K.transpose() * Mr * K;
+			grad_F.block(0, dofInternal, dofInternal, constraintDim) = grad_C.transpose();
+			grad_F.block(dofInternal, 0, constraintDim, dofInternal) = grad_C;
 
 			if (abs(grad_F.determinant()) < 1e-7)
 			{
@@ -1470,11 +1464,11 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 			p.setZero();
 			p = grad_F.inverse() * b;
 
-			x.segment(0, worldImpulseDim) = x.segment(0, worldImpulseDim) + p.segment(0, worldImpulseDim);
-			x(worldImpulseDim) = p(worldImpulseDim);//update lagrange multiplier
+			x.segment(0, dofInternal) = x.segment(0, dofInternal) + p.segment(0, dofInternal);
+			x(dofInternal) = p(dofInternal);//update lagrange multiplier
 			iter++;
 		}
-		io_qdot = io_qdot + K * x.segment(0, worldImpulseDim);
+		io_qdot = io_qdot + K * x.segment(0, dofInternal);
 		//std::cout << "Energy error " << C(0, 0) << " iter " << iter << std::endl << std::endl;
 	}
 	ForwardAngularAndTranslationalVelocity(Ht, io_qdot);
