@@ -153,6 +153,7 @@ namespace eae6320
 		void UnitTest0();
 		void HingeJointTest();
 		void BallJointTest();
+		void VerticalChainTest();
 		void DoubleCubeTest();
 		void CloseLoopTest();
 		void TwoCapsules();
@@ -171,6 +172,7 @@ namespace eae6320
 		_Vector xdot;
 		_Vector qOld;
 		_Vector qPre;
+		_Vector Qr_e;
 		std::vector<int> jointType;
 		std::vector<int> posDOF;
 		std::vector<int> xDOF;//used for position solve
@@ -292,6 +294,7 @@ namespace eae6320
 		bool gravity = false;
 		bool hasCloseLoop = false;
 		bool hasPointJoint = false;
+		bool hasNonConservativeForce = false;
 		int enablePositionSolve = 0;//position solve currently doesn't support free joint
 		bool adaptiveTimestep = false;//this feature is deprecated, it require update in the application class 
 		Application::cbApplication* pApp = nullptr;

@@ -143,6 +143,7 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	qdot.setZero();
 	x.resize(totalXDOF);
 	xdot.resize(totalXDOF);
+	Qr_e.resize(totalVelDOF);
 }
 
 void eae6320::MultiBody::ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle)
@@ -307,7 +308,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	_Vector qddot = MrInverse * Qr;
 	qdot = qdot + qddot * h;
 	//PrintMomentum(qdot);
-	//MomentumEnergyProjection(qdot);
+	MomentumEnergyProjection(qdot);
 
 	Qr = ComputeExternalQr();
 	qddot = MrInverse * Qr;
@@ -326,10 +327,12 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//PBDEnergyMomentumCorrection(q, qdot);
 	//PBDEnergyCorrection(qdot, Mr, MrInverse);
 
-	//totalEnergy0 = ComputeTotalEnergy();
 	//if there is non-workless exrternal force, update totalEnergy0, otherwise do the following
+	if (hasNonConservativeForce)
+	{
+		totalEnergy0 = ComputeTotalEnergy();
+	}
 	kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
-	//kineticEnergy0 = ComputeKineticEnergy();
 	linearMomentum0 = ComputeTranslationalMomentum(qdot);
 	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
 	angularMomentum0 = ComputeAngularMomentum(referencePoint, qdot);
@@ -830,6 +833,8 @@ void eae6320::MultiBody::ResetExternalForces()
 	{
 		externalForces[i].setZero();
 	}
+	Qr_e.setZero();
+	hasNonConservativeForce = false;
 }
 
 void eae6320::MultiBody::Forward()

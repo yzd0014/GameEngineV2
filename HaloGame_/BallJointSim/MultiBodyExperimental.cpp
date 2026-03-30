@@ -1514,7 +1514,7 @@ _Vector eae6320::MultiBody::ComputeExternalQr()
 		Q_temp = Ht[i].transpose() * Fe;
 		Qr = Qr + Q_temp;
 	}
-
+	Qr = Qr + Qr_e;
 	return Qr;
 }
 

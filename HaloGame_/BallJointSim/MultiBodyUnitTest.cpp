@@ -591,6 +591,34 @@ void eae6320::MultiBody::BallJointTest()
 	};*/
 }
 
+void eae6320::MultiBody::VerticalChainTest()
+{
+	constraintSolverMode = IMPULSE;
+	gravity = true;
+	int ballJointType = BALL_JOINT;
+
+	AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(0.5, 1.0, 0.5), localInertiaTensor);//body 0
+	AddRigidBody(0, ballJointType, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[3], Vector3d(0.5, 1.0, 0.5), localInertiaTensor);//body 1
+	AddRigidBody(1, ballJointType, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[3], Vector3d(0.5, 1.0, 0.5), localInertiaTensor);//body 2
+	AddRigidBody(2, ballJointType, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[3], Vector3d(0.5, 1.0, 0.5), localInertiaTensor);//body 3
+	AddRigidBody(3, ballJointType, _Vector3(0.0f, 1.0f, 0.0f), _Vector3(0.0f, -1.0f, 0.0f), masterMeshArray[3], Vector3d(0.5, 1.0, 0.5), localInertiaTensor);//body 4
+
+	MultiBodyInitialization();
+	q(1) = -1;
+	Forward();
+	AddPointJoint(_Vector3(0, 1, 0), _Vector3(0, 0, 0));
+	m_control = [this]()
+	{
+		if (eae6320::Physics::totalSimulationTime <= 1)
+		{
+			externalForces[3].segment(3, 3) = _Vector3(10 * sin(eae6320::Physics::totalSimulationTime), 0, 10 * cos(eae6320::Physics::totalSimulationTime));
+			externalForces[4].segment(0, 3) = _Vector3(10, 0, 0);
+			externalForces[4].segment(3, 3) = _Vector3(10 * sin(eae6320::Physics::totalSimulationTime), 0, 10 * cos(eae6320::Physics::totalSimulationTime));
+			hasNonConservativeForce = true;
+		}
+	};
+}
+
 void eae6320::MultiBody::DoubleCubeTest()
 {
 	constraintSolverMode = IMPULSE;
@@ -906,6 +934,11 @@ void eae6320::MultiBody::RunUnitTest()
 	{
 		TwoCapsules();
 		std::cout << "TwoCapsules" << std::endl;
+	}
+	else if (testCaseNum == 20)
+	{
+		VerticalChainTest();
+		std::cout << "VerticalChainTest" << std::endl;
 	}
 
 	std::cout << std::endl;
