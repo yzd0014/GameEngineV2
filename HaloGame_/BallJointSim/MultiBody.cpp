@@ -62,6 +62,7 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	mBeta.resize(numOfLinks);
 	mGamma.resize(numOfLinks);
 	vectorFieldNum.resize(numOfLinks);
+	enableJointsPD.resize(numOfLinks);
 	eulerDecompositionOffset.resize(numOfLinks);
 	lastValidOri.resize(numOfLinks);
 	eulerDecompositionOffsetMat.resize(numOfLinks);
@@ -104,6 +105,7 @@ void eae6320::MultiBody::MultiBodyInitialization()
 
 		totalTwist[i] = 0;
 		lastValidOri[i].setIdentity();
+		enableJointsPD[i] = false;
 
 		mAlpha[i] = 0;
 		mBeta[i] = 0;
@@ -143,7 +145,8 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	qdot.setZero();
 	x.resize(totalXDOF);
 	xdot.resize(totalXDOF);
-	Qr_e.resize(totalVelDOF);
+	qError.resize(totalVelDOF);
+	Qr_i.resize(totalVelDOF);
 }
 
 void eae6320::MultiBody::ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle)
@@ -194,6 +197,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	}
 	
 	ResetExternalForces();
+	Qr_i.setZero();
 	if (m_control) m_control();
 
 	if (integrationMode == "Euler") EulerIntegration(i_secondCountToIntegrate);
@@ -308,7 +312,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	_Vector qddot = MrInverse * Qr;
 	qdot = qdot + qddot * h;
 	//PrintMomentum(qdot);
-	MomentumEnergyProjection(qdot);
+	//MomentumEnergyProjection(qdot);
 
 	Qr = ComputeExternalQr();
 	qddot = MrInverse * Qr;
@@ -486,10 +490,19 @@ void eae6320::MultiBody::ComputeMr(_Matrix& o_M, std::vector<_Matrix>& i_Ht)
 {
 	o_M.resize(totalVelDOF, totalVelDOF);
 	o_M.setZero();
+	_Matrix Id;
+	Id.resize(totalVelDOF, totalVelDOF);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		_Matrix M_temp = i_Ht[i].transpose() * Mbody[i] * i_Ht[i];
 		o_M = o_M + M_temp;
+
+		if (enableJointsPD[i])
+		{
+			Id.setZero();
+			Id.block(velStartIndex[i], velStartIndex[i], velDOF[i], velDOF[i]) = _Matrix::Identity(velDOF[i], velDOF[i]) * pApp->GetSimulationUpdatePeriod_inSeconds() * kd;
+			o_M = o_M + Id;
+		}
 	}
 	if (o_M.determinant() < 0.0000001)
 	{
@@ -833,7 +846,6 @@ void eae6320::MultiBody::ResetExternalForces()
 	{
 		externalForces[i].setZero();
 	}
-	Qr_e.setZero();
 	hasNonConservativeForce = false;
 }
 

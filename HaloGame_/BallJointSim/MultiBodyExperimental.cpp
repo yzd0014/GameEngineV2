@@ -1493,8 +1493,13 @@ _Vector eae6320::MultiBody::ComputeInternalQr(_Vector& i_qdot)
 		Q_temp.setZero();
 		Q_temp = Ht[i].transpose() * (Fv - Mbody[i] * gamma_t[i]);
 		Qr = Qr + Q_temp;
-	}
 
+		if (enableJointsPD[i])
+		{
+			Qr.segment(velStartIndex[i], velDOF[i]) = kp * qError.segment(velStartIndex[i], velDOF[i]) - kd * qdot.segment(velStartIndex[i], velDOF[i]);
+		}
+	}
+	Qr = Qr + Qr_i;
 	return Qr;
 }
 
@@ -1514,7 +1519,6 @@ _Vector eae6320::MultiBody::ComputeExternalQr()
 		Q_temp = Ht[i].transpose() * Fe;
 		Qr = Qr + Q_temp;
 	}
-	Qr = Qr + Qr_e;
 	return Qr;
 }
 

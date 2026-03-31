@@ -172,7 +172,8 @@ namespace eae6320
 		_Vector xdot;
 		_Vector qOld;
 		_Vector qPre;
-		_Vector Qr_e;
+		_Vector Qr_i;
+		_Vector qError;//position error for PD control
 		std::vector<int> jointType;
 		std::vector<int> posDOF;
 		std::vector<int> xDOF;//used for position solve
@@ -182,6 +183,7 @@ namespace eae6320
 		std::vector<int> xStartIndex;//used for position solve
 		std::vector<int> xJointType;
 		std::vector<int> parentArr;
+		std::vector<bool> enableJointsPD;
 		_Matrix Mr;
 		_Matrix MrInverse;
 		std::vector<_Matrix> Mbody;
@@ -288,6 +290,8 @@ namespace eae6320
 
 		std::string integrationMode = "Euler";
 		_Scalar damping = 1.0;
+		_Scalar kp = 1000000;
+		_Scalar kd = 2000;
 		int constraintSolverMode = IMPULSE;
 		int constraintType = SWING_C;//only used for testing
 		int twistMode = EULER_V2;

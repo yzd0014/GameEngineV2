@@ -622,14 +622,16 @@ void eae6320::MultiBody::VerticalChainTest()
 void eae6320::MultiBody::DoubleCubeTest()
 {
 	constraintSolverMode = IMPULSE;
-	gravity = true;
-	int ballJointType = BALL_JOINT;
+	gravity = false;
+	int ballJointType = BALL_JOINT_4D;
 
 	AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 1.0f, 1.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	AddRigidBody(0, ballJointType, _Vector3(-1.0f, 1.0f, -1.0f), _Vector3(1.0f, -1.0f, 1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
-	AddRigidBody(1, ballJointType, _Vector3(1.0f, 1.0f, 1.0f), _Vector3(-1.0f, -1.0f, -1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 2
+	//AddRigidBody(1, ballJointType, _Vector3(1.0f, 1.0f, 1.0f), _Vector3(-1.0f, -1.0f, -1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 2
 	
 	MultiBodyInitialization();
+	enableJointsPD[0] = true;
+	enableJointsPD[1] = true;
 	Forward();
 
 	/*m_MatlabSave = [this]()
@@ -637,6 +639,29 @@ void eae6320::MultiBody::DoubleCubeTest()
 		_Vector3 vecRot = Math::RotationConversion_MatrixToVec(R_global[2]);
 		LOG_TO_FILE << eae6320::Physics::totalSimulationTime << "," << pos[2](0) << "," << pos[2](1) << "," << pos[2](2) << "," << vecRot(0) << "," << vecRot(1) << "," << vecRot(2) << std::endl;
 	};*/
+	m_control = [this]()
+	{
+		_Vector qTarget;
+		qTarget.resize(totalVelDOF);
+		qTarget.setZero();
+		_Scalar c = 10;
+		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
+		//qTarget(0) = sin(c*t);
+		//qTarget(1) = -cos(c*t);
+		qTarget(4) = -cos(c*t);
+		qTarget(5) = sin(c*t);
+		for (int i = 0; i < numOfLinks; i++)
+		{
+			_Vector3 qTargetVec3 = qTarget.segment(velStartIndex[i], velDOF[i]);
+			_Quat quatTarget = Math::RotationConversion_VecToQuat(qTargetVec3);
+			_Quat qPredicted;
+			Math::QuatIntegrate(qPredicted, rel_ori[i], qdot.segment(velStartIndex[i], 3), pApp->GetSimulationUpdatePeriod_inSeconds());
+			_Quat delta_q = quatTarget * qPredicted.inverse();
+			delta_q.normalize();
+			qError.segment(velStartIndex[i], velDOF[i]) = Math::RotationConversion_QuatToVec(delta_q);
+			//std::cout << qError << std::endl << std::endl;
+		}
+	};
 }
 
 void eae6320::MultiBody::CloseLoopTest()
