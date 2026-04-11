@@ -311,8 +311,8 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	_Vector Qr = ComputeInternalQr(qdot);
 	_Vector qddot = MrInverse * Qr;
 	qdot = qdot + qddot * h;
-	//PrintMomentum(qdot);
-	//MomentumEnergyProjection(qdot);
+	//ImplicitForceIntegration();
+	MomentumEnergyProjection(qdot);
 
 	Qr = ComputeExternalQr();
 	qddot = MrInverse * Qr;

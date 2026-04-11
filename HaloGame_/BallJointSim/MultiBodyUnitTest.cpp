@@ -533,7 +533,7 @@ void eae6320::MultiBody::BallJointTest()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-	int ballJointType = BALL_JOINT_4D;
+	int ballJointType = BALL_JOINT;
 
 	//AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
 	AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
@@ -646,8 +646,8 @@ void eae6320::MultiBody::DoubleCubeTest()
 		qTarget.setZero();
 		_Scalar c = 10;
 		_Scalar t = (_Scalar)eae6320::Physics::totalSimulationTime;
-		//qTarget(0) = sin(c*t);
-		//qTarget(1) = -cos(c*t);
+		qTarget(0) = sin(c*t);
+		qTarget(1) = -cos(c*t);
 		qTarget(4) = -cos(c*t);
 		qTarget(5) = sin(c*t);
 		for (int i = 0; i < numOfLinks; i++)
