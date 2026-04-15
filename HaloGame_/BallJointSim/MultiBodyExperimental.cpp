@@ -1269,6 +1269,9 @@ void eae6320::MultiBody::ImplicitForceIntegration()
 
 void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 {
+	/*Integrate_q(q, rel_ori, q, rel_ori, io_qdot, pApp->GetSimulationUpdatePeriod_inSeconds());
+	Forward();
+	
 	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
 	_Matrix Kp(3, totalVelDOF);
 	Kp.setZero();
@@ -1279,28 +1282,46 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 		Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
 		_Vector3 r = pos[i] - referencePoint;
 		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * Ht[i].block(0, 0, 3, totalVelDOF);
-	}
+	}*/
+	_Matrix Kp(3, totalVelDOF);
+	_Matrix Kl(3, totalVelDOF);
+	_Vector3 referencePoint;
 
 	//momentum projection
-	/*{
+	{
 		int momentumConstraintDim = 6;
 		
 		_Matrix grad_C(momentumConstraintDim, totalVelDOF);
 		grad_C.setZero();
-
-		grad_C.block(0, 0, 3, totalVelDOF) = Kp;
-		grad_C.block(3, 0, 3, totalVelDOF) = Kl;
-		
+	
 		_Matrix C(momentumConstraintDim, 1);
 		_Scalar energyErr = 1.0;
 		int iter = 0;
+		_Vector q0 = q;
+		std::vector<_Quat> rel_ori0 = rel_ori;
 		while (true)
 		{
+			Integrate_q(q, rel_ori, q0, rel_ori0, io_qdot, pApp->GetSimulationUpdatePeriod_inSeconds());
+			Forward();
+
+			referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+			Kp.setZero();
+			Kl.setZero();
+			for (int i = 0; i < numOfLinks; i++)
+			{
+				Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
+				_Vector3 r = pos[i] - referencePoint;
+				Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * Ht[i].block(0, 0, 3, totalVelDOF);
+			}
+			grad_C.block(0, 0, 3, totalVelDOF) = Kp;
+			grad_C.block(3, 0, 3, totalVelDOF) = Kl;
+			
+
 			C.block<3, 1>(0, 0) = Kp * io_qdot - linearMomentum0;
 			C.block<3, 1>(3, 0) = Kl * io_qdot - angularMomentum0;
 			_Scalar C_norm = C.norm();
-			std::cout << "momentum error norm " << C_norm << std::endl;
-			if (C_norm < 1e-4 || iter >= 50)
+			//std::cout << "momentum error norm " << C_norm << std::endl;
+			if (C_norm < 1e-10 || iter >= 50)
 			{
 				std::cout << "Momentum error " << C_norm << " iter " << iter << std::endl;
 				break;
@@ -1318,110 +1339,111 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 			io_qdot = io_qdot - qdotCorrection;
 			iter++;
 		}
-	}*/
+	}
 	
 	_Matrix3 kinematicTreeInertia = ComputeKinematicTreeInertiaTensor(referencePoint, pos, Mbody);
-	_Scalar internalKBefore;
-	_Matrix Me = kinematicTreeTotalMassInverse * Kp.transpose() * Kp + Kl.transpose() * kinematicTreeInertia.inverse() * Kl;
-	internalKBefore = ComputeKineticEnergy() - 0.5 * (io_qdot.transpose() * Me * io_qdot)(0, 0);
-	//external energy projection
-	{
-		int energeMomentumConstraintDim = 1;
-		_Matrix grad_C(energeMomentumConstraintDim, totalVelDOF);
-		grad_C.setZero();
-		_Scalar externalKineticEnergyTarget = 0.5 * kinematicTreeTotalMassInverse * linearMomentum0.dot(linearMomentum0) + 0.5 * (angularMomentum0.transpose() * kinematicTreeInertia.inverse() * angularMomentum0)(0, 0);
-		_Matrix C(energeMomentumConstraintDim, 1);
-		_Matrix lambdaNew(energeMomentumConstraintDim, 1);
-		int iter = 0;
-		while (true)
-		{
-			C(0, 0) = 0.5 * (io_qdot.transpose() * Me * io_qdot)(0, 0) - externalKineticEnergyTarget;
-			if (abs(C(0, 0)) < 1e-5 || iter >= 50)
-			{
-				std::cout << "energy constraint iter: " << iter << " error " << abs(C(0, 0)) << std::endl;
-				break;
-			}
-			grad_C.block(0, 0, 1, totalVelDOF) = (Me * io_qdot).transpose();
-			lambdaNew = (grad_C * MrInverse * grad_C.transpose()).inverse() * C;
-			io_qdot = io_qdot - MrInverse * grad_C.transpose() * lambdaNew;
-			iter++;
-		}
-	}
-
-	//_Vector3 linearMomentumCurr = Kp * io_qdot;
-	//_Vector3 angularMomentumCurr = Kl * io_qdot;
-	//_Scalar externalKineticEnergyCurr = 0.5 * linearMomentumCurr.dot(linearMomentumCurr) / kinematicTreeTotalMass + 0.5 * (angularMomentumCurr.transpose() * kinematicTreeInertia.inverse() * angularMomentumCurr)(0, 0);
-
-	////internal kinetic energy projection
+	//_Scalar internalKBefore;
+	//_Matrix Me = kinematicTreeTotalMassInverse * Kp.transpose() * Kp + Kl.transpose() * kinematicTreeInertia.inverse() * Kl;
+	//internalKBefore = ComputeKineticEnergy() - 0.5 * (io_qdot.transpose() * Me * io_qdot)(0, 0);
+	////external energy projection
 	//{
-	//	_Scalar kineticEnergyTarget = std::max(kineticEnergy0, externalKineticEnergyCurr);
-	//	
-	//	int constraintDim = 1;
-	//	int dofInternal = totalVelDOF - velDOF[0];
-	//	int n = dofInternal + constraintDim;
-	//	_Matrix b(n, 1);
-	//	_Matrix grad_F(n, n);
-
-	//	_Matrix K(totalVelDOF, dofInternal);
-	//	K.setZero();
-	//	K.block(velDOF[0], 0, dofInternal, dofInternal) = _Matrix::Identity(dofInternal, dofInternal);
-	//	K = MrInverse * K;
-
-	//	_Vector x(n);
-	//	x.setZero();
-
-	//	_Matrix grad_C(constraintDim, dofInternal);
+	//	int energeMomentumConstraintDim = 1;
+	//	_Matrix grad_C(energeMomentumConstraintDim, totalVelDOF);
 	//	grad_C.setZero();
-
-	//	_Scalar energyErr = 1.0;
-	//	_Matrix C(constraintDim, 1);
+	//	_Scalar externalKineticEnergyTarget = 0.5 * kinematicTreeTotalMassInverse * linearMomentum0.dot(linearMomentum0) + 0.5 * (angularMomentum0.transpose() * kinematicTreeInertia.inverse() * angularMomentum0)(0, 0);
+	//	_Matrix C(energeMomentumConstraintDim, 1);
+	//	_Matrix lambdaNew(energeMomentumConstraintDim, 1);
 	//	int iter = 0;
 	//	while (true)
 	//	{
-	//		_Vector v = io_qdot + K * x.segment(0, dofInternal);
-	//		C(0, 0) = 0.5 * v.transpose() * Mr * v - kineticEnergyTarget;
-	//		_Scalar C_norm = C.norm();
-	//		//std::cout << "C_norm " << C_norm << std::endl;
-	//		if (C_norm < 1e-4) break;
-	//		if (iter >= 50)
+	//		C(0, 0) = 0.5 * (io_qdot.transpose() * Me * io_qdot)(0, 0) - externalKineticEnergyTarget;
+	//		if (abs(C(0, 0)) < 1e-5 || iter >= 50)
 	//		{
-	//			std::cout << "doesn't converge" << std::endl;
+	//			std::cout << "External kinetic error: " << abs(C(0, 0)) << " iter " << iter << std::endl;
 	//			break;
 	//		}
-
-	//		grad_C.block(0, 0, constraintDim, dofInternal) = (K.transpose() * Mr * v).transpose();
-
-	//		b.block(0, 0, dofInternal, 1) = -K.transpose() * Mr * K * x.segment(0, dofInternal);
-	//		b.block(dofInternal, 0, constraintDim, 1) = -C;
-
-	//		grad_F.setZero();
-	//		grad_F.block(0, 0, dofInternal, dofInternal) = (1 + x(dofInternal)) * K.transpose() * Mr * K;
-	//		grad_F.block(0, dofInternal, dofInternal, constraintDim) = grad_C.transpose();
-	//		grad_F.block(dofInternal, 0, constraintDim, dofInternal) = grad_C;
-
-	//		if (abs(grad_F.determinant()) < 1e-7)
-	//		{
-	//			//std::cout << grad_F << 
-	//			grad_F = grad_F + 1e-6 * _Matrix::Identity(n, n);
-	//			std::cout << "grad_F is not invertible" << std::endl;
-	//			//EAE6320_ASSERTF(false, "grad_f is not invertable");
-	//		}
-
-	//		_Vector p(n);
-	//		p.setZero();
-	//		p = grad_F.inverse() * b;
-
-	//		x.segment(0, dofInternal) = x.segment(0, dofInternal) + p.segment(0, dofInternal);
-	//		x(dofInternal) = p(dofInternal);//update lagrange multiplier
+	//		grad_C.block(0, 0, 1, totalVelDOF) = (Me * io_qdot).transpose();
+	//		lambdaNew = (grad_C * MrInverse * grad_C.transpose()).inverse() * C;
+	//		io_qdot = io_qdot - MrInverse * grad_C.transpose() * lambdaNew;
 	//		iter++;
 	//	}
-	//	io_qdot = io_qdot + K * x.segment(0, dofInternal);
-	//	//std::cout << "Energy error " << C(0, 0) << " iter " << iter << std::endl << std::endl;
 	//}
+
+	_Vector3 linearMomentumCurr = Kp * io_qdot;
+	_Vector3 angularMomentumCurr = Kl * io_qdot;
+	_Scalar externalKineticEnergyCurr = 0.5 * linearMomentumCurr.dot(linearMomentumCurr) / kinematicTreeTotalMass + 0.5 * (angularMomentumCurr.transpose() * kinematicTreeInertia.inverse() * angularMomentumCurr)(0, 0);
+	int constraintDim = 1;
+	int dofInternal = totalVelDOF - velDOF[0];
+	//internal kinetic energy projection
+	if (dofInternal >= 1)
+	{
+		_Scalar kineticEnergyTarget = std::max(kineticEnergy0, externalKineticEnergyCurr);
+		
+		int n = dofInternal + constraintDim;
+		_Matrix b(n, 1);
+		_Matrix grad_F(n, n);
+
+		_Matrix K(totalVelDOF, dofInternal);
+		K.setZero();
+		K.block(velDOF[0], 0, dofInternal, dofInternal) = _Matrix::Identity(dofInternal, dofInternal);
+		K = MrInverse * K;
+
+		_Vector x(n);
+		x.setZero();
+
+		_Matrix grad_C(constraintDim, dofInternal);
+		grad_C.setZero();
+
+		_Scalar energyErr = 1.0;
+		_Matrix C(constraintDim, 1);
+		int iter = 0;
+		while (true)
+		{
+			_Vector v = io_qdot + K * x.segment(0, dofInternal);
+			C(0, 0) = 0.5 * v.transpose() * Mr * v - kineticEnergyTarget;
+			_Scalar C_norm = C.norm();
+			//std::cout << "C_norm " << C_norm << std::endl;
+			if (C_norm < 1e-4) break;
+			if (iter >= 50)
+			{
+				std::cout << "doesn't converge" << std::endl;
+				break;
+			}
+
+			grad_C.block(0, 0, constraintDim, dofInternal) = (K.transpose() * Mr * v).transpose();
+
+			b.block(0, 0, dofInternal, 1) = -K.transpose() * Mr * K * x.segment(0, dofInternal);
+			b.block(dofInternal, 0, constraintDim, 1) = -C;
+
+			grad_F.setZero();
+			grad_F.block(0, 0, dofInternal, dofInternal) = (1 + x(dofInternal)) * K.transpose() * Mr * K;
+			grad_F.block(0, dofInternal, dofInternal, constraintDim) = grad_C.transpose();
+			grad_F.block(dofInternal, 0, constraintDim, dofInternal) = grad_C;
+
+			if (abs(grad_F.determinant()) < 1e-7)
+			{
+				grad_F = grad_F + 1e-6 * _Matrix::Identity(n, n);
+				std::cout << "grad_F is not invertible" << std::endl;
+				//EAE6320_ASSERTF(false, "grad_f is not invertable");
+			}
+
+			_Vector p(n);
+			p.setZero();
+			p = grad_F.inverse() * b;
+
+			x.segment(0, dofInternal) = x.segment(0, dofInternal) + p.segment(0, dofInternal);
+			x(dofInternal) = p(dofInternal);//update lagrange multiplier
+			iter++;
+		}
+		io_qdot = io_qdot + K * x.segment(0, dofInternal);
+		std::cout << "Energy error " << C(0, 0) << " iter " << iter << std::endl;
+	}
+	
 	ForwardAngularAndTranslationalVelocity(Ht, io_qdot);
-	_Scalar internalKAfter = ComputeKineticEnergy() - 0.5 * (io_qdot.transpose() * Me * io_qdot)(0, 0);
+	/*_Scalar internalKAfter = ComputeKineticEnergy() - 0.5 * (io_qdot.transpose() * Me * io_qdot)(0, 0);
 	std::cout << "before " << internalKBefore << std::endl;
-	std::cout << "after " << internalKAfter << std::endl << std::endl;
+	std::cout << "after " << internalKAfter << std::endl << std::endl;*/
+	
 }
 
 _Vector eae6320::MultiBody::ComputeInternalQr(_Vector& i_qdot)

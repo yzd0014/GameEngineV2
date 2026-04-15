@@ -305,31 +305,29 @@ void eae6320::MultiBody::ConstraintSolve(const _Scalar h)
 
 void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 {
-	//_Vector Qr = ComputeQr_SikpVelocityUpdate(qdot);
-	//_Vector qddot = MrInverse * Qr;
 	//PrintMomentum(qdot);
 	_Vector Qr = ComputeInternalQr(qdot);
 	_Vector qddot = MrInverse * Qr;
 	qdot = qdot + qddot * h;
 	//ImplicitForceIntegration();
+
+	std::vector<_Quat> rel_ori_old = rel_ori;
+	_Vector q_old = q;
 	MomentumEnergyProjection(qdot);
+	rel_ori = rel_ori_old;
+	q = q_old;
+	Forward();
 
 	Qr = ComputeExternalQr();
 	qddot = MrInverse * Qr;
-	qdot = qdot + qddot * h;
-	
-	qdot = damping * qdot;
-
-	//PBDEnergyCorrectionV2(q, qdot);
-	//PBDEnergyCorrection(qdot);
-	//ConstraintSolve(h);
+	_Vector dqdot = qddot * h;
+	qdot = qdot + dqdot;
+	//qdot = damping * qdot;
 	ImpulseConstraintSolver();
 
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
-
+	//Integrate_q(q, rel_ori, q, rel_ori, dqdot, h);
 	Forward();
-	//PBDEnergyMomentumCorrection(q, qdot);
-	//PBDEnergyCorrection(qdot, Mr, MrInverse);
 
 	//if there is non-workless exrternal force, update totalEnergy0, otherwise do the following
 	if (hasNonConservativeForce)
@@ -342,7 +340,9 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	angularMomentum0 = ComputeAngularMomentum(referencePoint, qdot);
 	
 	//std::cout << "Kinetic " << kineticEnergy0 << " Potential " << ComputePotentialEnergy() << std::endl << std::endl;
-	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl;
+	std::cout << "P " << " " << linearMomentum0.norm() << std::endl;
+	std::cout << "L " << " " << angularMomentum0.norm() << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
