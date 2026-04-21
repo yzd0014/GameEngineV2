@@ -243,14 +243,14 @@ bool eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, in
 	return clamped;
 }
 
-void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, _Scalar h)
+void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, bool clamp, _Scalar h)
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		if (jointType[i] == BALL_JOINT_3D)
 		{
 			o_q.segment(posStartIndex[i], 3) = i_q.segment(posStartIndex[i], 3) + i_qdot.segment(velStartIndex[i], 3) * h;
-			ClampRotationVector(o_q, i_qdot, i);
+			if (clamp) ClampRotationVector(o_q, i_qdot, i);
 		}
 		else if (jointType[i] == BALL_JOINT_4D)
 		{
@@ -275,7 +275,7 @@ void eae6320::MultiBody::Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _
 		else if (jointType[i] == FREE_JOINT_EXPO)
 		{
 			o_q.segment(posStartIndex[i], 6) = i_q.segment(posStartIndex[i], 6) + i_qdot.segment(velStartIndex[i], 6) * h;
-			ClampRotationVector(o_q, i_qdot, i);
+			if (clamp) ClampRotationVector(o_q, i_qdot, i);
 		}
 		else if (jointType[i] == HINGE_JOINT)
 		{
@@ -325,7 +325,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	//qdot = damping * qdot;
 	ImpulseConstraintSolver();
 
-	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
+	Integrate_q(q, rel_ori, q, rel_ori, qdot, true, h);
 	//Integrate_q(q, rel_ori, q, rel_ori, dqdot, h);
 	Forward();
 
@@ -340,7 +340,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	angularMomentum0 = ComputeAngularMomentum(referencePoint, qdot);
 	
 	//std::cout << "Kinetic " << kineticEnergy0 << " Potential " << ComputePotentialEnergy() << std::endl << std::endl;
-	std::cout << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl;
+	std::cout << "time " << Physics::totalSimulationTime << " total energy " << ComputeTotalEnergy() << std::endl;
 	std::cout << "P " << " " << linearMomentum0.norm() << std::endl;
 	std::cout << "L " << " " << angularMomentum0.norm() << std::endl << std::endl;
 }
@@ -357,7 +357,7 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 	qdot = qdot + h * qddot;
 	ConstraintSolve(h);
 
-	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
+	Integrate_q(q, rel_ori, q, rel_ori, qdot, true, h);
 	Forward();
 	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
@@ -370,7 +370,7 @@ void eae6320::MultiBody::RK3Integration(const _Scalar h)
 
 	qdot = qdot + (1.0f / 6.0f) * (k1 + 4 * k2 + k3);
 	
-	Integrate_q(q, rel_ori, q, rel_ori, qdot, h);
+	Integrate_q(q, rel_ori, q, rel_ori, qdot, true, h);
 	Forward();
 }
 
@@ -995,7 +995,7 @@ void eae6320::MultiBody::AddRigidBody(int parent, int i_jointType, _Vector3 join
 
 		xDOF.push_back(6);
 		totalXDOF += 6;
-		xJointType.push_back(FREE_JOINT);
+		xJointType.push_back(FREE_JOINT_EXPO);
 	}
 	else if (i_jointType == HINGE_JOINT)
 	{

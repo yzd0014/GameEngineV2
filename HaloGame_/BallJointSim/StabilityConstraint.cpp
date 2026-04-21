@@ -551,35 +551,36 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _
 	d0.resize(6, 1);
 	d1.resize(6, 1);
 
-	_Vector old_x;
-	old_x = i_x;
-
 	int dof = static_cast<int>(x.size());
 	std::vector<_Vector> perturbed_x;
 	perturbed_x.resize(dof);
 	for (int i = 0; i < dof; i++)
 	{
 		perturbed_x[i].resize(dof);
-		perturbed_x[i] = x;
+		perturbed_x[i] = i_x;
 		perturbed_x[i](i) = perturbed_x[i](i) + delta;
 	}
+	//std::cout << x.transpose() << std::endl;
+	//std::cout << perturbed_x[0].transpose() << std::endl;
 
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		ComputeHt(Ht, H, old_x, rel_ori, xJointType, xStartIndex);
+		ComputeHt(Ht, H, i_x, rel_ori, xJointType, xStartIndex);
 		o_Jacobian[i].resize(6, dof);
 		d0 = Ht[i] * i_bj;
+		//std::cout << d0 << std::endl;
 		for (int k = 0; k < dof; k++)
 		{
 			ComputeHt(Ht, H, perturbed_x[k], rel_ori, xJointType, xStartIndex);
 			d1 = Ht[i] * i_bj;
+			//std::cout << d1 << std::endl;
 			o_Jacobian[i].block<6, 1>(0, k) = (d1 - d0) / delta;
 		}
 	}
 
 	for (int i = 0; i < numOfLinks; i++)
 	{
-		ForwardKinematics(old_x, rel_ori, xJointType, xStartIndex);
+		ForwardKinematics(i_x, rel_ori, xJointType, xStartIndex);
 		o_intertia[i].resize(6, dof);
 		_Vector bm = Ht[i] * i_bj;
 		d0 = Mbody[i] * bm;
@@ -590,6 +591,7 @@ void eae6320::MultiBody::ComputeJacobianAndInertiaDerivativeFDV2(_Vector& i_x, _
 			o_intertia[i].block<6, 1>(0, k) = (d1 - d0) / delta;
 		}
 	}
+	Forward();
 }
 
 _Matrix eae6320::MultiBody::ComputeLocalRotationJacobianDerivative(int joint_id, _Vector& i_q, _Vector& i_b, std::vector<int>& i_jointType)

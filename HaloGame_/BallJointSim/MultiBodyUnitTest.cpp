@@ -533,10 +533,10 @@ void eae6320::MultiBody::BallJointTest()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-	int ballJointType = BALL_JOINT;
+	int ballJointType = BALL_JOINT_3D;
 
 	//AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
-	AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
+	AddRigidBody(-1, FREE_JOINT_EXPO, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
 	AddRigidBody(0, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 1
 	AddRigidBody(1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 2
 	AddRigidBody(2, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 3
@@ -546,7 +546,7 @@ void eae6320::MultiBody::BallJointTest()
 	{
 		if (ballJointType == BALL_JOINT_3D)  q.segment(posStartIndex[1], 3) = _Vector3(0, M_PI / 8, 0);
 		else if (ballJointType == BALL_JOINT_4D || ballJointType == BALL_JOINT) rel_ori[1] = Math::RotationConversion_VecToQuat(_Vector3(0, M_PI / 8, 0));
-		if (jointType[0] == FREE_JOINT)
+		if (jointType[0] == FREE_JOINT || jointType[0] == FREE_JOINT_EXPO)
 		{
 			q(0) = 1;
 		}
@@ -741,7 +741,7 @@ void eae6320::MultiBody::GeneralTest()
 	//AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	//AddRigidBody(0, BALL_JOINT_4D, _Vector3(0.0f, 1.5f, 0.0f), _Vector3(0.0f, -1.5f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
 	
-	AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
+	AddRigidBody(-1, FREE_JOINT_EXPO, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	MultiBodyInitialization();
 	//q.segment(0, 3) = _Vector3(0.0, 1.5, 0.0);
 	qdot.segment(3, 3) = _Vector3(1.0, 2.0, 0.0);

@@ -1267,11 +1267,34 @@ void eae6320::MultiBody::ImplicitForceIntegration()
 	qdot = (_Matrix::Identity(totalVelDOF, totalVelDOF) - pApp->GetSimulationUpdatePeriod_inSeconds() * dampingCoeff * MrInverse * K).inverse() * qdot;
 }
 
+_Vector3 eae6320::MultiBody::ComputeKinematicTreeCOMandPositionDerivative(_Matrix& o_comDerivative, std::vector<_Vector3>& i_pos, std::vector<_Matrix>& i_inertia)
+{
+	_Vector3 COM;
+	COM.setZero();
+	_Scalar totalMass = 0;
+	o_comDerivative.resize(3, totalVelDOF);
+	o_comDerivative.setZero();
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		if (i_inertia[i](0, 0) <= 0)
+		{
+			EAE6320_ASSERTF(false, "Rigid body mass can't be zero!");
+		}
+		COM = COM + i_inertia[i](0, 0) * i_pos[i];
+		totalMass += i_inertia[i](0, 0);
+
+		o_comDerivative = o_comDerivative + i_inertia[i](0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
+	}
+	COM = COM / totalMass;
+	o_comDerivative = o_comDerivative / totalMass;
+	return COM;
+}
+
+
 void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 {
 	/*Integrate_q(q, rel_ori, q, rel_ori, io_qdot, pApp->GetSimulationUpdatePeriod_inSeconds());
 	Forward();
-	
 	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
 	_Matrix Kp(3, totalVelDOF);
 	Kp.setZero();
@@ -1283,10 +1306,16 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 		_Vector3 r = pos[i] - referencePoint;
 		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * Ht[i].block(0, 0, 3, totalVelDOF);
 	}*/
+	
 	_Matrix Kp(3, totalVelDOF);
 	_Matrix Kl(3, totalVelDOF);
+	_Matrix M1(3, totalVelDOF);//positions
+	_Matrix M2(3, totalVelDOF);//positions
+	std::vector<_Matrix> mN;//positions
 	_Vector3 referencePoint;
-
+	_Matrix referencePointDerivative;
+	referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+	
 	//momentum projection
 	{
 		int momentumConstraintDim = 6;
@@ -1301,22 +1330,30 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 		std::vector<_Quat> rel_ori0 = rel_ori;
 		while (true)
 		{
-			Integrate_q(q, rel_ori, q0, rel_ori0, io_qdot, pApp->GetSimulationUpdatePeriod_inSeconds());
+			Integrate_q(q, rel_ori, q0, rel_ori0, io_qdot, false, pApp->GetSimulationUpdatePeriod_inSeconds());
 			Forward();
-
-			referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+			
+			ComputeAuxiliaryJacobian(mN, Ht);
+			ComputeJacobianDerivative(HtDerivativeTimes_b, io_qdot, Ht, H, mN, q, R_global, uGlobalsChild, uGlobalsParent, jointType);
+			ComputeIntertiaDerivative(MassMatrixDerivativeTimes_b, io_qdot, Ht, mN, Mbody);
+			//ComputeJacobianAndInertiaDerivativeFDV2(q, io_qdot, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b, 1e-7);
+			
+			//referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+			referencePoint = ComputeKinematicTreeCOMandPositionDerivative(referencePointDerivative, pos, Mbody);	
 			Kp.setZero();
 			Kl.setZero();
+			M1.setZero();
+			M2.setZero();
 			for (int i = 0; i < numOfLinks; i++)
 			{
 				Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
 				_Vector3 r = pos[i] - referencePoint;
 				Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * Ht[i].block(0, 0, 3, totalVelDOF);
-			}
-			grad_C.block(0, 0, 3, totalVelDOF) = Kp;
-			grad_C.block(3, 0, 3, totalVelDOF) = Kl;
-			
 
+				M1 = M1 + Mbody[i].block<3, 3>(0, 0) * HtDerivativeTimes_b[i].block(0, 0, 3, totalVelDOF);
+				M2 = M2 + MassMatrixDerivativeTimes_b[i].block(3, 0, 3, totalVelDOF) + Mbody[i].block<3, 3>(3, 3) * HtDerivativeTimes_b[i].block(3, 0, 3, totalVelDOF)
+					+ rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * HtDerivativeTimes_b[i].block(0, 0, 3, totalVelDOF) - (rigidBodyMass * Math::ToSkewSymmetricMatrix(vel[i]) * Ht[i].block(0, 0, 3, totalVelDOF) - referencePointDerivative);
+			}
 			C.block<3, 1>(0, 0) = Kp * io_qdot - linearMomentum0;
 			C.block<3, 1>(3, 0) = Kl * io_qdot - angularMomentum0;
 			_Scalar C_norm = C.norm();
@@ -1326,6 +1363,11 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 				std::cout << "Momentum error " << C_norm << " iter " << iter << std::endl;
 				break;
 			}
+	
+			/*grad_C.block(0, 0, 3, totalVelDOF) = Kp;
+			grad_C.block(3, 0, 3, totalVelDOF) = Kl;*/
+			grad_C.block(0, 0, 3, totalVelDOF) = pApp->GetSimulationUpdatePeriod_inSeconds() * M1 + Kp;
+			grad_C.block(3, 0, 3, totalVelDOF) = pApp->GetSimulationUpdatePeriod_inSeconds() * M2 + Kl;
 
 			_Matrix K = grad_C * MrInverse * grad_C.transpose();
 			if (K.determinant() < 1e-7)
@@ -1438,12 +1480,11 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 		io_qdot = io_qdot + K * x.segment(0, dofInternal);
 		std::cout << "Energy error " << C(0, 0) << " iter " << iter << std::endl;
 	}
-	
 	ForwardAngularAndTranslationalVelocity(Ht, io_qdot);
+	
 	/*_Scalar internalKAfter = ComputeKineticEnergy() - 0.5 * (io_qdot.transpose() * Me * io_qdot)(0, 0);
 	std::cout << "before " << internalKBefore << std::endl;
-	std::cout << "after " << internalKAfter << std::endl << std::endl;*/
-	
+	std::cout << "after " << internalKAfter << std::endl << std::endl;*/	
 }
 
 _Vector eae6320::MultiBody::ComputeInternalQr(_Vector& i_qdot)

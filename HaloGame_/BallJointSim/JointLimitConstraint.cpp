@@ -479,7 +479,7 @@ void eae6320::MultiBody::SolvePositionJointLimit()
 		_Matrix lambda;
 		lambda = effectiveMass0 * error;
 		_Vector qCorrection = MrInverse * J_constraint.transpose() * lambda;
-		Integrate_q(q, rel_ori, q, rel_ori, qCorrection, 1.0);
+		Integrate_q(q, rel_ori, q, rel_ori, qCorrection, true, 1.0);
 	}
 }
 

@@ -42,7 +42,7 @@ namespace eae6320
 		void RK4Integration(const _Scalar h);
 		void RK3Integration(const _Scalar h);
 		void VariationalIntegration(const _Scalar h);
-		void Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, _Scalar h);
+		void Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, bool clamp,  _Scalar h);
 
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		void Forward();
@@ -77,6 +77,7 @@ namespace eae6320
 		_Vector3 ComputeTranslationalMomentum(_Vector& i_qdot);
 		_Vector3 ComputeAngularMomentum(_Vector3 i_referencePoint, _Vector& i_qdot);
 		_Vector3 ComputeKinematicTreeCOM(std::vector<_Vector3>& i_pos, std::vector<_Matrix>& i_inertia);
+		_Vector3 ComputeKinematicTreeCOMandPositionDerivative(_Matrix& o_comDerivative, std::vector<_Vector3>& i_pos, std::vector<_Matrix>& i_inertia);
 		void PrintMomentum(_Vector i_qdot);
 		_Matrix3 ComputeKinematicTreeInertiaTensor(_Vector3 i_referencePoint, std::vector<_Vector3>& i_pos, std::vector<_Matrix>& i_inertia);
 		
