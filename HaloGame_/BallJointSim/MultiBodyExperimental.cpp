@@ -1293,9 +1293,7 @@ _Vector3 eae6320::MultiBody::ComputeKinematicTreeCOMandPositionDerivative(_Matri
 
 void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 {
-	/*Integrate_q(q, rel_ori, q, rel_ori, io_qdot, pApp->GetSimulationUpdatePeriod_inSeconds());
-	Forward();
-	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+	/*_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
 	_Matrix Kp(3, totalVelDOF);
 	Kp.setZero();
 	_Matrix Kl(3, totalVelDOF);
@@ -1314,7 +1312,6 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 	std::vector<_Matrix> mN;//positions
 	_Vector3 referencePoint;
 	_Matrix referencePointDerivative;
-	referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
 	
 	//momentum projection
 	{
@@ -1352,7 +1349,7 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 
 				M1 = M1 + Mbody[i].block<3, 3>(0, 0) * HtDerivativeTimes_b[i].block(0, 0, 3, totalVelDOF);
 				M2 = M2 + MassMatrixDerivativeTimes_b[i].block(3, 0, 3, totalVelDOF) + Mbody[i].block<3, 3>(3, 3) * HtDerivativeTimes_b[i].block(3, 0, 3, totalVelDOF)
-					+ rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * HtDerivativeTimes_b[i].block(0, 0, 3, totalVelDOF) - (rigidBodyMass * Math::ToSkewSymmetricMatrix(vel[i]) * Ht[i].block(0, 0, 3, totalVelDOF) - referencePointDerivative);
+					+ rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * HtDerivativeTimes_b[i].block(0, 0, 3, totalVelDOF) - (rigidBodyMass * Math::ToSkewSymmetricMatrix(vel[i]) * (Ht[i].block(0, 0, 3, totalVelDOF) - referencePointDerivative));
 			}
 			C.block<3, 1>(0, 0) = Kp * io_qdot - linearMomentum0;
 			C.block<3, 1>(3, 0) = Kl * io_qdot - angularMomentum0;

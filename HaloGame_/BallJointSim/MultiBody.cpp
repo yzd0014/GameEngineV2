@@ -311,12 +311,12 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	qdot = qdot + qddot * h;
 	//ImplicitForceIntegration();
 
-	std::vector<_Quat> rel_ori_old = rel_ori;
-	_Vector q_old = q;
-	MomentumEnergyProjection(qdot);
-	rel_ori = rel_ori_old;
-	q = q_old;
-	Forward();
+	//std::vector<_Quat> rel_ori_old = rel_ori;
+	//_Vector q_old = q;
+	//MomentumEnergyProjection(qdot);
+	//rel_ori = rel_ori_old;
+	//q = q_old;
+	//Forward();
 
 	Qr = ComputeExternalQr();
 	qddot = MrInverse * Qr;
@@ -326,7 +326,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	ImpulseConstraintSolver();
 
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, true, h);
-	//Integrate_q(q, rel_ori, q, rel_ori, dqdot, h);
+	//Integrate_q(q, rel_ori, q, rel_ori, dqdot, true, h);
 	Forward();
 
 	//if there is non-workless exrternal force, update totalEnergy0, otherwise do the following
