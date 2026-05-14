@@ -19,12 +19,12 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	
 	UpdateInitialPosition();
 
-	totalEnergy0 = ComputeTotalEnergy();
+	/*totalEnergy0 = ComputeTotalEnergy();
 	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
 	angularMomentum0 = ComputeAngularMomentum(referencePoint, qdot);
 	linearMomentum0 = ComputeTranslationalMomentum(qdot);
 	kineticEnergy0 = ComputeKineticEnergy();
-	std::cout << std::setprecision(16) << "initial total energy: " << totalEnergy0 << std::endl;
+	std::cout << std::setprecision(16) << "initial total energy: " << totalEnergy0 << std::endl;*/
 	//std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
 	//std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
 }
@@ -32,9 +32,17 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 void eae6320::MultiBody::MultiBodyInitialization()
 {
 	w_abs_world.resize(numOfLinks);
+	w_abs_local.resize(numOfLinks);
 	w_rel_world.resize(numOfLinks);
 	w_rel_local.resize(numOfLinks);
+	wDot_abs_local.resize(numOfLinks);
 	vel.resize(numOfLinks);
+	COMVelLocal.resize(numOfLinks);
+	COMVelDotLocal.resize(numOfLinks);
+	f.resize(numOfLinks);
+	n.resize(numOfLinks);
+	f_fromChild.resize(numOfLinks);
+	n_fromChild.resize(numOfLinks);
 	pos.resize(numOfLinks);
 	jointPos.resize(numOfLinks);
 	rel_ori.resize(numOfLinks);
@@ -77,9 +85,17 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		w_abs_world[i].setZero();
+		w_abs_local[i].setZero();
 		w_rel_world[i].setZero();
 		w_rel_local[i].setZero();
+		wDot_abs_local[i].setZero();
 		vel[i].setZero();
+		COMVelLocal[i].setZero();
+		COMVelDotLocal[i].setZero();
+		f[i].setZero();
+		n[i].setZero();
+		f_fromChild[i].setZero();
+		n_fromChild[i].setZero();
 		jointPos[i].setZero();
 		pos[i].setZero();
 		rel_ori[i].setIdentity();
@@ -95,6 +111,7 @@ void eae6320::MultiBody::MultiBodyInitialization()
 		mN[i].resize(7, totalPosDOF);
 
 		D[i].resize(6, 6);
+		D[i].setZero();
 		
 		jointLimit[i] = -1;
 		std::pair<_Scalar, _Scalar> defaultRange(-1, -1);
@@ -133,6 +150,7 @@ void eae6320::MultiBody::MultiBodyInitialization()
 	}
 	kinematicTreeTotalMassInverse = 1 / kinematicTreeTotalMass;
 	
+	zeroExternalForces = externalForces;
 	gravityVec.resize(6);
 	gravityVec.setZero();
 	if (gravity) gravityVec(1) = -9.81;
@@ -196,7 +214,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		//SaveDataToHoudini(animationDuration, -1, frameNum);
 	}
 	
-	ResetExternalForces();
+	//ResetExternalForces();
 	Qr_i.setZero();
 	if (m_control) m_control();
 
@@ -204,6 +222,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	else if (integrationMode == "RK4") RK4Integration(i_secondCountToIntegrate);
 	else if (integrationMode == "RK3") RK3Integration(i_secondCountToIntegrate);
 	else if (integrationMode == "VI") VariationalIntegration(i_secondCountToIntegrate);
+	else if (integrationMode == "Euler_RNEA") EulerRNEA(i_secondCountToIntegrate);
 }
 
 bool eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
@@ -341,8 +360,8 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 	
 	//std::cout << "Kinetic " << kineticEnergy0 << " Potential " << ComputePotentialEnergy() << std::endl << std::endl;
 	std::cout << "time " << Physics::totalSimulationTime << " total energy " << ComputeTotalEnergy() << std::endl;
-	std::cout << "P " << " " << linearMomentum0.norm() << std::endl;
-	std::cout << "L " << " " << angularMomentum0.norm() << std::endl << std::endl;
+	//std::cout << "P " << " " << linearMomentum0.norm() << std::endl;
+	//std::cout << "L " << " " << angularMomentum0.norm() << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)

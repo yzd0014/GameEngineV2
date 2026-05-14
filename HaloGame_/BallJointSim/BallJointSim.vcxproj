@@ -407,6 +407,7 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='OpenGL_Release|x64'">/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="MultiBodyUnitTest.cpp" />
+    <ClCompile Include="RNEA.cpp" />
     <ClCompile Include="StabilityConstraint.cpp" />
   </ItemGroup>
   <ItemGroup>

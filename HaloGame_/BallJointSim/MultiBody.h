@@ -34,7 +34,10 @@ namespace eae6320
 		_Vector ComputeInternalQr(_Vector& i_qdot);
 		_Vector ComputeExternalQr();
 		void ComputeGamma_t(std::vector<_Vector>& o_gamma_t, _Vector& i_qdot);
-		
+
+		void ForwardBackwardRecursion(_Vector& o_tau, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, _Vector& i_qddot, std::vector<_Vector>& i_externalForces);
+		void RNEA(_Vector& o_C, _Vector& o_G, _Matrix& o_M, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, std::vector<_Vector>& i_externalForces);
+
 		void ForwardAngularAndTranslationalVelocity(std::vector<_Matrix> i_Ht, _Vector& i_qdot);
 		void ResetExternalForces();
 		
@@ -42,6 +45,7 @@ namespace eae6320
 		void RK4Integration(const _Scalar h);
 		void RK3Integration(const _Scalar h);
 		void VariationalIntegration(const _Scalar h);
+		void EulerRNEA(const _Scalar h);
 		void Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, bool clamp,  _Scalar h);
 
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
@@ -189,10 +193,18 @@ namespace eae6320
 		_Matrix MrInverse;
 		std::vector<_Matrix> Mbody;
 		std::vector<_Matrix3> localInertiaTensors;
-		std::vector<_Vector3> w_abs_world;//absolute 
+		std::vector<_Vector3> w_abs_world;//absolute
+		std::vector<_Vector3> w_abs_local;//absolute 
 		std::vector<_Vector3> w_rel_world;//relative
 		std::vector<_Vector3> w_rel_local;
+		std::vector<_Vector3> wDot_abs_local;
 		std::vector<_Vector3> vel;
+		std::vector<_Vector3> COMVelLocal;
+		std::vector<_Vector3> COMVelDotLocal;
+		std::vector<_Vector3> f;//joint force
+		std::vector<_Vector3> n;//joint torque
+		std::vector<_Vector3> f_fromChild;//total joint force from child
+		std::vector<_Vector3> n_fromChild;//total joint torque from child
 		std::vector<_Vector3> pos;//rigid body center of mass
 		std::vector<_Vector3> jointPos;
 		std::vector<_Vector3> uLocalsChild;
@@ -203,6 +215,7 @@ namespace eae6320
 		std::vector<_Vector3> hingeDirGlobals;
 		std::vector<_Scalar> hingeMagnitude;//distance between the point from each body that defines the position of the hinge joint
 		std::vector<_Vector> externalForces;//extern force in maximal coordinate
+		std::vector<_Vector> zeroExternalForces;
 	
 		std::vector<_Matrix3> R_global;//rigidbody rotation
 		std::vector<_Matrix3> R_local;
