@@ -20,6 +20,7 @@ namespace eae6320
 	private:
 		void InitializeBodies(Assets::cHandle<Mesh> i_mesh, Vector3d i_meshScale, _Matrix3& i_localInertiaTensor, _Vector3 i_partentJointPosition, _Vector3 i_childJointPosition);
 		void MultiBodyInitialization();
+		void SimulationInitialization();
 		void InitializeJoints(int* i_jointType);
 		void ConfigurateBallJoint(_Vector3& xAxis, _Vector3& yAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
 		void ConfigureSingleBallJoint(int bodyNum, _Vector3& xAxis, _Vector3& zAxis, _Scalar swingAngle, _Scalar twistAngle);
@@ -45,10 +46,10 @@ namespace eae6320
 		void RK4Integration(const _Scalar h);
 		void RK3Integration(const _Scalar h);
 		void VariationalIntegration(const _Scalar h);
-		void EulerRNEA(const _Scalar h);
 		void Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, bool clamp,  _Scalar h);
 
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
+		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void Forward();
 		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		_Matrix ComputeLocalRotationJacobianDerivative(int joint_id, _Vector& i_q, _Vector& i_b, std::vector<int>& i_jointType);
@@ -109,7 +110,7 @@ namespace eae6320
 		void ComputeTwistEulerJacobian(int i, bool isUpperBound, _Matrix& o_J);
 		void ComputeSwingJacobian(int jointNum, _Matrix& o_J);
 		void SwitchConstraint(int i);
-		void UpdateInitialPosition();//call this function whenever poistion is updated
+		void EulerAngleInitialization();//call this function whenever poistion is updated
 		void ComputeTwistDirectJacobian(int jointNum, int i_limitType, _Matrix& o_J);
 		void ComputeExponentialMapJacobian(_Vector& i_x, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 
@@ -303,6 +304,7 @@ namespace eae6320
 		GameObject* zArrow = nullptr;
 
 		std::string integrationMode = "Euler";
+		int simulationMethod = _RNEA;
 		_Scalar damping = 1.0;
 		_Scalar kp = 1000000;
 		_Scalar kd = 66000;

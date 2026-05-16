@@ -28,7 +28,6 @@ void eae6320::MultiBody::ForwardBackwardRecursion(_Vector& o_tau, _Vector& i_q, 
 			H[i].resize(6, 3);
 			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uLocalsChild[i]);
 			H[i].block<3, 3>(3, 0) = _Matrix::Identity(3, 3);
-			//std::cout << H[i] << std::endl;
 			//compute D
 			D[i].setZero();
 			if (j != -1)
@@ -38,7 +37,6 @@ void eae6320::MultiBody::ForwardBackwardRecursion(_Vector& o_tau, _Vector& i_q, 
 				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uLocalsChild[i]) * A - A * Math::ToSkewSymmetricMatrix(uLocalsParent[i]);
 				D[i].block<3, 3>(3, 3) = A;
 			}
-			//std::cout << D[i] << std::endl;
 		}
 		
 		//update child velocity based on parent velocity
@@ -53,7 +51,6 @@ void eae6320::MultiBody::ForwardBackwardRecursion(_Vector& o_tau, _Vector& i_q, 
 		_Vector vChild = H[i] * i_qdot.segment(velStartIndex[i], velDOF[i]) + D[i] * vParent;
 		COMVelLocal[i] = vChild.segment(0, 3);
 		w_abs_local[i] = vChild.segment(3, 3);
-		//std::cout << w_abs_local[i] << std::endl;
 
 		//compute gamma
 		gamma[i].resize(6);
@@ -75,7 +72,6 @@ void eae6320::MultiBody::ForwardBackwardRecursion(_Vector& o_tau, _Vector& i_q, 
 			}
 			gamma[i].segment(3, 3) = gamma_theta;
 		}
-		//std::cout << gamma[i] << std::endl;
 		
 		//update child acceleration based on parent acceleration
 		_Vector vDotParent;
@@ -102,10 +98,6 @@ void eae6320::MultiBody::ForwardBackwardRecursion(_Vector& o_tau, _Vector& i_q, 
 	{
 		f[i] = rigidBodyMass * COMVelDotLocal[i] - f_fromChild[i] - R_global[i].transpose() * i_externalForces[i].segment(0, 3);
 		n[i] = localInertiaTensors[i] * wDot_abs_local[i] + w_abs_local[i].cross(localInertiaTensors[i] * w_abs_local[i]) - n_fromChild[i] - R_global[i].transpose() * i_externalForces[i].segment(3, 3);
-		//n[i] = localInertiaTensors[i] * wDot_abs_local[i] + w_abs_local[i].cross(localInertiaTensors[i] * w_abs_local[i]) - n_fromChild[i] - uLocalsChild[i].cross(f[i]) - i_externalForces[i].segment(3, 3);
-	/*	std::cout << i_externalForces[i] << std::endl;
-		std::cout << f[i] << std::endl;
-		std::cout << n[i] << std::endl;*/
 		
 		int j = parentArr[i];
 		if (j != -1)
@@ -117,10 +109,6 @@ void eae6320::MultiBody::ForwardBackwardRecursion(_Vector& o_tau, _Vector& i_q, 
 			_Vector fnParent = D[i].transpose() * (-fnChild);
 			f_fromChild[j] += fnParent.segment(0, 3);
 			n_fromChild[j] += fnParent.segment(3, 3);
-
-			/*_Matrix3 A = R_global[j].transpose() * R_global[i];
-			f_fromChild[j] += A * (-f[i]);
-			n_fromChild[j] += A * (-n[i]) + uLocalsParent[i].cross(-A * f[i]);*/
 		}
 	}
 
@@ -159,24 +147,4 @@ void eae6320::MultiBody::RNEA(_Vector& o_C, _Vector& o_G, _Matrix& o_M, _Vector&
 		ForwardBackwardRecursion(mColmn, i_q, i_quat, zeroVector, basisVector, zeroExternalForces);
 		o_M.block(0, i, totalVelDOF, 1) = mColmn;
 	}
-}
-
-void eae6320::MultiBody::EulerRNEA(const _Scalar h)
-{
-	_Vector Qr;
-	_Vector C;
-	_Vector G;
-	//std::cout << externalForces[0] << std::endl;
-	RNEA(C, G, Mr, q, rel_ori, qdot, externalForces);
-	//std::cout << C << std::endl;
-	//std::cout << G << std::endl;
-	//std::cout << Mr << std::endl << std::endl;
-	Qr = C + G;
-
-	MrInverse = Mr.inverse();
-	_Vector qddot = MrInverse * Qr;
-	qdot = qdot + qddot * h;
-
-	Integrate_q(q, rel_ori, q, rel_ori, qdot, true, h);
-	ForwardKinematics(q, rel_ori, jointType, posStartIndex);
 }

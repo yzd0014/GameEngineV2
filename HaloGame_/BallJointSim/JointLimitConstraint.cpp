@@ -9,7 +9,7 @@
 #include <math.h>
 #include <iomanip>
 
-void eae6320::MultiBody::UpdateInitialPosition()
+void eae6320::MultiBody::EulerAngleInitialization()
 {
 	for (int i = 0; i < numOfLinks; i++)
 	{

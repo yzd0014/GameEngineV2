@@ -1532,6 +1532,54 @@ _Vector eae6320::MultiBody::ComputeExternalQr()
 	return Qr;
 }
 
+void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex)
+{
+	UpdateBodyRotation(i_q, i_quat, i_jointType, i_posStartIndex);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		int j = parentArr[i];
+		//update position
+		uGlobalsChild[i] = R_global[i] * uLocalsChild[i];
+		if (i > 0)
+		{
+			uGlobalsParent[i] = R_global[j] * uLocalsParent[i];
+			jointPos[i] = pos[j] + uGlobalsParent[i];
+		}
+		if (i_jointType[i] == BALL_JOINT_3D || i_jointType[i] == BALL_JOINT_4D || i_jointType[i] == BALL_JOINT)
+		{
+			pos[i] = jointPos[i] - uGlobalsChild[i];
+		}
+		else if (i_jointType[i] == FREE_JOINT || i_jointType[i] == FREE_JOINT_EXPO)
+		{
+			pos[i] = i_q.segment(i_posStartIndex[i], 3);
+			jointPos[i] = pos[i];
+		}
+		else if (i_jointType[i] == HINGE_JOINT)
+		{
+			pos[i] = jointPos[i] + hingeMagnitude[i] * hingeDirGlobals[i] - uGlobalsChild[i];
+		}
+
+		//update Euler angles
+		_Scalar eulerAngles[3];
+		GetEulerAngles(i, i_quat[i], eulerAngles);
+		mAlpha[i] = eulerAngles[2];
+		mBeta[i] = eulerAngles[1];
+		mGamma[i] = eulerAngles[0];
+
+		//update render position
+		m_linkBodys[i]->m_State.position = Math::sVector((float)pos[i](0), (float)pos[i](1), (float)pos[i](2));
+
+		//update inertia tensor
+		if (geometry != BALL)
+		{
+			_Matrix3 globalInertiaTensor;
+			globalInertiaTensor = R_global[i] * localInertiaTensors[i] * R_global[i].transpose();
+			Mbody[i].block<3, 3>(3, 3) = globalInertiaTensor;
+		}
+	}
+}
+
+
 void eae6320::MultiBody::VariationalIntegration(const _Scalar h)
 {
 	std::vector<_Matrix> H_predicted, H_old;

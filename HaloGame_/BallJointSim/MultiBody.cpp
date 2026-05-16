@@ -17,7 +17,8 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 
 	RunUnitTest();
 	
-	UpdateInitialPosition();
+	SimulationInitialization();
+	EulerAngleInitialization();
 
 	/*totalEnergy0 = ComputeTotalEnergy();
 	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
@@ -27,6 +28,24 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	std::cout << std::setprecision(16) << "initial total energy: " << totalEnergy0 << std::endl;*/
 	//std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
 	//std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
+}
+
+void eae6320::MultiBody::SimulationInitialization()
+{
+	if (simulationMethod == _JMJ)
+	{
+		Forward();
+	}
+	else if (simulationMethod == _RNEA)
+	{
+		if (gravity == true)
+		{
+			for (int i = 0; i < numOfLinks; i++)
+			{
+				externalForces[i] = gravityVec * rigidBodyMass;
+			}
+		}
+	}
 }
 
 void eae6320::MultiBody::MultiBodyInitialization()
@@ -214,7 +233,7 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 		//SaveDataToHoudini(animationDuration, -1, frameNum);
 	}
 	
-	//ResetExternalForces();
+	ResetExternalForces();
 	Qr_i.setZero();
 	if (m_control) m_control();
 
@@ -222,7 +241,6 @@ void eae6320::MultiBody::Tick(const double i_secondCountToIntegrate)
 	else if (integrationMode == "RK4") RK4Integration(i_secondCountToIntegrate);
 	else if (integrationMode == "RK3") RK3Integration(i_secondCountToIntegrate);
 	else if (integrationMode == "VI") VariationalIntegration(i_secondCountToIntegrate);
-	else if (integrationMode == "Euler_RNEA") EulerRNEA(i_secondCountToIntegrate);
 }
 
 bool eae6320::MultiBody::ClampRotationVector(_Vector& io_q, _Vector& io_qdot, int i)
@@ -324,44 +342,62 @@ void eae6320::MultiBody::ConstraintSolve(const _Scalar h)
 
 void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 {
-	//PrintMomentum(qdot);
-	_Vector Qr = ComputeInternalQr(qdot);
-	_Vector qddot = MrInverse * Qr;
-	qdot = qdot + qddot * h;
-	//ImplicitForceIntegration();
-
-	//std::vector<_Quat> rel_ori_old = rel_ori;
-	//_Vector q_old = q;
-	//MomentumEnergyProjection(qdot);
-	//rel_ori = rel_ori_old;
-	//q = q_old;
-	//Forward();
-
-	Qr = ComputeExternalQr();
-	qddot = MrInverse * Qr;
-	_Vector dqdot = qddot * h;
-	qdot = qdot + dqdot;
-	//qdot = damping * qdot;
-	ImpulseConstraintSolver();
-
-	Integrate_q(q, rel_ori, q, rel_ori, qdot, true, h);
-	//Integrate_q(q, rel_ori, q, rel_ori, dqdot, true, h);
-	Forward();
-
-	//if there is non-workless exrternal force, update totalEnergy0, otherwise do the following
-	if (hasNonConservativeForce)
+	if (simulationMethod == _JMJ)
 	{
-		totalEnergy0 = ComputeTotalEnergy();
+		//PrintMomentum(qdot);
+		_Vector Qr = ComputeInternalQr(qdot);
+		_Vector qddot = MrInverse * Qr;
+		qdot = qdot + qddot * h;
+		//ImplicitForceIntegration();
+
+		//std::vector<_Quat> rel_ori_old = rel_ori;
+		//_Vector q_old = q;
+		//MomentumEnergyProjection(qdot);
+		//rel_ori = rel_ori_old;
+		//q = q_old;
+		//Forward();
+
+		Qr = ComputeExternalQr();
+		qddot = MrInverse * Qr;
+		_Vector dqdot = qddot * h;
+		qdot = qdot + dqdot;
+		//qdot = damping * qdot;
+		ImpulseConstraintSolver();
+
+		Integrate_q(q, rel_ori, q, rel_ori, qdot, true, h);
+		//Integrate_q(q, rel_ori, q, rel_ori, dqdot, true, h);
+		Forward();
+
+		//if there is non-workless exrternal force, update totalEnergy0, otherwise do the following
+		if (hasNonConservativeForce)
+		{
+			totalEnergy0 = ComputeTotalEnergy();
+		}
+		kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
+		linearMomentum0 = ComputeTranslationalMomentum(qdot);
+		_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+		angularMomentum0 = ComputeAngularMomentum(referencePoint, qdot);
+
+		//std::cout << "Kinetic " << kineticEnergy0 << " Potential " << ComputePotentialEnergy() << std::endl << std::endl;
+		std::cout << "time " << Physics::totalSimulationTime << " total energy " << ComputeTotalEnergy() << std::endl;
+		//std::cout << "P " << " " << linearMomentum0.norm() << std::endl;
+		//std::cout << "L " << " " << angularMomentum0.norm() << std::endl << std::endl;
 	}
-	kineticEnergy0 = totalEnergy0 - ComputePotentialEnergy();
-	linearMomentum0 = ComputeTranslationalMomentum(qdot);
-	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
-	angularMomentum0 = ComputeAngularMomentum(referencePoint, qdot);
-	
-	//std::cout << "Kinetic " << kineticEnergy0 << " Potential " << ComputePotentialEnergy() << std::endl << std::endl;
-	std::cout << "time " << Physics::totalSimulationTime << " total energy " << ComputeTotalEnergy() << std::endl;
-	//std::cout << "P " << " " << linearMomentum0.norm() << std::endl;
-	//std::cout << "L " << " " << angularMomentum0.norm() << std::endl << std::endl;
+	else if (simulationMethod == _RNEA)
+	{
+		_Vector Qr;
+		_Vector C;
+		_Vector G;
+		RNEA(C, G, Mr, q, rel_ori, qdot, externalForces);
+		Qr = C + G;
+
+		MrInverse = Mr.inverse();
+		_Vector qddot = MrInverse * Qr;
+		qdot = qdot + qddot * h;
+
+		Integrate_q(q, rel_ori, q, rel_ori, qdot, true, h);
+		ForwardKinematics(q, rel_ori, jointType, posStartIndex);
+	}
 }
 
 void eae6320::MultiBody::RK4Integration(const _Scalar h)
@@ -812,9 +848,9 @@ void eae6320::MultiBody::UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_
 	}
 }
 
-void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex)
+void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat)
 {
-	UpdateBodyRotation(i_q, i_quat, i_jointType, i_posStartIndex);
+	UpdateBodyRotation(i_q, i_quat, jointType, posStartIndex);
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		int j = parentArr[i];
@@ -825,16 +861,16 @@ void eae6320::MultiBody::ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_q
 			uGlobalsParent[i] = R_global[j] * uLocalsParent[i];
 			jointPos[i] = pos[j] + uGlobalsParent[i];
 		}
-		if (i_jointType[i] == BALL_JOINT_3D || jointType[i] == BALL_JOINT_4D || jointType[i] == BALL_JOINT)
+		if (jointType[i] == BALL_JOINT_3D || jointType[i] == BALL_JOINT_4D || jointType[i] == BALL_JOINT)
 		{
 			pos[i] = jointPos[i] - uGlobalsChild[i];
 		}
-		else if (i_jointType[i] == FREE_JOINT || i_jointType[i] == FREE_JOINT_EXPO)
+		else if (jointType[i] == FREE_JOINT || jointType[i] == FREE_JOINT_EXPO)
 		{
-			pos[i] = i_q.segment(i_posStartIndex[i], 3);
+			pos[i] = i_q.segment(posStartIndex[i], 3);
 			jointPos[i] = pos[i];
 		}
-		else if (i_jointType[i] == HINGE_JOINT)
+		else if (jointType[i] == HINGE_JOINT)
 		{
 			pos[i] = jointPos[i] + hingeMagnitude[i] * hingeDirGlobals[i] - uGlobalsChild[i];
 		}
@@ -864,6 +900,10 @@ void eae6320::MultiBody::ResetExternalForces()
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		externalForces[i].setZero();
+		if (simulationMethod == _RNEA && gravity)
+		{
+			externalForces[i] = gravityVec * rigidBodyMass;
+		}
 	}
 	hasNonConservativeForce = false;
 }

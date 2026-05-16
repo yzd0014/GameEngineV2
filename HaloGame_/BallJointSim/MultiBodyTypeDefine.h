@@ -101,3 +101,11 @@
 #ifndef EULER_V2
 #define EULER_V2 3
 #endif
+/*************************************/
+#ifndef _JMJ
+#define _JMJ 0
+#endif
+
+#ifndef _RNEA
+#define _RNEA 1
+#endif
