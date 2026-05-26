@@ -620,7 +620,7 @@ void eae6320::MultiBody::DoubleCubeTest()
 {
 	constraintSolverMode = IMPULSE;
 	gravity = true;
-	int ballJointType = BALL_JOINT;
+	int ballJointType = BALL_JOINT_3D;
 
 	AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 1.0f, 1.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 0
 	AddRigidBody(0, ballJointType, _Vector3(-1.0f, 1.0f, -1.0f), _Vector3(1.0f, -1.0f, 1.0f), masterMeshArray[3], Vector3d(1, 1, 1), localInertiaTensor);//body 1
@@ -631,11 +631,11 @@ void eae6320::MultiBody::DoubleCubeTest()
 	//enableJointsPD[1] = true;
 	ForwardKinematics(q, rel_ori);
 
-	/*m_MatlabSave = [this]()
+	m_MatlabSave = [this]()
 	{
 		_Vector3 vecRot = Math::RotationConversion_MatrixToVec(R_global[2]);
 		LOG_TO_FILE << eae6320::Physics::totalSimulationTime << "," << pos[2](0) << "," << pos[2](1) << "," << pos[2](2) << "," << vecRot(0) << "," << vecRot(1) << "," << vecRot(2) << std::endl;
-	};*/
+	};
 	//m_control = [this]()
 	//{
 	//	_Vector qTarget;

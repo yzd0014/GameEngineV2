@@ -22,6 +22,8 @@ void eae6320::MultiBody::ForwardBackwardRecursion(_Vector& o_tau, _Vector& i_q, 
 		int j = parentArr[i];
 		_Matrix3 A;
 		A.setZero();
+		if (j != -1) A = R_global[i].transpose() * R_global[j];
+
 		if (jointType[i] == BALL_JOINT)
 		{
 			//compute H
@@ -32,7 +34,31 @@ void eae6320::MultiBody::ForwardBackwardRecursion(_Vector& o_tau, _Vector& i_q, 
 			D[i].setZero();
 			if (j != -1)
 			{
-				A = R_global[i].transpose() * R_global[j];
+				D[i].block<3, 3>(0, 0) = A;
+				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uLocalsChild[i]) * A - A * Math::ToSkewSymmetricMatrix(uLocalsParent[i]);
+				D[i].block<3, 3>(3, 3) = A;
+			}
+		}
+		else if (jointType[i] == BALL_JOINT_3D)
+		{
+			//compute H
+			ComputeExponentialMapJacobian(J_exp[i], uGlobalsChild[i], i_q.segment(posStartIndex[i], 3), i);
+			_Matrix3 J;
+			if (j != -1)
+			{
+				J = A * J_exp[i];
+			}
+			else
+			{
+				J = R_global[i].transpose() * J_exp[i];
+			}
+			H[i].resize(6, 3);
+			H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uLocalsChild[i]) * J;
+			H[i].block<3, 3>(3, 0) = J;
+			//compute D
+			D[i].setZero();
+			if (j != -1)
+			{
 				D[i].block<3, 3>(0, 0) = A;
 				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uLocalsChild[i]) * A - A * Math::ToSkewSymmetricMatrix(uLocalsParent[i]);
 				D[i].block<3, 3>(3, 3) = A;
@@ -61,6 +87,41 @@ void eae6320::MultiBody::ForwardBackwardRecursion(_Vector& o_tau, _Vector& i_q, 
 			_Vector3 gamma_theta;
 			gamma_theta.setZero();
 			gamma_theta = w_abs_local[i].cross(rdot);
+
+			if (i == 0)
+			{
+				gamma[i].segment(0, 3) = Math::ToSkewSymmetricMatrix(uLocalsChild[i]) * gamma_theta - w_abs_local[i].cross(w_abs_local[i].cross(uLocalsChild[i]));
+			}
+			else
+			{
+				gamma[i].segment(0, 3) = Math::ToSkewSymmetricMatrix(uLocalsChild[i]) * gamma_theta - w_abs_local[i].cross(w_abs_local[i].cross(uLocalsChild[i])) + A * w_abs_local[j].cross(w_abs_local[j].cross(uLocalsParent[i]));
+			}
+			gamma[i].segment(3, 3) = gamma_theta;
+		}
+		if (jointType[i] == BALL_JOINT_3D)
+		{
+			_Vector3 r = i_q.segment(posStartIndex[i], 3);
+			_Vector3 r_dot = i_qdot.segment(velStartIndex[i], 3);
+			_Scalar theta = r.norm();
+			_Scalar b = Compute_b(theta);
+			_Scalar a = Compute_a(theta);
+			_Scalar c = Compute_c(theta, a);
+			_Scalar a_dot = Compute_a_dot(c, b, r, r_dot);
+			_Scalar b_dot = Compute_b_dot(theta, a, b, r, r_dot);
+			_Scalar c_dot = Compute_c_dot(theta, b, c, r, r_dot);
+
+			_Vector3 Jdot_rdot;
+			Jdot_rdot = (c * r.dot(r_dot) + a_dot) * r_dot - (b_dot * r_dot).cross(r) + (c_dot * r.dot(r_dot) + c * r_dot.dot(r_dot)) * r;
+			_Vector3 gamma_theta;
+			if (i == 0)
+			{
+				gamma_theta = R_global[i].transpose() * Jdot_rdot;
+			}
+			else
+			{
+				//gamma_theta = (A * w_abs_local[j]).cross(w_abs_local[i]) + (A *  Math::ToSkewSymmetricMatrix(w_abs_local[j]) - Math::ToSkewSymmetricMatrix(w_abs_local[i]) * A) * J_exp[i] * r_dot + A * Jdot_rdot;
+				gamma_theta = A * Math::ToSkewSymmetricMatrix(w_abs_local[j]) * J_exp[i] * r_dot + A * Jdot_rdot;
+			}
 
 			if (i == 0)
 			{

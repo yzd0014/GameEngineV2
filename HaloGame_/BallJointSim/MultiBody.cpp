@@ -389,6 +389,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 		_Vector C;
 		_Vector G;
 		RNEA(C, G, Mr, q, rel_ori, qdot, externalForces);
+		//std::cout << Mr << std::endl;
 		Qr = C + G;
 
 		MrInverse = Mr.inverse();
