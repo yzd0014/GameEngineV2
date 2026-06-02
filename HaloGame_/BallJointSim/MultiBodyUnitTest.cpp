@@ -631,11 +631,11 @@ void eae6320::MultiBody::DoubleCubeTest()
 	//enableJointsPD[1] = true;
 	ForwardKinematics(q, rel_ori);
 
-	m_MatlabSave = [this]()
+	/*m_MatlabSave = [this]()
 	{
 		_Vector3 vecRot = Math::RotationConversion_MatrixToVec(R_global[2]);
 		LOG_TO_FILE << eae6320::Physics::totalSimulationTime << "," << pos[2](0) << "," << pos[2](1) << "," << pos[2](2) << "," << vecRot(0) << "," << vecRot(1) << "," << vecRot(2) << std::endl;
-	};
+	};*/
 	//m_control = [this]()
 	//{
 	//	_Vector qTarget;

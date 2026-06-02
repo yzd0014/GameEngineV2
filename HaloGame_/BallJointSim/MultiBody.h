@@ -30,6 +30,7 @@ namespace eae6320
 		void ComputeMr(_Matrix& o_M, std::vector<_Matrix>& i_Ht);
 		void ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matrix>& o_H, _Vector& i_q, std::vector<_Quat>& i_quat, 
 			std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
+		void ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matrix>& o_H, _Vector& io_qdot, _Vector& i_q, std::vector<_Quat>& i_quat);
 		_Vector ComputeQr(_Vector i_qdot);
 		_Vector ComputeQr_SikpVelocityUpdate(_Vector& i_qdot);
 		_Vector ComputeInternalQr(_Vector& i_qdot);
@@ -51,6 +52,7 @@ namespace eae6320
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void Forward();
+		void _Forward();
 		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		_Matrix ComputeLocalRotationJacobianDerivative(int joint_id, _Vector& i_q, _Vector& i_b, std::vector<int>& i_jointType);
 		void ComputeJacobianAndInertiaDerivativeFD(_Vector& i_bj, std::vector<_Vector>& i_bm, std::vector<_Matrix>& o_Jacobian, std::vector<_Matrix>& o_intertia, _Scalar i_delta);
@@ -304,7 +306,7 @@ namespace eae6320
 		GameObject* zArrow = nullptr;
 
 		std::string integrationMode = "Euler";
-		int simulationMethod = _RNEA;
+		int simulationMethod = _JMJ;
 		_Scalar damping = 1.0;
 		_Scalar kp = 1000000;
 		_Scalar kd = 66000;

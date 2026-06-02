@@ -1703,3 +1703,148 @@ void eae6320::MultiBody::PrintMomentum(_Vector i_qdot)
 	std::cout << "P " << linearMomentum0.transpose() << std::endl;
 	std::cout << "L " << angularMomentum0.transpose() << std::endl;
 }
+
+void eae6320::MultiBody::ComputeHt(std::vector<_Matrix>& o_Ht, std::vector<_Matrix>& o_H, _Vector& io_qdot, _Vector& i_q, std::vector<_Quat>& i_quat)
+{
+	ForwardKinematics(i_q, i_quat, jointType, posStartIndex);
+	for (int i = 0; i < numOfLinks; i++)
+	{
+		int j = parentArr[i];
+		if (jointType[i] == BALL_JOINT_4D)
+		{
+			//compute H
+			o_H[i].resize(6, 3);
+			o_H[i].setZero();
+			if (i == 0)
+			{
+				o_H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]);
+				o_H[i].block<3, 3>(3, 0) = _Matrix::Identity(3, 3);
+			}
+			else
+			{
+				o_H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * R_global[j];
+				o_H[i].block<3, 3>(3, 0) = R_global[j];
+			}
+			//compute D
+			if (i > 0)
+			{
+				D[i].setIdentity();
+				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) - Math::ToSkewSymmetricMatrix(uGlobalsParent[i]);
+			}
+		}
+		else if (jointType[i] == BALL_JOINT)
+		{
+			//compute H
+			o_H[i].resize(6, 3);
+			o_H[i].block<3, 3>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * R_global[i];
+			o_H[i].block<3, 3>(3, 0) = R_global[i];
+			//compute D
+			if (i > 0)
+			{
+				D[i].setIdentity();
+				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) - Math::ToSkewSymmetricMatrix(uGlobalsParent[i]);
+			}
+		}
+		else if (jointType[i] == BALL_JOINT_3D)
+		{
+			_Vector3 r = i_q.segment(posStartIndex[i], 3);
+			_Scalar theta = r.norm();
+			_Matrix3 J_expOld;
+			bool clamped = false;
+			if (theta > M_PI)
+			{
+				ComputeExponentialMapJacobian(J_exp[i], uGlobalsChild[i], i_q.segment(posStartIndex[i], 3), i);
+				J_expOld = J_exp[i];
+		
+				//reparameterize position
+				_Scalar eta = (_Scalar)(1.0f - 2.0f * M_PI / theta);
+				_Vector r_new = eta * r;
+				i_q.segment(posStartIndex[i], 3) = r_new;
+				std::cout << "rotation vector clamped" << std::endl;
+				clamped = true;
+			}
+			
+			//compute H
+			o_H[i] = ComputeExponentialMapJacobian(J_exp[i], uGlobalsChild[i], i_q.segment(posStartIndex[i], 3), i);
+			if (clamped)
+			{
+				//reparameterize velocity
+				_Vector3 rDot = io_qdot.segment(posStartIndex[i], 3);
+				_Vector3 omega = J_expOld * rDot;
+				_Vector3 rDotNew = J_exp[i].inverse() * omega;
+				io_qdot.segment(posStartIndex[i], 3) = rDotNew;
+			}
+
+			//compute D
+			if (i > 0)
+			{
+				D[i].setIdentity();
+				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) - Math::ToSkewSymmetricMatrix(uGlobalsParent[i]);
+			}
+		}
+		else if (jointType[i] == FREE_JOINT)
+		{
+			//compute H
+			o_H[i].resize(6, 6);
+			o_H[i].setIdentity();
+			//compute D
+			D[i].setZero();
+		}
+		else if (jointType[i] == FREE_JOINT_EXPO)
+		{
+			o_H[i].resize(6, 6);
+			o_H[i].setIdentity();
+
+			_Vector3 r = i_q.segment(posStartIndex[i] + 3, 3);
+			_Scalar theta = r.norm();
+			_Scalar b = Compute_b(theta);
+			_Scalar a = Compute_a(theta);
+			_Scalar c = Compute_c(theta, a);
+			o_H[i].block<3, 3>(3, 3) = _Matrix::Identity(3, 3) + b * Math::ToSkewSymmetricMatrix(r) + c * Math::ToSkewSymmetricMatrix(r) * Math::ToSkewSymmetricMatrix(r);
+
+			D[i].setZero();
+		}
+		else if (jointType[i] == HINGE_JOINT)
+		{
+			//compute H
+			o_H[i].resize(6, 1);
+			o_H[i].block<3, 1>(0, 0) = Math::ToSkewSymmetricMatrix(uGlobalsChild[i]) * hingeDirGlobals[i];
+			o_H[i].block<3, 1>(3, 0) = hingeDirGlobals[i];
+			//G[i] = H[i];
+			//compute D
+			D[i].setIdentity();
+			if (i > 0)
+			{
+				_Vector3 hingeVec = hingeMagnitude[i] * hingeDirGlobals[i];
+				_Vector3 iVec = uGlobalsChild[i] - uGlobalsParent[i] - hingeVec;
+				D[i].block<3, 3>(0, 3) = Math::ToSkewSymmetricMatrix(iVec);
+			}
+		}
+		//compose Ht
+		o_Ht[i].resize(6, totalVelDOF);
+		o_Ht[i].setZero();
+		int k = i;
+		while (k != -1)
+		{
+			_Matrix D_temp;
+			D_temp.resize(6, 6);
+			D_temp.setIdentity();
+			int j = i;
+			while (j > k)
+			{
+				D_temp = D_temp * D[j];
+				j = parentArr[j];
+			}
+			o_Ht[i].block(0, velStartIndex[k], 6, velDOF[k]) = D_temp * o_H[k];
+			k = parentArr[k];
+		}
+	}
+}
+
+void eae6320::MultiBody::_Forward()
+{
+	ComputeHt(Ht, H, qdot, q, rel_ori);
+	ComputeMr(Mr, Ht);
+	MrInverse = Mr.inverse();
+	ForwardAngularAndTranslationalVelocity(Ht, qdot);
+}

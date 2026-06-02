@@ -948,10 +948,17 @@ _Scalar eae6320::MultiBody::ComputeKineticEnergy()
 	for (int i = 0; i < numOfLinks; i++)
 	{
 		_Scalar kineticEnergyRotation = 0;
-		kineticEnergyRotation = 0.5 * w_abs_world[i].transpose() * Mbody[i].block<3, 3>(3, 3) * w_abs_world[i];
-
 		_Scalar kineticEnergyTranslaion = 0;
-		kineticEnergyTranslaion = 0.5 * vel[i].transpose() * Mbody[i].block<3, 3>(0, 0) * vel[i];
+		if (simulationMethod == _JMJ)
+		{
+			kineticEnergyRotation = 0.5 * w_abs_world[i].transpose() * Mbody[i].block<3, 3>(3, 3) * w_abs_world[i];
+			kineticEnergyTranslaion = 0.5 * vel[i].transpose() * Mbody[i].block<3, 3>(0, 0) * vel[i];
+		}
+		else if (simulationMethod ==  _RNEA)
+		{
+			kineticEnergyRotation = 0.5 * w_abs_local[i].transpose() * localInertiaTensor * w_abs_local[i];
+			kineticEnergyTranslaion = 0.5 * rigidBodyMass * COMVelLocal[i].transpose() * COMVelLocal[i];
+		}
 
 		out += kineticEnergyRotation + kineticEnergyTranslaion;
 	}
