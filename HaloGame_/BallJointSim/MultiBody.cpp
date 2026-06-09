@@ -379,7 +379,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 		angularMomentum0 = ComputeAngularMomentum(referencePoint, qdot);
 
 		//std::cout << "Kinetic " << kineticEnergy0 << " Potential " << ComputePotentialEnergy() << std::endl << std::endl;
-		std::cout << "time " << Physics::totalSimulationTime << " total energy " << ComputeTotalEnergy() << std::endl;
+		//std::cout << "time " << Physics::totalSimulationTime << " total energy " << ComputeTotalEnergy() << std::endl;
 		//std::cout << "P " << " " << linearMomentum0.norm() << std::endl;
 		//std::cout << "L " << " " << angularMomentum0.norm() << std::endl << std::endl;
 	}
@@ -398,6 +398,7 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 
 		Integrate_q(q, rel_ori, q, rel_ori, qdot, true, h);
 		ForwardKinematics(q, rel_ori, jointType, posStartIndex);
+		std::cout << "time " << Physics::totalSimulationTime << " total energy " << ComputeTotalEnergy() << std::endl;
 	}
 }
 
@@ -944,6 +945,14 @@ _Vector3 eae6320::MultiBody::ComputeAngularMomentum(_Vector3 i_referencePoint, _
 
 _Scalar eae6320::MultiBody::ComputeKineticEnergy()
 {
+	if (simulationMethod == _RNEA)
+	{
+		_Vector tau;
+		_Vector qddot;
+		qddot.resize(totalVelDOF);
+		qddot.setZero();
+		ForwardBackwardRecursion(tau, q, rel_ori, qdot, qddot, externalForces);
+	}
 	_Scalar out = 0;
 	for (int i = 0; i < numOfLinks; i++)
 	{

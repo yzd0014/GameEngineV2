@@ -306,7 +306,7 @@ namespace eae6320
 		GameObject* zArrow = nullptr;
 
 		std::string integrationMode = "Euler";
-		int simulationMethod = _JMJ;
+		int simulationMethod = _RNEA;
 		_Scalar damping = 1.0;
 		_Scalar kp = 1000000;
 		_Scalar kd = 66000;
