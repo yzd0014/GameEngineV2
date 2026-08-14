@@ -530,8 +530,8 @@ void eae6320::MultiBody::BallJointTest()
 	gravity = true;
 	int ballJointType = BALL_JOINT;
 
-	//AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
-	AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
+	AddRigidBody(-1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
+	//AddRigidBody(-1, FREE_JOINT, _Vector3(0.0f, 0.0f, 0.0f), _Vector3(0.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 0
 	AddRigidBody(0, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 1
 	AddRigidBody(1, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 2
 	AddRigidBody(2, ballJointType, _Vector3(-1.0f, 0.0f, 0.0f), _Vector3(1.0f, 0.0f, 0.0f), masterMeshArray[3], Vector3d(1, 0.5, 0.5), localInertiaTensor);//body 3
@@ -572,7 +572,7 @@ void eae6320::MultiBody::BallJointTest()
 		}*/
 	
 	ForwardKinematics(q, rel_ori);
-	AddPointJoint(_Vector3(-1, 0, 0), _Vector3(0, 0, 0));
+	//AddPointJoint(_Vector3(-1, 0, 0), _Vector3(0, 0, 0));
 	
 	/*m_MatlabSave = [this]()
 	{
@@ -817,6 +817,17 @@ void eae6320::MultiBody::RunUnitTest()
 	else if (twistMode == DIRECT)
 	{
 		std::cout << "direct swing-twist constraint is being used" << std::endl;
+	}
+	pApp->AddApplicationParameter(&simulationMethod, Application::ApplicationParameterType::integer, L"-simulation_method");
+	if (simulationMethod == 0)
+	{
+		simulationMethod = _JMJ;
+		std::cout << "JMJ is used" << std::endl;
+	}
+	else if (simulationMethod == 1)
+	{
+		simulationMethod = _RNEA;
+		std::cout << "RNEA is used" << std::endl;
 	}
 	pApp->AddApplicationParameter(&integrationMode, Application::ApplicationParameterType::string, L"-integrator");
 	if (integrationMode == "Euler")

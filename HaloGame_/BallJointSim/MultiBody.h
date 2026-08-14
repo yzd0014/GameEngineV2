@@ -45,6 +45,7 @@ namespace eae6320
 		
 		void EulerIntegration(const _Scalar h);
 		void RK4Integration(const _Scalar h);
+		void _RK4Integration(const _Scalar h);
 		void RK3Integration(const _Scalar h);
 		void VariationalIntegration(const _Scalar h);
 		void Integrate_q(_Vector& o_q, std::vector<_Quat>& o_quat, _Vector& i_q, std::vector<_Quat>& i_quat, _Vector& i_qdot, bool clamp,  _Scalar h);
@@ -52,6 +53,7 @@ namespace eae6320
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		void ForwardKinematics(_Vector& i_q, std::vector<_Quat>& i_quat);
 		void Forward();
+		void Forward(_Vector& i_q, std::vector<_Quat>& i_rel_ori, _Vector& i_qdot);
 		void _Forward();
 		void UpdateBodyRotation(_Vector& i_q, std::vector<_Quat>& i_quat, std::vector<int>& i_jointType, std::vector<int>& i_posStartIndex);
 		_Matrix ComputeLocalRotationJacobianDerivative(int joint_id, _Vector& i_q, _Vector& i_b, std::vector<int>& i_jointType);

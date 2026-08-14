@@ -20,12 +20,12 @@ eae6320::MultiBody::MultiBody(Effect * i_pEffect, Assets::cHandle<Mesh> i_Mesh, 
 	SimulationInitialization();
 	EulerAngleInitialization();
 
-	/*totalEnergy0 = ComputeTotalEnergy();
+	totalEnergy0 = ComputeTotalEnergy();
 	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
 	angularMomentum0 = ComputeAngularMomentum(referencePoint, qdot);
 	linearMomentum0 = ComputeTranslationalMomentum(qdot);
 	kineticEnergy0 = ComputeKineticEnergy();
-	std::cout << std::setprecision(16) << "initial total energy: " << totalEnergy0 << std::endl;*/
+	std::cout << std::setprecision(16) << "initial total energy: " << totalEnergy0 << std::endl;
 	//std::cout << "initial angular momentum: " << angularMomentum0.transpose() << std::endl;
 	//std::cout << "initial linear momentum: " << linearMomentum0.transpose() << std::endl;
 }
@@ -350,12 +350,12 @@ void eae6320::MultiBody::EulerIntegration(const _Scalar h)
 		qdot = qdot + qddot * h;
 		//ImplicitForceIntegration();
 
-		//std::vector<_Quat> rel_ori_old = rel_ori;
-		//_Vector q_old = q;
-		//MomentumEnergyProjection(qdot);
-		//rel_ori = rel_ori_old;
-		//q = q_old;
-		//Forward();
+	/*	std::vector<_Quat> rel_ori_old = rel_ori;
+		_Vector q_old = q;*/
+		MomentumEnergyProjection(qdot);
+	/*	rel_ori = rel_ori_old;
+		q = q_old;
+		Forward();*/
 
 		Qr = ComputeExternalQr();
 		qddot = MrInverse * Qr;
@@ -416,7 +416,50 @@ void eae6320::MultiBody::RK4Integration(const _Scalar h)
 
 	Integrate_q(q, rel_ori, q, rel_ori, qdot, true, h);
 	Forward();
-	//std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
+}
+
+void eae6320::MultiBody::_RK4Integration(const _Scalar h)
+{
+	_Vector q0 = q;
+	_Vector qdot0 = qdot;
+	std::vector<_Quat> quat0 = rel_ori;
+	
+	_Vector kv1 = MrInverse * ComputeQr_SikpVelocityUpdate(qdot0);
+	_Vector kq1 = qdot0;
+	_Vector qdot1 = qdot0 + 0.5 * h * kv1;
+	_Vector q1 = q0;
+	std::vector<_Quat> quat1 = quat0;
+	Integrate_q(q1, quat1, q0, quat0, kq1, false, 0.5 * h);
+	Forward(q1, quat1, qdot1);
+
+	_Vector kv2 = MrInverse * ComputeQr_SikpVelocityUpdate(qdot1);
+	_Vector kq2 = qdot1;
+	_Vector qdot2 = qdot0 + 0.5 * h * kv2;
+	_Vector q2 = q0;
+	std::vector<_Quat> quat2 = quat0;
+	Integrate_q(q2, quat2, q0, quat0, kq2, false, 0.5 * h);
+	Forward(q2, quat2, qdot2);
+
+	_Vector kv3 = MrInverse * ComputeQr_SikpVelocityUpdate(qdot2);
+	_Vector kq3 = qdot2;
+	_Vector qdot3 = qdot0 + h * kv3;
+	_Vector q3 = q0;
+	std::vector<_Quat> quat3 = quat0;
+	Integrate_q(q3, quat3, q0, quat0, kq3, false, h);
+	Forward(q3, quat3, qdot3);
+
+	_Vector kv4 = MrInverse * ComputeQr_SikpVelocityUpdate(qdot3);
+	_Vector kq4 = qdot3;
+	
+	qdot = qdot0 + (h / 6.0f) * (kv1 + 2 * kv2 + 2 * kv3 + kv4);
+
+	_Vector kq_avg = (kq1 + 2 * kq2 + 2 * kq3 + kq4) / 6.0f;
+	Integrate_q(q, rel_ori, q0, quat0, kq_avg, false, h);//TODO: currently does't rotaiton vector for ball joint due to clamping
+	//TODO:: constraint solve
+
+	Forward();
+	std::cout << std::setprecision(16) << Physics::totalSimulationTime << " " << ComputeTotalEnergy() << std::endl << std::endl;
 }
 
 void eae6320::MultiBody::RK3Integration(const _Scalar h)
@@ -916,6 +959,14 @@ void eae6320::MultiBody::Forward()
 	ComputeMr(Mr, Ht);
 	MrInverse = Mr.inverse();
 	ForwardAngularAndTranslationalVelocity(Ht, qdot);
+}
+
+void eae6320::MultiBody::Forward(_Vector& i_q, std::vector<_Quat>& i_rel_ori, _Vector& i_qdot)
+{
+	ComputeHt(Ht, H, i_q, i_rel_ori, jointType, posStartIndex);
+	ComputeMr(Mr, Ht);
+	MrInverse = Mr.inverse();
+	ForwardAngularAndTranslationalVelocity(Ht, i_qdot);
 }
 
 _Vector3 eae6320::MultiBody::ComputeTranslationalMomentum(_Vector& i_qdot)

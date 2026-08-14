@@ -1293,7 +1293,7 @@ _Vector3 eae6320::MultiBody::ComputeKinematicTreeCOMandPositionDerivative(_Matri
 
 void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 {
-	/*_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+	_Vector3 referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
 	_Matrix Kp(3, totalVelDOF);
 	Kp.setZero();
 	_Matrix Kl(3, totalVelDOF);
@@ -1303,82 +1303,82 @@ void eae6320::MultiBody::MomentumEnergyProjection(_Vector& io_qdot)
 		Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
 		_Vector3 r = pos[i] - referencePoint;
 		Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * Ht[i].block(0, 0, 3, totalVelDOF);
-	}*/
-	
-	_Matrix Kp(3, totalVelDOF);
-	_Matrix Kl(3, totalVelDOF);
-	_Matrix M1(3, totalVelDOF);//positions
-	_Matrix M2(3, totalVelDOF);//positions
-	std::vector<_Matrix> mN;//positions
-	_Vector3 referencePoint;
-	_Matrix referencePointDerivative;
-	
-	//momentum projection
-	{
-		int momentumConstraintDim = 6;
-		
-		_Matrix grad_C(momentumConstraintDim, totalVelDOF);
-		grad_C.setZero();
-	
-		_Matrix C(momentumConstraintDim, 1);
-		_Scalar energyErr = 1.0;
-		int iter = 0;
-		_Vector q0 = q;
-		std::vector<_Quat> rel_ori0 = rel_ori;
-		while (true)
-		{
-			Integrate_q(q, rel_ori, q0, rel_ori0, io_qdot, false, pApp->GetSimulationUpdatePeriod_inSeconds());
-			Forward();
-			
-			ComputeAuxiliaryJacobian(mN, Ht);
-			ComputeJacobianDerivative(HtDerivativeTimes_b, io_qdot, Ht, H, mN, q, R_global, uGlobalsChild, uGlobalsParent, jointType);
-			ComputeIntertiaDerivative(MassMatrixDerivativeTimes_b, io_qdot, Ht, mN, Mbody);
-			//ComputeJacobianAndInertiaDerivativeFDV2(q, io_qdot, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b, 1e-7);
-			
-			//referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
-			referencePoint = ComputeKinematicTreeCOMandPositionDerivative(referencePointDerivative, pos, Mbody);	
-			Kp.setZero();
-			Kl.setZero();
-			M1.setZero();
-			M2.setZero();
-			for (int i = 0; i < numOfLinks; i++)
-			{
-				Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
-				_Vector3 r = pos[i] - referencePoint;
-				Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * Ht[i].block(0, 0, 3, totalVelDOF);
-
-				M1 = M1 + Mbody[i].block<3, 3>(0, 0) * HtDerivativeTimes_b[i].block(0, 0, 3, totalVelDOF);
-				M2 = M2 + MassMatrixDerivativeTimes_b[i].block(3, 0, 3, totalVelDOF) + Mbody[i].block<3, 3>(3, 3) * HtDerivativeTimes_b[i].block(3, 0, 3, totalVelDOF)
-					+ rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * HtDerivativeTimes_b[i].block(0, 0, 3, totalVelDOF) - (rigidBodyMass * Math::ToSkewSymmetricMatrix(vel[i]) * (Ht[i].block(0, 0, 3, totalVelDOF) - referencePointDerivative));
-			}
-			C.block<3, 1>(0, 0) = Kp * io_qdot - linearMomentum0;
-			C.block<3, 1>(3, 0) = Kl * io_qdot - angularMomentum0;
-			_Scalar C_norm = C.norm();
-			//std::cout << "momentum error norm " << C_norm << std::endl;
-			if (C_norm < 1e-10 || iter >= 50)
-			{
-				std::cout << "Momentum error " << C_norm << " iter " << iter << std::endl;
-				break;
-			}
-	
-			/*grad_C.block(0, 0, 3, totalVelDOF) = Kp;
-			grad_C.block(3, 0, 3, totalVelDOF) = Kl;*/
-			grad_C.block(0, 0, 3, totalVelDOF) = pApp->GetSimulationUpdatePeriod_inSeconds() * M1 + Kp;
-			grad_C.block(3, 0, 3, totalVelDOF) = pApp->GetSimulationUpdatePeriod_inSeconds() * M2 + Kl;
-
-			_Matrix K = grad_C * MrInverse * grad_C.transpose();
-			if (K.determinant() < 1e-7)
-			{
-				K = K + 1e-6 * _Matrix::Identity(momentumConstraintDim, momentumConstraintDim);
-				std::cout << "K is not invertable" << std::endl;
-			}
-			_Matrix lambda(momentumConstraintDim, 1);
-			lambda = K.inverse() * C;
-			_Vector qdotCorrection = MrInverse * grad_C.transpose() * lambda;
-			io_qdot = io_qdot - qdotCorrection;
-			iter++;
-		}
 	}
+	
+	//_Matrix Kp(3, totalVelDOF);
+	//_Matrix Kl(3, totalVelDOF);
+	//_Matrix M1(3, totalVelDOF);//positions
+	//_Matrix M2(3, totalVelDOF);//positions
+	//std::vector<_Matrix> mN;//positions
+	//_Vector3 referencePoint;
+	//_Matrix referencePointDerivative;
+	//
+	////momentum projection
+	//{
+	//	int momentumConstraintDim = 6;
+	//	
+	//	_Matrix grad_C(momentumConstraintDim, totalVelDOF);
+	//	grad_C.setZero();
+	//
+	//	_Matrix C(momentumConstraintDim, 1);
+	//	_Scalar energyErr = 1.0;
+	//	int iter = 0;
+	//	_Vector q0 = q;
+	//	std::vector<_Quat> rel_ori0 = rel_ori;
+	//	while (true)
+	//	{
+	//		Integrate_q(q, rel_ori, q0, rel_ori0, io_qdot, false, pApp->GetSimulationUpdatePeriod_inSeconds());
+	//		Forward();
+	//		
+	//		ComputeAuxiliaryJacobian(mN, Ht);
+	//		ComputeJacobianDerivative(HtDerivativeTimes_b, io_qdot, Ht, H, mN, q, R_global, uGlobalsChild, uGlobalsParent, jointType);
+	//		ComputeIntertiaDerivative(MassMatrixDerivativeTimes_b, io_qdot, Ht, mN, Mbody);
+	//		//ComputeJacobianAndInertiaDerivativeFDV2(q, io_qdot, HtDerivativeTimes_b, MassMatrixDerivativeTimes_b, 1e-7);
+	//		
+	//		//referencePoint = ComputeKinematicTreeCOM(pos, Mbody);
+	//		referencePoint = ComputeKinematicTreeCOMandPositionDerivative(referencePointDerivative, pos, Mbody);	
+	//		Kp.setZero();
+	//		Kl.setZero();
+	//		M1.setZero();
+	//		M2.setZero();
+	//		for (int i = 0; i < numOfLinks; i++)
+	//		{
+	//			Kp = Kp + Mbody[i].block<3, 3>(0, 0) * Ht[i].block(0, 0, 3, totalVelDOF);
+	//			_Vector3 r = pos[i] - referencePoint;
+	//			Kl = Kl + Mbody[i].block<3, 3>(3, 3) * Ht[i].block(3, 0, 3, totalVelDOF) + rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * Ht[i].block(0, 0, 3, totalVelDOF);
+
+	//			M1 = M1 + Mbody[i].block<3, 3>(0, 0) * HtDerivativeTimes_b[i].block(0, 0, 3, totalVelDOF);
+	//			M2 = M2 + MassMatrixDerivativeTimes_b[i].block(3, 0, 3, totalVelDOF) + Mbody[i].block<3, 3>(3, 3) * HtDerivativeTimes_b[i].block(3, 0, 3, totalVelDOF)
+	//				+ rigidBodyMass * Math::ToSkewSymmetricMatrix(r) * HtDerivativeTimes_b[i].block(0, 0, 3, totalVelDOF) - (rigidBodyMass * Math::ToSkewSymmetricMatrix(vel[i]) * (Ht[i].block(0, 0, 3, totalVelDOF) - referencePointDerivative));
+	//		}
+	//		C.block<3, 1>(0, 0) = Kp * io_qdot - linearMomentum0;
+	//		C.block<3, 1>(3, 0) = Kl * io_qdot - angularMomentum0;
+	//		_Scalar C_norm = C.norm();
+	//		//std::cout << "momentum error norm " << C_norm << std::endl;
+	//		if (C_norm < 1e-10 || iter >= 50)
+	//		{
+	//			std::cout << "Momentum error " << C_norm << " iter " << iter << std::endl;
+	//			break;
+	//		}
+	//
+	//		/*grad_C.block(0, 0, 3, totalVelDOF) = Kp;
+	//		grad_C.block(3, 0, 3, totalVelDOF) = Kl;*/
+	//		grad_C.block(0, 0, 3, totalVelDOF) = pApp->GetSimulationUpdatePeriod_inSeconds() * M1 + Kp;
+	//		grad_C.block(3, 0, 3, totalVelDOF) = pApp->GetSimulationUpdatePeriod_inSeconds() * M2 + Kl;
+
+	//		_Matrix K = grad_C * MrInverse * grad_C.transpose();
+	//		if (K.determinant() < 1e-7)
+	//		{
+	//			K = K + 1e-6 * _Matrix::Identity(momentumConstraintDim, momentumConstraintDim);
+	//			std::cout << "K is not invertable" << std::endl;
+	//		}
+	//		_Matrix lambda(momentumConstraintDim, 1);
+	//		lambda = K.inverse() * C;
+	//		_Vector qdotCorrection = MrInverse * grad_C.transpose() * lambda;
+	//		io_qdot = io_qdot - qdotCorrection;
+	//		iter++;
+	//	}
+	//}
 	
 	_Matrix3 kinematicTreeInertia = ComputeKinematicTreeInertiaTensor(referencePoint, pos, Mbody);
 	//_Scalar internalKBefore;
